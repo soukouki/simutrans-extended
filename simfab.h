@@ -311,7 +311,7 @@ private:
 	/**
 	 * Electricity amount scaled with prodbase
 	 */
-	uint32 scaled_electric_amount;
+	uint32 scaled_electric_demand;
 
 	/**
 	 * Pax/mail demand scaled with prodbase and month length
@@ -322,7 +322,7 @@ private:
 	/**
 	 * Update scaled electricity amount
 	 */
-	void update_scaled_electric_amount();
+	void update_scaled_electric_demand();
 
 	/**
 	 * Update scaled pax/mail demand
@@ -699,7 +699,7 @@ public:
 	/**
 	 * Return the scaled electricity amount and pax/mail demand
 	 */
-	uint32 get_scaled_electric_demand() const { return scaled_electric_amount; }
+	uint32 get_scaled_electric_demand() const { return scaled_electric_demand; }
 	uint32 get_scaled_pax_demand() const { return scaled_pax_demand; }
 	uint32 get_monthly_pax_demand() const;
 	uint32 get_scaled_mail_demand() const { return scaled_mail_demand; }

@@ -68,7 +68,7 @@ vector_tpl<building_desc_t*> hausbauer_t::modifiable_station_buildings;
 vector_tpl<const building_desc_t *> hausbauer_t::headquarters;
 
 /// special objects directly needed by the program
-static spezial_obj_tpl<building_desc_t> const special_objects[] = {
+static special_obj_tpl<building_desc_t> const special_objects[] = {
 	{ &hausbauer_t::elevated_foundation_desc,   "MonorailGround" },
 	{ NULL, NULL }
 };
