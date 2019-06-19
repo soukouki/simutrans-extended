@@ -985,7 +985,7 @@ void stadt_t::cityrules_rdwr(loadsave_t *file)
 	}
 
 	const uint32 std_ver = file->get_version_int();
-	if( exp_ver == 0 && std_ver >= 112008 ) {
+	if(  file->is_version_atleast(112, 8) && exp_ver == 0  ) {
 		file->rdwr_long( cluster_factor );
 	}
 
@@ -1795,7 +1795,7 @@ void stadt_t::rdwr(loadsave_t* file)
 	file->rdwr_long(arb);
 	file->rdwr_long(won);
 
-	if(  file->get_version_int()>=112009  ) {
+	if(  file->is_version_atleast(112, 9)  ) {
 		// Must record the partial (less than 1 citizen) growth factor
 		// Otherwise we will get network desyncs
 		// Also allows accumulation of small growth factors
@@ -1805,7 +1805,7 @@ void stadt_t::rdwr(loadsave_t* file)
 		unsupplied_city_growth = 0;
 	}
 	// old values zentrum_namen_cnt : aussen_namen_cnt
-	if(file->get_version_int()<99018) {
+	if(file->is_version_less(99, 18)) {
 		sint32 dummy=0;
 		file->rdwr_long(dummy);
 		file->rdwr_long(dummy);
@@ -1833,12 +1833,9 @@ void stadt_t::rdwr(loadsave_t* file)
 	const int adapted_max_city_history = file->get_extended_version() < 12 ? MAX_CITY_HISTORY + 1 : MAX_CITY_HISTORY;
 
 	// we probably need to load/save the city history
-	if (file->get_version_int() < 86000)
-	{
+	if (file->is_version_less(86, 0)) {
 		//DBG_DEBUG("stadt_t::rdwr()", "is old version: No history!");
-	}
-	else if(file->get_version_int() < 99016)
-	{
+	} else if(file->is_version_less(99, 16)) {
 		// 86.00.0 introduced city history
 		for (uint year = 0; year < MAX_CITY_HISTORY_YEARS; year++)
 		{
@@ -1879,8 +1876,7 @@ void stadt_t::rdwr(loadsave_t* file)
 		file->rdwr_long(dummy);
 		file->rdwr_long(dummy);
 	}
-	else if (file->get_extended_version() == 0)
-	{
+	else if(  file->get_extended_version() == 0  ) {
 		// 99.17.0 extended city history
 		// Extended version 3 extended it further, so skip the last step.
 		// For extended versions *before* 3, power history was treated as congestion
@@ -2102,7 +2098,7 @@ void stadt_t::rdwr(loadsave_t* file)
 	}
 
 	// differential history
-	if (file->get_version_int() <= 120000 || (file->get_extended_version() > 0 && file->get_extended_version() < 25)) {
+	if (  file->is_version_less(120, 1) || (file->get_extended_version() > 0 && file->get_extended_version() < 25)) {
 		if (file->is_loading()) {
 			// Initalize differential statistics assuming a differential of 0.
 			city_growth_get_factors(city_growth_factor_previous, 0);
@@ -2128,21 +2124,21 @@ void stadt_t::rdwr(loadsave_t* file)
 		}
 	}
 
-	if(file->get_version_int()>99014  &&  file->get_version_int()<99016) {
+	if(file->is_version_atleast(99, 15)  &&  file->is_version_less(99, 16)) {
 		sint32 dummy = 0;
 		file->rdwr_long(dummy);
 		file->rdwr_long(dummy);
 	}
 
 	// since 102.2 there are static cities
-	if(file->get_version_int()>102001 ) {
+	if(file->is_version_atleast(102, 2)) {
 		file->rdwr_bool(allow_citygrowth);
 	}
 	else if(  file->is_loading()  ) {
 		allow_citygrowth = true;
 	}
 	// save townhall road position
-	if(file->get_version_int()>102002 && file->get_extended_version() != 7 ) {
+	if(file->is_version_atleast(102, 3) && file->get_extended_version() != 7) {
 		townhall_road.rdwr(file);
 	}
 	else if(  file->is_loading()  ) {

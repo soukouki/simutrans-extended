@@ -268,14 +268,15 @@ void simline_t::rdwr_linehandle_t(loadsave_t *file, linehandle_t &line)
 {
 	uint16 id;
 	if (file->is_saving()) {
-		id = line.is_bound() ? line.get_id(): (file->get_version_int() < 110000  ? INVALID_LINE_ID_OLD : INVALID_LINE_ID);
+		id = line.is_bound() ? line.get_id() :
+			 (file->is_version_less(110, 0)  ? INVALID_LINE_ID_OLD : INVALID_LINE_ID);
 	}
 	else {
 		// to avoid undefined errors during loading
 		id = 0;
 	}
 
-	if(file->get_version_int()<88003) {
+	if(file->is_version_less(88, 3)) {
 		sint32 dummy=id;
 		file->rdwr_long(dummy);
 		id = (uint16)dummy;
@@ -306,10 +307,8 @@ void simline_t::rdwr(loadsave_t *file)
 	schedule->rdwr(file);
 
 	//financial history
-	if(file->get_version_int() <= 102002 || (file->get_version_int() < 103000 && file->get_extended_version() < 7))
-	{
-		for (int j = 0; j<LINE_DISTANCE; j++)
-		{
+	if(  file->is_version_less(102, 3) || (file->is_version_less(103, 0) && file->get_extended_version() < 7) ) {
+		for (int j = 0; j<LINE_DISTANCE; j++) {
 			for (int k = MAX_MONTHS-1; k>=0; k--)
 			{
 				if(((j == LINE_AVERAGE_SPEED || j == LINE_COMFORT) && file->get_extended_version() <= 1) || (j == LINE_REFUNDS && file->get_extended_version() < 8))
@@ -357,7 +356,7 @@ void simline_t::rdwr(loadsave_t *file)
 					}
 					continue;
 				}
-				else if(j == 7 && file->get_version_int() >= 111001 && file->get_extended_version() == 0)
+				else if(j == 7 && file->is_version_atleast(111,1) && file->get_extended_version() == 0)
 				{
 					// In Standard, this is LINE_MAXSPEED.
 					sint64 dummy = 0;
@@ -376,7 +375,7 @@ void simline_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version_int()>=102002) {
+	if(  file->is_version_atleast(102, 2)  ) {
 		file->rdwr_bool(withdraw);
 	}
 
@@ -391,9 +390,9 @@ void simline_t::rdwr(loadsave_t *file)
 	if(file->get_extended_version() >= 2)
 	{
 #ifdef SPECIAL_RESCUE_12_2
-		const uint8 counter = file->get_version_int() < 103000 ? LINE_DISTANCE : file->get_extended_version() < 12 || file->is_loading() ? LINE_REFUNDS + 1 : LINE_WAYTOLL;
+		const uint8 counter = file->is_version_less(103, 0) ? LINE_DISTANCE : file->get_extended_version() < 12 || file->is_loading() ? LINE_REFUNDS + 1 : LINE_WAYTOLL;
 #else
-		const uint8 counter = file->get_version_int() < 103000 ? LINE_DISTANCE : file->get_extended_version() < 12 ? LINE_REFUNDS + 1 : LINE_WAYTOLL;
+		const uint8 counter = file->is_version_less(103, 0) ? LINE_DISTANCE : file->get_extended_version() < 12 ? LINE_REFUNDS + 1 : LINE_WAYTOLL;
 #endif
 		for(uint8 i = 0; i < counter; i ++)
 		{
@@ -407,8 +406,7 @@ void simline_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_extended_version() >= 9 && file->get_version_int() >= 110006)
-	{
+	if(  file->is_version_atleast(110, 6) && file->get_extended_version() >= 9  ) {
 		file->rdwr_short(livery_scheme_index);
 	}
 	else
@@ -502,7 +500,7 @@ void simline_t::rdwr(loadsave_t *file)
 			}
 		}
 	}
-	if(file->get_version_int() >= 111002 && file->get_extended_version() >= 10 && file->get_extended_version() < 12)
+	if(  file->is_version_atleast(111, 2) && file->get_extended_version() >= 10 && file->get_extended_version() < 12  )
 	{
 		bool dummy_is_alternating_circle_route = false; // Deprecated.
 		file->rdwr_bool(dummy_is_alternating_circle_route);

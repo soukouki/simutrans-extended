@@ -482,15 +482,12 @@ void leitung_t::rdwr(loadsave_t *file)
 			}
 		}
 	}
-	if(get_typ() == leitung)
-	{
-		/* ATTENTION: during loading this MUST not be called from the constructor!!!
-		 * (Otherwise it will be always true!)
-		 */
-		if(file->get_version_int() > 102002 && (file->get_extended_version() >= 8 || file->get_extended_version() == 0))
-		{
-			if(file->is_saving())
-			{
+	if(get_typ()==leitung) {
+		/* ATTENTION: during loading thus MUST not be called from the constructor!!!
+		* (Otherwise it will be always true!
+		*/
+		if(file->is_version_atleast(102, 3) && (file->get_extended_version() >= 8 || file->get_extended_version() == 0)) {
+			if(file->is_saving()) {
 				const char *s = desc->get_name();
 				file->rdwr_str(s);
 			}

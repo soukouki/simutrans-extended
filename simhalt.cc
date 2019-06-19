@@ -3787,10 +3787,8 @@ void haltestelle_t::rdwr(loadsave_t *file)
 	sint32 owner_n;
 	koord3d k;
 	// will restore halthandle_t after loading
-	if(file->get_version_int() > 110005)
-	{
-		if(file->is_saving())
-		{
+	if(file->is_version_atleast(110, 6)) {
+		if(file->is_saving()) {
 			if(!self.is_bound())
 			{
 				// Something has gone a bit wrong here, as the handle to self is not bound.
@@ -3837,12 +3835,12 @@ void haltestelle_t::rdwr(loadsave_t *file)
 		owner_n = welt->sp2num( owner );
 	}
 
-	if(file->get_version_int()<99008) {
+	if(file->is_version_less(99, 8)) {
 		init_pos.rdwr( file );
 	}
 	file->rdwr_long(owner_n);
 
-	if(file->get_version_int()<=88005) {
+	if(file->is_version_less(88, 6)) {
 		bool dummy;
 		file->rdwr_bool(dummy); // pax
 		file->rdwr_bool(dummy); // mail
@@ -3917,8 +3915,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 				s = "y";	// needs to be non-empty
 				file->rdwr_str(s);
 				bool has_uint16_count;
-				if(file->get_version_int() <= 112002 || file->get_extended_version() <= 10)
-				{
+				if(  file->is_version_less(112, 3) || file->get_extended_version() <= 10  ) {
 					const uint32 count = warray->get_count();
 					uint16 short_count = min(count, 65535u);
 					file->rdwr_short(short_count);
@@ -3962,8 +3959,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 		file->rdwr_str(s, lengthof(s));
 		while(*s) {
 			uint32 count;
-			if(  file->get_version_int() <= 112002  || (file->get_extended_version() > 0 && file->get_extended_version() <= 10) ) {
-				// Older versions stored only 16-bit count values.
+			if(  file->is_version_less(112, 3)  || (file->get_extended_version() > 0 && file->get_extended_version() <= 10)  ) {
 				uint16 scount;
 				file->rdwr_short(scount);
 				count = scount;
@@ -3999,7 +3995,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 
 		// old games save the list with stations
 		// however, we have to rebuilt them anyway for the new format
-		if(file->get_version_int()<99013) {
+		if(file->is_version_less(99, 13)) {
 			uint16 count;
 			file->rdwr_short(count);
 
