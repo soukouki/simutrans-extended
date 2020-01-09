@@ -3705,7 +3705,7 @@ void haltestelle_t::add_to_station_type( grund_t *gr )
 		capacity[0] = 0;
 		capacity[1] = 0;
 		capacity[2] = 0;
-		enables &= CROWDED;	// clear flags
+		enables = 0;
 		station_type = invalid;
 	}
 
@@ -3809,7 +3809,7 @@ void haltestelle_t::recalc_station_type()
 	capacity[0] = 0;
 	capacity[1] = 0;
 	capacity[2] = 0;
-	enables &= CROWDED;	// clear flags
+	enables = 0;
 	station_type = invalid;
 
 	// iterate over all tiles
@@ -4976,7 +4976,7 @@ void haltestelle_t::recalc_status()
 			total_freight += ware_sum;
 			if((ware_sum + transferring_total) > max_ware)
 			{
-				status_bits |= (ware_sum + transferring_total) > max_ware + 32 || enables & CROWDED ? 2 : 1;
+				status_bits |= (ware_sum + transferring_total) > max_ware + 32 ? 2 : 1;
 				overcrowded[wtyp->get_index()/8] |= 1<<(wtyp->get_index()%8);
 				status_color_freight = SYSCOL_OVERCROWDED;
 			}

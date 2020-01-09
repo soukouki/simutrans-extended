@@ -98,7 +98,6 @@ public:
 		PAX         = 1 << 0,
 		POST        = 1 << 1,
 		WARE        = 1 << 2,
-		CROWDED     = 1 << 3,
 	};
 
 	// can be combined with or!
