@@ -706,9 +706,10 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool s
 
 #ifdef DEBUG_ROUTES
 	/* for debug purposes only ...*/
-	if(world->ist_markiert(gr)) {
+	if(gr->get_flag(grund_t::marked)) {
 		color = color_idx_to_rgb(COL_PURPLE);
-	}else
+	}
+	else
 #endif
 	if(gr->get_halt().is_bound() && show_buildings) {
 		color = COL_HALT;

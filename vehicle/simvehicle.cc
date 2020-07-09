@@ -8189,7 +8189,7 @@ bool water_vehicle_t::check_next_tile(const grund_t *bd) const
 		}
 	}
 	// channel can have more stuff to check
-#if ENABLE_WATERWAY_SIGNS
+#ifdef ENABLE_WATERWAY_SIGNS
 	if(  w  &&  w->has_sign()  ) {
 		const roadsign_t* rs = bd->find<roadsign_t>();
 		if(  rs->get_desc()->get_wtyp()==get_waytype()  ) {
