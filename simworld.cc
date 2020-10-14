@@ -8794,9 +8794,15 @@ void karte_t::rdwr_gamestate(loadsave_t *file, loadingscreen_t *ls)
 			settings.set_player_type(i, player_t::EMPTY);
 		}
 	}
+
 	settings.rdwr(file);
+
 	for(  int i=0;  i<MAX_PLAYER_COUNT;  i++  ) {
 		settings.set_player_type(i, old_players[i]);
+	}
+
+	if (file->is_version_ex_atleast(14, 47)) {
+		simrand_rdwr(file);
 	}
 
 	if(file->get_extended_version() <= 1)
@@ -9414,12 +9420,18 @@ void karte_t::load(loadsave_t *file)
 	load_version.extended_version = file->get_extended_version();
 	load_version.extended_revision = file->get_extended_revision();
 
-
-
+	if (file->is_version_ex_atleast(14, 47)) {
+		// rdwr the entire RNG sate
+		simrand_rdwr(file);
+	}
 
 	if(  env_t::networkmode  ) {
-		// to have games synchronized, transfer random counter too
-		setsimrand(settings.get_random_counter(), 0xFFFFFFFFu );
+		// To have games synchronized, transfer random counter too
+		// Superseded by simrand_rdwr in newer versions
+		if (file->is_version_less(122, 1)) {
+			setsimrand(settings.get_random_counter(), 0xFFFFFFFFu );
+		}
+
 		translator::init_custom_names(settings.get_name_language_id());
 	}
 
