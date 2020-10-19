@@ -84,29 +84,37 @@ distribute()
 
 buildOSX()
 {
-	echo "Building macOS package"
-
-	# builds a bundle for macOS
+  echo "Build Mac OS package"
+	# builds a bundle for MAC OS
 	mkdir -p "simutrans.app/Contents/MacOS"
 	mkdir -p "simutrans.app/Contents/Resources"
-	cp $BUILDDIR/$simexe_name "simutrans.app/Contents/MacOS/simutrans"
+	cp $BUILDDIR$simexe_name   "simutrans.app/Contents/MacOS/simutrans"
 	strip "simutrans.app/Contents/MacOS/simutrans"
 	cp "../OSX/simutrans.icns" "simutrans.app/Contents/Resources/simutrans.icns"
-	localostype=$(uname)
+	localostype=`uname -o`
 	if [ "Msys" == "$localostype" ] || [ "Linux" == "$localostype" ]; then
 		# only 7z on linux and windows can do that ...
 		getSDL2mac
 		7z x "SDL2-2.0.10.dmg"
 		rm SDL2-2.0.10.dmg
 	else
-		# assume macOS
-		hdiutil attach ../SDL2-2.0.10.dmg >>/dev/stderr
-		cp -R -v /Volumes/SDL2 .
-		hdiutil eject /Volumes/SDL2 >>/dev/stderr
+		# assume MacOS
+		mkdir -p "simutrans.app/Contents/Frameworks/"
+		cp "/usr/local/opt/freetype/lib/libfreetype.6.dylib" \
+			"/usr/local/opt/libpng/lib/libpng16.16.dylib" \
+			"/usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib" \
+			"simutrans.app/Contents/Frameworks/"
+		install_name_tool -change "/usr/local/opt/freetype/lib/libfreetype.6.dylib" "@rpath/../Frameworks/libfreetype.6.dylib" "simutrans.app/Contents/MacOS/simutrans"
+		install_name_tool -change "/usr/local/opt/libpng/lib/libpng16.16.dylib" "@rpath/../Frameworks/libpng16.16.dylib" "simutrans.app/Contents/MacOS/simutrans"
+		install_name_tool -change "/usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib" "@rpath/../Frameworks/libSDL2-2.0.0.dylib" "simutrans.app/Contents/MacOS/simutrans"
 	fi
-
 	echo "APPL????" > "simutrans.app/Contents/PkgInfo"
 	sh ../OSX/plistgen.sh "simutrans.app" "simutrans"
+	if [ ! -d "pak" ]; then
+		curl --progress-bar -L -o "pak.zip" "http://downloads.sourceforge.net/project/simutrans/pak64/122-0/simupak64-122-0.zip"
+		unzip -qoC "pak.zip" -d ..
+		rm -f "pak.zip"
+	fi
 }
 
 
@@ -195,29 +203,22 @@ fi
 echo "Targeting archive $simarchiv"
 
 # now build the archive for distribution
+cd simutrans
 
 if [ "$OST" = "mac" ]; then
-	cd simutrans
-		buildOSX
-	cd ..
-
-	ls
-	pwd
-
-	zip -r -9 simumac.zip simutrans 1>/dev/null
-
-	cd simutrans
-		rm -rf SDL2
-		rm -rf simutrans.app
-	cd ..
-	exit 0
-
+    buildOSX
+    cd ..
+    ls
+    pwd
+    zip -r -9 - simutrans > simumac.zip
+    cd simutrans
+    rm -rf simutrans.app
+    exit 0
 else
-	cd simutrans
-		echo "Building default zip archive..."
-		cp "$BUILDDIR/$simexe_name" ./$simexe_name
-		strip ./$simexe_name
-		cp ..$updatepath$updater $updater
+    echo "Building default zip archive..."
+    cp "$BUILDDIR/$simexe_name" ./$simexe_name
+    strip ./$simexe_name
+    cp ..$updatepath$updater $updater
 	cd ..
 
 	distribute
