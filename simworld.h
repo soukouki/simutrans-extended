@@ -212,21 +212,21 @@ public:
 	void perlin_hoehe_loop(sint16, sint16, sint16, sint16);
 
 	enum player_cost {
-		WORLD_CITIZENS=0,		//!< total people
-		WORLD_JOBS,				//!< total jobs
-		WORLD_VISITOR_DEMAND,	//!< total visitor demand
-		WORLD_GROWTH,			//!< growth (just for convenience)
-		WORLD_TOWNS,			//!< number of all cities
-		WORLD_FACTORIES,		//!< number of all consuming only factories
-		WORLD_CONVOIS,			//!< total number of convois
-		WORLD_CITYCARS,			//!< number of passengers completing their journeys by private car
-		WORLD_PAS_RATIO,		//!< percentage of passengers that started successful
-		WORLD_PAS_GENERATED,	//!< total number generated
-		WORLD_MAIL_RATIO,		//!< percentage of mail that started successful
-		WORLD_MAIL_GENERATED,	//!< all letters generated
-		WORLD_GOODS_RATIO,		//!< ratio of chain completeness
-		WORLD_TRANSPORTED_GOODS,//!< all transported goods
-		WORLD_CAR_OWNERSHIP,	//!< The proportion of people with access to a private car
+		WORLD_CITIZENS = 0,      ///< total people
+		WORLD_JOBS,              ///< total jobs
+		WORLD_VISITOR_DEMAND,    ///< total visitor demand
+		WORLD_GROWTH,            ///< growth (just for convenience)
+		WORLD_TOWNS,             ///< number of all cities
+		WORLD_FACTORIES,         ///< number of all consuming only factories
+		WORLD_CONVOIS,           ///< total number of convois
+		WORLD_CITYCARS,          ///< number of passengers completing their journeys by private car
+		WORLD_PAS_RATIO,         ///< percentage of passengers that started successful
+		WORLD_PAS_GENERATED,     ///< total number generated
+		WORLD_MAIL_RATIO,        ///< percentage of mail that started successful
+		WORLD_MAIL_GENERATED,    ///< all letters generated
+		WORLD_GOODS_RATIO,       ///< ratio of chain completeness
+		WORLD_TRANSPORTED_GOODS, ///< all transported goods
+		WORLD_CAR_OWNERSHIP,     ///< The proportion of people with access to a private car
 		MAX_WORLD_COST
 	};
 
@@ -849,7 +849,10 @@ private:
 	 */
 	uint32 server_last_announce_time;
 
-	enum { SYNCX_FLAG = 0x01, GRIDS_FLAG = 0x02 };
+	enum {
+		SYNCX_FLAG = 1 << 0,
+		GRIDS_FLAG = 1 << 1
+	};
 
 	void world_xy_loop(xy_loop_func func, uint8 flags);
 	static void *world_xy_loop_thread(void *);

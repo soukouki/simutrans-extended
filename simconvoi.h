@@ -88,7 +88,8 @@ public:
 	/** Constants */
 	enum { max_vehicle=8, max_rail_vehicle = 64 };
 
-	enum states {INITIAL,
+	enum states {
+		INITIAL,
 		EDIT_SCHEDULE,
 		ROUTING_1,
 		ROUTING_2,

@@ -70,29 +70,30 @@ public:
 	static void fill_menu(tool_selector_t *tool_selector, const waytype_t wtyp, const systemtype_t styp, sint16 ok_sound);
 
 	enum bautyp_t {
-		strasse=road_wt,
-		schiene=track_wt,
-		schiene_tram=tram_wt, // Dario: Tramway
-		monorail=monorail_wt,
-		maglev=maglev_wt,
-		wasser=water_wt,
-		luft=air_wt,
-		narrowgauge=narrowgauge_wt,
-		leitung=powerline_wt,
-		river=127,
-		bautyp_mask=255,
-		bot_flag=0x100,					// do not connect to other ways
-		elevated_flag=0x200,			// elevated structure
-		terraform_flag=0x400,
-		tunnel_flag=0x800				// underground structure
+		strasse        = road_wt,
+		schiene        = track_wt,
+		schiene_tram   = tram_wt,
+		monorail       = monorail_wt,
+		maglev         = maglev_wt,
+		wasser         = water_wt,
+		luft           = air_wt,
+		narrowgauge    = narrowgauge_wt,
+		leitung        = powerline_wt,
+		river          = 0x7F,
+		bautyp_mask    = 0xFF,
+
+		bot_flag       = 1 << 8,  // do not connect to other ways
+		elevated_flag  = 1 << 9,  // elevated structure
+		terraform_flag = 1 << 10,
+		tunnel_flag    = 1 << 11  // underground structure
 	};
 
 private:
 	/// flags used in intern_calc_route, saved in the otherwise unused route_t::ANode->count
 	enum build_type_t {
-		build_straight = 1,      ///< next step has to be straight
-		terraform      = 2,      ///< terraform this tile
-		build_tunnel_bridge = 4, ///< bridge/tunnel ends here
+		build_straight      = 1 << 0, ///< next step has to be straight
+		terraform           = 1 << 1, ///< terraform this tile
+		build_tunnel_bridge = 1 << 2  ///< bridge/tunnel ends here
 	};
 
 	struct next_gr_t
