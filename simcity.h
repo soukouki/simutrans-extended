@@ -369,7 +369,12 @@ private:
 	 */
 	void step_grow_city(bool new_town = false, bool map_generation = false);
 
-	enum pax_return_type { no_return, factory_return, tourist_return, city_return };
+	enum pax_return_type {
+		no_return,
+		factory_return,
+		tourist_return,
+		city_return
+	};
 
 	/**
 	 * baut Spezialgebaeude, z.B Stadion

@@ -30,7 +30,6 @@ public:
 		nach_typ,
 		SORT_MODES
 	};
-
 	enum filter_flag_t {
 		any_filter             = 1 << 0,
 		name_filter            = 1 << 1,

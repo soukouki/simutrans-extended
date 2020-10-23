@@ -245,13 +245,28 @@ public:
 		on_foot
 	};
 
-	enum { NORMAL=0, PAUSE_FLAG = 0x01, FAST_FORWARD=0x02, FIX_RATIO=0x04 };
+	enum {
+		NORMAL       = 0,
+		PAUSE_FLAG   = 1 << 0,
+		FAST_FORWARD = 1 << 1,
+		FIX_RATIO    = 1 << 2
+	};
 
 	/**
 	 * Missing things during loading:
 	 * factories, vehicles, roadsigns or catenary may be severe
 	 */
-	enum missing_level_t { NOT_MISSING=0, MISSING_FACTORY=1, MISSING_VEHICLE=2, MISSING_SIGN=3, MISSING_WAYOBJ=4, MISSING_ERROR=4, MISSING_BRIDGE, MISSING_BUILDING, MISSING_WAY };
+	enum missing_level_t {
+		NOT_MISSING     = 0,
+		MISSING_FACTORY = 1,
+		MISSING_VEHICLE = 2,
+		MISSING_SIGN    = 3,
+		MISSING_WAYOBJ  = 4,
+		MISSING_ERROR   = 4,
+		MISSING_BRIDGE,
+		MISSING_BUILDING,
+		MISSING_WAY
+	};
 
 	void set_car_ownership_history_month(int month, sint64 value) { finance_history_month[month][WORLD_CAR_OWNERSHIP] = value; }
 	void set_car_ownership_history_year(int year, sint64 value) { finance_history_year[year][WORLD_CAR_OWNERSHIP] = value; }
@@ -1247,7 +1262,13 @@ public:
 	 */
 	void call_change_player_tool(uint8 cmd, uint8 player_nr, uint16 param, bool scripted_call=false);
 
-	enum change_player_tool_cmds { new_player=1, toggle_freeplay=2, delete_player=3, toggle_player_active=4 };
+	enum change_player_tool_cmds {
+		new_player           = 1,
+		toggle_freeplay      = 2,
+		delete_player        = 3,
+		toggle_player_active = 4
+	};
+
 	/**
 	 * @param exec If false checks whether execution is allowed, if true executes tool.
 	 * @returns Whether execution is allowed.

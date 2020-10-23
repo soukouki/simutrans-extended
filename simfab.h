@@ -162,7 +162,11 @@ public:
 	/**
 	 * Constants
 	 */
-	enum { precision_bits = 10, old_precision_bits = 10, precision_mask = 1023 };
+	enum {
+		old_precision_bits = 10,
+		precision_bits     = 10,
+		precision_mask     = (1 << precision_bits) - 1
+	};
 
 private:
 
@@ -658,7 +662,12 @@ public:
 	sint32 get_actual_productivity() const { return status == inactive ? 0 : status >= staff_shortage ? get_current_productivity() * get_staffing_level_percentage() / 100 : get_current_productivity(); }
 
 	/* returns the status of the current factory, as well as output */
-	enum { nothing, good, water_resource, medium, water_resource_full, storage_full, inactive, shipment_stuck, material_shortage, no_material, bad, mat_overstocked, stuck, missing_connection, staff_shortage, MAX_FAB_STATUS };
+	enum {
+		nothing, good, water_resource, medium, water_resource_full, storage_full,
+		inactive, shipment_stuck, material_shortage, no_material, bad,
+		mat_overstocked, stuck, missing_connection, staff_shortage,
+		MAX_FAB_STATUS
+	};
 	static uint8 status_to_color[MAX_FAB_STATUS];
 
 	uint8  get_status() const { return status; }

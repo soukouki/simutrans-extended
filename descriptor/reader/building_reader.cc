@@ -21,7 +21,12 @@ struct old_btyp
 	/**
 	 * From type "unknown" also come special buildings e.q. Townhall
 	 */
-	enum typ {wohnung, gewerbe, industrie, unknown};
+	enum typ {
+		wohnung,
+		gewerbe,
+		industrie,
+		unknown
+	};
 };
 
 
