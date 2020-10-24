@@ -894,7 +894,7 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 
 	for(  size_t i=0;  i<WALL_COUNT;  i++  ) {
 		// now enter the left/back two height differences
-		if (const grund_t *gr = welt->lookup_kartenboden(k + koord::nsew[(i - 1) & 3])) {
+		if(  const grund_t *gr=welt->lookup_kartenboden(k + koord::nesw[(i+3)&3])  ) {
 			const uint8 back_height = min(corner_nw(slope_this),(i==0?corner_sw(slope_this):corner_ne(slope_this)));
 
 			const sint16 left_hgt=gr->get_disp_height()-back_height;
@@ -942,9 +942,9 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 					// ok, we need a fence here, if there is not a vertical bridgehead
 					weg_t const* w;
 					fence[i] = !(w = get_weg_nr(0)) || (
-						!(w->get_ribi_unmasked() & ribi_t::nsew[(i - 1) & 3]) &&
-						(!(w = get_weg_nr(1)) || !(w->get_ribi_unmasked() & ribi_t::nsew[(i - 1) & 3]))
-						);
+						!(w->get_ribi_unmasked() & ribi_t::nesw[(i+3)&3]) &&
+						(!(w = get_weg_nr(1)) || !(w->get_ribi_unmasked() & ribi_t::nesw[(i+3)&3]))
+					);
 
 					// no fences between water tiles or between invisible tiles
 					if(  fence[i]  &&  ( (is_water() && gr->is_water()) || (!isvisible && !gr->is_visible()) )  ) {
@@ -1075,7 +1075,7 @@ void grund_t::display_boden(const sint16 xpos, const sint16 ypos, const sint16 r
 				sint16 yoff = tile_raster_scale_y( -TILE_HEIGHT_STEP*back_height, raster_tile_width );
 				if(  back_image[i]  ) {
 					// Draw extra wall images for walls that cannot be represented by a image.
-					grund_t *gr = welt->lookup_kartenboden( k + koord::nsew[(i-1)&3] );
+					grund_t *gr = welt->lookup_kartenboden( k + koord::nesw[(i+3)&3] );
 					if(  gr  ) {
 						// for left we test corners 2 and 3 (east), for back we use 1 and 2 (south)
 						const slope_t::type gr_slope = gr->get_disp_slope();
@@ -1864,13 +1864,13 @@ bool grund_t::weg_erweitern(waytype_t wegtyp, ribi_t::ribi ribi)
 				// ribi isn't set at wayobj;
 				for( uint8 i = 0; i < 4; i++ ) {
 					// Add ribis to adjacent wayobj.
-					if( ribi_t::nsew[i] & ribi ) {
+					if( ribi_t::nesw[i] & ribi ) {
 						grund_t *next_gr;
-						if( get_neighbour( next_gr, wegtyp, ribi_t::nsew[i] ) ) {
+						if( get_neighbour( next_gr, wegtyp, ribi_t::nesw[i] ) ) {
 							wayobj_t *wo2 = next_gr->get_wayobj( wegtyp );
 							if( wo2 ) {
-								wo->set_dir( wo->get_dir() | ribi_t::nsew[i] );
-								wo2->set_dir( wo2->get_dir() | ribi_t::backward(ribi_t::nsew[i]) );
+								wo->set_dir( wo->get_dir() | ribi_t::nesw[i] );
+								wo2->set_dir( wo2->get_dir() | ribi_t::backward(ribi_t::nesw[i]) );
 							}
 						}
 					}
@@ -2055,10 +2055,10 @@ sint32 grund_t::weg_entfernen(waytype_t wegtyp, bool ribi_rem)
 			grund_t *to;
 
 			for(int r = 0; r < 4; r++) {
-				if((ribi & ribi_t::nsew[r]) && get_neighbour(to, wegtyp, ribi_t::nsew[r])) {
+				if((ribi & ribi_t::nesw[r]) && get_neighbour(to, wegtyp, ribi_t::nesw[r])) {
 					weg_t *weg2 = to->get_weg(wegtyp);
 					if(weg2) {
-						weg2->ribi_rem(ribi_t::backward(ribi_t::nsew[r]));
+						weg2->ribi_rem(ribi_t::backward(ribi_t::nesw[r]));
 						to->calc_image();
 					}
 				}
@@ -2287,7 +2287,7 @@ int grund_t::count_neighbouring_roads(road_network_plan_t &road_tiles)
 	int count = 0;
 
 	for (int i = 0; i < 4; i++) {
-		koord k = ribi_t::nsew[i] + pos.get_2d();
+		koord k = ribi_t::nesw[i] + pos.get_2d();
 
 		if (road_tiles.get(k)) {
 			count++;
@@ -2463,12 +2463,12 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 	for(int n = 0; n < 4; n ++)
 	{
 		grund_t *to;
-		if(w->get_waytype() == water_wt && gr->get_neighbour(to, invalid_wt, ribi_t::nsew[n] ) && to->get_typ() == grund_t::wasser) {
+		if(w->get_waytype() == water_wt && gr->get_neighbour(to, invalid_wt, ribi_t::nesw[n] ) && to->get_typ() == grund_t::wasser) {
 			neighbouring_grounds.append(to);
 			continue;
 		}
 
-		if(gr->get_neighbour(to, w->get_waytype(), ribi_t::nsew[n])) {
+		if(gr->get_neighbour(to, w->get_waytype(), ribi_t::nesw[n])) {
 			weg_t *way = to->get_weg(w->get_waytype());
 
 			if(way && way->get_max_speed() > 0) {
@@ -2557,14 +2557,14 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 					bool found_valid_way = false;
 					for (int n = 0; n < 4; n++)
 					{
-						if (w->get_waytype() == water_wt && to->get_neighbour(to_check, invalid_wt, ribi_t::nsew[n]) && to_check->get_typ() == grund_t::wasser)
+						if (w->get_waytype() == water_wt && to->get_neighbour(to_check, invalid_wt, ribi_t::nesw[n]) && to_check->get_typ() == grund_t::wasser)
 						{
 							// This is a water waytype and we have reached open water. Treat open water as akin to an intersection.
 							intersections.append_unique(to_check);
 							intersection_or_end_found_this_direction = true;
 							break;
 						}
-						else if (to->get_neighbour(to_check, w->get_waytype(), ribi_t::nsew[n]))
+						else if (to->get_neighbour(to_check, w->get_waytype(), ribi_t::nesw[n]))
 						{
 							if (to_check == from)
 							{

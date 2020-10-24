@@ -182,14 +182,14 @@ wayobj_t::~wayobj_t()
 	if( gr ) {
 		for( uint8 i = 0; i < 4; i++ ) {
 			// Remove ribis from adjacent wayobj.
-			if( ribi_t::nsew[i] & get_dir() ) {
+			if( ribi_t::nesw[i] & get_dir() ) {
 				grund_t *next_gr;
-				if( gr->get_neighbour( next_gr, desc->get_wtyp(), ribi_t::nsew[i] ) ) {
+				if( gr->get_neighbour( next_gr, desc->get_wtyp(), ribi_t::nesw[i] ) ) {
 					wayobj_t *wo2 = next_gr->get_wayobj( desc->get_wtyp() );
 					if( wo2 ) {
 						wo2->mark_image_dirty( wo2->get_front_image(), 0 );
 						wo2->mark_image_dirty( wo2->get_image(), 0 );
-						wo2->set_dir( wo2->get_dir() & ~ribi_t::backward(ribi_t::nsew[i]) ); // This has the effect of looking for directions in front of this way object (the ~ combined with the ribi_t::backward).
+						wo2->set_dir( wo2->get_dir() & ~ribi_t::backward(ribi_t::nesw[i]) ); // This has the effect of looking for directions in front of this way object (the ~ combined with the ribi_t::backward).
 						wo2->mark_image_dirty( wo2->get_front_image(), 0 );
 						wo2->mark_image_dirty( wo2->get_image(), 0 );
 						wo2->set_flag(obj_t::dirty);
@@ -411,7 +411,7 @@ void wayobj_t::calc_image()
 					grund_t *to;
 					rekursion++;
 					for(int r = 0; r < 4; r++) {
-						if(gr->get_neighbour(to, wt, ribi_t::nsew[r])) {
+						if(gr->get_neighbour(to, wt, ribi_t::nesw[r])) {
 							wayobj_t* wo = to->get_wayobj( wt );
 							if(wo) {
 								wo->calc_image();
@@ -499,7 +499,7 @@ const char *wayobj_t::extend_wayobj_t(koord3d pos, player_t *owner, ribi_t::ribi
 		gr->calc_image();
 		for(int r = 0; r < 4; r++) {
 			grund_t *to;
-			if(gr->get_neighbour(to, invalid_wt, ribi_t::nsew[r])) {
+			if(gr->get_neighbour(to, invalid_wt, ribi_t::nesw[r])) {
 				to->calc_image();
 			}
 		}
@@ -507,14 +507,14 @@ const char *wayobj_t::extend_wayobj_t(koord3d pos, player_t *owner, ribi_t::ribi
 
 		for( uint8 i = 0; i < 4; i++ ) {
 		// Extend wayobjects around the new one, that aren't already connected.
-			if( ribi_t::nsew[i] & ~wo->get_dir() ) {
+			if( ribi_t::nesw[i] & ~wo->get_dir() ) {
 				grund_t *next_gr;
-				if( gr->get_neighbour( next_gr, desc->get_wtyp(), ribi_t::nsew[i] ) ) {
+				if( gr->get_neighbour( next_gr, desc->get_wtyp(), ribi_t::nesw[i] ) ) {
 					wayobj_t *wo2 = next_gr->get_wayobj( desc->get_wtyp() );
 					if( wo2 ) {
-						wo2->set_dir( wo2->get_dir() | ribi_t::backward(ribi_t::nsew[i]) );
+						wo2->set_dir( wo2->get_dir() | ribi_t::backward(ribi_t::nesw[i]) );
 						wo2->mark_image_dirty( wo2->get_front_image(), 0 );
-						wo->set_dir( wo->get_dir() | ribi_t::nsew[i] );
+						wo->set_dir( wo->get_dir() | ribi_t::nesw[i] );
 						wo->mark_image_dirty( wo->get_front_image(), 0 );
 					}
 				}

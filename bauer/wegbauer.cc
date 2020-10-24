@@ -2831,8 +2831,8 @@ void way_builder_t::build_track()
 					if(  desc->get_wtyp() == water_wt  ) {
 						for(  int j = 0;  j < 4;  j++  ) {
 							grund_t *sea = NULL;
-							if (gr->get_neighbour(sea, invalid_wt, ribi_t::nsew[j])  &&  sea->is_water()  ) {
-								gr->weg_erweitern( water_wt, ribi_t::nsew[j] );
+							if (gr->get_neighbour(sea, invalid_wt, ribi_t::nesw[j])  &&  sea->is_water()  ) {
+								gr->weg_erweitern( water_wt, ribi_t::nesw[j] );
 								sea->calc_image();
 							}
 						}
