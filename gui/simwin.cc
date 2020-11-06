@@ -60,6 +60,7 @@
 #include "goods_frame_t.h"
 #include "loadfont_frame.h"
 #include "scenario_info.h"
+#include "depotlist_frame.h"
 
 #include "../simversion.h"
 
@@ -177,8 +178,7 @@ static int display_gadget_box(sint8 code,
 	if(  img != NULL  ) {
 
 		// Max Kielland: This center the gadget image and compensates for any left/top margins within the image to be backward compatible with older PAK sets.
-		display_color_img(img->imageid, x-img->x + D_GET_CENTER_ALIGN_OFFSET(img->w,D_GADGET_WIDTH), y, 0, false, true);
-
+		display_img_aligned(img->imageid, scr_rect(x, y, D_GADGET_WIDTH, D_TITLEBAR_HEIGHT), ALIGN_CENTER_H | ALIGN_CENTER_V, true);
 	}
 	else {
 		const char *gadget_text = "#";
@@ -504,18 +504,6 @@ bool win_set_magic( gui_frame_t *gui, ptrdiff_t magic )
 }
 
 
-// returns the window on this positions
-gui_frame_t *win_get_oncoord( const scr_coord pt )
-{
-	for(  int i=wins.get_count()-1;  i>=0;  i--  ) {
-		if(  wins[i].gui->is_hit( pt.x-wins[i].pos.x, pt.y-wins[i].pos.y )  ) {
-			return wins[i].gui;
-		}
-	}
-	return NULL;
-}
-
-
 /**
  * Returns top window
  */
@@ -593,10 +581,10 @@ void rdwr_all_win(loadsave_t *file)
 				file->rdwr_long(id);
 				// create the matching
 				gui_frame_t *w = NULL;
-				switch(id) {
+				switch(magic_numbers(id)) {
 
 					// end of dialogues
-					case (uint32)magic_none: return;
+					case magic_none: return;
 
 					// actual dialogues to restore
 					case magic_convoi_info:    w = new convoi_info_t(); break;
@@ -626,6 +614,9 @@ void rdwr_all_win(loadsave_t *file)
 						else if(  id>=magic_toolbar  &&  id<magic_toolbar+256  ) {
 							tool_t::toolbar_tool[id-magic_toolbar]->update(wl->get_active_player());
 							w = tool_t::toolbar_tool[id-magic_toolbar]->get_tool_selector();
+						}
+						else if (id >= magic_depotlist && id < magic_depotlist + MAX_PLAYER_COUNT) {
+							w = new depotlist_frame_t(wl->get_player(id - magic_depotlist));
 						}
 						else {
 							dbg->error( "rdwr_all_win()", "No idea how to restore magic 0x%X", id );
@@ -975,6 +966,37 @@ void destroy_all_win(bool destroy_sticky)
 				// else wins was already modified - assume by the schedule window closing itself during event handling
 			}
 		}
+	}
+}
+
+void rollup_all_win()
+{
+	bool all_rolldown_flag = true; // If any dialog is open, all rolldown will not be performed
+	for (  sint32 curWin = 0; curWin < (sint32)wins.get_count(); curWin++  ) {
+		if (  !wins[curWin].rollup  ) {
+			wins[curWin].rollup = true;
+			gui_frame_t *gui = wins[curWin].gui;
+			scr_size size = gui->get_windowsize();
+			mark_rect_dirty_wc( wins[curWin].pos.x, wins[curWin].pos.y, wins[curWin].pos.x+size.w, wins[curWin].pos.y+size.h );
+			all_rolldown_flag = false;
+		}
+	}
+
+	if (  !all_rolldown_flag  ) {
+		wl->set_background_dirty();
+	}
+	else if (  wins.get_count()  ) {
+		rolldown_all_win();
+	}
+}
+
+void rolldown_all_win()
+{
+	for (  sint32 curWin = 0; curWin < (sint32)wins.get_count(); curWin++  ) {
+		wins[curWin].rollup = false;
+		gui_frame_t *gui = wins[curWin].gui;
+		scr_size size = gui->get_windowsize();
+		mark_rect_dirty_wc( wins[curWin].pos.x, wins[curWin].pos.y, wins[curWin].pos.x+size.w, wins[curWin].pos.y+size.h );
 	}
 }
 
@@ -1588,12 +1610,6 @@ bool check_pos_win(event_t *ev)
 }
 
 
-void win_get_event(event_t* const ev)
-{
-	display_get_event(ev);
-}
-
-
 void win_poll_event(event_t* const ev)
 {
 	display_poll_event(ev);
@@ -1858,8 +1874,8 @@ void win_display_flush(double konto)
 		}
 	}
 #endif
-	scr_coord_val w_left = 20+display_proportional_rgb(20, status_bar_text_y, time, ALIGN_LEFT, SYSCOL_STATUSBAR_TEXT, true);
-	scr_coord_val w_right  = display_proportional_rgb(right_border-4, status_bar_text_y, info, ALIGN_RIGHT, SYSCOL_STATUSBAR_TEXT, true);
+	/*scr_coord_val w_left  = 20 + */ display_proportional_rgb(20, status_bar_text_y, time, ALIGN_LEFT, SYSCOL_STATUSBAR_TEXT, true);
+	/*scr_coord_val w_right =      */ display_proportional_rgb(right_border-4, status_bar_text_y, info, ALIGN_RIGHT, SYSCOL_STATUSBAR_TEXT, true);
 	/* Since the visual center (disp_width + ((w_left + 8) & 0xFFF0) - ((w_right + 8) & 0xFFF0)) / 2;
 	 * jump left and right with proportional fonts, we just take the actual cetner
 	 */
