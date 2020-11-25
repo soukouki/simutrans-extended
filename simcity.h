@@ -9,7 +9,7 @@
 
 #include "dataobj/ribi.h"
 
-#include "simobj.h"
+#include "obj/simobj.h"
 #include "obj/gebaeude.h"
 
 #include "tpl/vector_tpl.h"

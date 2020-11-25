@@ -14,7 +14,7 @@
 
 #include "../../display/simimg.h"
 #include "../../simtypes.h"
-#include "../../simobj.h"
+#include "../../obj/simobj.h"
 #include "../../descriptor/way_desc.h"
 #include "../../dataobj/koord3d.h"
 #include "../../tpl/minivec_tpl.h"

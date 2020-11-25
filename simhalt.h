@@ -12,7 +12,7 @@
 #include "halthandle_t.h"
 #include "simware.h"
 
-#include "simobj.h"
+#include "obj/simobj.h"
 #include "display/simgraph.h"
 #include "simtypes.h"
 #include "simconst.h"
