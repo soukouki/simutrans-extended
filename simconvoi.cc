@@ -62,6 +62,8 @@
 #include "utils/simstring.h"
 #include "utils/cbuffer_t.h"
 
+#include "vehicle/road_vehicle.h"
+
 #include "convoy.h"
 
 #include "descriptor/goods_desc.h"

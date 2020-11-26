@@ -36,6 +36,9 @@
 
 #include "../utils/cbuffer_t.h"
 
+#include "road_vehicle.h"
+
+
 /**********************************************************************************************************************/
 /* Road users (Verkehrsteilnehmer) basis class from here on */
 

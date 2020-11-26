@@ -55,6 +55,7 @@
 #include "utils/simstring.h"
 
 #include "vehicle/simpeople.h"
+#include "vehicle/road_vehicle.h"
 
 #include "descriptor/goods_desc.h"
 
