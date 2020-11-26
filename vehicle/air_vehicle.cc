@@ -4,6 +4,7 @@
  */
 
 #include "air_vehicle.h"
+#include "rail_vehicle.h"
 
 
 #include "../boden/wege/runway.h"

@@ -2503,6 +2503,7 @@
     <ClCompile Include="simticker.cc" />
     <ClCompile Include="vehicle\simroadtraffic.cc" />
     <ClCompile Include="vehicle\simvehicle.cc" />
+    <ClCompile Include="vehicle\rail_vehicle.cc" />
     <ClCompile Include="vehicle\road_vehicle.cc" />
     <ClCompile Include="vehicle\water_vehicle.cc" />
     <ClCompile Include="simware.cc" />
@@ -2925,6 +2926,7 @@
     <ClInclude Include="simtypes.h" />
     <ClInclude Include="vehicle\simroadtraffic.h" />
     <ClInclude Include="vehicle\simvehicle.h" />
+    <ClInclude Include="vehicle\rail_vehicle.h" />
     <ClInclude Include="vehicle\road_vehicle.h" />
     <ClInclude Include="vehicle\water_vehicle.h" />
     <ClInclude Include="simversion.h" />

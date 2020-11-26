@@ -22,6 +22,7 @@
 
 #include "../tpl/stringhashtable_tpl.h"
 #include "../vehicle/air_vehicle.h"
+#include "../vehicle/rail_vehicle.h"
 #include "../vehicle/road_vehicle.h"
 #include "../vehicle/water_vehicle.h"
 

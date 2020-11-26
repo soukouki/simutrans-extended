@@ -453,6 +453,7 @@ add_executable(simutrans-extended
 	vehicle/simroadtraffic.cc
 	vehicle/simvehicle.cc
 	vehicle/air_vehicle.cc
+	vehicle/rail_vehicle.cc
 	vehicle/road_vehicle.cc
 	vehicle/water_vehicle.cc
 )

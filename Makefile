@@ -597,6 +597,7 @@ SOURCES += utils/simthread.cc
 SOURCES += vehicle/air_vehicle.cc
 SOURCES += vehicle/movingobj.cc
 SOURCES += vehicle/pedestrian.cc
+SOURCES += vehicle/rail_vehicle.cc
 SOURCES += vehicle/road_vehicle.cc
 SOURCES += vehicle/simroadtraffic.cc
 SOURCES += vehicle/simvehicle.cc

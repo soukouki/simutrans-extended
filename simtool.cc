@@ -41,6 +41,7 @@
 #include "descriptor/tunnel_desc.h"
 
 #include "vehicle/air_vehicle.h"
+#include "vehicle/rail_vehicle.h"
 #include "vehicle/simroadtraffic.h"
 #include "vehicle/pedestrian.h"
 
