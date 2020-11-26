@@ -489,6 +489,7 @@ SOURCES += gui/water_info.cc
 SOURCES += gui/way_info.cc
 SOURCES += gui/welt.cc
 SOURCES += io/classify_file.cc
+SOURCES += io/rdwr/adler32_stream.cc
 SOURCES += io/rdwr/bzip2_file_rdwr_stream.cc
 SOURCES += io/rdwr/raw_file_rdwr_stream.cc
 SOURCES += io/raw_image.cc
