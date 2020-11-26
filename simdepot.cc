@@ -36,8 +36,9 @@
 
 #include "utils/cbuffer_t.h"
 
-#include "vehicle/road_vehicle.h"
 #include "vehicle/air_vehicle.h"
+#include "vehicle/road_vehicle.h"
+#include "vehicle/water_vehicle.h"
 
 
 slist_tpl<depot_t *> depot_t::all_depots;

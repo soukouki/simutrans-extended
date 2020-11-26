@@ -454,6 +454,7 @@ add_executable(simutrans-extended
 	vehicle/simvehicle.cc
 	vehicle/air_vehicle.cc
 	vehicle/road_vehicle.cc
+	vehicle/water_vehicle.cc
 )
 
 if (WIN32)

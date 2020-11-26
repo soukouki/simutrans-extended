@@ -64,6 +64,7 @@
 
 #include "vehicle/air_vehicle.h"
 #include "vehicle/road_vehicle.h"
+#include "vehicle/water_vehicle.h"
 
 #include "convoy.h"
 

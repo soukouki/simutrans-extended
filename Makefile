@@ -600,6 +600,7 @@ SOURCES += vehicle/pedestrian.cc
 SOURCES += vehicle/road_vehicle.cc
 SOURCES += vehicle/simroadtraffic.cc
 SOURCES += vehicle/simvehicle.cc
+SOURCES += vehicle/water_vehicle.cc
 SOURCES += simunits.cc
 SOURCES += convoy.cc
 SOURCES += utils/float32e8_t.cc

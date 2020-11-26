@@ -2501,9 +2501,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="simticker.cc" />
+    <ClCompile Include="vehicle\simroadtraffic.cc" />
     <ClCompile Include="vehicle\simvehicle.cc" />
     <ClCompile Include="vehicle\road_vehicle.cc" />
-    <ClCompile Include="vehicle\simroadtraffic.cc" />
+    <ClCompile Include="vehicle\water_vehicle.cc" />
     <ClCompile Include="simware.cc" />
     <ClCompile Include="simtool.cc" />
     <ClCompile Include="simworld.cc" />
@@ -2922,9 +2923,10 @@
     <ClInclude Include="sys\simsys.h" />
     <ClInclude Include="simticker.h" />
     <ClInclude Include="simtypes.h" />
+    <ClInclude Include="vehicle\simroadtraffic.h" />
     <ClInclude Include="vehicle\simvehicle.h" />
     <ClInclude Include="vehicle\road_vehicle.h" />
-    <ClInclude Include="vehicle\simroadtraffic.h" />
+    <ClInclude Include="vehicle\water_vehicle.h" />
     <ClInclude Include="simversion.h" />
     <ClInclude Include="simware.h" />
     <ClInclude Include="simtool.h" />

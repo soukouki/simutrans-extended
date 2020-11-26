@@ -17,7 +17,7 @@
 #include "../player/simplay.h"
 
 #include "simroadtraffic.h"
-#include "simpeople.h"
+#include "pedestrian.h"
 
 #include "../dataobj/translator.h"
 #include "../dataobj/loadsave.h"
@@ -28,7 +28,6 @@
 
 #include "../boden/grund.h"
 #include "../boden/wege/weg.h"
-#include "../boden/wege/strasse.h"
 #include "../boden/wege/strasse.h"
 #include "../descriptor/citycar_desc.h"
 #include "../descriptor/roadsign_desc.h"
