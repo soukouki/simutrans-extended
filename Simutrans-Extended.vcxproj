@@ -2363,6 +2363,7 @@
     <ClCompile Include="boden\wege\monorail.cc" />
     <ClCompile Include="boden\monorailboden.cc" />
     <ClCompile Include="utils\simrandom.cc" />
+    <ClCompile Include="vehicle\air_vehicle.cc" />
     <ClCompile Include="vehicle\movingobj.cc" />
     <ClCompile Include="boden\wege\narrowgauge.cc" />
     <ClCompile Include="descriptor\reader\obj_reader.cc" />
@@ -2843,6 +2844,7 @@
     <ClInclude Include="boden\monorailboden.h" />
     <ClInclude Include="utils\simrandom.h" />
     <ClInclude Include="utils\simthread.h" />
+    <ClInclude Include="vehicle\air_vehicle.h" />
     <ClInclude Include="vehicle\movingobj.h" />
     <ClInclude Include="music\music.h" />
     <ClInclude Include="boden\wege\narrowgauge.h" />

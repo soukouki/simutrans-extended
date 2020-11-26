@@ -452,6 +452,7 @@ add_executable(simutrans-extended
 	vehicle/pedestrian.cc
 	vehicle/simroadtraffic.cc
 	vehicle/simvehicle.cc
+	vehicle/air_vehicle.cc
 	vehicle/road_vehicle.cc
 )
 
