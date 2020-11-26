@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-#include "simvehicle.h"
+#include "vehicle.h"
 
 #include "../simworld.h"
 #include "../simware.h"

@@ -451,7 +451,7 @@ add_executable(simutrans-extended
 	vehicle/movingobj.cc
 	vehicle/pedestrian.cc
 	vehicle/simroadtraffic.cc
-	vehicle/simvehicle.cc
+	vehicle/vehicle.cc
 	vehicle/air_vehicle.cc
 	vehicle/rail_vehicle.cc
 	vehicle/road_vehicle.cc
