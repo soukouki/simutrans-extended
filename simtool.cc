@@ -42,7 +42,7 @@
 
 #include "vehicle/simvehicle.h"
 #include "vehicle/simroadtraffic.h"
-#include "vehicle/simpeople.h"
+#include "vehicle/pedestrian.h"
 
 #include "gui/line_management_gui.h"
 #include "gui/tool_selector.h"

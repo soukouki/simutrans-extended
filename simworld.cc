@@ -42,7 +42,7 @@
 #include "gui/simwin.h"
 #include "simworld.h"
 
-#include "vehicle/simpeople.h"
+#include "vehicle/pedestrian.h"
 
 #include "tpl/vector_tpl.h"
 #include "tpl/binary_heap_tpl.h"

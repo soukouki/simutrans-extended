@@ -2474,7 +2474,7 @@
     <ClCompile Include="simmem.cc" />
     <ClCompile Include="simmenu.cc" />
     <ClCompile Include="simmesg.cc" />
-    <ClCompile Include="vehicle\simpeople.cc" />
+    <ClCompile Include="vehicle\pedestrian.cc" />
     <ClCompile Include="simplan.cc" />
     <ClCompile Include="player\simplay.cc" />
     <ClCompile Include="simskin.cc" />
@@ -2911,7 +2911,7 @@
     <ClInclude Include="simmem.h" />
     <ClInclude Include="simmenu.h" />
     <ClInclude Include="simmesg.h" />
-    <ClInclude Include="vehicle\simpeople.h" />
+    <ClInclude Include="vehicle\pedestrian.h" />
     <ClInclude Include="simplan.h" />
     <ClInclude Include="player\simplay.h" />
     <ClInclude Include="simskin.h" />

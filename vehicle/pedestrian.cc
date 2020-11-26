@@ -3,7 +3,7 @@
  * (see LICENSE.txt)
  */
 
-#include <stdio.h>
+#include "pedestrian.h"
 
 #include "../simdebug.h"
 #include "../simworld.h"
@@ -14,10 +14,12 @@
 #include "../dataobj/loadsave.h"
 #include "../dataobj/environment.h"
 #include "../dataobj/translator.h"
-#include "../utils/cbuffer_t.h"
 
-#include "simpeople.h"
+#include "../utils/cbuffer_t.h"
 #include "../descriptor/pedestrian_desc.h"
+
+#include <cstdio>
+
 
 static uint32 const strecke[] = { 6000, 11000, 15000, 20000, 25000, 30000, 35000, 40000 };
 

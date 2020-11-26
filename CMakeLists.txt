@@ -449,7 +449,7 @@ add_executable(simutrans-extended
 	utils/simstring.cc
 	utils/simthread.cc
 	vehicle/movingobj.cc
-	vehicle/simpeople.cc
+	vehicle/pedestrian.cc
 	vehicle/simroadtraffic.cc
 	vehicle/simvehicle.cc
 	vehicle/road_vehicle.cc
