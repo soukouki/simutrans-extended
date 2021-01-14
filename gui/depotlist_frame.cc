@@ -62,27 +62,12 @@ bool depotlist_frame_t::is_available_wt(waytype_t wt) const
 
 const image_id depotlist_stats_t::get_depot_symbol(waytype_t wt)
 {
-	switch (wt) {
-		case maglev_wt:
-			return skinverwaltung_t::maglevhaltsymbol ? skinverwaltung_t::maglevhaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case monorail_wt:
-			return skinverwaltung_t::monorailhaltsymbol ? skinverwaltung_t::monorailhaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case track_wt:
-			return skinverwaltung_t::zughaltsymbol ? skinverwaltung_t::zughaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case tram_wt:
-			return skinverwaltung_t::tramhaltsymbol ? skinverwaltung_t::tramhaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case narrowgauge_wt:
-			return skinverwaltung_t::narrowgaugehaltsymbol ? skinverwaltung_t::narrowgaugehaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case road_wt:
-			return skinverwaltung_t::autohaltsymbol ? skinverwaltung_t::autohaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case water_wt:
-			return skinverwaltung_t::schiffshaltsymbol ? skinverwaltung_t::schiffshaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case air_wt:
-			return skinverwaltung_t::airhaltsymbol ? skinverwaltung_t::airhaltsymbol->get_image_id(0) : IMG_EMPTY;
-		default:
-			return IMG_EMPTY;
+	if (skinverwaltung_t::get_waytype_skin(wt) != NULL) {
+		return skinverwaltung_t::get_waytype_skin(wt)->get_image_id(0);
 	}
-	return IMG_EMPTY;
+	else {
+		return IMG_EMPTY;
+	}
 }
 
 
