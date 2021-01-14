@@ -187,6 +187,8 @@ public:
 	 */
 	static const skin_desc_t *get_extra( const char *str, int len );
 
+	static const skin_desc_t *get_waytype_skin(const waytype_t wt);
+
 private:
 	/// holds objects from paks with type 'menu'
 	static slist_tpl<const skin_desc_t *>extra_obj;
