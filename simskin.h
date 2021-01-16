@@ -8,6 +8,7 @@
 
 
 #include "simcolor.h"
+#include "simtypes.h"
 
 // Max Kielland
 // Classic helper macro to transform a #define value into a "string"
