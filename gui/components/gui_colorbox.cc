@@ -50,3 +50,19 @@ void gui_colorbox_t::draw(scr_coord offset)
 		display_fillbox_wh_rgb(offset.x, offset.y, width, height, color, true);
 	}
 }
+
+
+
+gui_right_pointer_t::gui_right_pointer_t(PIXVAL c, uint8 height_)
+{
+	height = height_;
+	color = c;
+	tooltip = NULL;
+	set_size(scr_size(height, height));
+}
+
+void gui_right_pointer_t::draw(scr_coord offset)
+{
+	offset += pos;
+	display_right_pointer_rgb(offset.x, offset.y, height, color, true);
+}
