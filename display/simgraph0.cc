@@ -429,6 +429,10 @@ void display_right_triangle_rgb(KOORD_VAL, KOORD_VAL, uint8, const PIXVAL, const
 {
 }
 
+void display_right_pointer_rgb(KOORD_VAL, KOORD_VAL, uint8, const PIXVAL, const bool)
+{
+}
+
 int display_fluctuation_triangle_rgb(KOORD_VAL, KOORD_VAL, uint8, const bool, sint64)
 {
 	return 0;
