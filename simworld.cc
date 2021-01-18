@@ -11274,7 +11274,13 @@ bool karte_t::interactive(uint32 quit_month)
 	if(  env_t::server  ) {
 		step_mode |= FIX_RATIO;
 
-		reset_timer();
+		if (env_t::pause_server_no_clients) {
+			set_pause(true);
+		}
+		else {
+			reset_timer();
+		}
+
 		// Announce server startup to the listing server
 		if(  env_t::server_announce  ) {
 			announce_server( 0 );
