@@ -5090,9 +5090,9 @@ void display_right_pointer_rgb(KOORD_VAL x, KOORD_VAL y, uint8 height, const PIX
 	for (uint16 i = 0; i < height; i++)
 	{
 		uint8 xoff = (height/2 - abs(i-height/2))/2;
-		uint8 w = (height/2 - abs(i-height/2))*2;
+		uint8 w    = (height/2 - abs(i-height/2))*2;
 
-		display_fillbox_wh_rgb(x+xoff+1, y+i, w-xoff, 1, colval, dirty);
+		display_fillbox_wh_clip_rgb(x+xoff+1, y+i, w-xoff, 1, colval, dirty);
 		if (i != height /2) {
 			display_blend_wh_rgb(x+xoff+1+w-xoff, y+i, 1, 1, colval, 50);
 		}
