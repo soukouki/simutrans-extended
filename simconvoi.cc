@@ -8306,6 +8306,24 @@ uint16 convoi_t::get_cargo_max() const
 	return sum;
 }
 
+uint16 convoi_t::get_total_cargo() const
+{
+	uint16 sum = 0;
+	for (uint8 i = 0; i < vehicle_count; i++) {
+		sum += vehicle[i]->get_total_cargo();
+	}
+	return sum;
+}
+
+uint16 convoi_t::get_cargo_max() const
+{
+	uint16 sum = 0;
+	for (uint8 i = 0; i < vehicle_count; i++) {
+		sum += vehicle[i]->get_cargo_max();
+	}
+	return sum;
+}
+
 uint16 convoi_t::get_total_cargo_by_fare_class(uint8 catg, uint8 g_class) const
 {
 	if ((catg == goods_manager_t::INDEX_PAS && g_class >= goods_manager_t::passengers->get_number_of_classes())
