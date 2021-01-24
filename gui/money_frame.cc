@@ -107,9 +107,9 @@ static const uint8 cost_type[3*MAX_PLAYER_COST_BUTTON] =
 	ATV_INFRASTRUCTURE_MAINTENANCE, TT_ALL, MONEY,    // Upkeep
 	ATV_WAY_TOLL,                   TT_ALL, MONEY,
 	ATV_OPERATING_PROFIT,           TT_ALL, MONEY,
-	ATV_NEW_VEHICLE,                TT_ALL, MONEY,   // New vehicles
-	ATV_CONSTRUCTION_COST,	        TT_ALL, MONEY,   // Construction
-	ATC_INTEREST,					TT_MAX, MONEY,	// Interest paid servicing debt
+	ATV_NEW_VEHICLE,                TT_ALL, MONEY,    // New vehicles
+	ATV_CONSTRUCTION_COST,          TT_ALL, MONEY,    // Construction
+	ATC_INTEREST,                   TT_MAX, MONEY,    // Interest paid servicing debt
 	ATV_PROFIT,                     TT_ALL, MONEY,
 	ATV_TRANSPORTED,                TT_ALL, STANDARD, // all transported goods
 	ATC_CASH,                       TT_MAX, MONEY,   // Cash
@@ -303,7 +303,6 @@ void money_frame_t::init_stats()
 {
 	uint8 active_wt_count = 0;
 	for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-		//depotlist_frame_t::depot_types[i];
 		if(depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i]))
 		{
 			active_wt_count++;
@@ -313,7 +312,7 @@ void money_frame_t::init_stats()
 	cont_stats.add_table(active_wt_count+1,0);
 	{
 		// 0. header (symbol)
-		cont_stats.new_component<gui_margin_t>(1);
+		cont_stats.new_component<gui_margin_t>(10);
 		// symbol
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
 			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
@@ -452,10 +451,11 @@ money_frame_t::money_frame_t(player_t *player) :
 	end_table();
 
 	// tab panels
-	init_stats();
 	// tab (month/year)
 	year_month_tabs.add_tab( &container_year, translator::translate("Years"));
 	year_month_tabs.add_tab( &container_month, translator::translate("Months"));
+	// tab (stats)
+	init_stats();
 	year_month_tabs.add_tab( &scrolly_stats, translator::translate("player_stats"));
 	year_month_tabs.add_listener(this);
 	add_component(&year_month_tabs);
