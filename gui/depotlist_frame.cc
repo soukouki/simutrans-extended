@@ -23,7 +23,7 @@
 
 enum sort_mode_t { by_waytype, by_convoys, by_vehicle, by_coord, by_region, SORT_MODES };
 
-static waytype_t depot_types[MAX_DEPOT_TYPES] = { road_wt, track_wt, water_wt, air_wt, monorail_wt, maglev_wt, narrowgauge_wt, tram_wt };
+const waytype_t depotlist_frame_t::depot_types[MAX_DEPOT_TYPES] = { road_wt, track_wt, water_wt, air_wt, monorail_wt, maglev_wt, narrowgauge_wt, tram_wt };
 static char const* const depot_type_texts[] = { "Truck", "Train", "Ship", "Air", "Monorail", "Maglev", "Narrowgauge", "Tram" };
 
 uint8 depotlist_stats_t::sort_mode = by_waytype;
@@ -34,7 +34,7 @@ uint8 depotlist_frame_t::depot_type_filter_bits = 255;
 static karte_ptr_t welt;
 
 
-bool depotlist_frame_t::is_available_wt(waytype_t wt) const
+bool depotlist_frame_t::is_available_wt(waytype_t wt)
 {
 	switch (wt) {
 		case maglev_wt:

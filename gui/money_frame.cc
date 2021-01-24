@@ -12,6 +12,7 @@
 
 #include "../simworld.h"
 #include "../simdebug.h"
+#include "../simhalt.h" // for stats
 #include "../display/simgraph.h"
 #include "../simcolor.h"
 #include "../utils/simstring.h"
@@ -298,6 +299,99 @@ bool money_frame_t::is_chart_table_zero(int ttoption)
 	return true;
 }
 
+void money_frame_t::init_stats()
+{
+	uint8 active_wt_count = 0;
+	for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+		//depotlist_frame_t::depot_types[i];
+		if(depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i]))
+		{
+			active_wt_count++;
+		}
+	}
+	cont_stats.set_table_layout(1,0);
+	cont_stats.add_table(active_wt_count+1,0);
+	{
+		// 0. header (symbol)
+		cont_stats.new_component<gui_margin_t>(1);
+		// symbol
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.new_component<gui_image_t>()->set_image(skinverwaltung_t::get_waytype_skin(depotlist_frame_t::depot_types[i])->get_image_id(0), true);
+			}
+		}
+
+		// 1. station counts
+		cont_stats.new_component<gui_label_t>("Stations")->set_tooltip(translator::translate("hlptxt_mf_stations"));
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_station_counts[i]);
+			}
+		}
+
+		// 2-3. way total distance (tiles) 
+		cont_stats.new_component<gui_label_t>("total_km")->set_tooltip(translator::translate("hlptxt_mf_total_km"));
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_way_distances[i]);
+			}
+		}
+
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_way_fixed_costs[i]);
+			}
+		}
+
+		// 4-5. electrification  distance (tiles) 
+		cont_stats.new_component<gui_label_t>("total_electrification")->set_tooltip(translator::translate("hlptxt_mf_electrification_km"));
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_electrification[i]);
+			}
+		}
+
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_electrification_maint[i]);
+			}
+		}
+
+		// 6. lines
+		cont_stats.new_component<gui_label_t>("Lines")->set_tooltip(translator::translate("Number of lines per way type"));
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_line_counts[i]);
+			}
+		}
+
+		// 7. convoys
+		cont_stats.new_component<gui_label_t>("Convois")->set_tooltip(translator::translate("Number of convoys per way type"));
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_convoy_counts[i]);
+			}
+		}
+
+		// 8-9. vehicles
+		cont_stats.new_component<gui_label_t>("Vehicles")->set_tooltip(translator::translate("Number of vehicles per way type"));
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_vehicle_counts[i]);
+			}
+		}
+
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_vehicle_maint[i]);
+			}
+		}
+	}
+	cont_stats.end_table();
+}
 
 money_frame_t::money_frame_t(player_t *player) :
 	gui_frame_t( translator::translate("Finanzen"), player),
@@ -305,6 +399,7 @@ money_frame_t::money_frame_t(player_t *player) :
 	scenario_desc(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left),
 	scenario_completion(SYSCOL_TEXT, gui_label_t::left),
 	warn(SYSCOL_TEXT_STRONG, gui_label_t::centered),
+	scrolly_stats(&cont_stats, true),
 	transport_type_option(0)
 {
 	if(welt->get_player(0)!=player) {
@@ -357,9 +452,11 @@ money_frame_t::money_frame_t(player_t *player) :
 	end_table();
 
 	// tab panels
+	init_stats();
 	// tab (month/year)
 	year_month_tabs.add_tab( &container_year, translator::translate("Years"));
 	year_month_tabs.add_tab( &container_month, translator::translate("Months"));
+	year_month_tabs.add_tab( &scrolly_stats, translator::translate("player_stats"));
 	year_month_tabs.add_listener(this);
 	add_component(&year_month_tabs);
 

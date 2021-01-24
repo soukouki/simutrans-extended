@@ -37,11 +37,9 @@ private:
 
 	player_t *player;
 
-	// Whether the waytype is available in pakset
-	// This is determined by whether the pakset has a vehicle.
-	bool is_available_wt(waytype_t wt) const;
-
 public:
+	static const waytype_t depot_types[MAX_DEPOT_TYPES];
+
 	depotlist_frame_t(player_t *player);
 
 	const char *get_help_filename() const OVERRIDE {return "depotlist.txt"; }
@@ -53,6 +51,10 @@ public:
 	// yes we can reload
 	uint32 get_rdwr_id() OVERRIDE { return magic_depotlist; }
 	void rdwr(loadsave_t *file) OVERRIDE;
+
+	// Whether the waytype is available in pakset
+	// This is determined by whether the pakset has a vehicle.
+	static bool is_available_wt(waytype_t wt);
 
 	bool has_min_sizer() const OVERRIDE { return true; }
 

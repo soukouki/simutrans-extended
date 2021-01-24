@@ -8,6 +8,7 @@
 
 
 #include "gui_frame.h"
+#include "depotlist_frame.h" // for stats
 #include "components/action_listener.h"
 #include "components/gui_button.h"
 #include "components/gui_button_to_chart.h"
@@ -41,7 +42,8 @@ private:
 					scenario_completion,
 					warn;
 
-	gui_aligned_container_t container_year, container_month;
+	gui_aligned_container_t container_year, container_month, cont_stats;
+	gui_scrollpane_t scrolly_stats;
 
 	uint16 transport_types[TT_MAX];
 	uint16 transport_type_option;
@@ -67,11 +69,23 @@ private:
 	vector_tpl<money_frame_label_t*> money_labels;
 
 	void update_labels();
+	void init_stats();
 
 	void fill_chart_tables();
 
 	bool is_chart_table_zero(int ttoption);
 
+	// for stats
+	uint32 halt_count[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_station_counts[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_way_distances[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_way_fixed_costs[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_electrification[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_electrification_maint[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_line_counts[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_convoy_counts[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_vehicle_counts[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_vehicle_maint[MAX_DEPOT_TYPES];
 
 public:
 	/**
