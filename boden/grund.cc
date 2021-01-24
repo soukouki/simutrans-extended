@@ -1991,7 +1991,7 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 			{
 				// no tram => crossing needed!
 				waytype_t w2 = other->get_waytype();
-				const crossing_desc_t *cr_desc = crossing_logic_t::get_crossing( weg->get_waytype(), w2, weg->get_max_speed(), other->get_desc()->get_topspeed(), welt->get_timeline_year_month() );
+				const crossing_desc_t *cr_desc = crossing_logic_t::get_crossing( weg->get_waytype(), w2, weg->get_max_speed(), other->get_max_speed(), welt->get_timeline_year_month() );
 				if(cr_desc == nullptr)
 				{
 					dbg->error("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", weg->get_waytype(), w2);
@@ -2538,7 +2538,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 			// If the original basic algorithm does not succeed, try the between intersections algorithm instead.
 
 			// First, find the set of connected intersections
-			// One for each direction.	
+			// One for each direction.
 			minivec_tpl<grund_t*> intersections;
 			for (auto const gr : neighbouring_grounds)
 			{
@@ -2636,7 +2636,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 			}
 
 			// First, check the distance using the existing route.
-			
+
 			vehicle_t* diversion_checker = vehicle_builder_t::build(start, welt->get_public_player(), NULL, &diversion_check_type);
 			diversion_checker->set_flag(obj_t::not_on_map);
 			diversion_checker->set_owner(welt->get_public_player());
