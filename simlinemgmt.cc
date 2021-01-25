@@ -27,7 +27,7 @@ simlinemgmt_t::~simlinemgmt_t()
 	while (!all_managed_lines.empty()) {
 		linehandle_t line = all_managed_lines.back();
 		all_managed_lines.pop_back();
-		delete line.get_rep();	// detaching handled by line itself
+		delete line.get_rep(); // detaching handled by line itself
 	}
 }
 
@@ -40,8 +40,7 @@ void simlinemgmt_t::add_line(linehandle_t new_line)
 
 void simlinemgmt_t::delete_line(linehandle_t line)
 {
-	if (line.is_bound())
-	{
+	if (line.is_bound()) {
 		all_managed_lines.remove(line);
 		//destroy line object
 		delete line.get_rep();
@@ -61,8 +60,7 @@ void simlinemgmt_t::update_line(linehandle_t line, bool do_not_renew_stops)
 {
 	// when a line is updated, all managed convoys must get the new schedule!
 	const int count = line->count_convoys();
-	for(int i = 0; i<count; i++)
-	{
+	for(  int i = 0;  i<count;  i++  ) {
 		const convoihandle_t cnv = line->get_convoy(i);
 		cnv->set_update_line(line);
 		if(line->get_schedule()->get_count() < 2)
