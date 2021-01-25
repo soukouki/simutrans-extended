@@ -85,7 +85,7 @@ enum transport_type {
 };
 
 
-/* these have to match the strings in simline_t::linetype2name!  */
+/* these have to match the strings in schedule_type_text[]!  */
 /* (and it is sad that the order between those do not match ...) */
 static const char* const transport_type_text[TT_MAX] = {
 	"All",
