@@ -318,13 +318,13 @@ depotlist_frame_t::depotlist_frame_t(player_t *player) :
 		}
 		end_table();
 
-		// left, filter cell
+		// right, filter cell
 		add_table(1, 2);
 		{
-			// left top
+			// right top
 			new_component<gui_label_t>("Filter:");
 
-			// left bottom
+			// right bottom
 			add_table(MAX_DEPOT_TYPES+1, 1)->set_spacing(scr_size(0,0));
 			// All waytype button
 			all_depot_types.init(button_t::roundbox_state, translator::translate("All"), scr_coord(0, 0), scr_size(proportional_string_width(translator::translate("All")) + gui_theme_t::gui_button_text_offset.w + gui_theme_t::gui_button_text_offset_right.x, D_BUTTON_HEIGHT));
