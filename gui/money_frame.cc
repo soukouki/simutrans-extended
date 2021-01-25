@@ -12,7 +12,6 @@
 
 #include "../simworld.h"
 #include "../simdebug.h"
-#include "../simhalt.h" // for stats
 #include "../display/simgraph.h"
 #include "../simcolor.h"
 #include "../utils/simstring.h"
@@ -26,6 +25,28 @@
 // for headquarter construction only ...
 #include "../simmenu.h"
 
+// for stats only ...
+#include "../convoy.h" 
+#include "../simhalt.h"
+#include "../simline.h"
+#include "../linehandle_t.h"
+#include "../simdepot.h"
+#include "../obj/bruecke.h"
+#include "../obj/gebaeude.h"
+#include "../obj/wayobj.h"
+#include "../obj/signal.h"
+#include "../obj/roadsign.h"
+#include "../obj/tunnel.h"
+#include "../descriptor/way_desc.h"
+#include "../descriptor/building_desc.h"
+#include "../descriptor/tunnel_desc.h"
+#include "../vehicle/simvehicle.h" 
+#include "halt_list_frame.h"
+#include "schedule_list.h"
+#include "convoi_frame.h"
+#include "components/gui_divider.h"
+#include "signalboxlist_frame.h"
+#include "../simsignalbox.h"
 
 // remembers last settings
 static vector_tpl<sint32> bFilterStates;
@@ -299,6 +320,7 @@ bool money_frame_t::is_chart_table_zero(int ttoption)
 	return true;
 }
 
+#define L_VALUE_CELL_WIDTH proportional_string_width("8,888.8km")
 void money_frame_t::init_stats()
 {
 	uint8 active_wt_count = 0;
@@ -309,9 +331,11 @@ void money_frame_t::init_stats()
 		}
 	}
 	cont_stats.set_table_layout(1,0);
-	cont_stats.add_table(active_wt_count+1,0);
+	cont_stats.new_component<gui_heading_t>("Monthly maintenance cost details", SYSCOL_TEXT, get_titlecolor(), 1);
+	cont_stats.add_table(active_wt_count+3,0)->set_spacing( scr_size(D_H_SPACE,1) );
 	{
 		// 0. header (symbol)
+		cont_stats.new_component<gui_margin_t>(10);
 		cont_stats.new_component<gui_margin_t>(10);
 		// symbol
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
@@ -319,75 +343,197 @@ void money_frame_t::init_stats()
 				cont_stats.new_component<gui_image_t>()->set_image(skinverwaltung_t::get_waytype_skin(depotlist_frame_t::depot_types[i])->get_image_id(0), true);
 			}
 		}
+		cont_stats.new_component<gui_label_t>("Total");
 
-		// 1. station counts
-		cont_stats.new_component<gui_label_t>("Stations")->set_tooltip(translator::translate("hlptxt_mf_stations"));
+		//-- buildings
+		// 1-2. depots
+		bt_access_depotlist.init(button_t::arrowright_state, "");
+		bt_access_depotlist.add_listener(this);
+		cont_stats.add_component(&bt_access_depotlist);
+		cont_stats.new_component<gui_label_t>("Depots")->set_tooltip(translator::translate("Number of depots per way type, and those monthly maintenance costs."));
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
 			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
-				cont_stats.add_component(&lb_station_counts[i]);
+				cont_stats.add_component(&lb_depots[i]);
+				lb_depots[i].set_align(gui_label_t::right);
 			}
 		}
+		lb_total_depots.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_depots);
 
-		// 2-3. way total distance (tiles) 
-		cont_stats.new_component<gui_label_t>("total_km")->set_tooltip(translator::translate("hlptxt_mf_total_km"));
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
-				cont_stats.add_component(&lb_way_distances[i]);
-			}
-		}
-
+		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_empty_t>();
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
 			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
-				cont_stats.add_component(&lb_way_fixed_costs[i]);
+				cont_stats.add_component(&lb_depots_maint[i]);
+				lb_depots_maint[i].set_align(gui_label_t::right);
 			}
 		}
+		lb_total_depot_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_depot_maint);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE / 2, active_wt_count+3);
 
-		// 4-5. electrification  distance (tiles) 
-		cont_stats.new_component<gui_label_t>("total_electrification")->set_tooltip(translator::translate("hlptxt_mf_electrification_km"));
+		// 3. station counts
+		bt_access_haltlist.init(button_t::arrowright_state, "");
+		bt_access_haltlist.add_listener(this);
+		cont_stats.add_component(&bt_access_haltlist);
+		cont_stats.new_component<gui_label_t>("Stops")->set_tooltip(translator::translate("hlptxt_mf_stations"));
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
 			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
-				cont_stats.add_component(&lb_electrification[i]);
+				cont_stats.add_component(&lb_station_counts[i]);
+				lb_station_counts[i].set_align(gui_label_t::right);
+				lb_station_counts[i].set_min_size(scr_size(L_VALUE_CELL_WIDTH,D_LABEL_HEIGHT));
 			}
 		}
+		lb_total_halts.set_align(gui_label_t::right);
+		lb_total_halts.set_min_size(scr_size(L_VALUE_CELL_WIDTH, D_LABEL_HEIGHT));
+		cont_stats.add_component(&lb_total_halts);
 
+		cont_stats.new_component_span<gui_empty_t>(active_wt_count+2);
+		lb_total_halt_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_halt_maint);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE / 2, active_wt_count+3);
+
+		// 4. signalbox
+		bt_access_signalboxlist.init(button_t::arrowright_state, "");
+		bt_access_signalboxlist.add_listener(this);
+		cont_stats.add_component(&bt_access_signalboxlist);
+		cont_stats.new_component<gui_label_t>("Signalboxes")->set_tooltip(translator::translate("Number of signalboxes and total monthly maintenance costs."));
+		cont_stats.new_component_span<gui_empty_t>(active_wt_count);
+		lb_signalbox_count.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_signalbox_count);
+
+		cont_stats.new_component_span<gui_empty_t>(active_wt_count+2);
+		lb_signalbox_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_signalbox_maint);
+
+		// divider
+		cont_stats.new_component_span<gui_divider_t>(active_wt_count+3);
+
+		// way and way objects
+		// 5-6. way total distance (tiles)
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_label_t>("way_distances")->set_tooltip(translator::translate("hlptxt_mf_way_distances"));
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_way_distances[i]);
+				lb_way_distances[i].set_align(gui_label_t::right);
+			}
+		}
+		cont_stats.new_component<gui_empty_t>();
+
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_way_maintenances[i]);
+				lb_way_maintenances[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_total_way_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_way_maint);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE/2, active_wt_count+3);
+
+		// 4-5. electrification  distance (tiles)
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_label_t>("Electrified Distances")->set_tooltip(translator::translate("hlptxt_mf_electrified_distances"));
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_electrified_distances[i]);
+				lb_electrified_distances[i].set_align(gui_label_t::right);
+			}
+		}
+		cont_stats.new_component<gui_empty_t>();
+
+		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_empty_t>();
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
 			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
 				cont_stats.add_component(&lb_electrification_maint[i]);
+				lb_electrification_maint[i].set_align(gui_label_t::right);
 			}
 		}
+		lb_total_electrification_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_electrification_maint);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE/2, active_wt_count+3);
 
-		// 6. lines
-		cont_stats.new_component<gui_label_t>("Lines")->set_tooltip(translator::translate("Number of lines per way type"));
+		// 12. signals/signs
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_label_t>("Signals/signs")->set_tooltip(translator::translate("Number of signals and signs per way type, and those monthly maintenance costs."));
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_sign_counts[i]);
+				lb_sign_counts[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_own_sign_count.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_own_sign_count);
+
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				cont_stats.add_component(&lb_sign_maint[i]);
+				lb_sign_maint[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_total_sign_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_sign_maint);
+
+		// divider
+		cont_stats.new_component_span<gui_divider_t>(active_wt_count+3);
+
+		// 8. lines
+		bt_access_schedulelist.init(button_t::arrowright_state, "");
+		bt_access_schedulelist.add_listener(this);
+		cont_stats.add_component(&bt_access_schedulelist);
+		cont_stats.new_component<gui_label_t>("Active lines")->set_tooltip(translator::translate("Number of active lines per way type."));
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
 			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
 				cont_stats.add_component(&lb_line_counts[i]);
+				lb_line_counts[i].set_align(gui_label_t::right);
 			}
 		}
+		lb_total_active_lines.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_active_lines);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE/2, active_wt_count+3);
 
-		// 7. convoys
-		cont_stats.new_component<gui_label_t>("Convois")->set_tooltip(translator::translate("Number of convoys per way type"));
+		// 9. convoys
+		bt_access_convoylist.init(button_t::arrowright_state, "");
+		bt_access_convoylist.add_listener(this);
+		cont_stats.add_component(&bt_access_convoylist);
+		cont_stats.new_component<gui_label_t>("Convois")->set_tooltip(translator::translate("Number of convoys per way type, and inactive convoys number in parentheses."));
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
 			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+				lb_convoy_counts[i].set_align(gui_label_t::right);
 				cont_stats.add_component(&lb_convoy_counts[i]);
 			}
 		}
+		lb_own_convoy_count.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_own_convoy_count);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE/2, active_wt_count+3);
 
-		// 8-9. vehicles
-		cont_stats.new_component<gui_label_t>("Vehicles")->set_tooltip(translator::translate("Number of vehicles per way type"));
+		// 10-11. vehicles
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_label_t>("Vehicles")->set_tooltip(translator::translate("Number of vehicles per way type, and those monthly maintenance costs."));
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
 			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
 				cont_stats.add_component(&lb_vehicle_counts[i]);
+				lb_vehicle_counts[i].set_align(gui_label_t::right);
 			}
 		}
+		lb_own_vehicle_count.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_own_vehicle_count);
 
+		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_empty_t>();
 		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
 			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
 				cont_stats.add_component(&lb_vehicle_maint[i]);
+				lb_vehicle_maint[i].set_align(gui_label_t::right);
 			}
 		}
+		lb_total_veh_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_veh_maint);
 	}
 	cont_stats.end_table();
 }
@@ -456,7 +602,10 @@ money_frame_t::money_frame_t(player_t *player) :
 	year_month_tabs.add_tab( &container_month, translator::translate("Months"));
 	// tab (stats)
 	init_stats();
+	update_stats(); // Needed to initialize size
+	cont_stats.set_size(cont_stats.get_size());
 	year_month_tabs.add_tab( &scrolly_stats, translator::translate("player_stats"));
+
 	year_month_tabs.add_listener(this);
 	add_component(&year_month_tabs);
 
@@ -562,6 +711,7 @@ money_frame_t::money_frame_t(player_t *player) :
 	reset_min_windowsize();
 	set_windowsize(get_min_windowsize());
 	set_resizemode(diagonal_resize);
+	resize(scr_size(0,0));
 }
 
 
@@ -676,6 +826,305 @@ void money_frame_t::update_labels()
 	}
 }
 
+void money_frame_t::update_stats()
+{
+	// reset data
+	for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+		tt_halt_counts[i] = 0;
+		tt_way_length[i] = 0;
+		tt_way_maint[i] = 0;
+		tt_electrified_len[i] = 0;
+		tt_electrification_maint[i] = 0;
+		tt_convoy_counts[i] = 0;
+		tt_inactive_convoy_counts[i] = 0;
+		tt_vehicle_counts[i] = 0;
+		tt_vehicle_maint[i] = 0;
+		tt_depot_counts[i] = 0;
+		tt_depot_maint[i] = 0;
+		tt_sign_counts[i] = 0;
+		tt_sign_maint[i] = 0;
+	}
+	/*
+	memset(tt_halt_counts,            0, sizeof(tt_halt_counts));
+	memset(tt_way_length,             0, sizeof(tt_way_length));
+	memset(tt_way_maint,              0, sizeof(tt_way_maint));
+	memset(tt_electrified_len,        0, sizeof(tt_electrified_len));
+	memset(tt_electrification_maint,  0, sizeof(tt_electrification_maint));
+	memset(tt_convoy_counts,          0, sizeof(tt_convoy_counts));
+	memset(tt_inactive_convoy_counts, 0, sizeof(tt_inactive_convoy_counts));
+	memset(tt_vehicle_counts,         0, sizeof(tt_vehicle_counts));
+	memset(tt_vehicle_maint,          0, sizeof(tt_vehicle_maint));
+	memset(tt_depot_counts,           0, sizeof(tt_depot_counts));
+	memset(tt_depot_maint,            0, sizeof(tt_depot_maint));
+	memset(tt_sign_counts,            0, sizeof(tt_sign_counts));
+	memset(tt_sign_maint,             0, sizeof(tt_sign_maint));
+	*/
+	// Collect data
+	uint16 total_halts=0;
+	sint64 total_halt_maint=0;
+	sint64 total_way_maintenance = 0;
+	sint64 total_electrification_maintenance = 0;
+	uint16 total_own_convoys = 0;
+	uint32 total_own_vehicles = 0;
+	uint32 total_depots = 0;
+	sint64 total_depot_maintenance=0;
+	uint32 total_vehicle_maintenance = 0;
+	uint32 total_sign_maintenance = 0;
+	uint16 total_own_signalboxes = 0;
+	uint64 total_signalbox_maintenance = 0;
+
+	// - stations
+	FOR(vector_tpl<halthandle_t>, const halt, haltestelle_t::get_alle_haltestellen()) {
+		if (halt->get_owner() == player) {
+			for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+				if (depotlist_frame_t::depot_types[i] ==road_wt) {
+					if (halt->get_station_type() & haltestelle_t::busstop || halt->get_station_type() & haltestelle_t::loadingbay) {
+						tt_halt_counts[i]++;
+					}
+				}
+				else if (halt->get_station_type() & simline_t::linetype_to_stationtype[simline_t::waytype_to_linetype(depotlist_frame_t::depot_types[i])]) {
+					tt_halt_counts[i]++;
+				}
+			}
+			total_halts++;
+			total_halt_maint += halt->calc_maintenance();
+		}
+	}
+	// - depot & vehicle
+	FOR(slist_tpl<depot_t*>, const depot, depot_t::get_depot_list()) {
+		if (depot->get_player_nr() == player->get_player_nr()) {
+			const uint8 tt_idx = depotlist_frame_t::waytype_to_depot_type(depot->get_waytype());
+			tt_depot_counts[tt_idx]++;
+			total_depot_maintenance += welt->get_settings().maint_building * depot->get_tile()->get_desc()->get_level();
+			tt_depot_maint[tt_idx] += welt->get_settings().maint_building * depot->get_tile()->get_desc()->get_level();
+			total_depots++;
+			// all vehicles stored in depot not part of a convoi
+			tt_vehicle_counts[tt_idx] += depot->get_vehicle_list().get_count();
+			total_own_vehicles += depot->get_vehicle_list().get_count();
+			FOR(slist_tpl<vehicle_t*>, vehicle, depot->get_vehicle_list()) {
+				total_vehicle_maintenance += vehicle->get_fixed_cost(welt);
+				tt_vehicle_maint[tt_idx] += vehicle->get_fixed_cost(welt);
+			}
+		}
+	}
+	// - convoys
+	FOR(vector_tpl<convoihandle_t>, const cnv, welt->convoys()) {
+		if (cnv->get_owner() == player) {
+			const uint8 tt_idx= depotlist_frame_t::waytype_to_depot_type(cnv->front()->get_desc()->get_waytype());
+			tt_convoy_counts[tt_idx]++;
+			if (cnv->in_depot()) {
+				tt_inactive_convoy_counts[tt_idx]++;
+			}
+			tt_vehicle_counts[tt_idx] += cnv->get_vehicle_count();
+			total_own_vehicles += cnv->get_vehicle_count();
+			total_own_convoys++;
+			tt_vehicle_maint[tt_idx] += cnv->get_fixed_cost();
+			total_vehicle_maintenance+=cnv->get_fixed_cost();
+		}
+	}
+	// - signalboxes
+	FOR(slist_tpl<signalbox_t*>, const sigb, signalbox_t::all_signalboxes) {
+		if (sigb->get_owner() == player && sigb->get_first_tile() == sigb) {
+			total_signalbox_maintenance += (uint32)welt->lookup(sigb->get_pos())->get_building()->get_tile()->get_desc()->get_maintenance();
+			total_own_signalboxes++;
+		}
+	}
+	// - way & electrification
+	FOR(vector_tpl<weg_t*>, const way, weg_t::get_alle_wege()) {
+		const uint8 tt_idx = depotlist_frame_t::waytype_to_depot_type(way->get_desc()->get_finance_waytype());
+		if (tt_idx >= MAX_DEPOT_TYPES) {
+			continue;
+		}
+		const grund_t* gr = welt->lookup(way->get_pos());
+		if (way->get_owner()==player) {
+			sint32 maint = way->get_desc()->get_maintenance();
+
+			if( gr->ist_bruecke() ) {
+				if( bruecke_t* bridge = gr->find<bruecke_t>(1) ) {
+					maint += bridge->get_desc()->get_maintenance();
+				}
+			}
+			if( gr->ist_tunnel() ) {
+				if( tunnel_t* tunnel = gr->find<tunnel_t>(1) ) {
+					maint += tunnel->get_desc()->get_maintenance();
+				}
+			}
+
+			if(way->is_diagonal()){
+				maint *= 10;
+				maint /= 14;
+				tt_way_length[tt_idx]+=7;
+			}
+			else {
+				tt_way_length[tt_idx]+=10;
+			}
+			total_way_maintenance += maint;
+			tt_way_maint[tt_idx]  += maint;
+		}
+		// way and electrification object owners can be different
+		if (way->is_electrified()) {
+			const wayobj_t *wo = gr->get_wayobj(way->get_waytype());
+			if (wo->get_owner() == player) {
+				sint32 wo_maint = wo->get_desc()->get_maintenance();
+				if (way->is_diagonal()) {
+					tt_electrified_len[tt_idx] += 7;
+					wo_maint *= 10;
+					wo_maint /= 14;
+				}
+				else {
+					tt_electrified_len[tt_idx] += 10;
+				}
+				tt_electrification_maint[tt_idx] += wo_maint;
+				total_electrification_maintenance += wo_maint;
+			}
+		}
+		if (way->has_sign()) {
+			const roadsign_t* rs = gr->find<roadsign_t>();
+			if (rs->get_owner()==player) {
+				tt_sign_counts[tt_idx]++;
+				tt_sign_maint[tt_idx]+= rs->get_desc()->get_maintenance();
+			}
+		}
+		if (way->has_signal()) {
+			const signal_t* sig = gr->find<signal_t>();
+			if (sig->get_owner() == player) {
+				tt_sign_counts[tt_idx]++;
+				tt_sign_maint[tt_idx] += sig->get_desc()->get_maintenance();
+			}
+		}
+	}
+
+
+	// Update table(labels)
+	uint32 active_lines = 0;
+	for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+		if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+			// depots
+			if (tt_depot_counts[i]) {
+				lb_depots[i].buf().printf("%u", tt_depot_counts[i]);
+				lb_depots_maint[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_depot_maint[i]) / 100.0);
+			}
+			else {
+				lb_depots[i].buf().append("-");
+			}
+			lb_depots_maint[i].update();
+			lb_depots[i].update();
+
+			// halt
+			if (tt_halt_counts[i]) {
+				lb_station_counts[i].buf().printf("%u", tt_halt_counts[i]);
+			}
+			else {
+				lb_station_counts[i].buf().append("-");
+			}
+			lb_station_counts[i].update();
+
+			// way
+			if (tt_way_length[i]) {
+				lb_way_distances[i].buf().printf("%.1fkm", (double)(tt_way_length[i] * welt->get_settings().get_meters_per_tile()/10000.0));
+				lb_way_maintenances[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_way_maint[i]) / 100.0);
+			}
+			else {
+				lb_way_distances[i].buf().append("-");
+			}
+			lb_way_distances[i].update();
+			lb_way_maintenances[i].update();
+			// electrification
+			if (tt_electrified_len[i]) {
+				lb_electrified_distances[i].buf().printf("%.1fkm", (double)(tt_electrified_len[i] * welt->get_settings().get_meters_per_tile() / 10000.0));
+				lb_electrification_maint[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_electrification_maint[i]) / 100.0);
+			}
+			else {
+				lb_electrified_distances[i].buf().append("-");
+			}
+			lb_electrified_distances[i].update();
+			lb_electrification_maint[i].update();
+
+			// lines
+			vector_tpl<linehandle_t> lines;
+			player->simlinemgmt.get_lines(simline_t::waytype_to_linetype(depotlist_frame_t::depot_types[i]), &lines, 0, false);
+			if (lines.get_count()) {
+				lb_line_counts[i].buf().append(lines.get_count());
+				active_lines+=lines.get_count();
+			}
+			else {
+				lb_line_counts[i].buf().append("-");
+			}
+			lb_line_counts[i].update();
+
+			// convoys
+			if (tt_convoy_counts[i]) {
+				lb_convoy_counts[i].buf().printf("%u", tt_convoy_counts[i]);
+				if (tt_inactive_convoy_counts[i]) {
+					lb_convoy_counts[i].buf().printf("(%u)", tt_inactive_convoy_counts[i]);
+				}
+			}
+			else {
+				lb_convoy_counts[i].buf().append("-");
+			}
+			lb_convoy_counts[i].update();
+
+			// vehicles
+			if (tt_vehicle_counts[i]) {
+				lb_vehicle_counts[i].buf().printf("%u", tt_vehicle_counts[i]);
+				lb_vehicle_maint[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_vehicle_maint[i]) / 100.0);
+			}
+			else {
+				lb_vehicle_counts[i].buf().append("-");
+			}
+			lb_vehicle_maint[i].update();
+			lb_vehicle_counts[i].update();
+
+			// signs
+			if (tt_sign_counts[i]) {
+				lb_sign_counts[i].buf().printf("%u", tt_sign_counts[i]);
+				lb_sign_maint[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_sign_maint[i]) / 100.0);
+				total_sign_maintenance += tt_sign_maint[i];
+			}
+			else {
+				lb_sign_counts[i].buf().append("-");
+			}
+			lb_sign_maint[i].update();
+			lb_sign_counts[i].update();
+		}
+	}
+	// update total values
+	lb_total_halts.buf().append(total_halts,0);
+	lb_total_halts.update();
+	lb_total_halt_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_halt_maint) / 100.0);
+	lb_total_halt_maint.update();
+
+	lb_total_way_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_way_maintenance) / 100.0);
+	lb_total_way_maint.update();
+
+	lb_total_electrification_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_electrification_maintenance) / 100.0);
+	lb_total_electrification_maint.update();
+
+	lb_total_depots.buf().append(total_depots, 0);
+	lb_total_depots.update();
+	lb_total_depot_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_depot_maintenance) / 100.0);
+	lb_total_depot_maint.update();
+
+	lb_total_active_lines.buf().append(active_lines, 0);
+	lb_total_active_lines.update();
+
+	lb_own_convoy_count.buf().append(total_own_convoys, 0);
+	lb_own_convoy_count.update();
+
+	lb_own_vehicle_count.buf().append(total_own_vehicles, 0);
+	lb_own_vehicle_count.update();
+
+	lb_total_veh_maint.buf().printf("%.2f$", welt->calc_adjusted_monthly_figure(total_vehicle_maintenance) / 100.0);
+	lb_total_veh_maint.update();
+
+	lb_total_sign_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_sign_maintenance) / 100.0);
+	lb_total_sign_maint.update();
+
+	lb_signalbox_count.buf().append(total_own_signalboxes, 0);
+	lb_signalbox_count.update();
+	lb_signalbox_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_signalbox_maintenance) / 100.0);
+	lb_signalbox_maint.update();
+}
 
 void money_frame_t::set_windowsize(scr_size size)
 {
@@ -699,6 +1148,10 @@ void money_frame_t::draw(scr_coord pos, scr_size size)
 
 	// update chart seed
 	chart.set_seed(welt->get_last_year());
+
+	if (year_month_tabs.get_active_tab_index() == 2) {
+		update_stats();
+	}
 
 	gui_frame_t::draw(pos, size);
 }
@@ -734,6 +1187,26 @@ bool money_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		if((0 <= tmp) && (tmp < transport_type_c.count_elements())) {
 			transport_type_option = transport_types[tmp];
 		}
+		return true;
+	}
+	if (  comp == &bt_access_haltlist  ) {
+		create_win( new halt_list_frame_t(player), w_info, magic_halt_list_t );
+		return true;
+	}
+	if (  comp == &bt_access_depotlist  ) {
+		create_win( new depotlist_frame_t(player), w_info, magic_depotlist + player->get_player_nr() );
+		return true;
+	}
+	if (  comp == &bt_access_schedulelist  ) {
+		create_win( new schedule_list_gui_t(player), w_info, magic_line_management_t + player->get_player_nr() );
+		return true;
+	}
+	if (  comp == &bt_access_convoylist  ) {
+		create_win( new convoi_frame_t(player), w_info, magic_convoi_list + player->get_player_nr() );
+		return true;
+	}
+	if (  comp == &bt_access_signalboxlist) {
+		create_win( new signalboxlist_frame_t(player), w_info, magic_signalboxlist + player->get_player_nr() );
 		return true;
 	}
 	return false;

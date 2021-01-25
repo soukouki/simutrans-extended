@@ -69,6 +69,7 @@ private:
 	vector_tpl<money_frame_label_t*> money_labels;
 
 	void update_labels();
+	void update_stats();
 	void init_stats();
 
 	void fill_chart_tables();
@@ -76,16 +77,37 @@ private:
 	bool is_chart_table_zero(int ttoption);
 
 	// for stats
-	uint32 halt_count[MAX_DEPOT_TYPES];
+	uint16 tt_halt_counts[MAX_DEPOT_TYPES];
+	uint32 tt_way_length[MAX_DEPOT_TYPES];
+	sint64 tt_way_maint[MAX_DEPOT_TYPES];
+	uint32 tt_electrified_len[MAX_DEPOT_TYPES];
+	sint64 tt_electrification_maint[MAX_DEPOT_TYPES];
+	uint32 tt_depot_counts[MAX_DEPOT_TYPES];
+	sint64 tt_depot_maint[MAX_DEPOT_TYPES];
+	uint16 tt_convoy_counts[MAX_DEPOT_TYPES];
+	uint16 tt_inactive_convoy_counts[MAX_DEPOT_TYPES];
+	uint32 tt_vehicle_counts[MAX_DEPOT_TYPES];
+	uint32 tt_vehicle_maint[MAX_DEPOT_TYPES];
+	uint16 tt_sign_counts[MAX_DEPOT_TYPES];
+	uint16 tt_sign_maint[MAX_DEPOT_TYPES];
 	gui_label_buf_t lb_station_counts[MAX_DEPOT_TYPES];
 	gui_label_buf_t lb_way_distances[MAX_DEPOT_TYPES];
-	gui_label_buf_t lb_way_fixed_costs[MAX_DEPOT_TYPES];
-	gui_label_buf_t lb_electrification[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_way_maintenances[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_electrified_distances[MAX_DEPOT_TYPES];
 	gui_label_buf_t lb_electrification_maint[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_depots[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_depots_maint[MAX_DEPOT_TYPES];
 	gui_label_buf_t lb_line_counts[MAX_DEPOT_TYPES];
 	gui_label_buf_t lb_convoy_counts[MAX_DEPOT_TYPES];
 	gui_label_buf_t lb_vehicle_counts[MAX_DEPOT_TYPES];
 	gui_label_buf_t lb_vehicle_maint[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_sign_counts[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_sign_maint[MAX_DEPOT_TYPES];
+	gui_label_buf_t lb_total_halts,                          lb_total_electrified_km,        lb_total_depots,      lb_total_active_lines, lb_own_convoy_count, lb_own_vehicle_count, lb_own_sign_count;
+	gui_label_buf_t lb_total_halt_maint, lb_total_way_maint, lb_total_electrification_maint, lb_total_depot_maint,                                             lb_total_veh_maint,   lb_total_sign_maint;
+	gui_label_buf_t lb_signalbox_count, lb_signalbox_maint;
+
+	button_t bt_access_haltlist, bt_access_depotlist, bt_access_schedulelist, bt_access_convoylist, bt_access_signalboxlist;
 
 public:
 	/**
