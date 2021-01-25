@@ -30,21 +30,6 @@ uint8 depotlist_frame_t::depot_type_filter_bits = 255;
 
 static karte_ptr_t welt;
 
-uint8 depotlist_frame_t::waytype_to_depot_type(const waytype_t wt)
-{
-	switch (wt) {
-		case tram_wt:        return 7;
-		case road_wt:        return 0;
-		case track_wt:       return 1;
-		case water_wt:       return 2;
-		case monorail_wt:    return 4;
-		case maglev_wt:      return 5;
-		case narrowgauge_wt: return 6;
-		case air_wt:         return 3;
-		default:             return -1;
-	}
-}
-
 bool depotlist_frame_t::is_available_wt(waytype_t wt)
 {
 	switch (wt) {

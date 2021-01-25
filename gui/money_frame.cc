@@ -876,7 +876,7 @@ void money_frame_t::update_stats()
 	// - depot & vehicle
 	FOR(slist_tpl<depot_t*>, const depot, depot_t::get_depot_list()) {
 		if (depot->get_player_nr() == player->get_player_nr()) {
-			const uint8 tt_idx = depotlist_frame_t::waytype_to_depot_type(depot->get_waytype());
+			const uint8 tt_idx = finance_t::translate_waytype_to_tt(depot->get_waytype())-1;
 			tt_depot_counts[tt_idx]++;
 			total_depot_maintenance += welt->get_settings().maint_building * depot->get_tile()->get_desc()->get_level();
 			tt_depot_maint[tt_idx] += welt->get_settings().maint_building * depot->get_tile()->get_desc()->get_level();
@@ -893,7 +893,7 @@ void money_frame_t::update_stats()
 	// - convoys
 	FOR(vector_tpl<convoihandle_t>, const cnv, welt->convoys()) {
 		if (cnv->get_owner() == player) {
-			const uint8 tt_idx= depotlist_frame_t::waytype_to_depot_type(cnv->front()->get_desc()->get_waytype());
+			const uint8 tt_idx = finance_t::translate_waytype_to_tt(cnv->front()->get_desc()->get_waytype())-1;
 			tt_convoy_counts[tt_idx]++;
 			if (cnv->in_depot()) {
 				tt_inactive_convoy_counts[tt_idx]++;
@@ -914,7 +914,7 @@ void money_frame_t::update_stats()
 	}
 	// - way & electrification
 	FOR(vector_tpl<weg_t*>, const way, weg_t::get_alle_wege()) {
-		const uint8 tt_idx = depotlist_frame_t::waytype_to_depot_type(way->get_desc()->get_finance_waytype());
+		const uint8 tt_idx = finance_t::translate_waytype_to_tt(way->get_desc()->get_finance_waytype())-1;
 		if (tt_idx >= TT_MAX_VEH-1) {
 			continue;
 		}

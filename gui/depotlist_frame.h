@@ -48,7 +48,6 @@ public:
 	uint32 get_rdwr_id() OVERRIDE { return magic_depotlist; }
 	void rdwr(loadsave_t *file) OVERRIDE;
 
-	static uint8 waytype_to_depot_type(const waytype_t wt);
 	// Whether the waytype is available in pakset
 	// This is determined by whether the pakset has a vehicle.
 	static bool is_available_wt(waytype_t wt);
