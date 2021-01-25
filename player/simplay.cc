@@ -744,7 +744,7 @@ void player_t::complete_liquidation()
 								break;
 							case obj_t::way:
 							{
-								weg_t *w = (weg_t *)obj;
+								weg_t *w=(weg_t *)obj;
 								bool mothball = false;
 								if (gr->ist_bruecke() || gr->ist_tunnel())
 								{
@@ -971,10 +971,8 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 }
 
-/**
- * called after game is fully loaded;
- */
-void player_t::load_finished()
+
+void player_t::finish_rd()
 {
 	simlinemgmt.finish_rd();
 	display_set_player_color_scheme( player_nr, player_color_1, player_color_2 );
@@ -996,8 +994,8 @@ void player_t::rotate90( const sint16 y_size )
 
 void player_t::report_vehicle_problem(convoihandle_t cnv,const koord3d position)
 {
-	switch(cnv->get_state())
-	{
+	switch(cnv->get_state()) {
+
 		case convoi_t::NO_ROUTE_TOO_COMPLEX:
 		DBG_MESSAGE("player_t::report_vehicle_problem", "Vehicle %s can't find a route to (%i,%i) because the route is too long/complex", cnv->get_name(), position.x, position.y);
 			if (this == welt->get_active_player()) {
@@ -1139,19 +1137,18 @@ sint64 player_t::undo()
 					// special case airplane
 					// they can be everywhere, so we allow for everything but runway undo
 					case obj_t::air_vehicle: {
-							if(undo_type!=air_wt) {
-								break;
-							}
-							const air_vehicle_t* aircraft = obj_cast<air_vehicle_t>(gr->obj_bei(i));
-							// flying aircrafts are ok
-							if(!aircraft->is_on_ground()) {
-								break;
-							}
+						if(undo_type!=air_wt) {
+							break;
 						}
-						/* FALLTHROUGH */
-
+						const air_vehicle_t* aircraft = obj_cast<air_vehicle_t>(gr->obj_bei(i));
+						// flying aircrafts are ok
+						if(!aircraft->is_on_ground()) {
+							break;
+						}
+					}
+					/* FALLTHROUGH */
+					// all other are forbidden => no undo any more
 					default:
-						// all other are forbidden => no undo any more
 						last_built.clear();
 						return false;
 				}
@@ -1164,13 +1161,11 @@ sint64 player_t::undo()
 	FOR(vector_tpl<koord3d>, const& i, last_built) {
 		grund_t* const gr = welt->lookup(i);
 		if(  undo_type != powerline_wt  ) {
-			cost += gr->weg_entfernen(undo_type, true);
+			cost += gr->weg_entfernen(undo_type,true);
 			cost -= welt->get_land_value(gr->get_pos());
 		}
 		else {
-			leitung_t* lt = gr->get_leitung();
-			if (lt)
-			{
+			if (leitung_t* lt = gr->get_leitung()) {
 				cost += lt->get_desc()->get_value();
 				lt->cleanup(NULL);
 				delete lt;
