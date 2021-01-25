@@ -233,7 +233,10 @@ void simlinemgmt_t::get_lines(int type, vector_tpl<linehandle_t>* lines, uint8 f
 	lines->clear();
 	FOR(vector_tpl<linehandle_t>, const line, all_managed_lines) {
 		if (type == simline_t::line || line->get_linetype() == simline_t::line || line->get_linetype() == type) {
-			if (freight_type_bits && !(show_empty_line && !line->get_convoys().get_count())) {
+			if (!show_empty_line && !line->get_convoys().get_count()) {
+				continue;
+			}
+			if (freight_type_bits) {
 				if (freight_type_bits & (1 << simline_t::all_pas) && line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS)) {
 					lines->append(line);
 					continue;

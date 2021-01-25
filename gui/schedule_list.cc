@@ -863,7 +863,7 @@ void schedule_list_gui_t::build_line_list(int selected_tab)
 {
 	sint32 sel = -1;
 	scl.clear_elements();
-	player->simlinemgmt.get_lines(tabs_to_lineindex[selected_tab], &lines, get_filter_type_bits());
+	player->simlinemgmt.get_lines(tabs_to_lineindex[selected_tab], &lines, get_filter_type_bits(), true);
 
 	FOR(vector_tpl<linehandle_t>, const l, lines) {
 		// search name
