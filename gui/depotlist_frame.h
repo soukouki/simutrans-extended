@@ -14,8 +14,7 @@
 #include "components/gui_label.h"
 #include "components/gui_image.h"
 #include "components/gui_combobox.h"
-
-#define MAX_DEPOT_TYPES 8
+#include "../player/finance.h"
 
 class depot_t;
 
@@ -27,8 +26,7 @@ private:
 	button_t sort_asc, sort_desc;
 	gui_scrolled_list_t scrolly;
 
-	button_t filter_buttons[MAX_DEPOT_TYPES];
-	button_t all_depot_types;
+	button_t filter_buttons[TT_MAX_VEH];
 
 	uint32 last_depot_count;
 	static uint8 depot_type_filter_bits;
@@ -38,8 +36,6 @@ private:
 	player_t *player;
 
 public:
-	static const waytype_t depot_types[MAX_DEPOT_TYPES];
-
 	depotlist_frame_t(player_t *player);
 
 	const char *get_help_filename() const OVERRIDE {return "depotlist.txt"; }

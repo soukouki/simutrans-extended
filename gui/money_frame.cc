@@ -205,22 +205,6 @@ static const sint8 cell_to_moneylabel[] =
 	-1,  20,  21,  -1,  27,
 };
 
-/* order has to be same as in enum transport_type in file finance.h */
-/* Also these have to match the strings in simline_t::linetype2name! */
-/* (and it is sad that the order between those do not match ...) */
-const char * transport_type_values[TT_MAX] = {
-	"All",
-	"Truck",
-	"Train",
-	"Ship",
-	"Monorail",
-	"Maglev",
-	"Tram",
-	"Narrowgauge",
-	"Air",
-	"tt_Other",
-	"Powerlines",
-};
 
 /// Helper method to query data from players statistics
 sint64 money_frame_t::get_statistics_value(int tt, uint8 type, int yearmonth, bool monthly)
@@ -324,9 +308,8 @@ bool money_frame_t::is_chart_table_zero(int ttoption)
 void money_frame_t::init_stats()
 {
 	uint8 active_wt_count = 0;
-	for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-		if(depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i]))
-		{
+	for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+		if( depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) ) ) {
 			active_wt_count++;
 		}
 	}
@@ -338,9 +321,9 @@ void money_frame_t::init_stats()
 		cont_stats.new_component<gui_margin_t>(10);
 		cont_stats.new_component<gui_margin_t>(10);
 		// symbol
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
-				cont_stats.new_component<gui_image_t>()->set_image(skinverwaltung_t::get_waytype_skin(depotlist_frame_t::depot_types[i])->get_image_id(0), true);
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.new_component<gui_image_t>()->set_image(skinverwaltung_t::get_waytype_skin( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )->get_image_id(0), true);
 			}
 		}
 		cont_stats.new_component<gui_label_t>("Total");
@@ -351,8 +334,8 @@ void money_frame_t::init_stats()
 		bt_access_depotlist.add_listener(this);
 		cont_stats.add_component(&bt_access_depotlist);
 		cont_stats.new_component<gui_label_t>("Depots")->set_tooltip(translator::translate("Number of depots per way type, and those monthly maintenance costs."));
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_depots[i]);
 				lb_depots[i].set_align(gui_label_t::right);
 			}
@@ -362,8 +345,8 @@ void money_frame_t::init_stats()
 
 		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_empty_t>();
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_depots_maint[i]);
 				lb_depots_maint[i].set_align(gui_label_t::right);
 			}
@@ -377,8 +360,8 @@ void money_frame_t::init_stats()
 		bt_access_haltlist.add_listener(this);
 		cont_stats.add_component(&bt_access_haltlist);
 		cont_stats.new_component<gui_label_t>("Stops")->set_tooltip(translator::translate("hlptxt_mf_stations"));
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_station_counts[i]);
 				lb_station_counts[i].set_align(gui_label_t::right);
 				lb_station_counts[i].set_min_size(scr_size(L_VALUE_CELL_WIDTH,D_LABEL_HEIGHT));
@@ -413,8 +396,8 @@ void money_frame_t::init_stats()
 		// 5-6. way total distance (tiles)
 		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_label_t>("way_distances")->set_tooltip(translator::translate("hlptxt_mf_way_distances"));
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_way_distances[i]);
 				lb_way_distances[i].set_align(gui_label_t::right);
 			}
@@ -423,8 +406,8 @@ void money_frame_t::init_stats()
 
 		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_empty_t>();
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_way_maintenances[i]);
 				lb_way_maintenances[i].set_align(gui_label_t::right);
 			}
@@ -436,8 +419,8 @@ void money_frame_t::init_stats()
 		// 4-5. electrification  distance (tiles)
 		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_label_t>("Electrified Distances")->set_tooltip(translator::translate("hlptxt_mf_electrified_distances"));
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_electrified_distances[i]);
 				lb_electrified_distances[i].set_align(gui_label_t::right);
 			}
@@ -446,8 +429,8 @@ void money_frame_t::init_stats()
 
 		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_empty_t>();
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_electrification_maint[i]);
 				lb_electrification_maint[i].set_align(gui_label_t::right);
 			}
@@ -459,8 +442,8 @@ void money_frame_t::init_stats()
 		// 12. signals/signs
 		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_label_t>("Signals/signs")->set_tooltip(translator::translate("Number of signals and signs per way type, and those monthly maintenance costs."));
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_sign_counts[i]);
 				lb_sign_counts[i].set_align(gui_label_t::right);
 			}
@@ -470,8 +453,8 @@ void money_frame_t::init_stats()
 
 		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_empty_t>();
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_sign_maint[i]);
 				lb_sign_maint[i].set_align(gui_label_t::right);
 			}
@@ -487,8 +470,8 @@ void money_frame_t::init_stats()
 		bt_access_schedulelist.add_listener(this);
 		cont_stats.add_component(&bt_access_schedulelist);
 		cont_stats.new_component<gui_label_t>("Active lines")->set_tooltip(translator::translate("Number of active lines per way type."));
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_line_counts[i]);
 				lb_line_counts[i].set_align(gui_label_t::right);
 			}
@@ -502,8 +485,8 @@ void money_frame_t::init_stats()
 		bt_access_convoylist.add_listener(this);
 		cont_stats.add_component(&bt_access_convoylist);
 		cont_stats.new_component<gui_label_t>("Convois")->set_tooltip(translator::translate("Number of convoys per way type, and inactive convoys number in parentheses."));
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				lb_convoy_counts[i].set_align(gui_label_t::right);
 				cont_stats.add_component(&lb_convoy_counts[i]);
 			}
@@ -515,8 +498,8 @@ void money_frame_t::init_stats()
 		// 10-11. vehicles
 		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_label_t>("Vehicles")->set_tooltip(translator::translate("Number of vehicles per way type, and those monthly maintenance costs."));
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_vehicle_counts[i]);
 				lb_vehicle_counts[i].set_align(gui_label_t::right);
 			}
@@ -526,8 +509,8 @@ void money_frame_t::init_stats()
 
 		cont_stats.new_component<gui_empty_t>();
 		cont_stats.new_component<gui_empty_t>();
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-			if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_component(&lb_vehicle_maint[i]);
 				lb_vehicle_maint[i].set_align(gui_label_t::right);
 			}
@@ -576,7 +559,7 @@ money_frame_t::money_frame_t(player_t *player) :
 
 		for(int i=0, count=0; i<TT_MAX; ++i) {
 			if (!is_chart_table_zero(i)) {
-				transport_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(transport_type_values[i]), SYSCOL_TEXT);
+				transport_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(finance_t::get_transport_type_name((transport_type)i)), SYSCOL_TEXT);
 				transport_types[ count++ ] = i;
 			}
 		}
@@ -829,7 +812,7 @@ void money_frame_t::update_labels()
 void money_frame_t::update_stats()
 {
 	// reset data
-	for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+	for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
 		tt_halt_counts[i] = 0;
 		tt_way_length[i] = 0;
 		tt_way_maint[i] = 0;
@@ -876,13 +859,13 @@ void money_frame_t::update_stats()
 	// - stations
 	FOR(vector_tpl<halthandle_t>, const halt, haltestelle_t::get_alle_haltestellen()) {
 		if (halt->get_owner() == player) {
-			for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-				if (depotlist_frame_t::depot_types[i] ==road_wt) {
+			for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+				if (finance_t::translate_tt_to_waytype((transport_type)(i+1)) ==road_wt) {
 					if (halt->get_station_type() & haltestelle_t::busstop || halt->get_station_type() & haltestelle_t::loadingbay) {
 						tt_halt_counts[i]++;
 					}
 				}
-				else if (halt->get_station_type() & simline_t::linetype_to_stationtype[simline_t::waytype_to_linetype(depotlist_frame_t::depot_types[i])]) {
+				else if (halt->get_station_type() & simline_t::linetype_to_stationtype[simline_t::waytype_to_linetype( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )]) {
 					tt_halt_counts[i]++;
 				}
 			}
@@ -932,7 +915,7 @@ void money_frame_t::update_stats()
 	// - way & electrification
 	FOR(vector_tpl<weg_t*>, const way, weg_t::get_alle_wege()) {
 		const uint8 tt_idx = depotlist_frame_t::waytype_to_depot_type(way->get_desc()->get_finance_waytype());
-		if (tt_idx >= MAX_DEPOT_TYPES) {
+		if (tt_idx >= TT_MAX_VEH-1) {
 			continue;
 		}
 		const grund_t* gr = welt->lookup(way->get_pos());
@@ -997,8 +980,8 @@ void money_frame_t::update_stats()
 
 	// Update table(labels)
 	uint32 active_lines = 0;
-	for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-		if (depotlist_frame_t::is_available_wt(depotlist_frame_t::depot_types[i])) {
+	for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+		if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 			// depots
 			if (tt_depot_counts[i]) {
 				lb_depots[i].buf().printf("%u", tt_depot_counts[i]);
@@ -1042,7 +1025,7 @@ void money_frame_t::update_stats()
 
 			// lines
 			vector_tpl<linehandle_t> lines;
-			player->simlinemgmt.get_lines(simline_t::waytype_to_linetype(depotlist_frame_t::depot_types[i]), &lines, 0, false);
+			player->simlinemgmt.get_lines(simline_t::waytype_to_linetype( finance_t::translate_tt_to_waytype((transport_type)(i+1)) ), &lines, 0, false);
 			if (lines.get_count()) {
 				lb_line_counts[i].buf().append(lines.get_count());
 				active_lines+=lines.get_count();

@@ -23,9 +23,6 @@
 
 enum sort_mode_t { by_waytype, by_convoys, by_vehicle, by_coord, by_region, SORT_MODES };
 
-const waytype_t depotlist_frame_t::depot_types[MAX_DEPOT_TYPES] = { road_wt, track_wt, water_wt, air_wt, monorail_wt, maglev_wt, narrowgauge_wt, tram_wt };
-static char const* const depot_type_texts[] = { "Truck", "Train", "Ship", "Air", "Monorail", "Maglev", "Narrowgauge", "Tram" };
-
 uint8 depotlist_stats_t::sort_mode = by_waytype;
 bool depotlist_stats_t::reverse = false;
 uint16 depotlist_stats_t::name_width = D_LABEL_WIDTH;
@@ -325,29 +322,30 @@ depotlist_frame_t::depotlist_frame_t(player_t *player) :
 			new_component<gui_label_t>("Filter:");
 
 			// right bottom
-			add_table(MAX_DEPOT_TYPES+1, 1)->set_spacing(scr_size(0,0));
-			// All waytype button
-			all_depot_types.init(button_t::roundbox_state, translator::translate("All"), scr_coord(0, 0), scr_size(proportional_string_width(translator::translate("All")) + gui_theme_t::gui_button_text_offset.w + gui_theme_t::gui_button_text_offset_right.x, D_BUTTON_HEIGHT));
-			all_depot_types.pressed = (depot_type_filter_bits==255);
-			all_depot_types.add_listener(this);
-			add_component(&all_depot_types);
+			add_table(TT_MAX_VEH, 1)->set_spacing(scr_size(0,0));
 
 			// waytype buttons
-			for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
-				if (!is_available_wt(depot_types[i])) {
+			// All waytype button
+			filter_buttons[0].init(button_t::roundbox_state, translator::translate("All"), scr_coord(0, 0), scr_size(proportional_string_width(translator::translate("All")) + gui_theme_t::gui_button_text_offset.w + gui_theme_t::gui_button_text_offset_right.x, D_BUTTON_HEIGHT));
+			filter_buttons[0].pressed = (depot_type_filter_bits == 255);
+			filter_buttons[0].add_listener(this);
+			add_component(&filter_buttons[0]);
+			for (uint8 i = 1; i < TT_MAX_VEH; i++) {
+				const waytype_t wt = finance_t::translate_tt_to_waytype((transport_type)i);
+				if (!is_available_wt(finance_t::translate_tt_to_waytype((transport_type)i))) {
 					new_component<gui_empty_t>()->set_visible(false);
 					continue;
 				}
-				if (depot_types[i] != IMG_EMPTY) {
+				if (wt != any_wt) {
 					filter_buttons[i].init(button_t::roundbox_state, NULL, scr_coord(0, 0), scr_size(10, D_BUTTON_HEIGHT));
-					filter_buttons[i].set_image(depotlist_stats_t::get_depot_symbol(depot_types[i]));
-					filter_buttons[i].set_tooltip(depot_type_texts[i]);
+					filter_buttons[i].set_image(depotlist_stats_t::get_depot_symbol(wt));
+					filter_buttons[i].set_tooltip(finance_t::get_transport_type_name((transport_type)i));
 					filter_buttons[i].add_listener(this);
-					filter_buttons[i].pressed = depot_type_filter_bits & (1<<i);
+					filter_buttons[i].pressed = depot_type_filter_bits & (1<<(i-1));
 					add_component(filter_buttons + i);
 				}
 				else {
-					new_component<gui_label_t>(depot_type_texts[i]);
+					new_component<gui_label_t>(finance_t::get_transport_type_name((transport_type)i));
 				}
 			}
 			end_table();
@@ -380,39 +378,42 @@ bool depotlist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 		sort_asc.pressed = depotlist_stats_t::reverse;
 		sort_desc.pressed = !depotlist_stats_t::reverse;
 	}
-	else if (comp == &all_depot_types) {
-		all_depot_types.pressed ^= 1;
-		if (all_depot_types.pressed) {
-			for (int i = 0; i < MAX_DEPOT_TYPES; i++) {
+	else if (comp == &filter_buttons[0]) {
+		filter_buttons[0].pressed ^= 1;
+		if (filter_buttons[0].pressed) {
+			for (int i = 1; i < TT_MAX_VEH; i++) {
 				filter_buttons[i].pressed = true;
 			}
 			depot_type_filter_bits = 255;
 		}
 		else {
-			for (int i = 0; i < MAX_DEPOT_TYPES; i++) {
-				if (!is_available_wt(depot_types[i])) {
+			for (int i = 1; i < TT_MAX_VEH; i++) {
+				const waytype_t wt = finance_t::translate_tt_to_waytype((transport_type)i);
+				if (!is_available_wt(wt)) {
 					continue;
 				}
-				depot_type_filter_bits &= ~(1<<i);
+				depot_type_filter_bits &= ~(1<<(i-1));
 				filter_buttons[i].pressed = false;
 			}
 		}
 		fill_list();
 	}
 	else {
-		for (int i = 0; i < MAX_DEPOT_TYPES; i++) {
+		for (int i = 1; i < TT_MAX_VEH; i++) {
+			const waytype_t wt = finance_t::translate_tt_to_waytype((transport_type)i);
+
 			if (comp == filter_buttons + i) {
-				all_depot_types.pressed = false;
+				filter_buttons[0].pressed = false;
 				filter_buttons[i].pressed ^= 1;
 				if (filter_buttons[i].pressed) {
-					depot_type_filter_bits |= (1<<i);
+					depot_type_filter_bits |= (1<<(i-1));
 				}
 				else {
-					depot_type_filter_bits &= ~(1<<i);
+					depot_type_filter_bits &= ~(1<<(i-1));
 				}
 
 				if (depot_type_filter_bits == 255) {
-					all_depot_types.pressed = true;
+					filter_buttons[0].pressed = true;
 				}
 				fill_list();
 				return true;
@@ -429,8 +430,9 @@ void depotlist_frame_t::fill_list()
 	scrolly.clear_elements();
 	FOR(slist_tpl<depot_t*>, const depot, depot_t::get_depot_list()) {
 		if( depot->get_owner() == player ) {
-			for (int i = 0; i < MAX_DEPOT_TYPES; i++) {
-				if (depot->get_waytype() == depot_types[i] && depot_type_filter_bits & (1<<i)) {
+			for (int i = 1; i < TT_MAX_VEH; i++) {
+				const waytype_t wt = finance_t::translate_tt_to_waytype((transport_type)i);
+				if (depot->get_waytype() == wt && depot_type_filter_bits & (1<<(i-1))) {
 					scrolly.new_component<depotlist_stats_t>( depot );
 				}
 			}
@@ -466,10 +468,10 @@ void depotlist_frame_t::rdwr(loadsave_t *file)
 		depotlist_stats_t::sort_mode = s;
 		depotlist_stats_t::reverse = sort_asc.pressed;
 		sort_desc.pressed = !sort_asc.pressed;
-		for (int i = 0; i < MAX_DEPOT_TYPES; i++) {
-			filter_buttons[i].pressed = depot_type_filter_bits & (1 << i);
+		for (int i = 1; i < TT_MAX_VEH; i++) {
+			filter_buttons[i].pressed = depot_type_filter_bits & (1 << (i-1));
 		}
 		fill_list();
-		all_depot_types.pressed = (depot_type_filter_bits == 255);
+		filter_buttons[0].pressed = (depot_type_filter_bits == 255);
 	}
 }
