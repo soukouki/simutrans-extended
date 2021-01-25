@@ -84,8 +84,6 @@ public:
 	void set_size(scr_size size) OVERRIDE;
 
 	static bool compare(const gui_component_t *a, const gui_component_t *b );
-
-	static const image_id get_depot_symbol(waytype_t wt);
 };
 
 #endif

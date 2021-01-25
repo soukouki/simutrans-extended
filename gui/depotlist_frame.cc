@@ -71,32 +71,6 @@ bool depotlist_frame_t::is_available_wt(waytype_t wt)
 }
 
 
-const image_id depotlist_stats_t::get_depot_symbol(waytype_t wt)
-{
-	switch (wt) {
-		case maglev_wt:
-			return skinverwaltung_t::maglevhaltsymbol ? skinverwaltung_t::maglevhaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case monorail_wt:
-			return skinverwaltung_t::monorailhaltsymbol ? skinverwaltung_t::monorailhaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case track_wt:
-			return skinverwaltung_t::zughaltsymbol ? skinverwaltung_t::zughaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case tram_wt:
-			return skinverwaltung_t::tramhaltsymbol ? skinverwaltung_t::tramhaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case narrowgauge_wt:
-			return skinverwaltung_t::narrowgaugehaltsymbol ? skinverwaltung_t::narrowgaugehaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case road_wt:
-			return skinverwaltung_t::autohaltsymbol ? skinverwaltung_t::autohaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case water_wt:
-			return skinverwaltung_t::schiffshaltsymbol ? skinverwaltung_t::schiffshaltsymbol->get_image_id(0) : IMG_EMPTY;
-		case air_wt:
-			return skinverwaltung_t::airhaltsymbol ? skinverwaltung_t::airhaltsymbol->get_image_id(0) : IMG_EMPTY;
-		default:
-			return IMG_EMPTY;
-	}
-	return IMG_EMPTY;
-}
-
-
 depotlist_stats_t::depotlist_stats_t(depot_t *d)
 {
 	this->depot = d;
@@ -106,7 +80,7 @@ depotlist_stats_t::depotlist_stats_t(depot_t *d)
 	gotopos.set_targetpos3d(depot->get_pos());
 	add_component(&gotopos);
 	const waytype_t wt = d->get_wegtyp();
-	waytype_symbol.set_image(get_depot_symbol(wt), true);
+	waytype_symbol.set_image(skinverwaltung_t::get_waytype_skin(wt)->get_image_id(0), true);
 	add_component(&waytype_symbol);
 
 	const weg_t *w = welt->lookup(depot->get_pos())->get_weg(wt != tram_wt ? wt : track_wt);
@@ -338,7 +312,7 @@ depotlist_frame_t::depotlist_frame_t(player_t *player) :
 				}
 				if (wt != any_wt) {
 					filter_buttons[i].init(button_t::roundbox_state, NULL, scr_coord(0, 0), scr_size(10, D_BUTTON_HEIGHT));
-					filter_buttons[i].set_image(depotlist_stats_t::get_depot_symbol(wt));
+					filter_buttons[i].set_image( skinverwaltung_t::get_waytype_skin(wt)->get_image_id(0) );
 					filter_buttons[i].set_tooltip(finance_t::get_transport_type_name((transport_type)i));
 					filter_buttons[i].add_listener(this);
 					filter_buttons[i].pressed = depot_type_filter_bits & (1<<(i-1));
