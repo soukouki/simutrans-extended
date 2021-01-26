@@ -351,14 +351,17 @@ const char *tunnel_builder_t::build( player_t *player, koord pos, const tunnel_d
 
 	// Search tunnel end and check intermediate tiles
 	const char *err = NULL;
-	koord3d end = find_end_pos(player, gr->get_pos(), zv, desc, full_tunnel, &err);
-	if (err) {
-		return err;
-	}
+	koord3d end = koord3d::invalid;
 
 	if(player && !player->can_afford(desc->get_value()))
 	{
 		return "That would exceed\nyour credit limit.";
+	}
+	else {
+		end = find_end_pos(player, gr->get_pos(), zv, desc, full_tunnel, &err);
+		if (err) {
+			return err;
+		}
 	}
 
 	if(!welt->is_within_limits(end.get_2d())) {
