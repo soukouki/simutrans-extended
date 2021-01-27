@@ -66,17 +66,17 @@ static int standard_pointer = -1;
 
 #ifdef USE_SOFTPOINTER
 /*
-* Icon bar needs to redrawn on mouse hover
-*/
+ * Icon bar needs to redrawn on mouse hover
+ */
 int old_my = -1;
 #endif
 
 
 /*
-* struct to hold the information about visible area
-* at screen line y
-* associated to some clipline
-*/
+ * struct to hold the information about visible area
+ * at screen line y
+ * associated to some clipline
+ */
 struct xrange {
 	int sx, sy;
 	KOORD_VAL y;
@@ -104,24 +104,24 @@ public:
 		dy = y1 - y0;
 		non_convex = non_convex_;
 		int steps = (abs(dx) > abs(dy) ? abs(dx) : abs(dy));
-		if (steps == 0) {
+		if(  steps == 0  ) {
 			return;
 		}
-		sdx = (dx * (1 << 16)) / steps;
-		sdy = (dy * (1 << 16)) / steps;
+		sdx = (dx << 16) / steps;
+		sdy = (dy << 16) / steps;
 		// to stay right from the line
 		// left border: xmin <= x
 		// right border: x < xmax
-		if (dy > 0) {
-			if (dy > dx) {
+		if(  dy > 0  ) {
+			if(  dy > dx  ) {
 				inc = 1 << 16;
 			}
 			else {
-				inc = (dx * (1 << 16)) / dy - (1 << 16);
+				inc = (dx << 16) / dy -  (1 << 16);
 			}
 		}
-		else if (dy < 0) {
-			if (dy < dx) {
+		else if(  dy < 0  ) {
+			if(  dy < dx  ) {
 				inc = 0; // (+1)-1 << 16;
 			}
 			else {
@@ -141,17 +141,17 @@ public:
 		y--;
 		r.y = y;
 		r.non_convex_active = false;
-		if (non_convex  &&  use_non_convex  &&  y < y0  &&  y < (y0 + dy)) {
+		if(  non_convex  &&  use_non_convex  &&  y < y0  &&  y < (y0 + dy)  ) {
 			r.non_convex_active = true;
 			y = min(y0, y0+dy) - 1;
 		}
-		if (  dy != 0  ) {
+		if(  dy != 0  ) {
 			// init Bresenham algorithm
-			const int t = ((y - y0) * (1 << 16)) / sdy;
+			const int t = ((y - y0) << 16) / sdy;
 			// sx >> 16 = x
 			// sy >> 16 = y
-			r.sx = t * sdx + inc + (x0 * (1 << 16));
-			r.sy = t * sdy +       (y0 * (1 << 16));
+			r.sx = t * sdx + inc + (x0 << 16);
+			r.sy = t * sdy + (y0 << 16);
 		}
 	}
 
@@ -159,20 +159,20 @@ public:
 	inline void inc_y(xrange &r, int &xmin, int &xmax) const {
 		r.y++;
 		// switch between clip vertical and along ray
-		if (r.non_convex_active) {
-			if (r.y == min(y0, y0 + dy)) {
+		if(  r.non_convex_active  ) {
+			if(  r.y == min( y0, y0 + dy )  ) {
 				r.non_convex_active = false;
 			}
 			else {
-				if (dy < 0) {
+				if(  dy < 0  ) {
 					const int r_xmax = x0 + dx;
-					if (xmax > r_xmax) {
+					if(  xmax > r_xmax  ) {
 						xmax = r_xmax;
 					}
 				}
 				else {
 					const int r_xmin = x0 + 1;
-					if (xmin < r_xmin) {
+					if(  xmin < r_xmin  ) {
 						xmin = r_xmin;
 					}
 				}
@@ -180,14 +180,14 @@ public:
 			}
 		}
 		// go along the ray, Bresenham
-		if (  dy != 0  ) {
-			if (dy > 0) {
+		if(  dy != 0  ) {
+			if(  dy > 0  ) {
 				do {
 					r.sx += sdx;
 					r.sy += sdy;
-				} while ((r.sy >> 16) < r.y);
+				} while(  (r.sy >> 16) < r.y  );
 				const int r_xmin = r.sx >> 16;
-				if (xmin < r_xmin) {
+				if(  xmin < r_xmin  ) {
 					xmin = r_xmin;
 				}
 			}
@@ -195,9 +195,9 @@ public:
 				do {
 					r.sx -= sdx;
 					r.sy -= sdy;
-				} while ((r.sy >> 16) < r.y);
+				} while(  (r.sy >> 16) < r.y  );
 				const int r_xmax = r.sx >> 16;
-				if (xmax > r_xmax) {
+				if(  xmax > r_xmax  ) {
 					xmax = r_xmax;
 				}
 			}
@@ -205,7 +205,7 @@ public:
 		// horizontal clip
 		else {
 			const bool clip = dx * (r.y - y0) > 0;
-			if (clip) {
+			if(  clip  ) {
 				// invisible row
 				xmin = +1;
 				xmax = -1;
@@ -295,18 +295,18 @@ PIXVAL specialcolormap_all_day[256];
 
 
 /*
-* contains all color conversions for transparency
-* 16 player colors, 15 special colors and 1024 3 4 3 encoded colors for transparent base
-*/
-static PIXVAL transparent_map_day_night[MAX_PLAYER_COUNT + LIGHT_COUNT + 1024];
+ * contains all color conversions for transparency
+ * 16 player colors, 15 special colors and 1024 3 4 3 encoded colors for transparent base
+ */
+static PIXVAL transparent_map_day_night[MAX_PLAYER_COUNT+LIGHT_COUNT+1024];
 //static PIXVAL transparent_map_all_day[MAX_PLAYER_COUNT+LIGHT_COUNT+1024];
 //static PIXVAL *transparent_map_current;
 
 /*
-* contains all color conversions for transparency
-* 16 player colors, 15 special colors and 1024 3 4 3 encoded colors for transparent base
-*/
-static uint8 transparent_map_day_night_rgb[(MAX_PLAYER_COUNT + LIGHT_COUNT + 1024) * 4];
+ * contains all color conversions for transparency
+ * 16 player colors, 15 special colors and 1024 3 4 3 encoded colors for transparent base
+ */
+static uint8 transparent_map_day_night_rgb[(MAX_PLAYER_COUNT+LIGHT_COUNT+1024)*4];
 //static uint8 transparent_map_all_day_rgb[(MAX_PLAYER_COUNT+LIGHT_COUNT+1024)*4];
 //static uint8 *transparent_map_current_rgb;
 
@@ -356,38 +356,38 @@ struct imd {
 
 static int bitdepth = 16;
 
-static KOORD_VAL disp_width = 640;
-static KOORD_VAL disp_actual_width = 640;
+static KOORD_VAL disp_width  = 640;
+static KOORD_VAL disp_actual_width  = 640;
 static KOORD_VAL disp_height = 480;
 
 
 /*
-* Static buffers for rezoom_img()
-*/
+ * Static buffers for rezoom_img()
+ */
 static uint8 *rezoom_baseimage[MAX_THREADS];
 static PIXVAL *rezoom_baseimage2[MAX_THREADS];
 static size_t rezoom_size[MAX_THREADS];
 
 /*
-* Image table
-*/
+ * Image table
+ */
 static struct imd* images = NULL;
 
 /*
-* Number of loaded images
-*/
+ * Number of loaded images
+ */
 static image_id anz_images = 0;
 
 /*
-* Number of allocated entries for images
-* (>= anz_images)
-*/
+ * Number of allocated entries for images
+ * (>= anz_images)
+ */
 static image_id alloc_images = 0;
 
 
 /*
-* Output framebuffer
-*/
+ * Output framebuffer
+ */
 static PIXVAL* textur = NULL;
 
 
