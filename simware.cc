@@ -215,7 +215,7 @@ void ware_t::rdwr(loadsave_t *file)
 		arrival_time = 0;
 	}
 
-	if(  file->get_version_int(111, 0) && file->get_extended_version() >= 10  ) {
+	if(  file->is_version_atleast(111, 0) && file->get_extended_version() >= 10  ) {
 		if(file->is_saving())
 		{
 			uint16 halt_id = last_transfer.is_bound() ? last_transfer.get_id() : 0;

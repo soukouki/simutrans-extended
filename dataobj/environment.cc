@@ -473,7 +473,7 @@ void env_t::rdwr(loadsave_t *file)
 		file->rdwr_bool(cities_ignore_height);
 	}
 
-	if(  file->get_extended_version() >= 9 || (file->get_extended_version() == 0 && file->is_version_atleast(102, 3)  ) {
+	if(  file->get_extended_version() >= 9 || (file->get_extended_version() == 0 && file->is_version_atleast(102, 3))  ) {
 		file->rdwr_long( tooltip_delay );
 		file->rdwr_long( tooltip_duration );
 		if (  file->is_version_less(120, 5)  ) {

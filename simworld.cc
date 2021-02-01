@@ -9993,7 +9993,7 @@ DBG_MESSAGE("karte_t::load()", "%d factories loaded", fab_list.get_count());
 		file->rdwr_short(base_pathing_counter);
 	}
 
-	if( (file->get_extended_version() >= 7 && file->get_extended_version() < 9 && file->is_version_less(110 ,6) ) {
+	if( file->get_extended_version() >= 7 && file->get_extended_version() < 9 && file->is_version_less(110, 6) ) {
 		double old_proportion = industry_density_proportion / 10000.0;
 		file->rdwr_double(old_proportion);
 		industry_density_proportion = old_proportion * 10000.0;

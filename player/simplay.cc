@@ -934,7 +934,7 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 
 	// save the name too
-	if(  file->is_version_atleast(102, 4) (file->get_extended_version() >= 9 || file->get_extended_version() == 0)  ) {
+	if(  file->is_version_atleast(102, 4) && (file->get_extended_version() >= 9 || file->get_extended_version() == 0)  ) {
 		file->rdwr_str( player_name_buf, lengthof(player_name_buf) );
 	}
 

@@ -900,7 +900,7 @@ void settings_t::rdwr(loadsave_t *file)
 			file->rdwr_longlong(cst_transformer );
 			file->rdwr_longlong(cst_maintain_transformer );
 
-			if(  file->is_version_atleast(120, 3) && (file->get_extended_revision() == 0 || file->get_extended_revision() >= 16)) || file->get_extended_version() >= 13  ) {
+			if(  (file->is_version_atleast(120, 3) && (file->get_extended_revision() == 0 || file->get_extended_revision() >= 16)) || file->get_extended_version() >= 13  ) {
 				file->rdwr_longlong(cst_make_public_months);
 			}
 
