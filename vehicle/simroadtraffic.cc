@@ -581,7 +581,7 @@ void private_car_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version_int() <= 86001) {
+	if(file->is_version_less(86, 2)) {
 		time_to_life = simrand(1000000, "void private_car_t::rdwr")+10000;
 	}
 	else if(file->is_version_less(89, 5)) {
@@ -617,8 +617,7 @@ void private_car_t::rdwr(loadsave_t *file)
 		set_tiles_overtaking( tiles_overtaking );
 	}
 
-	if(file->get_extended_version() >= 10 && file->get_version_int() >= 111002)
-	{
+	if( file->get_extended_version() >= 10 && file->is_version_atleast(111, 2) ) {
 		file->rdwr_long(ms_traffic_jam);
 		target.rdwr(file);
 		origin.rdwr(file);

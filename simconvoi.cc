@@ -4263,8 +4263,7 @@ void convoi_t::rdwr(loadsave_t *file)
 						{
 							financial_history[k][j] = 0;
 						}
-						if (file->get_extended_version() == 0 && file->get_version_int() >= 111001)
-						{
+						if(  file->get_extended_version() == 0 && file->is_version_atleast(111, 1)  ) {
 							// CONVOI_MAXSPEED - not used in Extended
 							sint64 dummy = 0;
 							for (int k = MAX_MONTHS-1; k >= 0; k--)
@@ -4299,8 +4298,7 @@ void convoi_t::rdwr(loadsave_t *file)
 
 		if (file->is_loading())
 		{
-			if (file->get_extended_version() == 0 && file->get_version_int() >= 112008 )
-			{
+			if(  file->is_version_atleast(112, 8) && file->get_extended_version() == 0  ) {
 				// CONVOI_WAYTOLL - not used in Extended until Jan 2020
 				sint64 dummy = 0;
 				for (int k = MAX_MONTHS-1; k >= 0; k--)
@@ -4609,8 +4607,7 @@ void convoi_t::rdwr(loadsave_t *file)
 				{
 					file->rdwr_short(dummy_id);
 					file->rdwr_longlong(dummy_departure_time);
-					if(file->get_version_int() >= 110007)
-					{
+					if(  file->is_version_atleast(110, 7)  ) {
 						uint8 player_count = 0;
 						file->rdwr_byte(player_count);
 						for(uint i = 0; i < player_count; i ++)
@@ -4647,8 +4644,7 @@ void convoi_t::rdwr(loadsave_t *file)
 					file->rdwr_short(departure_point.entry);
 					file->rdwr_short(departure_point.reversed);
 					file->rdwr_longlong(departure_time);
-					if(file->get_version_int() >= 110007)
-					{
+					if(  file->is_version_atleast(110, 7)  ) {
 						uint8 player_count = MAX_PLAYER_COUNT + 2;
 						file->rdwr_byte(player_count);
 						for(int i = 0; i < player_count; i ++)
@@ -4707,8 +4703,7 @@ void convoi_t::rdwr(loadsave_t *file)
 					file->rdwr_longlong(departure_time);
 					departure_data_t dep;
 					dep.departure_time = departure_time;
-					if(file->get_version_int() >= 110007)
-					{
+					if(  file->is_version_atleast(110, 7)  ) {
 						uint8 player_count = 0;
 						file->rdwr_byte(player_count);
 						for(uint i = 0; i < player_count; i ++)
@@ -4751,7 +4746,7 @@ void convoi_t::rdwr(loadsave_t *file)
 				}
 			}
 		}
-		const uint8 count = file->get_version_int() < 103000 ? CONVOI_DISTANCE : CONVOI_WAYTOLL;
+		const uint8 count = file->is_version_less(103, 0) ? CONVOI_DISTANCE : CONVOI_WAYTOLL;
 		for(uint8 i = 0; i < count; i ++)
 		{
 			file->rdwr_long(rolling_average[i]);
@@ -4763,8 +4758,7 @@ void convoi_t::rdwr(loadsave_t *file)
 		clear_departures();
 	}
 
-	if(file->get_extended_version() >= 9 && file->get_version_int() >= 110006)
-	{
+	if( file->get_extended_version() >= 9 && file->is_version_atleast(110, 6) ) {
 		file->rdwr_short(livery_scheme_index);
 	}
 	else
@@ -4895,8 +4889,7 @@ void convoi_t::rdwr(loadsave_t *file)
 		}
 
 		file->rdwr_long(current_loading_time);
-		if(file->get_version_int() >= 111000)
-		{
+		if(  file->is_version_atleast(111, 0)  ) {
 			file->rdwr_byte(no_route_retry_count);
 			if(no_route_retry_count > 7)
 			{
@@ -4956,28 +4949,25 @@ void convoi_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version_int() >= 111001 && file->get_extended_version() == 0)
-	{
+	if(  file->is_version_atleast(111, 1) && file->get_extended_version() == 0  ) {
 		uint32 dummy = 0;
 		file->rdwr_long( dummy ); // Was distance_since_last_stop
 		file->rdwr_long( dummy ); // Was sum_speed_limit
 	}
 
 
-	if(file->get_version_int()>=111002 && file->get_extended_version() == 0)
-	{
+	if(  file->is_version_atleast(111, 2) && file->get_extended_version() == 0  ) {
 		// Was maxspeed_average_count
 		uint32 dummy = 0;
 		file->rdwr_long(dummy);
 	}
 
-	if(file->get_version_int() >= 111002 && file->get_extended_version() >= 10)
-	{
+	if(  file->is_version_atleast(111, 2) && file->get_extended_version() >= 10  ) {
 		file->rdwr_short(last_stop_id);
 		v.rdwr(file);
 	}
 
-	if(  file->get_version_int()>=111003  ) {
+	if(  file->is_version_atleast(111, 3)  ) {
 		file->rdwr_short( next_stop_index );
 		file->rdwr_short( next_reservation_index );
 	}

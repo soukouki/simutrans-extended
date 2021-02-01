@@ -270,8 +270,7 @@ void schedule_t::rdwr(loadsave_t *file)
 	else {
 		file->rdwr_byte(current_stop);
 		file->rdwr_byte(size);
-		if(file->get_version_int()>=102003 && file->get_extended_version() >= 9)
-		{
+		if(  file->is_version_atleast(102, 3) && file->get_extended_version() >= 9  ) {
 			file->rdwr_bool(bidirectional);
 			file->rdwr_bool(mirrored);
 		}
@@ -297,8 +296,7 @@ void schedule_t::rdwr(loadsave_t *file)
 				entries[i].reverse = -1;
 			}
 			entries[i].pos.rdwr(file);
-			if(file->get_extended_version() >= 10 && file->get_version_int() >= 111002)
-			{
+			if( file->get_extended_version() >= 10 && file->is_version_atleast(111, 2) ) {
 				file->rdwr_short(entries[i].minimum_loading);
 				if(entries[i].minimum_loading > 100 && spacing)
 				{
@@ -318,8 +316,7 @@ void schedule_t::rdwr(loadsave_t *file)
 			if(file->is_version_atleast(99, 18)) {
 				file->rdwr_byte(entries[i].waiting_time_shift);
 
-				if(file->get_extended_version() >= 9 && file->get_version_int() >= 110006)
-				{
+				if( file->get_extended_version() >= 9 && file->is_version_atleast(110, 6) ) {
 					file->rdwr_short(entries[i].spacing_shift);
 				}
 
@@ -372,8 +369,7 @@ void schedule_t::rdwr(loadsave_t *file)
 		file->rdwr_short(spacing);
 	}
 
-	if(file->get_extended_version() >= 9 && file->get_version_int() >= 110006)
-	{
+	if( file->get_extended_version() >= 9 && file->is_version_atleast(110, 6) ) {
 		file->rdwr_bool(same_spacing_shift);
 	}
 

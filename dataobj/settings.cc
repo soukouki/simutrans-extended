@@ -646,7 +646,7 @@ void settings_t::rdwr(loadsave_t *file)
 		if(file->get_extended_version() >= 11)
 		{
 			file->rdwr_short(station_coverage_size_factories);
-			if ( file->get_version_int() <= 112002) {
+			if(  file->is_version_less(112, 3)  ) {
 				// Correct broken save files on load.
 				if (station_coverage_size_factories < 3) {
 					station_coverage_size_factories = 3;
@@ -1503,30 +1503,25 @@ void settings_t::rdwr(loadsave_t *file)
 			file->rdwr_bool(factory_enforce_demand);
 		}
 
-		if(  file->is_version_atleast(110, 7)  ) {
-			if(file->get_extended_version() == 0 )
+		if(  file->is_version_atleast(110, 7) && file->get_extended_version() == 0  ) {
+			// Unfortunately, with this new system from Standard, it is no longer possible
+			// to parse these values in a way that makes sense to Extended. This must
+			// be maintained to retain saved game compatibility only.
+			uint32 dummy_32 = 0;
+			uint16 dummy_16 = 0;
+			for(  int i=0;  i<10;  i++  )
 			{
-				// Unfortunately, with this new system from Standard, it is no longer possible
-				// to parse these values in a way that makes sense to Extended. This must
-				// be maintained to retain saved game compatibility only.
-				uint32 dummy_32 = 0;
-				uint16 dummy_16 = 0;
-				for(  int i=0;  i<10;  i++  )
-				{
-					file->rdwr_short(dummy_16);
-					file->rdwr_long(dummy_32);
-				}
+				file->rdwr_short(dummy_16);
+				file->rdwr_long(dummy_32);
 			}
 		}
 
-		if(file->get_extended_version() >= 10 || (file->get_extended_version() == 0 && file->get_version_int() >= 110007))
-		{
+		if((  file->is_version_atleast(110, 7) && file->get_extended_version() == 0  ) || file->get_extended_version() >= 10 ) {
 			file->rdwr_bool( drive_on_left );
 			file->rdwr_bool( signals_on_left );
 		}
 
-		if(file->get_version_int() >= 110007)
-		{
+		if(  file->is_version_atleast(110, 7)  ) {
 			file->rdwr_long( way_toll_runningcost_percentage );
 			file->rdwr_long( way_toll_waycost_percentage );
 			if(file->get_extended_version() >= 10)
@@ -1575,12 +1570,10 @@ void settings_t::rdwr(loadsave_t *file)
 		{
 			file->rdwr_bool(allow_routing_on_foot);
 			file->rdwr_short(min_wait_airport);
-			if(file->get_version_int() >= 110007)
-			{
+			if(  file->is_version_atleast(110, 7)  ) {
 				file->rdwr_bool(toll_free_public_roads);
 			}
-			if(file->get_version_int() >= 111000)
-			{
+			if(  file->is_version_atleast(111, 0)  ) {
 				file->rdwr_bool(allow_making_public);
 			}
 		}
@@ -1652,7 +1645,7 @@ void settings_t::rdwr(loadsave_t *file)
 			file->rdwr_long(max_choose_route_steps );
 		}
 
-		if ((file->get_version_int() > 120003 && (file->get_extended_version() == 0 || file->get_extended_revision() >= 19)) || file->get_extended_version() >= 13)
+		if ((file->is_version_atleast(120, 4) && (file->get_extended_version() == 0 || file->get_extended_revision() >= 19)) || file->get_extended_version() >= 13)
 		{
 			file->rdwr_bool(disable_make_way_public);
 		}

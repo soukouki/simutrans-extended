@@ -458,7 +458,7 @@ void env_t::rdwr(loadsave_t *file)
 
 	if(  file->is_version_atleast(102, 2)  ) {
 		file->rdwr_byte( show_vehicle_states );
-		if(  file->get_extended_version() >= 1 && file->get_extended_version() < 12  && file->get_version_int() < 112005 ) {
+		if(  file->get_extended_version() >= 1 && file->get_extended_version() < 12  && file->is_version_less(112, 5) ) {
 			// Extended (but not standard!) was carrying around a dummy variable.
 			// Formerly finance_ltr_graphs.
 			bool dummy = false;

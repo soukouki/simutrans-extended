@@ -2862,8 +2862,7 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 		}
 	}
 
-	if(file->get_extended_version() >=9 && file->get_version_int() >= 110000)
-	{
+	if(  file->is_version_atleast(110, 0) && file->get_extended_version() >=9  ) {
 		// Existing values now saved in order to prevent network desyncs
 		file->rdwr_short(direction_steps);
 		// "Current revenue" is obsolete, but was used in this file version
@@ -2895,8 +2894,7 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 		}
 	}
 
-	if(file->get_extended_version() >= 9 && file->get_version_int() >= 110006)
-	{
+	if (file->is_version_atleast(110, 6) && file->get_extended_version() >= 9) {
 		file->rdwr_string(current_livery);
 	}
 	else if(file->is_loading())

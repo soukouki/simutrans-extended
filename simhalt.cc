@@ -4039,8 +4039,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 				{
 					// Walked passengers in Standard
 					// (Extended stores these in cities, not stops)
-					if(file->get_version_int() >= 111001)
-					{
+					if(  file->is_version_atleast(111, 1)  ) {
 						sint64 dummy = 0;
 						file->rdwr_longlong(dummy);
 					}
@@ -4302,8 +4301,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_extended_version() >=9 && file->get_version_int() >= 110000)
-	{
+	if(  file->get_extended_version() >=9 && file->is_version_atleast(110, 0)  ) {
 		file->rdwr_bool(do_alternative_seats_calculation);
 	}
 
@@ -4330,8 +4328,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 				add_halt_within_walking_distance(halt);
 			}
 		}
-		if(file->get_version_int() >= 111002)
-		{
+		if(  file->is_version_atleast(111, 2)  ) {
 			file->rdwr_byte(control_towers);
 		}
 	}
@@ -4364,7 +4361,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_extended_version() >= 12 || (file->get_version_int() >= 112007 && file->get_extended_version() >= 11))
+	if(file->get_extended_version() >= 12 || (file->is_version_atleast(112, 7) && file->get_extended_version() >= 11))
 	{
 		file->rdwr_byte(check_waiting);
 	}

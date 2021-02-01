@@ -1003,7 +1003,7 @@ void stadt_t::cityrules_rdwr(loadsave_t *file)
 		file->rdwr_long(bridge_success_percentage);
 	}
 
-	if(file->get_extended_version() >= 12 || (file->get_version_int() >= 112007 && file->get_extended_version() >= 11))
+	if(file->get_extended_version() >= 12 || (file->is_version_atleast(112, 7) && file->get_extended_version() >= 11))
 	{
 		file->rdwr_long(renovations_try);
 		file->rdwr_long(renovations_count);
@@ -1881,8 +1881,7 @@ void stadt_t::rdwr(loadsave_t* file)
 		// Extended version 3 extended it further, so skip the last step.
 		// For extended versions *before* 3, power history was treated as congestion
 		// (they are now separate), so that must be handled differently.
-		if (file->get_version_int() <= 120000)
-		{
+		if(  file->is_version_less(120, 0)  ) {
 			for (uint year = 0; year < MAX_CITY_HISTORY_YEARS; year++)
 			{
 				for (uint hist_type = 0; hist_type < 14; hist_type++)
@@ -2015,7 +2014,7 @@ void stadt_t::rdwr(loadsave_t* file)
 		{
 			for(uint32 hist_type = 0; hist_type < adapted_max_city_history; hist_type++)
 			{
-				if(hist_type == HIST_PAS_WALKED && (file->get_extended_version() < 10 || file->get_version_int() < 111001))
+				if(hist_type == HIST_PAS_WALKED && (file->get_extended_version() < 10 || file->is_version_less(111, 1)))
 				{
 					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers.
 					city_history_year[year][hist_type] = 0;
@@ -2044,7 +2043,7 @@ void stadt_t::rdwr(loadsave_t* file)
 		{
 			for(uint hist_type = 0; hist_type < adapted_max_city_history; hist_type++)
 			{
-				if(hist_type == HIST_PAS_WALKED && (file->get_extended_version() < 10 || file->get_version_int() < 111001))
+				if(hist_type == HIST_PAS_WALKED && (file->get_extended_version() < 10 || file->is_version_less(111, 1)))
 				{
 					// Versions earlier than 111.1 Ex 10.8 did not record walking passengers.
 					city_history_month[month][hist_type] = 0;
@@ -2145,8 +2144,7 @@ void stadt_t::rdwr(loadsave_t* file)
 		townhall_road = koord::invalid;
 	}
 
-	if(file->get_version_int() >= 110005 && file->get_extended_version() < 12)
-	{
+	if(  file->is_version_atleast(110, 5) && file->get_extended_version() < 12  ) {
 		// Old "factory_entry_t" code - deprecated, but must skip to the correct
 		// position in old saved game files. NOTE: There is *no* way to save in
 		// a version compatible with older saved games with the factory entry
@@ -2178,7 +2176,7 @@ void stadt_t::rdwr(loadsave_t* file)
 	//target_factories_pax.rdwr( file );
 	//target_factories_mail.rdwr( file );
 
-	if(file->get_extended_version() >=9 && file->get_version_int() >= 110000 && file->get_extended_version() < 13 && file->get_extended_revision() < 26)
+	if(file->get_extended_version() >=9 && file->is_version_atleast(110, 0) && file->get_extended_version() < 13 && file->get_extended_revision() < 26)
 	{
 		// This load/save block has been moved upwards because it is necessary to load outgoing_private_cars before setting the growth factors, which is done above.
 		if ((file->get_extended_version() < 14 || (file->get_extended_version() == 14 && file->get_extended_revision() < 19)))
@@ -2199,7 +2197,7 @@ void stadt_t::rdwr(loadsave_t* file)
 		file->rdwr_long(incoming_private_cars);
 	}
 
-	if(file->is_saving() && file->get_extended_version() >=9 && file->get_version_int() >= 110000)
+	if(file->is_saving() && file->get_extended_version() >=9 && file->is_version_atleast(110, 0))
 	{
 		uint32 time;
 		koord k;
@@ -2303,7 +2301,7 @@ void stadt_t::rdwr(loadsave_t* file)
 		connected_cities.clear();
 		connected_industries.clear();
 		connected_attractions.clear();
-		if(file->get_extended_version() >=9 && file->get_version_int() >= 110000)
+		if(file->get_extended_version() >=9 && file->is_version_atleast(110, 0) )
 		{
 			uint32 time;
 			koord k;

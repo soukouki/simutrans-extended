@@ -441,7 +441,7 @@ void leitung_t::rdwr(loadsave_t *file)
 		}
 		city_pos.rdwr(file);
 
-		if(file->get_extended_version() >= 12 || (file->get_extended_version() == 11 && file->get_version_int() >= 112006))
+		if( file->get_extended_version() >= 12 || (file->get_extended_version() == 11 && file->is_version_atleast(112, 6)) )
 		{
 			if(get_typ() == senke)
 			{
@@ -470,7 +470,7 @@ void leitung_t::rdwr(loadsave_t *file)
 				city->add_substation((senke_t*)this);
 			}
 
-			if(file->get_extended_version() >= 12 || (file->get_extended_version() == 11 && file->get_version_int() >= 112006))
+			if( file->get_extended_version() >= 12 || (file->get_extended_version() == 11 && file->is_version_atleast(112, 6)) )
 			{
 				uint32 lpd = 0;
 				file->rdwr_long(lpd);
