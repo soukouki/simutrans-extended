@@ -157,12 +157,12 @@ bool karte_t::threads_initialised = false;
 thread_local uint32 karte_t::passenger_generation_thread_number;
 thread_local uint32 karte_t::marker_index = UINT32_MAX_VALUE;
 
-sint32 karte_t::cities_to_process = 0;
 vector_tpl<convoihandle_t> convoys_next_step;
 
 vector_tpl<pedestrian_t*> *karte_t::pedestrians_added_threaded;
 vector_tpl<private_car_t*> *karte_t::private_cars_added_threaded;
 #endif
+sint32 karte_t::cities_to_process = 0;
 #ifdef MULTI_THREAD
 vector_tpl<nearby_halt_t> *karte_t::start_halts;
 vector_tpl<halthandle_t> *karte_t::destination_list;
@@ -1656,7 +1656,7 @@ void *check_road_connexions_threaded(void *args)
 		{
 			stadt_t* city;
 			city = world()->cities_awaiting_private_car_route_check.remove_first();
-			
+
 			int error = pthread_mutex_unlock(&karte_t::private_car_route_mutex);
 			assert(error == 0);
 			(void)error;
@@ -5573,13 +5573,8 @@ void karte_t::pause_step()
 
 	if (!private_car_route_check_complete && cities_awaiting_private_car_route_check.empty())
 	{
-		suspend_private_car_threads();
-		weg_t::swap_private_car_routes_currently_reading_element();
-		dbg->message("karte_t::step", "Refreshed private car routes (while paused)");
-		FOR(weighted_vector_tpl<stadt_t*>, const i, stadt)
-		{
-			cities_awaiting_private_car_route_check.append(i);
-		}
+		refresh_private_car_routes();
+		dbg->message("karte_t::pause_step", "Refreshed private car routes");
 		private_car_route_check_complete = true;
 	}
 
@@ -5724,19 +5719,8 @@ void karte_t::step()
 
 		if (cities_awaiting_private_car_route_check.empty() && cities_to_process <= 0)
 		{
-			suspend_private_car_threads();
-			weg_t::swap_private_car_routes_currently_reading_element();
+			refresh_private_car_routes();
 			dbg->message("karte_t::step", "Refreshed private car routes");
-			for(auto w : weg_t::get_alle_wege()) {
-				for(auto & l : w->private_car_routes[weg_t::get_private_car_routes_currently_writing_element()]) {
-					l.clear();
-					l.resize(0);
-				}
-			}
-			FOR(weighted_vector_tpl<stadt_t*>, const i, stadt)
-			{
-				cities_awaiting_private_car_route_check.append(i);
-			}
 		}
 
 #ifdef MULTI_THREAD
@@ -6147,6 +6131,26 @@ void karte_t::step()
 
 	DBG_DEBUG4("karte_t::step", "end");
 	rands[26] = get_random_seed();
+}
+
+void karte_t::refresh_private_car_routes() {
+#ifdef MULTI_THREAD
+	suspend_private_car_threads();
+#endif
+	weg_t::swap_private_car_routes_currently_reading_element();
+	clear_private_car_routes();
+	for(auto & city : stadt) {
+		cities_awaiting_private_car_route_check.insert(city);
+	}
+}
+
+void karte_t::clear_private_car_routes() {
+	for(auto & w : weg_t::get_alle_wege()) {
+		for(auto & l : w->private_car_routes[weg_t::get_private_car_routes_currently_writing_element()]) {
+			l.clear();
+			l.resize(0);
+		}
+	}
 }
 
 void karte_t::step_time_interval_signals()
@@ -8937,7 +8941,7 @@ DBG_MESSAGE("karte_t::save(loadsave_t *file)", "motd filename %s", env_t::server
 			location.rdwr(file);
 		}
 
-		file->rdwr_long(cities_to_process); 
+		file->rdwr_long(cities_to_process);
 	}
 
 	// MUST be at the end of the load/save routine.
@@ -12491,5 +12495,5 @@ void karte_t::calc_max_vehicle_speeds()
 
 uint32 karte_t::get_cities_awaiting_private_car_route_check_count() const
 {
-	return cities_awaiting_private_car_route_check.get_count(); 
+	return cities_awaiting_private_car_route_check.get_count();
 }
