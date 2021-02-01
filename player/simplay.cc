@@ -822,7 +822,7 @@ void player_t::rdwr(loadsave_t *file)
 {
 	xml_tag_t sss( file, "spieler_t" );
 
-	if(file->get_version_int() < 112005) {
+	if(file->is_version_less(112, 5)) {
 		sint64 konto = finance->get_account_balance();
 		file->rdwr_longlong(konto);
 		finance->set_account_balance(konto);
@@ -832,13 +832,13 @@ void player_t::rdwr(loadsave_t *file)
 		finance->set_account_overdrawn( account_overdrawn );
 	}
 
-	if(file->get_version_int()<101000) {
+	if(file->is_version_less(101, 0)) {
 		// ignore steps
 		sint32 ldummy=0;
 		file->rdwr_long(ldummy);
 	}
 
-	if(file->get_version_int()<99009) {
+	if(file->is_version_less(99, 9)) {
 		sint32 farbe;
 		file->rdwr_long(farbe);
 		player_color_1 = (uint8)farbe*2;
@@ -850,10 +850,10 @@ void player_t::rdwr(loadsave_t *file)
 	}
 
 	sint32 halt_count=0;
-	if(file->get_version_int()<99008) {
+	if(file->is_version_less(99, 8)) {
 		file->rdwr_long(halt_count);
 	}
-	if(file->get_version_int()<=112002) {
+	if(file->is_version_less(112, 3)) {
 		sint32 haltcount = 0;
 		file->rdwr_long(haltcount);
 	}
@@ -864,16 +864,14 @@ void player_t::rdwr(loadsave_t *file)
 	file->rdwr_bool(active);
 
 	// state is not saved anymore
-	if(file->get_version_int()<99014)
-	{
+	if(file->is_version_less(99, 14)) {
 		sint32 ldummy=0;
 		file->rdwr_long(ldummy);
 		file->rdwr_long(ldummy);
 	}
 
 	// the AI stuff is now saved directly by the different AI
-	if(  file->get_version_int()<101000)
-	{
+	if(  file->is_version_less(101, 0)) {
 		sint32 ldummy = -1;
 		file->rdwr_long(ldummy);
 		file->rdwr_long(ldummy);
@@ -896,7 +894,7 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 
 	// headquarters stuff
-	if (file->get_version_int() < 86004)
+	if (file->is_version_less(86, 4))
 	{
 		headquarter_level = 0;
 		headquarter_pos = koord::invalid;
@@ -913,11 +911,11 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 
 	// line management
-	if(file->get_version_int()>=88003) {
+	if(file->is_version_atleast(88, 3)) {
 		simlinemgmt.rdwr(file,this);
 	}
 
-	if(file->get_version_int()>102002 && file->get_extended_version() != 7) {
+	if(file->is_version_atleast(102, 3) && file->get_extended_version() != 7) {
 		// password hash
 		for(  int i=0;  i<20;  i++  ) {
 			file->rdwr_byte(pwd_hash[i]);
@@ -936,13 +934,11 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 
 	// save the name too
-	if(file->get_version_int()>102003 && (file->get_extended_version() >= 9 || file->get_extended_version() == 0))
-	{
+	if(  file->is_version_atleast(102, 4) && (file->get_extended_version() >= 9 || file->get_extended_version() == 0)  ) {
 		file->rdwr_str( player_name_buf, lengthof(player_name_buf) );
 	}
 
-	if(file->get_version_int() >= 110007 && file->get_extended_version() >= 10)
-	{
+	if(  file->is_version_atleast(110, 7) && file->get_extended_version() >= 10  ) {
 		// Save the colour
 		file->rdwr_byte(player_color_1);
 		file->rdwr_byte(player_color_2);
@@ -957,7 +953,7 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 
 	// save age
-	if(  file->get_version_int() >= 112002  && (file->get_extended_version() >= 11 || file->get_extended_version() == 0) ) {
+	if(  file->is_version_atleast(112, 2) && (file->get_extended_version() >= 11 || file->get_extended_version() == 0)  ) {
 		file->rdwr_short( player_age );
 	}
 

@@ -183,11 +183,11 @@ void grund_t::rdwr(loadsave_t *file)
 	uint8 climate_data = plan->get_climate() + (plan->get_climate_corners() << 4);
 
 	xml_tag_t g( file, "grund_t" );
-	if(file->get_version_int()<101000) {
+	if(file->is_version_less(101, 0)) {
 		pos.rdwr(file);
 		z_w = welt->get_groundwater();
 	}
-	else if(  file->get_version_int() < 112007  ) {
+	else if(  file->is_version_less(112, 7)  ) {
 		file->rdwr_byte(z);
 		pos.z = get_typ() == grund_t::wasser ? welt->get_groundwater() : z;
 		z_w = welt->get_groundwater();
@@ -208,7 +208,7 @@ void grund_t::rdwr(loadsave_t *file)
 		plan->set_climate_corners((climate_data >> 4));
 	}
 
-	if(  file->is_loading()  &&  file->get_version_int() < 112007  ) {
+	if(  file->is_loading()  &&  file->is_version_less(112, 7)  ) {
 		// convert heights from old single height saved game - water already at correct height
 		pos.z = get_typ() == grund_t::wasser ? pos.z : pos.z * env_t::pak_height_conversion_factor;
 		z = z * env_t::pak_height_conversion_factor;
@@ -227,7 +227,7 @@ void grund_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version_int()<99007) {
+	if(file->is_version_less(99, 7)) {
 		bool label;
 		file->rdwr_bool(label);
 		if(label) {
@@ -236,13 +236,13 @@ void grund_t::rdwr(loadsave_t *file)
 	}
 
 	sint8 owner_n=-1;
-	if(file->get_version_int()<99005) {
+	if(file->is_version_less(99, 5)) {
 		file->rdwr_byte(owner_n);
 	}
 
-	if(file->get_version_int()>=88009) {
+	if(file->is_version_atleast(88, 9)) {
 		uint8 sl = slope;
-		if(  file->get_version_int() < 112007  &&  file->is_saving()  ) {
+		if(  file->is_version_less(112, 7)  &&  file->is_saving()  ) {
 			// truncate double slopes to single slopes, better than nothing
 			sl = min( corner_sw(slope), 1 ) + min( corner_se(slope), 1 ) * 2 + min( corner_ne(slope), 1 ) * 4 + min( corner_nw(slope), 1 ) * 8;
 		}
@@ -257,7 +257,7 @@ void grund_t::rdwr(loadsave_t *file)
 	}
 
 	if(  file->is_loading()  ) {
-		if(  file->get_version_int() < 112007  ) {
+		if(  file->is_version_less(112, 7)  ) {
 			// convert slopes from old single height saved game
 			slope = encode_corners(scorner_sw(slope), scorner_se(slope), scorner_ne(slope), scorner_nw(slope)) * env_t::pak_height_conversion_factor;
 		}
@@ -379,7 +379,7 @@ void grund_t::rdwr(loadsave_t *file)
 
 					case water_wt:
 						// ignore old type dock ...
-						if(file->get_version_int()>=87000) {
+						if(file->is_version_atleast(87, 0)) {
 							weg = new kanal_t(file);
 						}
 						else {

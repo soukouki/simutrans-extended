@@ -152,7 +152,7 @@ void pedestrian_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version_int()<89004) {
+	if(file->is_version_less(89, 4)) {
 		time_to_life = pick_any(strecke);
 	}
 }
