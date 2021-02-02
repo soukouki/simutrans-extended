@@ -106,7 +106,7 @@ gebaeude_t::gebaeude_t(loadsave_t *file, bool do_not_add_to_world_list) :
 		is_in_world_list = -1;
 	}
 	rdwr(file);
-	if (file->get_version_int()<88002) {
+	if(file->is_version_less(88, 2)) {
 		set_yoff(0);
 	}
 	if (tile  &&  tile->get_phases()>1) {
@@ -1265,7 +1265,7 @@ void gebaeude_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if (file->get_version_int()<99006) {
+	if(file->is_version_less(99, 6)) {
 		// ignore the sync flag
 		uint8 dummy = sync;
 		file->rdwr_byte(dummy);
@@ -1279,8 +1279,7 @@ void gebaeude_t::rdwr(loadsave_t *file)
 	}
 
 	// restore city pointer here
-	if (file->get_version_int() >= 99014 && !is_factory)
-	{
+	if(  file->is_version_atleast(99, 14) && !is_factory  ) {
 		sint32 city_index = -1;
 		if (file->is_saving() && ptr.stadt != NULL)
 		{

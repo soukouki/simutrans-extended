@@ -1255,6 +1255,10 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 
 		const uint8 max_hdiff = ground_desc_t::double_grounds ?  2 : 1;
 
+		if(new_slope==ALL_DOWN_SLOPE  &&  pos.z-1<welt->get_minimumheight() ) {
+			return "Maximum tile height difference reached.";
+		}
+
 		// at least a pixel away from the border?
 		if(  pos.z < water_hgt  &&  !gr1->ist_tunnel()  ) {
 			return "Maximum tile height difference reached.";
@@ -3220,7 +3224,7 @@ void tool_build_bridge_t::mark_tiles(  player_t *player, const koord3d &start, c
 			}
 		}
 	}
-	win_set_static_tooltip( tooltip_with_price_and_distance("Building costs estimates", costs, koord_distance(start, pos) ) );
+	win_set_static_tooltip( tooltip_with_price_and_distance("Building costs estimates", costs, (koord_distance(start, pos)+1) * welt->get_settings().get_meters_per_tile()) );
 }
 
 uint8 tool_build_bridge_t::is_valid_pos(  player_t *player, const koord3d &pos, const char *&error, const koord3d &start )
@@ -7438,11 +7442,21 @@ const building_desc_t *tool_headquarter_t::next_level( const player_t *player ) 
 
 const char* tool_headquarter_t::get_tooltip(const player_t *player) const
 {
+	static char my_toolstr[1024];
 	if (building_desc_t const* const desc = next_level(player)) {
+		char old_toolstr[1024];
+		/* since there is one static toolstr for all tools uing tooltip_with_...
+		 * but we are also called every frame from finance window, we need to restore old content
+		 * or all tooltips generated before will only show our message */
+		tstrncpy(old_toolstr, tool_t::toolstr, 1024);
 		settings_t  const& s      = welt->get_settings();
 		char const* const  tip    = player->get_headquarters_level() == 0 ? "build HQ" : "upgrade HQ";
 		sint64      const  factor = (sint64)desc->get_level() * desc->get_x() * desc->get_y();
-		return tooltip_with_price_maintenance(welt, tip, factor * s.cst_multiply_headquarter, factor * s.maint_building);
+
+		strcpy( my_toolstr, tooltip_with_price_maintenance(welt, tip, factor * s.cst_multiply_headquarter, factor * s.maint_building) );
+		tstrncpy(tool_t::toolstr, old_toolstr, 1024);
+
+		return my_toolstr;
 	}
 	return NULL;
 }
