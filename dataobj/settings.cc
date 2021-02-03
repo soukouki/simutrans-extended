@@ -1881,7 +1881,7 @@ void settings_t::rdwr(loadsave_t *file)
 		if(  file->is_version_ex_atleast(14, 32)  ) {
 			file->rdwr_byte(world_maximum_height);
 			file->rdwr_byte(world_minimum_height);
-			
+
 			world_maximum_height = clamp<sint8>(world_maximum_height, 16, 127);
 			world_minimum_height = clamp<sint8>(world_minimum_height, -127, -12);
 		}
