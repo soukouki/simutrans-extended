@@ -344,17 +344,14 @@ void env_t::rdwr(loadsave_t *file)
 
 	file->rdwr_bool( use_transparency_station_coverage );
 	file->rdwr_byte( station_coverage_show );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 12) || file->get_extended_version() >= 15)
-	{
+	if( file->is_version_ex_atleast(14, 12) ) {
 		file->rdwr_byte(signalbox_coverage_show);
 	}
 	file->rdwr_long( show_names );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 22) || file->get_extended_version() >= 15)
-	{
+	if( file->is_version_ex_atleast(14, 22) ) {
 		file->rdwr_byte(show_cnv_nameplates);
 	}
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 28) || file->get_extended_version() >= 15)
-	{
+	if( file->is_version_ex_atleast(14, 28) ) {
 		file->rdwr_byte(show_cnv_loadingbar);
 	}
 
@@ -397,7 +394,7 @@ void env_t::rdwr(loadsave_t *file)
 
 	file->rdwr_long( autosave );
 	file->rdwr_long( fps );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
+	if( file->is_version_ex_atleast(14, 32) ) {
 		file->rdwr_long(ff_fps);
 	}
 	file->rdwr_short( max_acceleration );
@@ -448,7 +445,7 @@ void env_t::rdwr(loadsave_t *file)
 	file->rdwr_short( global_volume );
 	file->rdwr_short( midi_volume );
 	file->rdwr_bool( global_mute_sound );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
+	if( file->is_version_ex_atleast(14, 32) ) {
 		for( int i = 0; i <= 5; i++ ) {
 			file->rdwr_short( specific_volume[ i ] );
 		}
@@ -563,7 +560,7 @@ void env_t::rdwr(loadsave_t *file)
 	if (file->is_version_atleast(120, 8)) {
 		rdwr_win_settings(file);
 	}
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
+	if( file->is_version_ex_atleast(14, 32) ) {
 		file->rdwr_byte(show_money_message);
 		file->rdwr_byte(follow_convoi_underground);
 		file->rdwr_byte( gui_player_color_dark );

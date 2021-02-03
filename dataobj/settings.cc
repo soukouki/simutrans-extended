@@ -1878,7 +1878,7 @@ void settings_t::rdwr(loadsave_t *file)
 				industry_density_proportion_override = 0;
 			}
 		}
-		if( (file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() > 14) {
+		if(  file->is_version_ex_atleast(14, 32)  ) {
 			file->rdwr_byte(world_maximum_height);
 			file->rdwr_byte(world_minimum_height);
 		}
