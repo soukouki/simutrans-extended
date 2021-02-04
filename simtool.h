@@ -467,7 +467,6 @@ public:
 
 // builds roadsigns and signals
 class tool_build_roadsign_t : public two_click_tool_t {
-
 private:
 	const roadsign_desc_t* desc;
 	const char *place_sign_intern( player_t *, grund_t*, const roadsign_desc_t* b = NULL);
@@ -544,7 +543,8 @@ public:
 	bool is_init_network_safe() const OVERRIDE { return true; }
 };
 
-/* builds (random) tourist attraction (default_param==NULL) and maybe adds it to the next city
+/**
+ * builds (random) tourist attraction (default_param==NULL) and maybe adds it to the next city
  * the parameter string is a follow (or NULL):
  * 1#theater
  * first letter: ignore climates
@@ -645,7 +645,7 @@ public:
 class tool_forest_t : public two_click_tool_t {
 public:
 	tool_forest_t() : two_click_tool_t(TOOL_FOREST | GENERAL_TOOL) {}
-	image_id get_icon(player_t *) const OVERRIDE { return baum_t::get_count() > 0 ? icon : IMG_EMPTY; }
+	image_id get_icon(player_t *) const  OVERRIDE { return baum_t::get_count() > 0 ? icon : IMG_EMPTY; }
 	char const* get_tooltip(player_t const*) const OVERRIDE { return translator::translate("Add forest"); }
 	bool init( player_t *player) OVERRIDE { return  baum_t::get_count() > 0  &&  two_click_tool_t::init(player); }
 private:
