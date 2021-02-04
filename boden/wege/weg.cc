@@ -18,6 +18,7 @@
 #include "kanal.h"
 #include "runway.h"
 
+
 #include "../grund.h"
 #include "../../simmesg.h"
 #include "../../simworld.h"
@@ -119,14 +120,14 @@ weg_t* weg_t::alloc(waytype_t wt)
 const char *weg_t::waytype_to_string(waytype_t wt)
 {
 	switch(wt) {
-		case tram_wt:	return "tram_track";
-		case track_wt:	return "track";
-		case monorail_wt: return "monorail_track";
-		case maglev_wt: return "maglev_track";
+		case tram_wt:        return "tram_track";
+		case track_wt:       return "track";
+		case monorail_wt:    return "monorail_track";
+		case maglev_wt:      return "maglev_track";
 		case narrowgauge_wt: return "narrowgauge_track";
-		case road_wt:	return "road";
-		case water_wt:	return "water";
-		case air_wt:	return "air";
+		case road_wt:        return "road";
+		case water_wt:       return "water";
+		case air_wt:         return "air_wt";
 		default:
 			// keep compiler happy; should never reach here anyway
 			break;
@@ -1094,8 +1095,8 @@ void weg_t::info(cbuffer_t & buf) const
 #else
 	// Debug - output stats
 	buf.append("\n");
-	for (int type = 0; type < MAX_WAY_STATISTICS; type++) {
-		for (int month = 0; month < MAX_WAY_STAT_MONTHS; month++) {
+	for (int type=0; type<MAX_WAY_STATISTICS; type++) {
+		for (int month=0; month<MAX_WAY_STAT_MONTHS; month++) {
 			buf.printf("%d ", statistics[month][type]);
 		}
 		buf.append("\n");
@@ -1344,7 +1345,7 @@ bool weg_t::check_season(const bool calc_only_season_change)
 	grund_t *from = welt->lookup( get_pos() );
 
 	// use snow image if above snowline and above ground
-	bool snow = (from->ist_karten_boden() || !from->ist_tunnel()) && (get_pos().z + from->get_weg_yoff() / TILE_HEIGHT_STEP >= welt->get_snowline() || welt->get_climate(get_pos().get_2d()) == arctic_climate);
+	bool snow = (from->ist_karten_boden()  ||  !from->ist_tunnel())  &&  (get_pos().z  + from->get_weg_yoff()/TILE_HEIGHT_STEP >= welt->get_snowline()  ||  welt->get_climate( get_pos().get_2d() ) == arctic_climate);
 	bool old_snow = (flags&IS_SNOW) != 0;
 	if(  !(snow ^ old_snow)  ) {
 		// season is not changing ...
@@ -1363,8 +1364,7 @@ bool weg_t::check_season(const bool calc_only_season_change)
 		return true;
 	}
 
-	if(  is_diagonal()  )
-	{
+	if(  is_diagonal()  ) {
 		if( desc->get_diagonal_image_id(ribi, snow) != IMG_EMPTY  ||
 			desc->get_diagonal_image_id(ribi, snow, true) != IMG_EMPTY)
 		{
@@ -1393,7 +1393,6 @@ bool weg_t::check_season(const bool calc_only_season_change)
 
 	return true;
 }
-
 
 
 #ifdef MULTI_THREAD
@@ -1442,7 +1441,7 @@ void weg_t::calc_image()
 #ifdef MULTI_THREAD
 		pthread_mutex_unlock( &weg_calc_image_mutex );
 #endif
-		return;	// otherwise crashing during enlargement
+		return; // otherwise crashing during enlargement
 	}
 	else if(  from->ist_tunnel() &&  from->ist_karten_boden()  &&  corner_se(from->get_grund_hang()) > 0
 		&&  (grund_t::underground_mode==grund_t::ugm_none || (grund_t::underground_mode==grund_t::ugm_level && from->get_hoehe()<grund_t::underground_level))  ) {
@@ -1524,7 +1523,7 @@ void weg_t::calc_image()
 			}
 		}
 	}
-	if (image!=old_image) {
+	if(  image!=old_image  ) {
 		sint8 yoff = from ? from->get_weg_yoff() : 0;
 		mark_image_dirty(old_image, yoff);
 		mark_image_dirty(image, from->get_weg_yoff());
@@ -1533,6 +1532,7 @@ void weg_t::calc_image()
 	pthread_mutex_unlock( &weg_calc_image_mutex );
 #endif
 }
+
 
 // checks, if this way qualifies as diagonal
 void weg_t::check_diagonal()
@@ -1613,12 +1613,11 @@ void weg_t::finish_rd()
 
 // returns NULL, if removal is allowed
 // players can remove public owned ways (Depracated)
-const char *weg_t:: is_deletable(const player_t *player)
+const char *weg_t::is_deletable(const player_t *player)
 {
 	if(  get_player_nr()==welt->get_public_player()->get_player_nr()  ) {
 		return NULL;
 	}
-
 	return obj_t::is_deletable(player);
 }
 
