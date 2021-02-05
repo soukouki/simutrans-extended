@@ -550,13 +550,13 @@ void signal_t::info(cbuffer_t & buf) const
 					dead_end = true;
 					for (int r = 0; r < 4; r++)
 					{
-						if (((ribi_t::nsew[r] & initial_direction) != 0 || (ribi_t::nsew[r] & coming_from_direction) == 0) && gr->get_neighbour(to, waytype, ribi_t::nsew[r]))
+						if (((ribi_t::nesw[r] & initial_direction) != 0 || (ribi_t::nesw[r] & coming_from_direction) == 0) && gr->get_neighbour(to, waytype, ribi_t::nesw[r]))
 						{
 							weg_t* weg = to->get_weg(waytype);
 							gr = welt->lookup(weg->get_pos());
 							initial_direction = 0; // reset initial direction and start record what direction we came from by reversing the direction in which we are traveling
 							uint8 new_from_direction = r == 0 ? 1 : r == 1 ? 0 : r == 2 ? 3 : r == 3 ? 2 : 0;
-							coming_from_direction = ribi_t::nsew[new_from_direction];
+							coming_from_direction = ribi_t::nesw[new_from_direction];
 							dead_end = false;
 
 							// Is this new tile a junction of some sorth?
@@ -617,7 +617,7 @@ void signal_t::info(cbuffer_t & buf) const
 												sig_dir == 8 ? 2 :
 												sig_ribi_dir;
 
-											if (ribi_t::nsew[r] == sig_ribi_dir)
+											if (ribi_t::nesw[r] == sig_ribi_dir)
 											{
 												signal = true;
 											}

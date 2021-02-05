@@ -2369,7 +2369,7 @@ bool grund_t::removing_road_would_disconnect_city_building()
 					// than the road that we are trying to delete.
 					for(int q = 0; q < 4; q ++)
 					{
-						const koord ky = kx.nsew[q] + kx;
+						const koord ky = kx.nesw[q] + kx;
 						const grund_t* gry = welt->lookup_kartenboden(ky);
 						if (gry == this)
 						{

@@ -1929,7 +1929,7 @@ uint8 weg_t::get_map_idx(const koord3d &next_tile) const {
 	const ribi_t::ribi dir = ribi_type(get_pos(), next_tile);
 	if(next_tile != koord3d::invalid) {
 		for (uint8 j = 0; j < 4; j++) {
-			if (dir == ribi_t::nsew[j]) {
+			if (dir == ribi_t::nesw[j]) {
 				return j;
 			}
 		}
@@ -2056,7 +2056,7 @@ koord3d weg_t::get_next_on_private_car_route_to(koord dest, bool reading_set) co
 		if(map[i].contains(dest)) {
 			if(i<4) {
 				grund_t* to;
-				if(welt->lookup(get_pos())->get_neighbour(to, waytype_t::road_wt,ribi_t::nsew[i])) {
+				if(welt->lookup(get_pos())->get_neighbour(to, waytype_t::road_wt,ribi_t::nesw[i])) {
 					return to->get_pos();
 				}
 			} else {
