@@ -26,7 +26,7 @@
 #include "../simmenu.h"
 
 // for stats only ...
-#include "../convoy.h" 
+#include "../convoy.h"
 #include "../simhalt.h"
 #include "../simline.h"
 #include "../linehandle_t.h"
@@ -40,7 +40,7 @@
 #include "../descriptor/way_desc.h"
 #include "../descriptor/building_desc.h"
 #include "../descriptor/tunnel_desc.h"
-#include "../vehicle/simvehicle.h" 
+#include "../vehicle/simvehicle.h"
 #include "halt_list_frame.h"
 #include "schedule_list.h"
 #include "convoi_frame.h"
@@ -133,11 +133,11 @@ static const uint8 cost_type[3*MAX_PLAYER_COST_BUTTON] =
 	ATC_INTEREST,                   TT_MAX, MONEY,    // Interest paid servicing debt
 	ATV_PROFIT,                     TT_ALL, MONEY,
 	ATV_TRANSPORTED,                TT_ALL, STANDARD, // all transported goods
-	ATC_CASH,                       TT_MAX, MONEY,   // Cash
-	ATV_NON_FINANCIAL_ASSETS,       TT_ALL, MONEY,   // value of all vehicles and buildings
-	ATC_NETWEALTH,                  TT_MAX, MONEY,   // Total Cash + Assets
-	ATC_SOFT_CREDIT_LIMIT,          TT_MAX, MONEY,	// Maximum amount that can be borrowed
-	ATC_HARD_CREDIT_LIMIT,          TT_MAX, MONEY,	// Borrowing which will lead to insolvency
+	ATC_CASH,                       TT_MAX, MONEY,    // Cash
+	ATV_NON_FINANCIAL_ASSETS,       TT_ALL, MONEY,    // value of all vehicles and buildings
+	ATC_NETWEALTH,                  TT_MAX, MONEY,    // Total Cash + Assets
+	ATC_SOFT_CREDIT_LIMIT,          TT_MAX, MONEY,    // Maximum amount that can be borrowed
+	ATC_HARD_CREDIT_LIMIT,          TT_MAX, MONEY,    // Borrowing which will lead to insolvency
 	ATV_PROFIT_MARGIN,              TT_ALL, PERCENT
 };
 
