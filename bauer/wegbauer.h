@@ -64,6 +64,7 @@ public:
 
 	static const vector_tpl<const way_desc_t *>&  get_way_list(waytype_t, systemtype_t system_type);
 
+
 	/**
 	 * Fill menu with icons of given waytype
 	 */
@@ -102,7 +103,7 @@ private:
 		next_gr_t(grund_t* gr_, sint32 cost_, uint8 flag_=0) : gr(gr_), cost(cost_), flag(flag_) {}
 
 		grund_t* gr;
-		sint32     cost;
+		sint32   cost;
 		uint8    flag;
 	};
 	vector_tpl<next_gr_t> next_gr;
@@ -180,7 +181,6 @@ public:
 	bool is_allowed_step( const grund_t *from, const grund_t *to, sint32 *costs );
 
 private:
-
 	// checks, if we can built a bridge here ...
 	// may modify next_gr array!
 	void check_for_bridge(const grund_t* parent_from, const grund_t* from, const vector_tpl<koord3d> &ziel);
@@ -271,8 +271,6 @@ public:
 	void build();
 };
 
-
-ENUM_BITSET(way_builder_t::bautyp_t)
-
+ENUM_BITSET(way_builder_t::bautyp_t);
 
 #endif
