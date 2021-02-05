@@ -37,13 +37,12 @@ void kanal_t::rdwr(loadsave_t *file)
 {
 	weg_t::rdwr(file);
 
-	if(file->get_version_int() <= 87000) {
+	if(file->is_version_less(87, 1)) {
 		set_desc(default_kanal);
 		return;
 	}
 
-	if(file->is_saving())
-	{
+	if(file->is_saving()) {
 		const char *s = get_desc()->get_name();
 		file->rdwr_str(s);
 		if(file->get_extended_version() >= 12)
@@ -52,8 +51,7 @@ void kanal_t::rdwr(loadsave_t *file)
 			file->rdwr_str(s);
 		}
 	}
-	else
-	{
+	else {
 		char bname[128];
 		file->rdwr_str(bname, lengthof(bname));
 		const way_desc_t *desc = way_builder_t::get_desc(bname);

@@ -224,7 +224,7 @@ void road_user_t::rdwr(loadsave_t *file)
 	sint8 hoff = file->is_saving() ? get_hoff() : 0;
 
 	// correct old offsets ... REMOVE after savegame increase ...
-	if(file->get_version_int()<99018  &&  file->is_saving()) {
+	if(file->is_version_less(99, 18)  &&  file->is_saving()) {
 		dx = dxdy[ ribi_t::get_dir(direction)*2 ];
 		dy = dxdy[ ribi_t::get_dir(direction)*2+1 ];
 		sint8 i = steps/16;
@@ -234,7 +234,7 @@ void road_user_t::rdwr(loadsave_t *file)
 
 	vehicle_base_t::rdwr(file);
 
-	if(file->get_version_int() < 86006) {
+	if(file->is_version_less(86, 6)) {
 		sint32 l;
 		file->rdwr_long(l);
 		file->rdwr_long(l);
@@ -248,12 +248,12 @@ void road_user_t::rdwr(loadsave_t *file)
 		hoff = (sint8)l;
 	}
 	else {
-		if(file->get_version_int()<99005) {
+		if(file->is_version_less(99, 5)) {
 			sint32 dummy32;
 			file->rdwr_long(dummy32);
 		}
 		file->rdwr_long(weg_next);
-		if(file->get_version_int()<99018) {
+		if(file->is_version_less(99, 18)) {
 			file->rdwr_byte(dx);
 			file->rdwr_byte(dy);
 		}
@@ -264,7 +264,7 @@ void road_user_t::rdwr(loadsave_t *file)
 		file->rdwr_enum(direction);
 		dx = dxdy[ ribi_t::get_dir(direction)*2];
 		dy = dxdy[ ribi_t::get_dir(direction)*2+1];
-		if(file->get_version_int()<99005  ||  file->get_version_int()>99016) {
+		if(file->is_version_less(99, 5)  ||  file->is_version_atleast(99, 17)) {
 			sint16 dummy16 = ((16*(sint16)hoff)/OBJECT_OFFSET_STEPS);
 			file->rdwr_short(dummy16);
 			hoff = (sint8)((OBJECT_OFFSET_STEPS*(sint16)dummy16)/16);
@@ -276,7 +276,7 @@ void road_user_t::rdwr(loadsave_t *file)
 	pos_next.rdwr(file);
 
 	// convert steps to position
-	if(file->get_version_int()<99018) {
+	if(file->is_version_less(99, 18)) {
 		sint8 ddx=get_xoff(), ddy=get_hoff()-hoff;
 		sint8 i=0;
 
@@ -298,7 +298,7 @@ void road_user_t::rdwr(loadsave_t *file)
 	}
 
 	// the lifetime in ms
-	if(file->get_version_int()>89004) {
+	if(file->is_version_atleast(89, 5)) {
 		file->rdwr_long(time_to_life);
 	}
 
@@ -581,15 +581,15 @@ void private_car_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version_int() <= 86001) {
+	if(file->is_version_less(86, 2)) {
 		time_to_life = simrand(1000000, "void private_car_t::rdwr")+10000;
 	}
-	else if(file->get_version_int() <= 89004) {
+	else if(file->is_version_less(89, 5)) {
 		file->rdwr_long(time_to_life);
 		time_to_life *= 10000;	// converting from hops left to ms since start
 	}
 
-	if(file->get_version_int() <= 86004) {
+	if(file->is_version_less(86, 5)) {
 		// default starting speed for old games
 		if(file->is_loading()) {
 			current_speed = 48;
@@ -601,7 +601,7 @@ void private_car_t::rdwr(loadsave_t *file)
 		current_speed = dummy32;
 	}
 
-	if(file->get_version_int() <= 99010) {
+	if(file->is_version_less(99, 10)) {
 		pos_next_next = koord3d::invalid;
 	}
 	else {
@@ -609,7 +609,7 @@ void private_car_t::rdwr(loadsave_t *file)
 	}
 
 	// overtaking status
-	if(file->get_version_int()<100001) {
+	if(file->is_version_less(100, 1)) {
 		set_tiles_overtaking( 0 );
 	}
 	else {
@@ -617,8 +617,7 @@ void private_car_t::rdwr(loadsave_t *file)
 		set_tiles_overtaking( tiles_overtaking );
 	}
 
-	if(file->get_extended_version() >= 10 && file->get_version_int() >= 111002)
-	{
+	if( file->get_extended_version() >= 10 && file->is_version_atleast(111, 2) ) {
 		file->rdwr_long(ms_traffic_jam);
 		target.rdwr(file);
 		origin.rdwr(file);
@@ -691,12 +690,12 @@ bool private_car_t::can_enter_tile(grund_t *gr)
 	if(  get_pos()==pos_next_next  ) {
 		// turning around => single check
 		const uint8 next_direction = ribi_t::backward(this_direction);
-		dt = no_cars_blocking( gr, NULL, next_direction, next_direction, next_direction, this, 0 );
+		dt = get_blocking_vehicle(gr, NULL, next_direction, next_direction, next_direction, this, 0);
 
 		// do not block railroad crossing
 		if(dt==NULL  &&  str->is_crossing()) {
 			const grund_t *gr = welt->lookup(get_pos());
-			dt = no_cars_blocking( gr, NULL, next_direction, next_direction, next_direction, this, 0 );
+			dt = get_blocking_vehicle(gr, NULL, next_direction, next_direction, next_direction, this, 0);
 		}
 	}
 	else {
@@ -728,18 +727,18 @@ bool private_car_t::can_enter_tile(grund_t *gr)
 			grund_t *test = welt->lookup(pos_next_next);
 			if(  test  ) {
 				next_90direction = this->calc_direction(pos_next, pos_next_next);
-				dt = no_cars_blocking( gr, NULL, this_direction, next_direction, next_90direction, this, next_lane);
+				dt = get_blocking_vehicle(gr, NULL, this_direction, next_direction, next_90direction, this, next_lane);
 				if(  !dt  ) {
 					// This possibly made traffic too cautious at junctions, causing delays. However, precisely what this did
 					// and why it did it remain unclear, so retaining for reference.
-					//dt = no_cars_blocking( test, NULL, next_direction, next_90direction, next_90direction, this, next_lane);
+					//dt = get_blocking_vehicle( test, NULL, next_direction, next_90direction, next_90direction, this, next_lane);
 				}
 			}
 			// this fails with two crossings together; however, I see no easy way out here ...
 		}
 		else {
 			// not a crossing => skip 90 degrees check!
-			dt = no_cars_blocking( gr, NULL, this_direction, next_direction, next_90direction, this, next_lane );
+			dt = get_blocking_vehicle(gr, NULL, this_direction, next_direction, next_90direction, this, next_lane);
 			frei = true;
 		}
 		//If this car is overtaking, the car must avoid a head-on crash.
@@ -881,7 +880,7 @@ bool private_car_t::can_enter_tile(grund_t *gr)
 				const uint8 next_direction = ribi_type(dir);
 				const uint8 nextnext_direction = ribi_type(dir);
 				// test next field after way crossing
-				if(no_cars_blocking( test, NULL, next_direction, nextnext_direction, nextnext_direction, this, next_lane )) {
+				if(get_blocking_vehicle(test, NULL, next_direction, nextnext_direction, nextnext_direction, this, next_lane)) {
 					return false;
 				}
 				// ok, left the crossing

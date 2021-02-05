@@ -183,11 +183,11 @@ void grund_t::rdwr(loadsave_t *file)
 	uint8 climate_data = plan->get_climate() + (plan->get_climate_corners() << 4);
 
 	xml_tag_t g( file, "grund_t" );
-	if(file->get_version_int()<101000) {
+	if(file->is_version_less(101, 0)) {
 		pos.rdwr(file);
 		z_w = welt->get_groundwater();
 	}
-	else if(  file->get_version_int() < 112007  ) {
+	else if(  file->is_version_less(112, 7)  ) {
 		file->rdwr_byte(z);
 		pos.z = get_typ() == grund_t::wasser ? welt->get_groundwater() : z;
 		z_w = welt->get_groundwater();
@@ -208,7 +208,7 @@ void grund_t::rdwr(loadsave_t *file)
 		plan->set_climate_corners((climate_data >> 4));
 	}
 
-	if(  file->is_loading()  &&  file->get_version_int() < 112007  ) {
+	if(  file->is_loading()  &&  file->is_version_less(112, 7)  ) {
 		// convert heights from old single height saved game - water already at correct height
 		pos.z = get_typ() == grund_t::wasser ? pos.z : pos.z * env_t::pak_height_conversion_factor;
 		z = z * env_t::pak_height_conversion_factor;
@@ -227,7 +227,7 @@ void grund_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version_int()<99007) {
+	if(file->is_version_less(99, 7)) {
 		bool label;
 		file->rdwr_bool(label);
 		if(label) {
@@ -236,13 +236,13 @@ void grund_t::rdwr(loadsave_t *file)
 	}
 
 	sint8 owner_n=-1;
-	if(file->get_version_int()<99005) {
+	if(file->is_version_less(99, 5)) {
 		file->rdwr_byte(owner_n);
 	}
 
-	if(file->get_version_int()>=88009) {
+	if(file->is_version_atleast(88, 9)) {
 		uint8 sl = slope;
-		if(  file->get_version_int() < 112007  &&  file->is_saving()  ) {
+		if(  file->is_version_less(112, 7)  &&  file->is_saving()  ) {
 			// truncate double slopes to single slopes, better than nothing
 			sl = min( corner_sw(slope), 1 ) + min( corner_se(slope), 1 ) * 2 + min( corner_ne(slope), 1 ) * 4 + min( corner_nw(slope), 1 ) * 8;
 		}
@@ -257,7 +257,7 @@ void grund_t::rdwr(loadsave_t *file)
 	}
 
 	if(  file->is_loading()  ) {
-		if(  file->get_version_int() < 112007  ) {
+		if(  file->is_version_less(112, 7)  ) {
 			// convert slopes from old single height saved game
 			slope = encode_corners(scorner_sw(slope), scorner_se(slope), scorner_ne(slope), scorner_nw(slope)) * env_t::pak_height_conversion_factor;
 		}
@@ -379,7 +379,7 @@ void grund_t::rdwr(loadsave_t *file)
 
 					case water_wt:
 						// ignore old type dock ...
-						if(file->get_version_int()>=87000) {
+						if(file->is_version_atleast(87, 0)) {
 							weg = new kanal_t(file);
 						}
 						else {
@@ -409,7 +409,7 @@ void grund_t::rdwr(loadsave_t *file)
 						// we do not delete them, to keep maintenance costs correct
 					}
 					else {
-						assert((flags&has_way2)==0);	// maximum two ways on one tile ...
+						assert((flags&has_way2)==0); // maximum two ways on one tile ...
 						weg->set_pos(pos);
 						if(owner_n!=-1) {
 							weg->set_owner(welt->get_player(owner_n));
@@ -862,7 +862,7 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 	const size_t WALL_COUNT = 2;
 
 	// full underground mode or not ground -> no back image, no need for draw_as_obj
-	if (underground_mode == ugm_all || !ist_karten_boden()) {
+	if(  underground_mode == ugm_all  ||  !ist_karten_boden()  ) {
 		clear_flag(grund_t::draw_as_obj);
 		this->back_imageid = 0;
 		return;
@@ -895,16 +895,16 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 	for(  size_t i=0;  i<WALL_COUNT;  i++  ) {
 		// now enter the left/back two height differences
 		if (const grund_t *gr = welt->lookup_kartenboden(k + koord::nsew[(i - 1) & 3])) {
-			const uint8 back_height = min(corner_nw(slope_this), (i == 0 ? corner_sw(slope_this) : corner_ne(slope_this)));
+			const uint8 back_height = min(corner_nw(slope_this),(i==0?corner_sw(slope_this):corner_ne(slope_this)));
 
 			const sint16 left_hgt=gr->get_disp_height()-back_height;
 			const slope_t::type slope=gr->get_disp_slope();
 
-			const uint8 corner_a = (i == 0 ? corner_sw(slope_this) : corner_nw(slope_this)) - back_height;
-			const uint8 corner_b = (i == 0 ? corner_nw(slope_this) : corner_ne(slope_this)) - back_height;
+			const uint8 corner_a = (i==0?corner_sw(slope_this):corner_nw(slope_this))-back_height;
+			const uint8 corner_b = (i==0?corner_nw(slope_this):corner_ne(slope_this))-back_height;
 
-			sint8 diff_from_ground_1 = left_hgt + (i == 0 ? corner_se(slope) : corner_sw(slope)) - hgt;
-			sint8 diff_from_ground_2 = left_hgt + (i == 0 ? corner_ne(slope) : corner_se(slope)) - hgt;
+			sint8 diff_from_ground_1 = left_hgt+(i==0?corner_se(slope):corner_sw(slope))-hgt;
+			sint8 diff_from_ground_2 = left_hgt+(i==0?corner_ne(slope):corner_se(slope))-hgt;
 
 			if (underground_mode==ugm_level) {
 				const bool gr_is_visible = gr->is_visible();
@@ -914,7 +914,7 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 					diff_from_ground_1 += 1;
 					diff_from_ground_2 += 1;
 					set_flag(grund_t::draw_as_obj);
-					fence[i] = corner_a == corner_b;
+					fence[i] = corner_a==corner_b;
 				}
 				else if ( !isvisible && gr_is_visible){
 					diff_from_ground_1 = max(diff_from_ground_1, 1);
@@ -929,7 +929,7 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 				if ( isvisible && (get_typ()==grund_t::tunnelboden) && ist_karten_boden() && pos.z==underground_level
 					&& corner_nw( get_grund_hang() ) > 0 /* nw corner */) {
 
-					if ((i == 0) ^ (corner_sw(get_grund_hang()) == 0)) {
+					if ( (i==0)  ^  (corner_sw( get_grund_hang() )==0) ) {
 						diff_from_ground_1 = 0;
 						diff_from_ground_2 = 0;
 					}
@@ -937,8 +937,8 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 			}
 
 			// up slope hiding something ...
-			if (diff_from_ground_1 - corner_a<0 || diff_from_ground_2 - corner_b<0) {
-				if (corner_a == corner_b) {
+			if(diff_from_ground_1-corner_a<0  ||  diff_from_ground_2-corner_b<0)  {
+				if(  corner_a==corner_b  ) {
 					// ok, we need a fence here, if there is not a vertical bridgehead
 					weg_t const* w;
 					fence[i] = !(w = get_weg_nr(0)) || (
@@ -947,7 +947,7 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 						);
 
 					// no fences between water tiles or between invisible tiles
-					if (fence[i] && ((is_water() && gr->is_water()) || (!isvisible && !gr->is_visible()))) {
+					if(  fence[i]  &&  ( (is_water() && gr->is_water()) || (!isvisible && !gr->is_visible()) )  ) {
 						fence[i] = false;
 					}
 				}
@@ -960,10 +960,10 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 			}
 			// update corner heights
 			if (diff_from_ground_1 > corner_a) {
-				corners_add[i] = max(corners_add[i], scale_z_step * (diff_from_ground_1 - corner_a));
+				corners_add[i] = max(corners_add[i], scale_z_step * (diff_from_ground_1-corner_a));
 			}
 			if (diff_from_ground_2 > corner_b) {
-				corners_add[i + 1] = max(corners_add[i + 1], scale_z_step * (diff_from_ground_2 - corner_b));
+				corners_add[i+1] = max(corners_add[i+1], scale_z_step * (diff_from_ground_2 - corner_b));
 			}
 		}
 	}
@@ -1004,11 +1004,11 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 					}
 				}
 				if (i>0) {
-					test[i - 1] = min(test[i - 1], h + min(corner_sw(s), lh)*scale_z_step + (2 - i)*scale_y_step + step*scale_y_step);
+					test[i-1] = min(test[i-1], h + min(corner_sw(s),lh)*scale_z_step + (2-i)*scale_y_step + step*scale_y_step );
 				}
-				test[i] = min(test[i], h + min(corner_se(s)*scale_z_step, min(min(corner_nw(s), lh), rh)*scale_z_step + scale_y_step) + step*scale_y_step);
+				test[i] = min(test[i], h + min( corner_se(s)*scale_z_step, min(min(corner_nw(s),lh),rh)*scale_z_step + scale_y_step) + step*scale_y_step );
 				if (i<2) {
-					test[i + 1] = min(test[i + 1], h + min(corner_ne(s), rh)*scale_z_step + i*scale_y_step + step*scale_y_step);
+					test[i+1] = min(test[i+1], h + min(corner_ne(s),rh)*scale_z_step + i*scale_y_step + step*scale_y_step);
 				}
 			}
 		}
@@ -1017,7 +1017,7 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 			set_flag(draw_as_obj);
 			break;
 		}
-		else if (test[0] > corners[0] && test[1] > corners[1] && test[2] > corners[2]) {
+		else if (test[0] > corners[0]  &&  test[1] > corners[1]  &&  test[2] > corners[2]) {
 			// we cannot hide anything anymore
 			break;
 		}
@@ -1030,7 +1030,7 @@ void grund_t::calc_back_image(const sint8 hgt, const slope_t::type slope_this)
 			back_imageid = WALL_IMAGE_COUNT + fence_offset;
 		}
 	}
-	this->back_imageid = (is_building != 0) ? -back_imageid : back_imageid;
+	this->back_imageid = (is_building!=0)? -back_imageid : back_imageid;
 }
 #endif
 
@@ -1281,7 +1281,7 @@ void grund_t::display_boden(const sint16 xpos, const sint16 ypos, const sint16 r
 					const int dh = corner_nw(get_disp_way_slope()) * hgt_step;
 					add_poly_clip( xpos + raster_tile_width, ypos + 3 * raster_tile_width / 4 - dh, xpos + raster_tile_width / 2, ypos + raster_tile_width / 2 - dh, ribi_t::north | non_convex CLIP_NUM_PAR );
 				}
-				activate_ribi_clip((way_ribi & ribi_t::northwest) | non_convex  CLIP_NUM_PAR);
+				activate_ribi_clip( (way_ribi & ribi_t::northwest) | non_convex  CLIP_NUM_PAR );
 			}
 			d->display( xpos, ypos CLIP_NUM_PAR );
 		}
@@ -1291,7 +1291,6 @@ void grund_t::display_boden(const sint16 xpos, const sint16 ypos, const sint16 r
 		}
 	}
 }
-
 
 
 void grund_t::display_border( sint16 xpos, sint16 ypos, const sint16 raster_tile_width CLIP_NUM_DEF)
@@ -1410,7 +1409,6 @@ slope_t::type grund_t::get_disp_way_slope() const
 		return slope_t::flat;
 	}
 }
-
 
 
 /**
@@ -1561,16 +1559,17 @@ void grund_t::display_obj_all(const sint16 xpos, const sint16 ypos, const sint16
 	}
 	if(  ribi & ribi_t::east  ) {
 		const int dh = corner_se(slope) * hgt_step;
-		add_poly_clip(xpos + raster_tile_width / 2, ypos + raster_tile_width - dh, xpos + raster_tile_width, ypos + 3 * raster_tile_width / 4 - dh, ribi_t::east | 16 CLIP_NUM_PAR);
+		add_poly_clip( xpos + raster_tile_width / 2, ypos + raster_tile_width - dh, xpos + raster_tile_width, ypos + 3 * raster_tile_width / 4 - dh, ribi_t::east|16 CLIP_NUM_PAR );
 	}
 	if(  ribi & ribi_t::south  ) {
 		const int dh = corner_se(slope) * hgt_step;
-		add_poly_clip(xpos - 1, ypos + 3 * raster_tile_width / 4 - dh, xpos + raster_tile_width / 2 - 1, ypos + raster_tile_width - dh, ribi_t::south | 16  CLIP_NUM_PAR);
+		add_poly_clip( xpos- 1, ypos + 3 * raster_tile_width / 4  - dh, xpos + raster_tile_width / 2 - 1, ypos + raster_tile_width  - dh, ribi_t::south|16  CLIP_NUM_PAR );
 	}
 
 	// display background
 	if (!tunnel_portal  ||  slope == 0) {
-		activate_ribi_clip( (ribi_t::northwest & ribi) | 16 CLIP_NUM_PAR );	}
+		activate_ribi_clip( (ribi_t::northwest & ribi) | 16 CLIP_NUM_PAR );
+	}
 	else {
 		// also clip along the upper edge of the tunnel tile
 		activate_ribi_clip( ribi | 16 CLIP_NUM_PAR );
@@ -1616,7 +1615,7 @@ void grund_t::display_obj_all(const sint16 xpos, const sint16 ypos, const sint16
 		grund_t *gr;
 		if(  get_neighbour( gr, invalid_wt, ribi_t::east )  ) {
 			const bool draw_other_ways = (flags&draw_as_obj)  ||  (gr->flags&draw_as_obj)  ||  !gr->ist_karten_boden();
-			activate_ribi_clip(ribi_t::east | 16 CLIP_NUM_PAR);
+			activate_ribi_clip( ribi_t::east|16 CLIP_NUM_PAR );
 			gr->display_obj_bg( xpos + raster_tile_width / 2, ypos + raster_tile_width / 4 - tile_raster_scale_y( (gr->get_hoehe() - pos.z) * TILE_HEIGHT_STEP, raster_tile_width ), is_global, draw_other_ways, true CLIP_NUM_PAR );
 		}
 	}
@@ -1624,7 +1623,7 @@ void grund_t::display_obj_all(const sint16 xpos, const sint16 ypos, const sint16
 		grund_t *gr;
 		if(  get_neighbour( gr, invalid_wt, ribi_t::south )  ) {
 			const bool draw_other_ways = (flags&draw_as_obj)  ||  (gr->flags&draw_as_obj)  ||  !gr->ist_karten_boden();
-			activate_ribi_clip(ribi_t::south | 16 CLIP_NUM_PAR);
+			activate_ribi_clip( ribi_t::south|16 CLIP_NUM_PAR );
 			gr->display_obj_bg( xpos - raster_tile_width / 2, ypos + raster_tile_width / 4 - tile_raster_scale_y( (gr->get_hoehe() - pos.z) * TILE_HEIGHT_STEP, raster_tile_width ), is_global, draw_other_ways, true CLIP_NUM_PAR );
 		}
 	}
@@ -1912,12 +1911,11 @@ sint64 grund_t::remove_trees()
 
 sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player, koord3d_vector_t *route)
 {
-	sint64 cost = 0;
+	sint64 cost=0;
 
 	// not already there?
 	const weg_t * alter_weg = get_weg(weg->get_waytype());
-	if(alter_weg == NULL)
-	{
+	if(alter_weg==NULL) {
 		// ok, we are unique
 		// Calculate the forge cost
 		sint64 forge_cost = welt->get_settings().get_forge_cost(weg->get_waytype());
@@ -1952,8 +1950,7 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 		}
 		cost -= forge_cost;
 
-		if((flags&has_way1)==0)
-		{
+		if((flags&has_way1)==0) {
 			// new first way here, clear trees
 			cost -= remove_trees();
 
@@ -1973,25 +1970,22 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 			objlist.add( weg );
 			flags |= has_way1;
 		}
-		else
-		{
+		else {
 			weg_t *other = (weg_t *)obj_bei(0);
 			// another way will be added
-			if(flags&has_way2)
-			{
+			if(flags&has_way2) {
 				dbg->error("grund_t::neuen_weg_bauen()","cannot built more than two ways on %i,%i,%i!",pos.x,pos.y,pos.z);
 				return 0;
 			}
 			// add the way
-			objlist.add(weg);
+			objlist.add( weg );
 			weg->set_ribi(ribi);
 			weg->set_pos(pos);
 			flags |= has_way2;
-			if(ist_uebergang())
-			{
+			if(ist_uebergang()) {
 				// no tram => crossing needed!
-				waytype_t w2 = other->get_waytype();
-				const crossing_desc_t *cr_desc = crossing_logic_t::get_crossing( weg->get_waytype(), w2, weg->get_max_speed(), other->get_desc()->get_topspeed(), welt->get_timeline_year_month() );
+				waytype_t w2 =  other->get_waytype();
+				const crossing_desc_t *cr_desc = crossing_logic_t::get_crossing( weg->get_waytype(), w2, weg->get_max_speed(), other->get_max_speed(), welt->get_timeline_year_month() );
 				if(cr_desc == nullptr)
 				{
 					dbg->error("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", weg->get_waytype(), w2);
@@ -2037,6 +2031,7 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 	}
 	return cost;
 }
+
 
 sint32 grund_t::weg_entfernen(waytype_t wegtyp, bool ribi_rem)
 {
@@ -2538,7 +2533,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 			// If the original basic algorithm does not succeed, try the between intersections algorithm instead.
 
 			// First, find the set of connected intersections
-			// One for each direction.	
+			// One for each direction.
 			minivec_tpl<grund_t*> intersections;
 			for (auto const gr : neighbouring_grounds)
 			{
@@ -2636,7 +2631,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 			}
 
 			// First, check the distance using the existing route.
-			
+
 			vehicle_t* diversion_checker = vehicle_builder_t::build(start, welt->get_public_player(), NULL, &diversion_check_type);
 			diversion_checker->set_flag(obj_t::not_on_map);
 			diversion_checker->set_owner(welt->get_public_player());
@@ -2879,7 +2874,8 @@ bool grund_t::remove_everything_from_way(player_t* player, waytype_t wt, ribi_t:
 					costs -= signal->get_desc()->get_value();
 					delete signal;
 				}
-			} else if (wayobj_t* const wayobj = obj_cast<wayobj_t>(obj)) {
+			}
+			else if (wayobj_t* const wayobj = obj_cast<wayobj_t>(obj)) {
 				// wayobj: check dir
 				if (add == ribi_t::none && wayobj->get_desc()->get_wtyp() == wt) {
 					uint8 new_dir=wayobj->get_dir()&add;
@@ -2892,13 +2888,16 @@ bool grund_t::remove_everything_from_way(player_t* player, waytype_t wt, ribi_t:
 						delete wayobj;
 					}
 				}
-			} else if (private_car_t* const citycar = obj_cast<private_car_t>(obj)) {
+			}
+			else if (private_car_t* const citycar = obj_cast<private_car_t>(obj)) {
 				// citycar: just delete
 				if (wt == road_wt) delete citycar;
-			} else if (pedestrian_t* const pedestrian = obj_cast<pedestrian_t>(obj)) {
+			}
+			else if (pedestrian_t* const pedestrian = obj_cast<pedestrian_t>(obj)) {
 				// pedestrians: just delete
 				if (wt == road_wt) delete pedestrian;
-			} else if (tunnel_t* const tunnel = obj_cast<tunnel_t>(obj)) {
+			}
+			else if (tunnel_t* const tunnel = obj_cast<tunnel_t>(obj)) {
 				// remove tunnel portal, if not the last tile ...
 				// must be done before weg_entfernen() to get maintenance right
 				uint8 wt = tunnel->get_desc()->get_waytype();

@@ -448,7 +448,8 @@ public:
 	image_id get_image() const OVERRIDE {return image;}
 
 	inline void set_after_image( image_id b ) { foreground_image = b; }
-	image_id get_front_image() const OVERRIDE { return foreground_image; }
+	image_id get_front_image() const OVERRIDE {return foreground_image;}
+
 
 	// correct maintenance
 	void finish_rd() OVERRIDE;

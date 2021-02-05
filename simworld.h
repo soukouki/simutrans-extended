@@ -982,6 +982,7 @@ private:
 
 	destination find_destination(trip_type trip, uint8 g_class);
 
+	static sint32 cities_to_process;
 #ifdef MULTI_THREAD
 	friend void *check_road_connexions_threaded(void* args);
 	friend void *unreserve_route_threaded(void* args);
@@ -989,7 +990,6 @@ private:
 	friend void *step_convoys_threaded(void* args);
 	friend void *path_explorer_threaded(void* args);
 	friend void *step_individual_convoy_threaded(void* args);
-	static sint32 cities_to_process;
 	static vector_tpl<convoihandle_t> convoys_next_step;
 	public:
 	static bool threads_initialised;
@@ -2683,6 +2683,10 @@ private:
 	uint32 get_next_command_step();
 
 	void get_nearby_halts_of_tiles(const minivec_tpl<const planquadrat_t*> &tile_list, const goods_desc_t * wtyp, vector_tpl<nearby_halt_t> &halts) const;
+
+	void refresh_private_car_routes();
+
+	static void clear_private_car_routes() ;
 };
 
 
