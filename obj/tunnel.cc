@@ -123,8 +123,7 @@ void tunnel_t::calc_image()
 			}
 		}
 	}
-	else
-	{
+	else {
 		set_image( IMG_EMPTY );
 		set_after_image( IMG_EMPTY );
 	}
@@ -185,7 +184,7 @@ void tunnel_t::finish_rd()
 		}
 	}
 
-	if (player) {
+	if(player) {
 		// change maintenance
 		weg_t *weg = gr->get_weg(desc->get_waytype());
 		if(weg) {

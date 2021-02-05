@@ -823,6 +823,7 @@ void signal_t::calc_image()
 {
 	foreground_image = IMG_EMPTY;
 	image_id image = IMG_EMPTY;
+
 	after_xoffset = 0;
 	after_yoffset = 0;
 	sint8 xoff = 0, yoff = 0;
@@ -836,8 +837,7 @@ void signal_t::calc_image()
 		const ribi_t::ribi hang_dir = ribi_t::backward( ribi_type(full_hang) );
 
 		weg_t *sch = gr->get_weg(desc->get_wtyp()!=tram_wt ? desc->get_wtyp() : track_wt);
-		if(sch)
-		{
+		if(sch) {
 			uint16 number_of_signal_image_types = desc->get_aspects();
 			if(desc->get_has_call_on())
 			{

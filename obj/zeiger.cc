@@ -110,6 +110,7 @@ void zeiger_t::set_after_image( image_id b )
 	foreground_image = b;
 }
 
+
 void zeiger_t::set_area(koord new_area, bool center, koord new_offset)
 {
 	if (center) {

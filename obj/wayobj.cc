@@ -144,11 +144,9 @@ wayobj_t::~wayobj_t()
 						weg->add_way_constraints(t->get_desc()->get_way_constraints());
 					}
 				}
-				if(gr->get_typ()==grund_t::brueckenboden)
-				{
+				if(gr->get_typ()==grund_t::brueckenboden) {
 					bruecke_t *b = gr->find<bruecke_t>(1);
-					if(b)
-					{
+					if(b) {
 						if(hang != slope_t::flat)
 						{
 							const uint slope_height = (hang & 7) ? 1 : 2;
@@ -252,12 +250,12 @@ void wayobj_t::cleanup(player_t *player)
 
 // returns NULL, if removal is allowed
 // players can remove public owned wayobjs
-const char *wayobj_t:: is_deletable(const player_t *player)
+const char *wayobj_t::is_deletable(const player_t *player)
 {
 	if(  get_player_nr()==1  ) {
 		return NULL;
 	}
-	return obj_t:: is_deletable(player);
+	return obj_t::is_deletable(player);
 }
 
 
@@ -311,8 +309,7 @@ void wayobj_t::finish_rd()
 			// Add the way constraints together.
 			weg->add_way_constraints(desc->get_way_constraints());
 		}
-		else
-		{
+		else {
 			dbg->warning("wayobj_t::finish_rd()","ground was not a way!");
 		}
 	}
@@ -448,8 +445,7 @@ void wayobj_t::calc_image()
 const char *wayobj_t::extend_wayobj_t(koord3d pos, player_t *owner, ribi_t::ribi dir, const way_obj_desc_t *desc)
 {
 	grund_t *gr=welt->lookup(pos);
-	if(gr)
-	{
+	if(gr) {
 		wayobj_t *existing_wayobj = gr->get_wayobj( desc->get_wtyp() );
 		if( existing_wayobj ) {
 			if(  existing_wayobj->get_desc() != desc  &&  player_t::check_owner(owner, existing_wayobj->get_owner())  ) {
@@ -628,7 +624,7 @@ const way_obj_desc_t *wayobj_t::get_overhead_line(waytype_t wt, uint16 time)
 {
 	for(auto const& i : table) {
 		way_obj_desc_t const* const desc = i.value;
-		if(  desc->is_available(time)  &&  desc->get_wtyp()==wt  &&  desc->is_overhead_line()) {
+		if(  desc->is_available(time)  &&  desc->get_wtyp()==wt  &&  desc->is_overhead_line()  ) {
 			return desc;
 		}
 	}

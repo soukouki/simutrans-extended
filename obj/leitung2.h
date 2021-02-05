@@ -194,8 +194,11 @@ public:
 	typ get_typ() const { return senke; }
 #endif
 
-	// used to alternate between displaying power on and power off images at a frequency determined by the percentage of power supplied
-	// gives players a visual indication of a power network with insufficient generation
+	/**
+	 * Used to alternate between displaying power on and power off images.
+	 * Frequency determined by the percentage of power supplied.
+	 * Gives players a visual indication of a power network with insufficient generation.
+	 */
 	sync_result sync_step(uint32 delta_t) OVERRIDE;
 
 	const char *get_name() const OVERRIDE {return "Abspanntransformator";}

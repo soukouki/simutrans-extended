@@ -58,6 +58,7 @@ public:
 
 	void cleanup(player_t *player) OVERRIDE;
 
+
 	uint8 get_broad_type() const { return broad_type; };
 
 	/**

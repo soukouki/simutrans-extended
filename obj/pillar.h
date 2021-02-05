@@ -10,12 +10,12 @@
 #include "../simobj.h"
 #include "../descriptor/bridge_desc.h"
 
-/**
- * Bridge piece (visible)
- */
 class loadsave_t;
 class karte_t;
 
+/**
+ * Bridge piece (visible)
+ */
 class pillar_t : public obj_t
 {
 	const bridge_desc_t *desc;
