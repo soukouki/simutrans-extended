@@ -97,7 +97,7 @@ public:
 	static const building_desc_t* get_residential(int level, koord size, uint16 time, climate cl, uint8 region, bool allow_earlier = false, uint32 clusters = 0l);
 
 	/// @returns headquarters with level @p level (takes the first matching one)
-	static const building_desc_t* get_headquarter(int level, uint16 time);
+	static const building_desc_t* get_headquarters(int level, uint16 time);
 
 	/// @returns a random tourist attraction matching the requirements.
 	static const building_desc_t* get_random_attraction(uint16 time, bool ignore_retire, climate cl)

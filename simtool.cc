@@ -7407,7 +7407,7 @@ const char *tool_link_factory_t::do_work( player_t *, const koord3d &start, cons
 
 const building_desc_t *tool_headquarter_t::next_level( const player_t *player ) const
 {
-	return hausbauer_t::get_headquarter(player->get_headquarters_level(), welt->get_timeline_year_month());
+	return hausbauer_t::get_headquarters(player->get_headquarters_level(), welt->get_timeline_year_month());
 }
 
 const char* tool_headquarter_t::get_tooltip(const player_t *player) const

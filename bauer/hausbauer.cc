@@ -1198,7 +1198,7 @@ const building_desc_t* hausbauer_t::get_residential(int level, koord size, uint1
 }
 
 
-const building_desc_t* hausbauer_t::get_headquarter(int level, uint16 time)
+const building_desc_t* hausbauer_t::get_headquarters(int level, uint16 time)
 {
 	if(  level<0  ) {
 		return NULL;

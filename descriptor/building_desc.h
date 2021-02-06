@@ -296,7 +296,7 @@ public:
 	bool is_connected_with_town() const;
 
 	/// @returns headquarter level (or -1 if building is not headquarter)
-	sint32 get_headquarter_level() const  { return (is_headquarters() ? get_extra() : -1) ; }
+	sint32 get_headquarters_level() const  { return (is_headquarters() ? get_extra() : -1) ; }
 
 	/**
 	* the level is used in many places: for price, for capacity, ...
