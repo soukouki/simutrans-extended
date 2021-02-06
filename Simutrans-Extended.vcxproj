@@ -2032,6 +2032,8 @@
     <ClCompile Include="obj\roadsign.cc" />
     <ClCompile Include="obj\signal.cc" />
     <ClCompile Include="obj\simobj.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug (SDL 2)|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="obj\tunnel.cc" />
     <ClCompile Include="obj\wayobj.cc" />
     <ClCompile Include="obj\wolke.cc" />
@@ -2080,8 +2082,6 @@
     <ClCompile Include="script\script.cc" />
     <ClCompile Include="siminteraction.cc" />
     <ClCompile Include="simloadingscreen.cc" />
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug (SDL 2)|Win32'">false</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="simsignalbox.cc" />
     <ClCompile Include="sys\simsys.cc" />
     <ClCompile Include="sys\simsys_d.cc">
