@@ -312,7 +312,7 @@ void obj_t::display_after(int xpos, int ypos, bool) const
 	}
 }
 
-#include "simconvoi.h"
+#include "../simconvoi.h"
 
 /*
  * when a vehicle moves or a cloud moves, it needs to mark the old spot as dirty (to copy to screen)

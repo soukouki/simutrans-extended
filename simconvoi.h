@@ -29,7 +29,7 @@
 
 #include "simconst.h"
 
-#include "simobj.h"
+#include "obj/simobj.h"
 #include "convoy.h"
 
 /*
