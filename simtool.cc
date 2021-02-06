@@ -218,8 +218,8 @@ static halthandle_t suche_nahe_haltestelle(player_t *player, karte_t *welt, koor
 	if(  bd->hat_wege()  ) {
 		ribi_t::ribi ribi = bd->get_weg_nr(0)->get_ribi_unmasked();
 		for(  int i=0;  i<4;  i++ ) {
-			if(  ribi_t::nsew[i] & ribi ) {
-				if(  planquadrat_t* plan=welt->access(k+koord::nsew[i])  ) {
+			if(  ribi_t::nesw[i] & ribi ) {
+				if(  planquadrat_t* plan=welt->access(k+koord::nesw[i])  ) {
 					my_halt = plan->get_halt( player );
 					if(  my_halt.is_bound()  ) {
 						return my_halt;
@@ -1449,7 +1449,7 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 
 		if(  gr1->get_typ()==grund_t::boden  ) {
 			for(  sint16 i = 0 ;  i < 4 ;  i++  ) {
-				const koord neighbour = k + koord::nsew[i];
+				const koord neighbour = k + koord::nesw[i];
 
 				const grund_t *gr_neighbour=welt->lookup_kartenboden(neighbour);
 				if(gr_neighbour) {
@@ -4848,9 +4848,9 @@ const char *tool_build_station_t::tool_station_flat_dock_aux(player_t *player, k
 	ribi_t::ribi water_dir = 0;
 	uint8        total_dir = 0;
 	for(  uint8 i=0;  i<4;  i++  ) {
-		if(  grund_t *gr = welt->lookup_kartenboden(k+koord::nsew[i])  ) {
+		if(  grund_t *gr = welt->lookup_kartenboden(k+koord::nesw[i])  ) {
 			if(  gr->is_water()  &&  gr->get_hoehe() == pos.z) {
-				water_dir |= ribi_t::nsew[i];
+				water_dir |= ribi_t::nesw[i];
 				total_dir ++;
 			}
 		}
@@ -4867,10 +4867,10 @@ const char *tool_build_station_t::tool_station_flat_dock_aux(player_t *player, k
 
 	for(  uint8 ii=0;  ii<4;  ii++  ) {
 
-		if(  (water_dir & ribi_t::nsew[ii]) == 0  ) {
+		if(  (water_dir & ribi_t::nesw[ii]) == 0  ) {
 			continue;
 		}
-		const koord dx = koord::nsew[ii];
+		const koord dx = koord::nesw[ii];
 		const char *last_error = NULL;
 
 		for(int i=0;  i<=len;  i++  ) {
@@ -4894,7 +4894,7 @@ const char *tool_build_station_t::tool_station_flat_dock_aux(player_t *player, k
 				halthandle_t halt = pl->get_boden_bei(j)->get_halt();
 				if (halt.is_bound()  &&  player_t::check_owner( player, halt->get_owner()) ) {
 					test_halt[ii] = halt;
-					halt_dir |= ribi_t::nsew[ii];
+					halt_dir |= ribi_t::nesw[ii];
 				}
 			}
 
@@ -4912,7 +4912,7 @@ const char *tool_build_station_t::tool_station_flat_dock_aux(player_t *player, k
 
 		// error: then remove this direction
 		if(  last_error  ) {
-			water_dir &= ~ribi_t::nsew[ii];
+			water_dir &= ~ribi_t::nesw[ii];
 			if(  --total_dir == 0  ) {
 				// no duitable directions found
 				return last_error;
@@ -4935,8 +4935,8 @@ const char *tool_build_station_t::tool_station_flat_dock_aux(player_t *player, k
 	halthandle_t halt;
 
 	for(  uint8 i=0;  i<4;  i++  ) {
-		if(  water_dir & ribi_t::nsew[i]  ) {
-			dx = koord::nsew[i];
+		if(  water_dir & ribi_t::nesw[i]  ) {
+			dx = koord::nesw[i];
 			halt = test_halt[i];
 			koord last_k = k + dx*len;
 			// layout: north 2, west 3, south 0, east 1
@@ -5168,7 +5168,7 @@ DBG_MESSAGE("tool_station_aux()", "building %s on square %d,%d for waytype %x", 
 		sint32 neighbour_layout[] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 		for(  unsigned i=0;  i<4;  i++  ) {
 			// oriented buildings here - get neighbouring layouts
-			gr = welt->lookup(koord3d(k+koord::nsew[i],offset));
+			gr = welt->lookup(koord3d(k+koord::nesw[i],offset));
 			if(!gr) {
 				// check whether bridge end tile
 				grund_t * gr_tmp = welt->lookup( pos+koord3d( (layout & 1 ? koord::west :  koord::north),offset - 1) );
@@ -5186,8 +5186,8 @@ DBG_MESSAGE("tool_station_aux()", "building %s on square %d,%d for waytype %x", 
 				// check, if there is an oriented stop
 				const gebaeude_t* gb = gr->find<gebaeude_t>();
 				if(gb  &&  gb->get_tile()->get_desc()->get_all_layouts()>4  &&  (gb->get_tile()->get_desc()->get_type()>building_desc_t::dock  ||  gb->get_tile()->get_desc()->get_type()>building_desc_t::flat_dock)  ) {
-					next_own |= ribi_t::nsew[i];
-					neighbour_layout[ribi_t::nsew[i]] = gb->get_tile()->get_layout();
+					next_own |= ribi_t::nesw[i];
+					neighbour_layout[ribi_t::nesw[i]] = gb->get_tile()->get_layout();
 				}
 			}
 		}
@@ -6392,7 +6392,7 @@ const char *tool_build_roadsign_t::place_sign_intern( player_t *player, grund_t*
 					if (!old_direction_was_double) {
 						// inverse first dir
 						for (; i < 4; i++) {
-							if ((dir & ribi_t::nsew[i]) == sig_dir) {
+							if ((dir & ribi_t::nesw[i]) == sig_dir) {
 								i++;
 								break;
 							}
@@ -6400,8 +6400,8 @@ const char *tool_build_roadsign_t::place_sign_intern( player_t *player, grund_t*
 					}
 					// find the second dir ...
 					for (; i < 4; i++) {
-						if ((dir & ribi_t::nsew[i]) != 0) {
-							dir = ribi_t::nsew[i];
+						if ((dir & ribi_t::nesw[i]) != 0) {
+							dir = ribi_t::nesw[i];
 						}
 					}
 					// if nothing found, we have two ways again ...
@@ -6509,8 +6509,8 @@ const char *tool_build_roadsign_t::place_sign_intern( player_t *player, grund_t*
 					// if single way, we need to reduce the allowed ribi to one
 					if (desc->is_single_way() || desc->is_choose_sign()) {
 						for(  int i=0;  i<4;  i++  ) {
-							if ((dir & ribi_t::nsew[i]) != 0) {
-								dir = ribi_t::nsew[i];
+							if ((dir & ribi_t::nesw[i]) != 0) {
+								dir = ribi_t::nesw[i];
 								break;
 							}
 						}
@@ -7407,7 +7407,7 @@ const char *tool_link_factory_t::do_work( player_t *, const koord3d &start, cons
 
 const building_desc_t *tool_headquarter_t::next_level( const player_t *player ) const
 {
-	return hausbauer_t::get_headquarter(player->get_headquarters_level(), welt->get_timeline_year_month());
+	return hausbauer_t::get_headquarters(player->get_headquarters_level(), welt->get_timeline_year_month());
 }
 
 const char* tool_headquarter_t::get_tooltip(const player_t *player) const

@@ -24,7 +24,7 @@
 #include "../../simworld.h"
 #include "../../display/simimg.h"
 #include "../../simhalt.h"
-#include "../../simobj.h"
+#include "../../obj/simobj.h"
 #include "../../player/simplay.h"
 #include "../../obj/wayobj.h"
 #include "../../obj/roadsign.h"
@@ -1496,7 +1496,7 @@ void weg_t::calc_image()
 			if(recursion == 0) {
 				recursion++;
 				for(int r = 0; r < 4; r++) {
-					if(  from->get_neighbour(to, get_waytype(), ribi_t::nsew[r])  ) {
+					if(  from->get_neighbour(to, get_waytype(), ribi_t::nesw[r])  ) {
 						// can fail on water tiles
 						if(  weg_t *w=to->get_weg(get_waytype())  )  {
 							// and will only change the outcome, if it has a diagonal image ...
@@ -1929,7 +1929,7 @@ uint8 weg_t::get_map_idx(const koord3d &next_tile) const {
 	const ribi_t::ribi dir = ribi_type(get_pos(), next_tile);
 	if(next_tile != koord3d::invalid) {
 		for (uint8 j = 0; j < 4; j++) {
-			if (dir == ribi_t::nsew[j]) {
+			if (dir == ribi_t::nesw[j]) {
 				return j;
 			}
 		}
@@ -2056,7 +2056,7 @@ koord3d weg_t::get_next_on_private_car_route_to(koord dest, bool reading_set) co
 		if(map[i].contains(dest)) {
 			if(i<4) {
 				grund_t* to;
-				if(welt->lookup(get_pos())->get_neighbour(to, waytype_t::road_wt,ribi_t::nsew[i])) {
+				if(welt->lookup(get_pos())->get_neighbour(to, waytype_t::road_wt,ribi_t::nesw[i])) {
 					return to->get_pos();
 				}
 			} else {

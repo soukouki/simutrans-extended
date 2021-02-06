@@ -84,7 +84,7 @@ void wasser_t::recalc_ribis()
 
 	for(  uint8 i = 0;  i < 4;  i++  ) {
 		grund_t *gr_neighbour = NULL;
-		ribi_t::ribi test = ribi_t::nsew[i];
+		ribi_t::ribi test = ribi_t::nesw[i];
 
 		if( get_neighbour(gr_neighbour, invalid_wt, test) ) {
 			// neighbour tile has water ways
@@ -124,7 +124,7 @@ void wasser_t::recalc_water_neighbours()
 
 	for(  uint8 i = 0;  i < 4;  i++  ) {
 		grund_t *gr_neighbour = NULL;
-		ribi_t::ribi test = ribi_t::nsew[i];
+		ribi_t::ribi test = ribi_t::nesw[i];
 
 		if( get_neighbour(gr_neighbour, invalid_wt, test) ) {
 			if (wasser_t* gr_water = dynamic_cast<wasser_t*>(gr_neighbour) ) {
