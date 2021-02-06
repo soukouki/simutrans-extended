@@ -10,8 +10,8 @@
 #include "../ifc/sync_steppable.h"
 #include "../dataobj/koord3d.h"
 #include "../dataobj/ribi.h"
-#include "../simobj.h"
 #include "../simcity.h"
+#include "simobj.h"
 #include "../tpl/slist_tpl.h"
 
 #define POWER_TO_MW (12)  // bitshift for converting internal power values to mW for display. This is equivalent to dividing by 5,000

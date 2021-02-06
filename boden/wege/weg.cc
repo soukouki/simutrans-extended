@@ -24,7 +24,7 @@
 #include "../../simworld.h"
 #include "../../display/simimg.h"
 #include "../../simhalt.h"
-#include "../../simobj.h"
+#include "../../obj/simobj.h"
 #include "../../player/simplay.h"
 #include "../../obj/wayobj.h"
 #include "../../obj/roadsign.h"

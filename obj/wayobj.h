@@ -9,9 +9,9 @@
 
 #include "../simtypes.h"
 #include "../display/simimg.h"
-#include "../simobj.h"
 #include "../simworld.h"
 #include "../boden/grund.h"
+#include "simobj.h"
 #include "../dataobj/ribi.h"
 #include "../descriptor/way_obj_desc.h"
 #include "../tpl/stringhashtable_tpl.h"
