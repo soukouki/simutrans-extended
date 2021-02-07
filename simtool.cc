@@ -1475,7 +1475,7 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 
 			// check way ownership
 			if(gr1->hat_wege()) {
-				if(gr1->get_weg_nr(0)-> is_deletable(player)!=NULL) {
+				if(gr1->get_weg_nr(0)->is_deletable(player)!=NULL) {
 					return NOTICE_TILE_FULL;
 				}
 				if(gr1->has_two_ways()  &&  gr1->get_weg_nr(1)-> is_deletable(player)!=NULL) {
@@ -2446,8 +2446,7 @@ static const char *tool_schedule_insert_aux(karte_t *welt, player_t *player, koo
 		{
 			w = bd->get_weg( track_wt );
 		}
-		if(!bd->is_halt())
-		{
+		if(  !bd->is_halt()  ) {
 			if(w != NULL && w->get_owner() && !w->get_owner()->allows_access_to(player->get_player_nr()))
 			{
 				return "Das Feld gehoert\neinem anderen Spieler\n";
@@ -3245,7 +3244,7 @@ uint8 tool_build_bridge_t::is_valid_pos(  player_t *player, const koord3d &pos, 
 					return 0;
 				}
 				if(wt!=road_wt) {
-				// only road bridges can have other ways on it (ie trams)
+					// only road bridges can have other ways on it (ie trams)
 					if(gr->has_two_ways()  ||  (gr->hat_wege() && gr->get_weg_nr(0)->get_waytype()!=wt) ) {
 						return 0;
 					}
@@ -3258,7 +3257,7 @@ uint8 tool_build_bridge_t::is_valid_pos(  player_t *player, const koord3d &pos, 
 					for(int i=0;i<2;i++) {
 						const weg_t *w = gr->get_weg_nr(i);
 						if (w) {
-							if (w->get_waytype()!=road_wt  && !w->get_desc()->is_tram()) {
+							if (w->get_waytype()!=road_wt  &&  !w->get_desc()->is_tram()) {
 								return 0;
 							}
 							rw |= w->get_ribi_unmasked();
