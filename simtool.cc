@@ -3233,49 +3233,50 @@ uint8 tool_build_bridge_t::is_valid_pos(  player_t *player, const koord3d &pos, 
 			// first click
 			ribi_t::ribi rw = ribi_t::none;
 			if (wt==powerline_wt) {
-			if (gr->hat_wege()) {
-				return 0;
-			}
-			if (gr->find<leitung_t>()) {
-				rw |= gr->find<leitung_t>()->get_ribi();
-			}
-		}
-		else {
-			if (gr->find<leitung_t>()) {
-				return 0;
-			}
-			if(wt!=road_wt) {
-			// only road bridges can have other ways on it (ie trams)
-				if(gr->has_two_ways()  ||  (gr->hat_wege() && gr->get_weg_nr(0)->get_waytype()!=wt) ) {
+				if (gr->hat_wege()) {
 					return 0;
 				}
-				if(gr->hat_wege()){
-					rw |= gr->get_weg_nr(0)->get_ribi_unmasked();
+				if (gr->find<leitung_t>()) {
+					rw |= gr->find<leitung_t>()->get_ribi();
 				}
 			}
 			else {
-				// If road and tram, we have to check both ribis.
-				for(int i=0;i<2;i++) {
-					const weg_t *w = gr->get_weg_nr(i);
-					if (w) {
-						if (w->get_waytype()!=road_wt  && !w->get_desc()->is_tram()) {
-							return 0;
-						}
-						rw |= w->get_ribi_unmasked();
+				if (gr->find<leitung_t>()) {
+					return 0;
+				}
+				if(wt!=road_wt) {
+				// only road bridges can have other ways on it (ie trams)
+					if(gr->has_two_ways()  ||  (gr->hat_wege() && gr->get_weg_nr(0)->get_waytype()!=wt) ) {
+						return 0;
 					}
-					else break;
+					if(gr->hat_wege()){
+						rw |= gr->get_weg_nr(0)->get_ribi_unmasked();
+					}
+				}
+				else {
+					// If road and tram, we have to check both ribis.
+					for(int i=0;i<2;i++) {
+						const weg_t *w = gr->get_weg_nr(i);
+						if (w) {
+							if (w->get_waytype()!=road_wt  && !w->get_desc()->is_tram()) {
+								return 0;
+							}
+							rw |= w->get_ribi_unmasked();
+						}
+						else break;
+					}
 				}
 			}
+			// ribi from slope
+			rw |= ribi_type(gr->get_grund_hang());
+			if(  rw!=ribi_t::none && !ribi_t::is_single(rw)  ) {
+				return 0;
+			}
+			// determine possible directions
+			ribi = ribi_t::backward(rw);
+			return (ribi!=ribi_t::none ? 2 : 0) | (ribi_t::is_single(ribi) ? 1 : 0);
 		}
-		// ribi from slope
-		rw |= ribi_type(gr->get_grund_hang());
-		if(  rw!=ribi_t::none && !ribi_t::is_single(rw)  ) {
-			return 0;
-		}
-		// determine possible directions
-		ribi = ribi_t::backward(rw);
-		return (ribi!=ribi_t::none ? 2 : 0) | (ribi_t::is_single(ribi) ? 1 : 0);
-		} else {
+		else {
 			if(  gr->get_weg_hang()  ) {
 				return 0;
 			}
