@@ -857,7 +857,7 @@ void ai_passenger_t::walk_city(linehandle_t const line, grund_t* const start, in
 									// our stop => nothing to do
 #ifdef AUTOJOIN_PUBLIC
 									// we leave also public stops alone
-									if(  hl[own].halt->get_owner()==this  ||  hl[own]->get_owner()==welt->get_public_player()  ) {
+									if(  hl[own].halt->get_owner()==this  ||  hl[own].halt->get_owner()==welt->get_public_player()  ) {
 #else
 									if(  hl[own].halt->get_owner()==this  ) {
 #endif
