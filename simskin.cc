@@ -66,7 +66,7 @@ const skin_desc_t* skinverwaltung_t::message_options    = NULL;
 const skin_desc_t* skinverwaltung_t::color_options      = NULL;
 
 const skin_desc_t* skinverwaltung_t::compass_iso        = NULL;
-const skin_desc_t* skinverwaltung_t::compass_map        = NULL;	// compass for minimap
+const skin_desc_t* skinverwaltung_t::compass_map        = NULL; // compass for minimap
 
 const skin_desc_t* skinverwaltung_t::pax_evaluation_icons = NULL;
 const skin_desc_t* skinverwaltung_t::mail_evaluation_icons = NULL;
@@ -82,7 +82,7 @@ const skin_desc_t* skinverwaltung_t::service_frequency  = NULL; // line service 
 const skin_desc_t* skinverwaltung_t::on_foot            = NULL;
 
 // cursors
-const skin_desc_t* skinverwaltung_t::cursor_general     = NULL;	// new cursors
+const skin_desc_t* skinverwaltung_t::cursor_general     = NULL; // new cursors
 const skin_desc_t* skinverwaltung_t::bauigelsymbol      = NULL;
 const skin_desc_t* skinverwaltung_t::belegtzeiger       = NULL;
 const skin_desc_t* skinverwaltung_t::mouse_cursor       = NULL;
