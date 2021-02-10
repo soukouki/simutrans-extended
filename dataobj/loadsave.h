@@ -201,6 +201,12 @@ public:
 };
 
 
+class stream_loadsave_t : public loadsave_t
+{
+public:
+	stream_loadsave_t(rdwr_stream_t *stream);
+};
+
 
 // this produces semi-automatic hierarchies
 class xml_tag_t

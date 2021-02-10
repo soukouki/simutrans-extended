@@ -118,7 +118,9 @@
 #include "player/ai_passenger.h"
 #include "player/ai_goods.h"
 
+#include "io/rdwr/adler32_stream.h"
 #include "dataobj/tabfile.h" // For reload of simuconf.tab to override savegames
+
 
 #ifdef MULTI_THREAD
 #include "utils/simthread.h"
@@ -11350,10 +11352,14 @@ bool karte_t::interactive(uint32 quit_month)
 						network_frame_count = 0;
 					}
 					sync_steps = steps * settings.get_frames_per_step() + network_frame_count;
+#if HEAVY_MODE
+					LCHKLST(sync_steps) = checklist_t(get_gamestate_hash());
+#else
 					LCHKLST(sync_steps) = checklist_t(sync_steps, (uint32)steps, network_frame_count, get_random_seed(), halthandle_t::get_next_check(), linehandle_t::get_next_check(), convoihandle_t::get_next_check(),
 						rands, debug_sums
 					);
 
+#endif
 #ifdef DEBUG_SIMRAND_CALLS
 					char buf[2048];
 					const int offset = LCHKLST(sync_steps).print(buf, "chklist");
@@ -12450,3 +12456,15 @@ uint32 karte_t::get_cities_awaiting_private_car_route_check_count() const
 {
 	return cities_awaiting_private_car_route_check.get_count();
 }
+
+
+#if HEAVY_MODE
+uint32 karte_t::get_gamestate_hash()
+{
+	adler32_stream_t *stream = new adler32_stream_t;
+	stream_loadsave_t ls(stream);
+
+	rdwr_gamestate(&ls, NULL);
+	return stream->get_hash();
+}
+#endif

@@ -2611,6 +2611,10 @@ public:
 	 */
 	uint32 generate_new_map_counter() const;
 
+#if HEAVY_MODE
+	uint32 get_gamestate_hash();
+#endif
+
 	/**
 	 * Time printing routines.
 	 * Should be inlined.
