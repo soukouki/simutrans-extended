@@ -1163,8 +1163,8 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 			if ((depot_frame && depot_frame->get_depot()->is_contained(info)) ||
 				((way_electrified || info->get_engine_type() != vehicle_desc_t::electric) &&
 				(((!info->is_future(month_now)) && (!info->is_retired(month_now))) ||
-					(info->is_retired(month_now) &&	(((show_retired_vehicles && info->is_obsolete(month_now, welt)) ||
-					(show_outdated_vehicles && (!info->is_obsolete(month_now, welt)))))))))
+					(info->is_retired(month_now) &&	(((show_retired_vehicles && info->is_obsolete(month_now)) ||
+					(show_outdated_vehicles && (!info->is_obsolete(month_now)))))))))
 			{
 				// check if allowed
 				bool append = true;
@@ -1587,14 +1587,14 @@ void gui_convoy_assembler_t::init_convoy_color_bars(vector_tpl<const vehicle_des
 	uint32 i=0;
 	// change green into blue for retired vehicles
 	PIXVAL base_col = (!vehs->get_element(i)->is_future(month_now) && !vehs->get_element(i)->is_retired(month_now)) ? COL_SAFETY :
-		(vehicles[i]->is_obsolete(month_now, welt)) ? COL_OBSOLETE : COL_OUT_OF_PRODUCTION;
+		(vehicles[i]->is_obsolete(month_now)) ? COL_OBSOLETE : COL_OUT_OF_PRODUCTION;
 	uint32 end = vehs->get_count();
 	set_vehicle_bar_shape(convoi_pics[0], vehs->get_element(0));
 	convoi_pics[0]->lcolor = vehs->get_element(0)->can_follow(NULL) ? base_col : COL_CAUTION;
 	for (i = 1; i < end; i++)
 	{
 		if (vehs->get_element(i)->is_future(month_now) || vehs->get_element(i)->is_retired(month_now)) {
-			if (vehicles[i]->is_obsolete(month_now, welt)) {
+			if (vehicles[i]->is_obsolete(month_now)) {
 				base_col = COL_OBSOLETE;
 			}
 			else {
@@ -1736,7 +1736,7 @@ void gui_convoy_assembler_t::update_data()
 		gui_image_list_t::image_data_t& img  = *i.value;
 
 		PIXVAL ok_color = info->is_future(month_now) || info->is_retired(month_now) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
-		if (info->is_obsolete(month_now, welt)) {
+		if (info->is_obsolete(month_now)) {
 			ok_color = COL_OBSOLETE;
 		}
 

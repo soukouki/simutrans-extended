@@ -1098,7 +1098,7 @@ void gui_convoy_payload_info_t::draw(scr_coord offset)
 
 			// vehicle color bar
 			veh_bar_color = (v->get_desc()->is_future(month_now) || v->get_desc()->is_retired(month_now)) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
-			if (v->get_desc()->is_obsolete(month_now, welt)) {
+			if (v->get_desc()->is_obsolete(month_now)) {
 				veh_bar_color = COL_OBSOLETE;
 			}
 			display_veh_form_wh_clip_rgb(pos.x + offset.x+1, pos.y + offset.y + total_height + extra_y + LINESPACE, (grid_width-6)/2, veh_bar_color, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_next() : v->get_desc()->get_basic_constraint_prev(), v->get_desc()->get_interactivity(), false);
@@ -1434,7 +1434,7 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 
 			// vehicle color bar
 			veh_bar_color = v->get_desc()->is_future(month_now) || v->get_desc()->is_retired(month_now) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
-			if (v->get_desc()->is_obsolete(month_now, welt)) {
+			if (v->get_desc()->is_obsolete(month_now)) {
 				veh_bar_color = COL_OBSOLETE;
 			}
 			display_veh_form_wh_clip_rgb(pos.x + offset.x+1, pos.y + offset.y + total_height + extra_y + LINESPACE, (grid_width-6)/2, veh_bar_color, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_next() : v->get_desc()->get_basic_constraint_prev(), v->get_desc()->get_interactivity(), false);
@@ -1586,7 +1586,7 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 						else if (desc->is_retired(month_now)) {
 							upgrade_state_color = COL_OUT_OF_PRODUCTION;
 						}
-						else if (desc->is_obsolete(month_now, welt)) {
+						else if (desc->is_obsolete(month_now)) {
 							upgrade_state_color = COL_OBSOLETE;
 						}
 						display_veh_form_wh_clip_rgb(pos.x + extra_w + offset.x + D_MARGIN_LEFT, pos.y + offset.y + total_height + extra_y + 1, VEHICLE_BAR_HEIGHT * 2, upgrade_state_color, true, desc->get_basic_constraint_prev(), desc->get_interactivity(), false);

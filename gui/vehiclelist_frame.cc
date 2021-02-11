@@ -139,7 +139,7 @@ void vehiclelist_stats_t::draw( scr_coord offset )
 	else if (veh->is_available_only_as_upgrade()) {
 		name_colval = COL_UPGRADEABLE;
 	}
-	else if (veh->is_obsolete(month, world())) {
+	else if (veh->is_obsolete(month)) {
 		name_colval = COL_OBSOLETE;
 	}
 	else if (veh->is_retired(month)) {
@@ -486,10 +486,10 @@ void vehiclelist_frame_t::fill_list()
 				if (!bt_only_upgrade.pressed && veh->is_available_only_as_upgrade()) {
 					continue;
 				}
-				if (!bt_outdated.pressed && (veh->is_retired(month) && !veh->is_obsolete(month, world()))) {
+				if (!bt_outdated.pressed && (veh->is_retired(month) && !veh->is_obsolete(month))) {
 					continue;
 				}
-				if (!bt_obsolete.pressed && veh->is_obsolete(month, world())) {
+				if (!bt_obsolete.pressed && veh->is_obsolete(month)) {
 					continue;
 				}
 				if (!bt_future.pressed && veh->is_future(month)) {
@@ -533,10 +533,10 @@ void vehiclelist_frame_t::fill_list()
 			if (!bt_only_upgrade.pressed && veh->is_available_only_as_upgrade()) {
 				continue;
 			}
-			if (!bt_outdated.pressed && (veh->is_retired(month) && !veh->is_obsolete(month, world()))) {
+			if (!bt_outdated.pressed && (veh->is_retired(month) && !veh->is_obsolete(month))) {
 				continue;
 			}
-			if (!bt_obsolete.pressed && veh->is_obsolete(month, world())) {
+			if (!bt_obsolete.pressed && veh->is_obsolete(month)) {
 				continue;
 			}
 			if (!bt_future.pressed && veh->is_future(month)) {

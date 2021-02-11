@@ -18,7 +18,7 @@ uint32 vehicle_desc_t::calc_running_cost(const karte_t *welt, uint32 base_cost) 
 	}
 
 	// I am not obsolete --> no obsolescence cost increase.
-	const uint16 months_after_retire = get_obsolete_year_month(welt) - retire_date;
+	const uint16 months_after_retire = get_obsolete_year_month() - retire_date;
 	sint32 months_of_obsolescence = welt->get_current_month() - (get_retire_year_month() + months_after_retire);
 	if (months_of_obsolescence <= 0)
 	{
@@ -226,7 +226,7 @@ uint32 vehicle_desc_t::get_effective_power_index(sint32 speed /* in m/s */ ) con
 	return geared_power[min(speed, max_speed)];
 }
 
-uint16 vehicle_desc_t::get_obsolete_year_month(const karte_t *welt) const
+uint16 vehicle_desc_t::get_obsolete_year_month() const
 {
 	if(increase_maintenance_after_years)
 	{
@@ -234,7 +234,7 @@ uint16 vehicle_desc_t::get_obsolete_year_month(const karte_t *welt) const
 	}
 	else
 	{
-		return retire_date + (welt->get_settings().get_default_increase_maintenance_after_years((waytype_t)wtyp) * 12);
+		return retire_date + (world()->get_settings().get_default_increase_maintenance_after_years((waytype_t)wtyp) * 12);
 	}
 }
 
