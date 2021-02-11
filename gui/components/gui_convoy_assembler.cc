@@ -1745,7 +1745,7 @@ void gui_convoy_assembler_t::update_data()
 		img.rcolor = ok_color;
 		set_vehicle_bar_shape(&img, info);
 		if (info->get_upgrades_count()) {
-			img.has_upgrade = info->has_available_upgrade(month_now, welt->get_settings().get_show_future_vehicle_info());
+			img.has_upgrade = info->has_available_upgrade(month_now);
 		}
 
 		/*
@@ -2303,7 +2303,7 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 					txt_convoi_number.clear();
 					txt_convoi_number.printf("%.2s", cnv->get_car_numbering(sel_index) < 0 ? translator::translate("LOCO_SYM") : "");
 					txt_convoi_number.printf("%d", abs(cnv->get_car_numbering(sel_index)));
-					lb_convoi_number.set_color(veh_type->has_available_upgrade(welt->get_timeline_year_month(), welt->get_settings().get_show_future_vehicle_info()) == 2? COL_UPGRADEABLE : COL_WHITE);
+					lb_convoi_number.set_color(veh_type->has_available_upgrade(welt->get_timeline_year_month()) == 2? COL_UPGRADEABLE : COL_WHITE);
 					lb_convoi_number.set_pos(scr_coord((grid.x - grid_dx)*sel_index + D_MARGIN_LEFT, 4));
 
 

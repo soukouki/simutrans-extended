@@ -426,9 +426,10 @@ uint8 vehicle_desc_t::get_interactivity() const
 	return flags;
 }
 
-uint8 vehicle_desc_t::has_available_upgrade(uint16 month_now, bool show_future) const
+uint8 vehicle_desc_t::has_available_upgrade(uint16 month_now) const
 {
 	uint8 upgrade_state = 0; // 1 = not available yet, 2 = already available
+	const bool show_future = world()->get_settings().get_show_future_vehicle_info();
 	for (int i = 0; i < upgrades; i++)
 	{
 		if (show_future) {

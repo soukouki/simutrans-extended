@@ -622,8 +622,8 @@ public:
 
 	uint8 get_upgrades_count() const { return upgrades; }
 	// returns this vehicle has available upgrades
-	// 1 = near future, 2 = already available          @Ranran
-	uint8 has_available_upgrade(const uint16 month_now, bool show_future = true) const;
+	// 1 = near future, 2 = already available
+	uint8 has_available_upgrade(const uint16 month_now) const;
 
 	bool can_follow_any() const { return trailer_count==0; }
 

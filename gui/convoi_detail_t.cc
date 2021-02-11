@@ -845,7 +845,7 @@ void gui_vehicleinfo_t::draw(scr_coord offset)
 		for (uint8 veh = 0; veh < vehicle_count; veh++) {
 			vehicle_t *v = cnv->get_vehicle(veh);
 			vehicle_as_potential_convoy_t convoy(*v->get_desc());
-			const uint8 upgradable_state = v->get_desc()->has_available_upgrade(month_now, welt->get_settings().get_show_future_vehicle_info());
+			const uint8 upgradable_state = v->get_desc()->has_available_upgrade(month_now);
 
 			// first image
 			scr_coord_val x, y, w, h;
@@ -1413,7 +1413,7 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 		char number[64];
 		for (uint8 veh = 0; veh < vehicle_count; veh++) {
 			vehicle_t *v = cnv->get_vehicle(veh);
-			const uint8 upgradable_state = v->get_desc()->has_available_upgrade(month_now, welt->get_settings().get_show_future_vehicle_info());
+			const uint8 upgradable_state = v->get_desc()->has_available_upgrade(month_now);
 
 			int extra_y = 0;
 			const uint8 grid_width = D_BUTTON_WIDTH / 3;
