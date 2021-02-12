@@ -86,11 +86,11 @@ buildOSX()
 {
   echo "Build Mac OS package"
 	# builds a bundle for MAC OS
-	mkdir -p "simutrans.app/Contents/MacOS"
-	mkdir -p "simutrans.app/Contents/Resources"
-	cp $BUILDDIR$simexe_name   "simutrans.app/Contents/MacOS/simutrans"
-	strip "simutrans.app/Contents/MacOS/simutrans"
-	cp "../OSX/simutrans.icns" "simutrans.app/Contents/Resources/simutrans.icns"
+	mkdir -p "simutrans-extended.app/Contents/MacOS"
+	mkdir -p "simutrans-extended.app/Contents/Resources"
+	cp $BUILDDIR$simexe_name   "simutrans-extended.app/Contents/MacOS/$simexe_name"
+	strip "simutrans-extended.app/Contents/MacOS/$simexe_name"
+	cp "../OSX/simutrans.icns" "simutrans-extended.app/Contents/Resources/simutrans-extended.icns"
 	localostype=`uname -o`
 	if [ "Msys" == "$localostype" ] || [ "Linux" == "$localostype" ]; then
 		# only 7z on linux and windows can do that ...
@@ -99,23 +99,18 @@ buildOSX()
 		rm SDL2-2.0.10.dmg
 	else
 		# assume MacOS
-		mkdir -p "simutrans.app/Contents/Frameworks/"
+		mkdir -p "simutrans-extended.app/Contents/Frameworks/"
 		cp "/usr/local/opt/freetype/lib/libfreetype.6.dylib" \
 			"/usr/local/opt/libpng/lib/libpng16.16.dylib" \
 			"/usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib" \
-			"simutrans.app/Contents/Frameworks/"
-		install_name_tool -change "/usr/local/opt/freetype/lib/libfreetype.6.dylib" "@executable_path/../Frameworks/libfreetype.6.dylib" "simutrans.app/Contents/MacOS/simutrans"
-		install_name_tool -change "/usr/local/opt/libpng/lib/libpng16.16.dylib" "@executable_path/../Frameworks/libpng16.16.dylib" "simutrans.app/Contents/MacOS/simutrans"
-		sudo install_name_tool -change "/usr/local/opt/libpng/lib/libpng16.16.dylib" "@executable_path/../Frameworks/libpng16.16.dylib" "simutrans.app/Contents/Frameworks/libfreetype.6.dylib"
-		install_name_tool -change "/usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib" "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" "simutrans.app/Contents/MacOS/simutrans"
+			"simutrans-extended.app/Contents/Frameworks/"
+		install_name_tool -change "/usr/local/opt/freetype/lib/libfreetype.6.dylib" "@executable_path/../Frameworks/libfreetype.6.dylib" "simutrans-extended.app/Contents/MacOS/$simexe_name"
+		install_name_tool -change "/usr/local/opt/libpng/lib/libpng16.16.dylib" "@executable_path/../Frameworks/libpng16.16.dylib" "simutrans-extended.app/Contents/MacOS/$simexe_name"
+		sudo install_name_tool -change "/usr/local/opt/libpng/lib/libpng16.16.dylib" "@executable_path/../Frameworks/libpng16.16.dylib" "simutrans-extended.app/Contents/MacOS/$simexe_name"
+		install_name_tool -change "/usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib" "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" "simutrans-extended.app/Contents/MacOS/$simexe_name"
 	fi
-	echo "APPL????" > "simutrans.app/Contents/PkgInfo"
-	sh ../OSX/plistgen.sh "simutrans.app" "simutrans"
-	if [ ! -d "pak" ]; then
-		curl --progress-bar -L -o "pak.zip" "http://downloads.sourceforge.net/project/simutrans/pak64/122-0/simupak64-122-0.zip"
-		unzip -qoC "pak.zip" -d ..
-		rm -f "pak.zip"
-	fi
+	echo "APPL????" > "simutrans-extended.app/Contents/PkgInfo"
+	sh ../OSX/plistgen.sh "simutrans-extended.app" "$simexe_name"
 }
 
 
@@ -138,7 +133,7 @@ fi
 BUILDDIR="$(grep '^PROGDIR' config.default | sed 's/PROGDIR[ ]*=[ ]*//' | sed 's/[ ]*\#.*//')"
 
 if [ -n "$BUILDDIR" ]; then
-	BUILDDIR="$(pwd)/simutrans"
+	BUILDDIR="$(pwd)/"
 else
 	BUILDDIR="$(pwd)/build/default"
 fi
@@ -213,7 +208,7 @@ if [ "$OST" = "mac" ]; then
     pwd
     zip -r -9 - simutrans > simumac.zip
     cd simutrans
-    rm -rf simutrans.app
+    rm -rf simutrans-extended.app
     exit 0
 else
     echo "Building default zip archive..."
