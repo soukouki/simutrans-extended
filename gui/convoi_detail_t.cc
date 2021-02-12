@@ -1346,7 +1346,7 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 
 				uint32 percentage = 0;
 				for (uint16 i = 0; i < vehicle_count; i++) {
-					percentage += cnv->get_vehicle(i)->get_desc()->calc_running_cost(welt, 10000);
+					percentage += cnv->get_vehicle(i)->get_desc()->calc_running_cost(10000);
 				}
 				percentage = percentage / (vehicle_count * 100) - 100;
 				if (percentage > 0)
@@ -1515,7 +1515,7 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 			extra_y += LINESPACE;
 
 			// Bernd Gabriel, 16.06.2009: current average obsolescence increase percentage
-			uint32 percentage = v->get_desc()->calc_running_cost(welt, 100) - 100;
+			uint32 percentage = v->get_desc()->calc_running_cost(100) - 100;
 			if (percentage > 0)
 			{
 				buf.clear();
