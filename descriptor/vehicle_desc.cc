@@ -61,9 +61,9 @@ uint32 vehicle_desc_t::get_fixed_cost(karte_t *welt) const
 	return calc_running_cost(welt, get_fixed_cost());
 }
 
-uint32 vehicle_desc_t::get_adjusted_monthly_fixed_cost(karte_t *welt) const
+uint32 vehicle_desc_t::get_adjusted_monthly_fixed_cost() const
 {
-	return welt->calc_adjusted_monthly_figure(calc_running_cost(welt, get_fixed_cost()));
+	return world()->calc_adjusted_monthly_figure(calc_running_cost(world(), get_fixed_cost()));
 }
 
 /**
