@@ -622,8 +622,8 @@ public:
 
 	uint8 get_upgrades_count() const { return upgrades; }
 	// returns this vehicle has available upgrades
-	// 1 = near future, 2 = already available          @Ranran
-	uint8 has_available_upgrade(const uint16 month_now, bool show_future = true) const;
+	// 1 = near future, 2 = already available
+	uint8 has_available_upgrade(const uint16 month_now) const;
 
 	bool can_follow_any() const { return trailer_count==0; }
 
@@ -644,7 +644,7 @@ public:
 	uint16 get_running_cost(const class karte_t *welt) const; //Overloaded method - includes increase for obsolescence.
 	uint32 get_fixed_cost() const { return fixed_cost; }
 	uint32 get_fixed_cost(class karte_t *welt) const;  //Overloaded method - includes increase for obsolescence.
-	uint32 get_adjusted_monthly_fixed_cost(class karte_t *welt) const; // includes increase for obsolescence and adjustment for monthly figures
+	uint32 get_adjusted_monthly_fixed_cost() const; // includes increase for obsolescence and adjustment for monthly figures
 	sint16 get_sound() const { return sound; }
 	bool is_bidirectional() const { return bidirectional; }
 	uint8 get_comfort(uint32 g_class = 0) const { return  classes == 0 ? 0: g_class >= classes ? comfort[0] : comfort[g_class]; }
@@ -692,7 +692,7 @@ public:
 	}
 
 	// BG, 15.06.2009: the formula for obsolescence formerly implemented twice in get_running_cost() and get_fixed_cost()
-	uint32 calc_running_cost(const class karte_t *welt, uint32 base_cost) const;
+	uint32 calc_running_cost(uint32 base_cost) const;
 
 	float32e8_t get_power_force_ratio() const;
 	uint32 calc_max_force(const uint32 power) const {
@@ -731,7 +731,7 @@ public:
 	* @return time when the vehicle is obsolete
 	* @author: jamespetts
 	*/
-	uint16 get_obsolete_year_month(const class karte_t *welt) const;
+	uint16 get_obsolete_year_month() const;
 
 	// Returns 2 in the near future. Use the judgment of 2 only when control the display of the future
 	uint8 is_future (const uint16 month_now) const
@@ -756,9 +756,9 @@ public:
 	/**
 	 * @ Returns true if the vehicle is obsolete
 	 */
-	bool is_obsolete (const uint16 month_now, const class karte_t* welt) const
+	bool is_obsolete (const uint16 month_now) const
 	{
-		return month_now  &&  (get_obsolete_year_month(welt) <= month_now);
+		return month_now  &&  (get_obsolete_year_month() <= month_now);
 	}
 
 	/**
