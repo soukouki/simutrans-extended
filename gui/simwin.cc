@@ -129,9 +129,9 @@ static std::string static_tooltip_text;
 
 // For timed tooltip with initial delay and finite visible duration.
 // Valid owners are required for timing. Invalid (NULL) owners disable timing.
-static const void * tooltip_owner = 0;	// owner of the registered tooltip
-static const void * tooltip_group = 0;	// group to which the owner belongs
-static uint32 tooltip_register_time = 0;	// time at which a tooltip is initially registered
+static const void * tooltip_owner = 0;   // owner of the registered tooltip
+static const void * tooltip_group = 0;   // group to which the owner belongs
+static uint32 tooltip_register_time = 0; // time at which a tooltip is initially registered
 
 static bool show_ticker=0;
 
@@ -495,6 +495,15 @@ gui_component_t *win_get_focus()
 }
 
 
+bool win_is_textinput()
+{
+	if(  gui_component_t *comp = win_get_focus()  ) {
+		return dynamic_cast<gui_textinput_t *>(comp) || dynamic_cast<gui_combobox_t *>(comp)  ||  dynamic_cast<gui_numberinput_t *>(comp);
+	}
+	return false;
+}
+
+
 int win_get_open_count()
 {
 	return wins.get_count();
@@ -530,7 +539,7 @@ bool win_is_top(const gui_frame_t *ig)
 // save/restore all dialogues
 void rdwr_all_win(loadsave_t *file)
 {
-	if((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
+	if( file->is_version_ex_atleast(14, 32) ) {
 		if(  file->is_saving()  ) {
 			FOR(vector_tpl<simwin_t>, & i, wins) {
 				uint32 id = i.gui->get_rdwr_id();
@@ -1500,6 +1509,7 @@ bool check_pos_win(event_t *ev)
 										koord3d k = wins[i].gui->get_weltpos(true);
 										if(  k!=koord3d::invalid  ) {
 											wl->get_viewport()->change_world_position( k );
+											wl->get_zeiger()->change_pos( k );
 										}
 									}
 									break;

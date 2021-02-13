@@ -24,6 +24,7 @@
 #include "../../simworld.h"
 #include "../../boden/grund.h"
 #include "../../display/viewport.h"
+#include "../../obj/zeiger.h"
 
 #include "../gui_frame.h"
 
@@ -273,24 +274,25 @@ bool button_t::infowin_event(const event_t *ev)
 			call_listeners( &targetpos );
 			if (type == posbutton_automatic) {
 				welt->get_viewport()->change_world_position( targetpos );
+				welt->get_zeiger()->change_pos( targetpos );
 			}
-
+			return true;
 		}
 		else {
 			if(  type & AUTOMATIC_BIT  ) {
 				pressed = !pressed;
 			}
-
 			call_listeners( (long)0 );
+			return true;
 		}
 	}
 	else if(IS_LEFTREPEAT(ev)) {
 		if((type&TYPE_MASK)>=repeatarrowleft) {
 			call_listeners( (long)1 );
+			return true;
 		}
 	}
-	// swallow all not handled non-keyboard events
-	return (ev->ev_class != EVENT_KEYBOARD);
+	return false;
 }
 
 

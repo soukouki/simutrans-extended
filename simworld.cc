@@ -218,7 +218,7 @@ void *karte_t::world_xy_loop_thread(void *ptr)
 	world_thread_param_t *param = reinterpret_cast<world_thread_param_t *>(ptr);
 	while(true) {
 		if(param->keep_running) {
-			simthread_barrier_wait( &world_barrier_start );	// wait for all to start
+			simthread_barrier_wait( &world_barrier_start ); // wait for all to start
 		}
 
 		sint16 x_min = 0;
@@ -240,7 +240,7 @@ void *karte_t::world_xy_loop_thread(void *ptr)
 		}
 
 		if(param->keep_running) {
-			simthread_barrier_wait( &world_barrier_end );	// wait for all to finish
+			simthread_barrier_wait( &world_barrier_end ); // wait for all to finish
 		}
 		else {
 			return NULL;
@@ -5527,7 +5527,7 @@ void karte_t::recalc_average_speed(bool skip_messages)
 						msg->add_message(buf, koord::invalid, message_t::new_vehicle, NEW_VEHICLE, info->get_base_image());
 					}
 
-					const uint16 obsolete_month = info->get_obsolete_year_month(this);
+					const uint16 obsolete_month = info->get_obsolete_year_month();
 					if (obsolete_month == current_month)
 					{
 						cbuffer_t buf;
@@ -10591,13 +10591,17 @@ uint8 karte_t::sp2num(player_t *player)
 void karte_t::load_heightfield(settings_t* const sets)
 {
 	sint16 w, h;
-	sint8 *h_field;
-	height_map_loader_t hml(sets);
+	sint8 *h_field = NULL;
+	const sint8 min_h = sets->get_minimumheight();
+	const sint8 max_h = sets->get_maximumheight();
+
+	height_map_loader_t hml(min_h, max_h, env_t::height_conv_mode);
+
 	if(hml.get_height_data_from_file(sets->heightfield.c_str(), (sint8)(sets->get_groundwater()), h_field, w, h, false )) {
 		sets->set_size(w,h);
 		// create map
 		init(sets,h_field);
-		delete [] h_field;
+		free(h_field);
 	}
 	else {
 		dbg->error("karte_t::load_heightfield()","Cant open file '%s'", sets->heightfield.c_str());

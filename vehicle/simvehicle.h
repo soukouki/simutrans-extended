@@ -11,7 +11,7 @@
 #include <string>
 #include "../simtypes.h"
 #include "../simworld.h"
-#include "../simobj.h"
+#include "../obj/simobj.h"
 #include "../halthandle_t.h"
 #include "../convoihandle_t.h"
 #include "../ifc/simtestdriver.h"
@@ -196,7 +196,7 @@ public:
 	// if true, this convoi needs to restart for correct alignment
 	bool need_realignment() const;
 
-	virtual uint32 do_drive(uint32 dist);	// basis movement code
+	virtual uint32 do_drive(uint32 dist); // basis movement code
 
 	inline void set_image( image_id b ) { image = b; }
 	image_id get_image() const OVERRIDE {return image;}
@@ -352,12 +352,12 @@ protected:
 	*/
 	uint16 route_index;
 
-	uint16 total_freight;	// since the sum is needed quite often, it is cached (not differentiated by class)
-	slist_tpl<ware_t> *fracht;   // list of goods being transported (array for each class)
+	uint16 total_freight; // since the sum is needed quite often, it is cached (not differentiated by class)
+	slist_tpl<ware_t> *fracht;  // list of goods being transported (array for each class)
 
 	const vehicle_desc_t *desc;
 
-	convoi_t *cnv;		// != NULL if the vehicle is part of a Convoi
+	convoi_t *cnv;  // != NULL if the vehicle is part of a Convoi
 
 	/**
 	 * Previous position on our path
@@ -366,10 +366,10 @@ protected:
 
 	uint8 number_of_classes;
 
-	bool leading:1;	// true, if vehicle is first vehicle of a convoi
-	bool last:1;	// true, if vehicle is last vehicle of a convoi
+	bool leading:1; // true, if vehicle is first vehicle of a convoi
+	bool last:1;    // true, if vehicle is last vehicle of a convoi
 	bool smoke:1;
-	bool check_for_finish:1;		// true, if on the last tile
+	bool check_for_finish:1; // true, if on the last tile
 	bool has_driven:1;
 
 	void calc_image() OVERRIDE;
@@ -951,7 +951,15 @@ public:
 class air_vehicle_t : public vehicle_t
 {
 public:
-	enum flight_state { taxiing=0, departing=1, flying=2, landing=3, looking_for_parking=4, circling=5, taxiing_to_halt=6  };
+	enum flight_state {
+		taxiing             = 0,
+		departing           = 1,
+		flying              = 2,
+		landing             = 3,
+		looking_for_parking = 4,
+		circling            = 5,
+		taxiing_to_halt     = 6
+	};
 
 private:
 
@@ -970,7 +978,7 @@ private:
 	//koord3d search_start;
 	//koord3d search_end;
 
-	flight_state state;	// functions needed for the search without destination from find_route
+	flight_state state; // functions needed for the search without destination from find_route
 
 	sint16 flying_height;
 	sint16 target_height;

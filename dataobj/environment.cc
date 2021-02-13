@@ -18,7 +18,7 @@ void rdwr_win_settings(loadsave_t *file); // simwin
 
 sint8 env_t::pak_tile_height_step = 16;
 sint8 env_t::pak_height_conversion_factor = 1;
-bool env_t::new_height_map_conversion = false;
+env_t::height_conversion_mode env_t::height_conv_mode = env_t::HEIGHT_CONV_LINEAR;
 
 bool env_t::simple_drawing = false;
 bool env_t::simple_drawing_fast_forward = true;
@@ -74,7 +74,7 @@ uint32 env_t::sound_distance_scaling;
 sint16 env_t::midi_volume = 127;
 uint16 env_t::specific_volume[MAX_SOUND_TYPES];
 bool env_t::global_mute_sound = false;
-bool env_t::mute_midi = true;
+bool env_t::mute_midi = false;
 bool env_t::shuffle_midi = true;
 sint16 env_t::window_snap_distance = 8;
 scr_size env_t::iconsize( 32, 32 );
@@ -244,8 +244,8 @@ void env_t::init()
 	// debug level (0: only fatal, 1: error, 2: warning, 3: all
 	verbose_debug = 0;
 
-	default_sortmode = 1;	// sort by amount
-	default_mapmode = 0;	// show cities
+	default_sortmode = 1; // sort by amount
+	default_mapmode = 0;  // show cities
 
 	savegame_version_str = SAVEGAME_VER_NR;
 	savegame_ex_version_str = EXTENDED_VER_NR;
@@ -344,17 +344,14 @@ void env_t::rdwr(loadsave_t *file)
 
 	file->rdwr_bool( use_transparency_station_coverage );
 	file->rdwr_byte( station_coverage_show );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 12) || file->get_extended_version() >= 15)
-	{
+	if( file->is_version_ex_atleast(14, 12) ) {
 		file->rdwr_byte(signalbox_coverage_show);
 	}
 	file->rdwr_long( show_names );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 22) || file->get_extended_version() >= 15)
-	{
+	if( file->is_version_ex_atleast(14, 22) ) {
 		file->rdwr_byte(show_cnv_nameplates);
 	}
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 28) || file->get_extended_version() >= 15)
-	{
+	if( file->is_version_ex_atleast(14, 28) ) {
 		file->rdwr_byte(show_cnv_loadingbar);
 	}
 
@@ -397,7 +394,7 @@ void env_t::rdwr(loadsave_t *file)
 
 	file->rdwr_long( autosave );
 	file->rdwr_long( fps );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
+	if( file->is_version_ex_atleast(14, 32) ) {
 		file->rdwr_long(ff_fps);
 	}
 	file->rdwr_short( max_acceleration );
@@ -448,7 +445,7 @@ void env_t::rdwr(loadsave_t *file)
 	file->rdwr_short( global_volume );
 	file->rdwr_short( midi_volume );
 	file->rdwr_bool( global_mute_sound );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
+	if( file->is_version_ex_atleast(14, 32) ) {
 		for( int i = 0; i <= 5; i++ ) {
 			file->rdwr_short( specific_volume[ i ] );
 		}
@@ -540,8 +537,20 @@ void env_t::rdwr(loadsave_t *file)
 		file->rdwr_str( default_theme );
 	}
 	if(  file->is_version_atleast(120, 2)  && (file->get_extended_version() == 0  || file->get_extended_revision() >= 10 || file->get_extended_version() >= 13) ) {
-		file->rdwr_bool( new_height_map_conversion );
+		if(  file->is_version_atleast(122, 1)  ||  file->is_version_ex_atleast(14, 38)  ) {
+			sint32 conv_mode = height_conv_mode;
+			file->rdwr_long( conv_mode );
+			if (file->is_loading()) {
+				height_conv_mode = (env_t::height_conversion_mode)::clamp(conv_mode, 0, (int)env_t::NUM_HEIGHT_CONV_MODES-1);
+			}
+		}
+		else {
+			bool new_convert = height_conv_mode != env_t::HEIGHT_CONV_LEGACY_SMALL;
+			file->rdwr_bool( new_convert );
+			height_conv_mode = new_convert ? env_t::HEIGHT_CONV_LEGACY_LARGE : env_t::HEIGHT_CONV_LEGACY_SMALL;
+		}
 	}
+
 	if(  file->is_version_atleast(120, 5)  ) {
 		file->rdwr_long( background_color_rgb );
 		file->rdwr_long( tooltip_color_rgb );
@@ -563,7 +572,7 @@ void env_t::rdwr(loadsave_t *file)
 	if (file->is_version_atleast(120, 8)) {
 		rdwr_win_settings(file);
 	}
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
+	if( file->is_version_ex_atleast(14, 32) ) {
 		file->rdwr_byte(show_money_message);
 		file->rdwr_byte(follow_convoi_underground);
 		file->rdwr_byte( gui_player_color_dark );

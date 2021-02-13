@@ -32,7 +32,7 @@
 #include "gui/messagebox.h"
 #include "gui/convoi_detail_t.h"
 #include "boden/grund.h"
-#include "boden/wege/schiene.h"	// for railblocks
+#include "boden/wege/schiene.h" // for railblocks
 #include "boden/wege/strasse.h"
 
 #include "bauer/vehikelbauer.h"
@@ -1311,7 +1311,7 @@ sync_result convoi_t::sync_step(uint32 delta_t)
 
 			clear_departures();
 
-			break;	// LEAVING_DEPOT
+			break; // LEAVING_DEPOT
 
 		case DRIVING:
 			{
@@ -1346,7 +1346,7 @@ sync_result convoi_t::sync_step(uint32 delta_t)
 					}
 				}
 			}
-			break;	// DRIVING
+			break; // DRIVING
 
 		default:
 			dbg->fatal("convoi_t::sync_step()", "Wrong state %d!\n", state);
@@ -2316,7 +2316,7 @@ end_loop:
 			destroy();
 			return; // must not continue method after deleting this object
 
-		default:	/* keeps compiler silent*/
+		default: /* keeps compiler silent*/
 			break;
 	}
 	// calculate new waiting time
@@ -2874,7 +2874,7 @@ DBG_MESSAGE("convoi_t::add_vehicle()","extend array_tpl to %i totals.",max_rail_
 		}
 		// check for obsolete
 		if(!has_obsolete  &&  welt->use_timeline()) {
-			has_obsolete = info->is_obsolete( welt->get_timeline_year_month(), welt );
+			has_obsolete = info->is_obsolete( welt->get_timeline_year_month() );
 		}
 		player_t::add_maintenance( get_owner(), info->get_maintenance(), info->get_waytype() );
 	}
@@ -3163,7 +3163,7 @@ bool convoi_t::set_schedule(schedule_t * sch)
 			}
 			if(  !sch->matches( welt, line->get_schedule() )  ) {
 				// change from line to individual schedule
-				//		-> unset line now and register stops from new schedule later
+				// -> unset line now and register stops from new schedule later
 				changed = true;
 				unset_line();
 			}
@@ -3186,7 +3186,7 @@ bool convoi_t::set_schedule(schedule_t * sch)
 		if(  changed  )
 		{
 			// if line is unset or schedule is changed
-			//				-> register stops from new schedule
+			// -> register stops from new schedule
 			if(!line.is_bound())
 			{
 				register_stops();
@@ -3250,7 +3250,7 @@ bool convoi_t::can_go_alte_direction()
 	// now get the actual length and the tile length
 	uint16 convoi_length = 15;
 	uint16 tile_length = 24;
-	unsigned i;	// for visual C++
+	unsigned i; // for visual C++
 	const vehicle_t* pred = NULL;
 	for(i=0; i<vehicle_count; i++) {
 		const vehicle_t* v = vehicle[i];
@@ -3292,7 +3292,7 @@ bool convoi_t::can_go_alte_direction()
 		return false;
 	}
 
-	uint16 length = min((convoi_length/16u)+4u,route.get_count());	// maximum length in tiles to check
+	uint16 length = min((convoi_length/16u)+4u,route.get_count()); // maximum length in tiles to check
 
 	// we just check, whether we go back (i.e. route tiles other than zero have convoi vehicles on them)
 	for( int index=1;  index<length;  index++ ) {
@@ -3328,9 +3328,9 @@ bool convoi_t::can_go_alte_direction()
 
 	// since we need the route for every vehicle of this convoi,
 	// we must set the current route index (instead assuming 1)
-	length = min((convoi_length / 8u), route.get_count() - 1);	// maximum length in tiles to check
-	bool ok = false;
-	for (i = 0; i<vehicle_count; i++) {
+	length = min((convoi_length/8u),route.get_count()-1); // maximum length in tiles to check
+	bool ok=false;
+	for(i=0; i<vehicle_count; i++) {
 		vehicle_t* v = get_vehicle(i);
 
 		// this is such awkward, since it takes into account different vehicle length
@@ -3963,7 +3963,7 @@ void convoi_t::rdwr(loadsave_t *file)
 
 	file->rdwr_str(name_and_id + name_offset, lengthof(name_and_id) - name_offset);
 	if(file->is_loading()) {
-		set_name(name_and_id+name_offset);	// will add id automatically
+		set_name(name_and_id+name_offset); // will add id automatically
 	}
 
 	koord3d dummy_pos;
@@ -4364,7 +4364,7 @@ void convoi_t::rdwr(loadsave_t *file)
 
 	// save/restore pending line updates
 	if(file->is_version_atleast(84, 9)  &&  file->is_version_less(99, 13)) {
-		file->rdwr_long(dummy);	// ignore
+		file->rdwr_long(dummy); // ignore
 	}
 	if(file->is_loading()) {
 		line_update_pending = linehandle_t();
@@ -5243,7 +5243,7 @@ void convoi_t::open_schedule_window( bool show )
 		return;
 	}
 
-	set_akt_speed(0);	// stop the train ...
+	set_akt_speed(0); // stop the train ...
 	if(state!=INITIAL) {
 		state = EDIT_SCHEDULE;
 	}
@@ -6242,7 +6242,7 @@ uint32 convoi_t::get_average_kmh()
  */
 void convoi_t::self_destruct()
 {
-	line_update_pending = linehandle_t();	// does not bother to add it to a new line anyway ...
+	line_update_pending = linehandle_t(); // does not bother to add it to a new line anyway ...
 	// convois in depot are not contained in the map array!
 	if(state==INITIAL) {
 		destroy();
@@ -6329,7 +6329,7 @@ void convoi_t::dump() const
 		"state = %d\n"
 		"statename = %s\n"
 		"alte_direction = %d\n"
-		"jahresgewinn = %ld\n"	// %lld crashes mingw now, cast gewinn to long ...
+		"jahresgewinn = %ld\n" // %lld crashes mingw now, cast gewinn to long ...
 		"name = '%s'\n"
 		"line_id = '%d'\n"
 		"schedule = '%p'",
@@ -7677,7 +7677,7 @@ bool convoi_t::calc_obsolescence(uint16 timeline_year_month)
 {
 	// convoi has obsolete vehicles?
 	for(int j = get_vehicle_count(); --j >= 0; ) {
-		if (vehicle[j]->get_desc()->is_obsolete(timeline_year_month, welt)) {
+		if (vehicle[j]->get_desc()->is_obsolete(timeline_year_month)) {
 			return true;
 		}
 	}
@@ -8510,7 +8510,7 @@ bool convoi_t::all_vehicles_are_buildable() const
 		{
 			return false;
 		}
-		if(!welt->get_settings().get_allow_buying_obsolete_vehicles() && get_vehicle(i)->get_desc()->is_obsolete(welt->get_timeline_year_month(), welt))
+		if(!welt->get_settings().get_allow_buying_obsolete_vehicles() && get_vehicle(i)->get_desc()->is_obsolete(welt->get_timeline_year_month()))
 		{
 			return false;
 		}

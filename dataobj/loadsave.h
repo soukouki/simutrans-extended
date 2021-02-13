@@ -100,7 +100,7 @@ protected:
 public:
 	static mode_t save_mode;     ///< default to use for saving
 	static mode_t autosave_mode; ///< default to use for autosaves and network mode client temp saves
-	static int save_level;    ///< default to use for compression (various libraries allow for szie/speed settings)
+	static int save_level;       ///< default to use for compression (various libraries allow for size/speed settings)
 	static int autosave_level;
 
 	/**
@@ -142,6 +142,10 @@ public:
 	inline bool is_version_atleast(uint32 major, uint32 save_minor) const { return !is_version_less(major, save_minor); }
 	inline bool is_version_less(uint32 major, uint32 save_minor) const    { return finfo.ext_version.version < major * 1000U + save_minor; }
 	inline bool is_version_equal(uint32 major, uint32 save_minor) const   { return finfo.ext_version.version == major * 1000U + save_minor; }
+	// Extended version check for the file
+	inline bool is_version_ex_atleast(uint32 ex_ver, uint32 ex_revision) const { return !is_version_ex_less(ex_ver, ex_revision); }
+	inline bool is_version_ex_less(uint32 ex_ver, uint32 ex_revision) const    { return (finfo.ext_version.extended_version < ex_ver || (finfo.ext_version.extended_version == ex_ver && finfo.ext_version.extended_revision < ex_revision)); }
+	inline bool is_version_ex_equal(uint32 ex_ver, uint32 ex_revision) const   { return (finfo.ext_version.extended_version == ex_ver && finfo.ext_version.extended_revision == ex_revision); }
 
 	void rdwr_byte(sint8 &c);
 	void rdwr_byte(uint8 &c);

@@ -59,11 +59,15 @@ public:
 /**
  * GUI for Schedule dialog
  */
-class schedule_gui_t :	public gui_frame_t,
-						public action_listener_t
+class schedule_gui_t : public gui_frame_t, public action_listener_t
 {
 private:
-	enum mode_t {adding, inserting, removing, undefined_mode};
+	enum mode_t {
+		adding,
+		inserting,
+		removing,
+		undefined_mode
+	};
 
 	mode_t mode;
 

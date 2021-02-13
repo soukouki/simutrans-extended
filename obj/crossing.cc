@@ -7,7 +7,7 @@
 
 #include "../simdebug.h"
 #include "../simworld.h"
-#include "../simobj.h"
+#include "simobj.h"
 #include "../display/simimg.h"
 #include "../player/simplay.h"
 
@@ -125,7 +125,9 @@ void crossing_t::rdwr(loadsave_t *file)
 	// variables ... attention, logic now in crossing_logic_t
 	state = logic==NULL ? crossing_logic_t::CROSSING_INVALID : logic->get_state();
 	file->rdwr_byte(state);
+	state = clamp<uint8>(state, 0, crossing_logic_t::NUM_CROSSING_STATES-1);
 	file->rdwr_byte(ns);
+
 	if(file->is_version_less(99, 16)) {
 		uint32 ldummy=0;
 		uint8 bdummy=0;
@@ -201,7 +203,7 @@ void crossing_t::finish_rd()
 // players can remove public owned ways
 const char *crossing_t::is_deletable(const player_t *player)
 {
-	if(  get_player_nr()==welt->get_public_player()->get_player_nr()  ) {
+	if (get_player_nr()==welt->get_public_player()->get_player_nr()) {
 		return NULL;
 	}
 
