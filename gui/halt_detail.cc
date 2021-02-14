@@ -1738,32 +1738,19 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 				char travelling_time_as_clock[32];
 				const uint32 journey_time = cnx->journey_time;
 				welt->sprintf_time_tenths(travelling_time_as_clock, sizeof(travelling_time_as_clock), journey_time);
-				if (is_walking) {
-					if (skinverwaltung_t::on_foot) {
-						buf.printf("%5s", travelling_time_as_clock);
-						display_color_img_with_tooltip(skinverwaltung_t::on_foot->get_image_id(0), offset.x + xoff + catg_xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate("Walking time"));
-						catg_xoff += GOODS_SYMBOL_CELL_WIDTH;
-					}
-					else {
-						buf.printf(translator::translate("%s mins. walking"), travelling_time_as_clock);
-						buf.append(", ");
-					}
-				}
-				else {
-					if (skinverwaltung_t::travel_time) {
-						buf.printf("%5s", travelling_time_as_clock);
-						display_color_img_with_tooltip(skinverwaltung_t::travel_time->get_image_id(0), offset.x + xoff + catg_xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate("Travel time and travel speed"));
-						catg_xoff += GOODS_SYMBOL_CELL_WIDTH;
-					}
-					else {
-						buf.printf(translator::translate("%s mins. travelling"), travelling_time_as_clock);
-						buf.append(", ");
-					}
+
+				if(const skin_desc_t* icon = is_walking ? skinverwaltung_t::on_foot : skinverwaltung_t::travel_time) {
+					buf.printf("%5s", travelling_time_as_clock);
+					display_color_img_with_tooltip(icon->get_image_id(0),offset.x + xoff + catg_xoff,offset.y + yoff + FIXED_SYMBOL_YOFF,0, false, false,translator::translate(is_walking ? "Walking time" : "Travel time and travel speed"));
+					catg_xoff += GOODS_SYMBOL_CELL_WIDTH;
+				} else {
+					buf.printf(translator::translate(is_walking ? "%s mins. walking" : "%s mins. travelling"), travelling_time_as_clock);
+					buf.append(", ");
 				}
 				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
 				// [avarage speed]
 				buf.clear();
-				sint64 average_speed = journey_time ? kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time) : 0;
+				const sint64 average_speed = journey_time ? kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time) : 0;
 				buf.printf(" (%2ukm/h) ", average_speed);
 				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
 
