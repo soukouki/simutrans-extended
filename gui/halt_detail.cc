@@ -1736,7 +1736,7 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 				catg_xoff += D_BUTTON_WIDTH;
 				buf.clear();
 				char travelling_time_as_clock[32];
-				uint32 journey_time = cnx->journey_time;
+				const uint32 journey_time = cnx->journey_time;
 				welt->sprintf_time_tenths(travelling_time_as_clock, sizeof(travelling_time_as_clock), journey_time);
 				if (is_walking) {
 					if (skinverwaltung_t::on_foot) {
