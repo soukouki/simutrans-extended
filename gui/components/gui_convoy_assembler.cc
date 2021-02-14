@@ -2802,8 +2802,8 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 						else if (desc->is_obsolete(month_now, welt)) {
 							upgrade_state_color = COL_OBSOLETE;
 						}
-						display_veh_form_wh_clip_rgb(pos.x + 335, top + 1, VEHICLE_BAR_HEIGHT * 2, upgrade_state_color, true, desc->get_basic_constraint_prev(), desc->get_interactivity(), false);
-						display_veh_form_wh_clip_rgb(pos.x + 335 + VEHICLE_BAR_HEIGHT * 2 - 1, top + 1, VEHICLE_BAR_HEIGHT * 2, upgrade_state_color, true, desc->get_basic_constraint_next(), desc->get_interactivity(), true);
+						display_veh_form_wh_clip_rgb(pos.x + 335, top + 1, VEHICLE_BAR_HEIGHT * 2, VEHICLE_BAR_HEIGHT, upgrade_state_color, true, false, desc->get_basic_constraint_prev(), desc->get_interactivity());
+						display_veh_form_wh_clip_rgb(pos.x + 335 + VEHICLE_BAR_HEIGHT * 2 - 1, top + 1, VEHICLE_BAR_HEIGHT * 2, VEHICLE_BAR_HEIGHT, upgrade_state_color, true, true, desc->get_basic_constraint_next(), desc->get_interactivity());
 
 						buf.clear();
 						buf.append(translator::translate(veh_type->get_upgrades(i)->get_name()));
