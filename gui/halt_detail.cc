@@ -1748,10 +1748,10 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 					buf.append(", ");
 				}
 				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-				// [avarage speed]
+
+				// [average speed]
 				buf.clear();
-				const sint64 average_speed = journey_time ? kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time) : 0;
-				buf.printf(" (%2ukm/h) ", average_speed);
+				buf.printf(" (%2ukm/h) ", journey_time ? kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time) : 0);
 				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
 
 				// [waiting time]
@@ -1761,9 +1761,10 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 						display_color_img_with_tooltip(skinverwaltung_t::waiting_time->get_image_id(0), offset.x + xoff + catg_xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate("Route average waiting time and speed evaluation"));
 						catg_xoff += GOODS_SYMBOL_CELL_WIDTH;
 					}
-					if (cnx->waiting_time > 0) {
+					const uint32 waiting_time = cnx->waiting_time;
+					if (waiting_time > 0) {
 						char waiting_time_as_clock[32];
-						welt->sprintf_time_tenths(waiting_time_as_clock, sizeof(waiting_time_as_clock), cnx->waiting_time);
+						welt->sprintf_time_tenths(waiting_time_as_clock, sizeof(waiting_time_as_clock), waiting_time);
 						if (!skinverwaltung_t::waiting_time) {
 							buf.printf(translator::translate("%s mins. waiting"), waiting_time_as_clock);
 						}
@@ -1781,10 +1782,9 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 					}
 					catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
 
-					// [avarage schedule speed]
+					// [average schedule speed]
 					buf.clear();
-					sint64 schedule_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time + cnx->waiting_time);
-					buf.printf(" (%2ukm/h) ", schedule_speed);
+					buf.printf(" (%2ukm/h) ", journey_time+waiting_time ? kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time + waiting_time) : 0);
 					catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
 					max_x = max(max_x, catg_xoff);
 				}
