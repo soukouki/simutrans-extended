@@ -4057,6 +4057,16 @@ Population/Visitor demand
 人口／訪問者需要
 Climate
 気候
+hl_btn_sort_tiles
+敷地面積
+by_potential_pax_number
+旅客需要度
+by_potential_mail_users
+郵便需要度
+by_pax_happy_last_month
+先月の乗車数
+by_mail_delivered_last_month
+先月の郵便発送数
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month

@@ -86,7 +86,13 @@ slist_tpl<const goods_desc_t *> halt_list_frame_t::waren_filter_an;
 const char *halt_list_frame_t::sort_text[SORT_MODES] = {
 	"hl_btn_sort_name",
 	"hl_btn_sort_waiting",
-	"hl_btn_sort_type"
+	"hl_btn_sort_type",
+	"hl_btn_sort_tiles",
+	"by_potential_pax_number",
+	"by_potential_mail_users",
+	"by_pax_happy_last_month",
+	"by_mail_delivered_last_month",
+	"by_region"
 };
 
 
@@ -112,6 +118,24 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 			break;
 		case nach_typ: // sort by station type
 			order = halt1->get_station_type() - halt2->get_station_type();
+			break;
+		case by_tiles:
+			order = halt1->get_tiles().get_count() - halt2->get_tiles().get_count();
+			break;
+		case by_potential_pax:
+			order = halt1->get_potential_passenger_number(1) - halt2->get_potential_passenger_number(1);
+			break;
+		case by_potential_mail:
+			order = (int)(halt1->get_finance_history(1, HALT_MAIL_DELIVERED) + halt1->get_finance_history(1, HALT_MAIL_NOROUTE) - halt2->get_finance_history(1, HALT_MAIL_DELIVERED) - halt2->get_finance_history(1, HALT_MAIL_NOROUTE));
+			break;
+		case by_pax_happy_last_month:
+			order = (int)(halt1->get_finance_history(1, HALT_HAPPY) - halt2->get_finance_history(1, HALT_HAPPY));
+			break;
+		case by_mail_delivered_last_month:
+			order = (int)(halt1->get_finance_history(1, HALT_MAIL_DELIVERED) - halt2->get_finance_history(1, HALT_MAIL_DELIVERED));
+			break;
+		case by_region:
+			order = welt->get_region(halt1->get_basis_pos()) - welt->get_region(halt2->get_basis_pos());
 			break;
 	}
 	/**

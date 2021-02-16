@@ -28,6 +28,12 @@ public:
 		nach_name,
 		nach_wartend,
 		nach_typ,
+		by_tiles,
+		by_potential_pax,
+		by_potential_mail,
+		by_pax_happy_last_month,
+		by_mail_delivered_last_month,
+		by_region,
 		SORT_MODES
 	};
 

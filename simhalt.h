@@ -893,9 +893,22 @@ public:
 	uint32 get_around_mail_generated() const;
 	uint32 get_around_mail_delivery_succeeded() const;
 
+	// The number of passengers who have tried to use this station.
+	sint64 get_potential_passenger_number(uint8 month) const
+	{
+		sint64 sum=0;
+		sum += financial_history[month][HALT_HAPPY];
+		sum += financial_history[month][HALT_UNHAPPY];
+		sum += financial_history[month][HALT_NOROUTE];
+		sum += financial_history[month][HALT_TOO_SLOW];
+		sum += financial_history[month][HALT_TOO_WAITING];
+		return sum;
+	}
+
 	// @author: jamespetts
 	// Returns the percentage of unhappy people
 	// out of the total of happy and unhappy people.
+	/*
 	uint16 get_unhappy_percentage(uint8 month) const
 	{
 		sint64 happy_count = financial_history[month][HALT_HAPPY];
@@ -906,7 +919,7 @@ public:
 		else {
 			return 0;
 		}
-	}
+	}*/
 
 	// Getting and setting average waiting times in minutes
 	// @author: jamespetts
