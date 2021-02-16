@@ -315,7 +315,7 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 
 	set_table_layout(1,0);
 
-	add_table(2,2);
+	add_table(3,2);
 	{
 		new_component<gui_label_t>("hl_txt_sort");
 
@@ -324,6 +324,12 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 		filter_on.pressed = filter_is_on;
 		filter_on.add_listener(this);
 		add_component(&filter_on);
+
+		btn_show_mutual_use.init(button_t::square_state, "show_mutual_use");
+		btn_show_mutual_use.set_tooltip(translator::translate("Also shows the stops of other players you are using"));
+		btn_show_mutual_use.pressed = filter_is_on;
+		btn_show_mutual_use.add_listener(this);
+		add_component(&btn_show_mutual_use);
 
 		// sort ascend/descend button
 		add_table(4, 1);
@@ -387,7 +393,7 @@ void halt_list_frame_t::fill_list()
 
 	scrolly->clear_elements();
 	FOR(vector_tpl<halthandle_t>, const halt, haltestelle_t::get_alle_haltestellen()) {
-		if(  halt->get_owner() == m_player  ) {
+		if(  halt->get_owner() == m_player || (show_mutual_stops && halt->has_available_network(m_player))  ) {
 			scrolly->new_component<halt_list_stats_t>(halt) ;
 		}
 	}
@@ -451,6 +457,11 @@ bool halt_list_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* 
 			filter_frame = new halt_list_filter_frame_t(m_player, this);
 			create_win(filter_frame, w_info, (ptrdiff_t)this);
 		}
+	}
+	else if (comp == &btn_show_mutual_use) {
+		show_mutual_stops = !show_mutual_stops;
+		fill_list();
+		btn_show_mutual_use.pressed = show_mutual_stops;
 	}
 	return true;
 }

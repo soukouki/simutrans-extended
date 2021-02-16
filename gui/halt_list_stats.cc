@@ -14,6 +14,7 @@
 #include "../display/simimg.h"
 
 #include "../dataobj/translator.h"
+#include "../dataobj/environment.h"
 
 #include "../descriptor/skin_desc.h"
 
@@ -224,6 +225,9 @@ void halt_list_stats_t::draw(scr_coord offset)
 		img_enabled[2].set_visible(halt->get_ware_enabled());
 
 		label_name.buf().append(halt->get_name());
+		if (halt->get_owner() != welt->get_active_player()) {
+			label_name.set_color(color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
+		}
 		label_name.update();
 
 		halt->get_short_freight_info(label_cargo.buf());

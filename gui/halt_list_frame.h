@@ -74,6 +74,7 @@ private:
 	button_t sort_asc, sort_desc;
 	button_t filter_on;
 	button_t filter_details;
+	button_t btn_show_mutual_use;
 	gui_scrolled_halt_list_t *scrolly;
 
 	/*
@@ -89,6 +90,7 @@ private:
 	static bool sortreverse;
 
 	bool filter_is_on = false;
+	bool show_mutual_stops = false;
 	static int filter_flags;
 
 	static char name_filter_value[64];
