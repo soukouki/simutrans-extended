@@ -85,7 +85,9 @@ slist_tpl<const goods_desc_t *> halt_list_frame_t::waren_filter_an;
 
 const char *halt_list_frame_t::sort_text[SORT_MODES] = {
 	"hl_btn_sort_name",
-	"hl_btn_sort_waiting",
+	"by_waiting_passengers",
+	"by_waiting_mails",
+	"by_waiting_goods",
 	"hl_btn_sort_type",
 	"hl_btn_sort_tiles",
 	"by_potential_pax_number",
@@ -113,9 +115,19 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 		case nach_name: // sort by station name
 			order = 0;
 			break;
-		case nach_wartend: // sort by waiting goods
-			order = (int)(halt1->get_finance_history( 0, HALT_WAITING ) - halt2->get_finance_history( 0, HALT_WAITING ));
+		case by_waiting_pax:
+			order = (int)(halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)));
 			break;
+		case by_waiting_mail:
+			order = (int)(halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
+			break;
+		case by_waiting_goods:
+		{
+			const int a = (int)(halt1->get_finance_history(0, HALT_WAITING) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
+			const int b = (int)(halt2->get_finance_history(0, HALT_WAITING) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
+			order = a - b;
+			break;
+		}
 		case nach_typ: // sort by station type
 			order = halt1->get_station_type() - halt2->get_station_type();
 			break;

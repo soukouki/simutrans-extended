@@ -26,7 +26,9 @@ class halt_list_frame_t : public gui_frame_t , private action_listener_t
 public:
 	enum sort_mode_t {
 		nach_name,
-		nach_wartend,
+		by_waiting_pax,
+		by_waiting_mail,
+		by_waiting_goods,
 		nach_typ,
 		by_tiles,
 		by_potential_pax,
