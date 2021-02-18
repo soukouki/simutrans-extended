@@ -2796,6 +2796,27 @@ void haltestelle_t::update_alternative_seats(convoihandle_t cnv)
 	}
 }
 
+
+sint64 haltestelle_t::get_overcrowded_proporion(uint8 typ) const
+{
+	sint64 waiting_amount_of_this_typ = 0;
+	switch (typ) {
+		case 0:
+			waiting_amount_of_this_typ = get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS));
+			break;
+		case 1:
+			waiting_amount_of_this_typ = get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
+			break;
+		case 2:
+			waiting_amount_of_this_typ = financial_history[0][HALT_WAITING] - get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
+			break;
+		default:
+			return 0; // error
+	}
+	const sint64 catg_capacity = capacity[typ] ? (sint64)capacity[typ] : 1;
+	return (sint64)(waiting_amount_of_this_typ * 10ll / catg_capacity);
+}
+
 uint32 haltestelle_t::get_ware_summe(const goods_desc_t *wtyp) const
 {
 	int sum = 0;
@@ -6226,45 +6247,17 @@ void haltestelle_t::calc_transfer_time()
 	// Adjust for overcrowding - transfer time increases with a more crowded stop.
 	// TODO: Better separate waiting times for different types of goods.
 
-	const uint8 max_categories = goods_manager_t::get_max_catg_index();
-	sint64 waiting_passengers = 0;
-	sint64 waiting_goods = 0;
 	// TODO: Consider adding waiting mail here, too
 	// This would require a separete mail transfer time.
 
-	for(uint8 i = 0; i < max_categories; i++)
+	if(get_overcrowded_proporion(0) >= 10)
 	{
-		if(cargo[i])
-		{
-			if (i == goods_manager_t::INDEX_PAS)
-			{
-				vector_tpl<ware_t> * warray = cargo[i];
-				FOR(vector_tpl<ware_t>, &w, *warray)
-				{
-					waiting_passengers += w.menge;
-				}
-			}
-			else if (i > goods_manager_t::INDEX_NONE)
-			{
-				vector_tpl<ware_t> * warray = cargo[i];
-				FOR(vector_tpl<ware_t>, &w, *warray)
-				{
-					waiting_goods += w.menge;
-				}
-			}
-		}
+		transfer_time = (uint32)std::min(std::max((sint64)transfer_time, (get_overcrowded_proporion(0) * (2ll * get_overcrowded_proporion(0))) / 10ll), (sint64)transfer_time * 10ll);
 	}
 
-	if(capacity[0] > 0 && waiting_passengers > capacity[0])
+	if(get_overcrowded_proporion(2) >= 10)
 	{
-		const sint64 overcrowded_proporion_passengers = waiting_passengers * 10ll / capacity[0];
-		transfer_time = (uint32)std::min(std::max((sint64)transfer_time, (overcrowded_proporion_passengers * (2ll * overcrowded_proporion_passengers)) / 10ll), (sint64)transfer_time * 10ll);
-	}
-
-	if(capacity[2] > 0 && waiting_goods > capacity[2])
-	{
-		const sint64 overcrowded_proportion_goods = waiting_goods * 10ll / capacity[2];
-		transshipment_time = (uint32)std::min(std::max((sint64)transshipment_time, (overcrowded_proportion_goods * (2ll *overcrowded_proportion_goods)) / 10ll), (sint64)transshipment_time * 10ll);
+		transshipment_time = (uint32)std::min(std::max((sint64)transshipment_time, (get_overcrowded_proporion(2) * (2ll * get_overcrowded_proporion(2))) / 10ll), (sint64)transshipment_time * 10ll);
 	}
 
 	// For reference, with a transshipment speed of 1 km/h and a walking speed of 5 km/h,
