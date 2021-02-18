@@ -31,6 +31,8 @@ public:
 		by_waiting_goods,
 		nach_typ,
 		by_tiles,
+		by_capacity,
+		by_overcrowding_rate,
 		by_potential_pax,
 		by_potential_mail,
 		by_pax_happy_last_month,

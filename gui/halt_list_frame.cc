@@ -89,7 +89,9 @@ const char *halt_list_frame_t::sort_text[SORT_MODES] = {
 	"by_waiting_mails",
 	"by_waiting_goods",
 	"hl_btn_sort_type",
-	"hl_btn_sort_tiles",
+	"hl_sort_tiles",
+	"hl_sort_capacity",
+	"hl_sort_overcrowding_rate",
 	"by_potential_pax_number",
 	"by_potential_mail_users",
 	"by_pax_happy_last_month",
@@ -123,9 +125,9 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 			break;
 		case by_waiting_goods:
 		{
-			const int a = (int)(halt1->get_finance_history(0, HALT_WAITING) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
-			const int b = (int)(halt2->get_finance_history(0, HALT_WAITING) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
-			order = a - b;
+			const int waiting_goods_a = (int)(halt1->get_finance_history(0, HALT_WAITING) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
+			const int waiting_goods_b = (int)(halt2->get_finance_history(0, HALT_WAITING) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
+			order = waiting_goods_a - waiting_goods_b;
 			break;
 		}
 		case nach_typ: // sort by station type
@@ -134,6 +136,24 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 		case by_tiles:
 			order = halt1->get_tiles().get_count() - halt2->get_tiles().get_count();
 			break;
+		case by_capacity:
+		{
+			const uint64 a = halt1->get_capacity(0) + halt1->get_capacity(1) + halt1->get_capacity(2);
+			const uint64 b = halt2->get_capacity(0) + halt2->get_capacity(1) + halt2->get_capacity(2);
+			order = (int)(a - b);
+			break;
+		}
+		case by_overcrowding_rate:
+		{
+			uint8 weighting_a = halt1->get_pax_enabled() + halt1->get_mail_enabled() + halt1->get_ware_enabled();
+			uint8 weighting_b = halt2->get_pax_enabled() + halt2->get_mail_enabled() + halt2->get_ware_enabled();
+			if (!weighting_a) { weighting_a=1; }
+			if (!weighting_b) { weighting_b=1; }
+			const sint64 crowding_factor_a = halt1->get_overcrowded_proporion(0) + halt1->get_overcrowded_proporion(1) + halt1->get_overcrowded_proporion(2);
+			const sint64 crowding_factor_b = halt2->get_overcrowded_proporion(0) + halt2->get_overcrowded_proporion(1) + halt2->get_overcrowded_proporion(2);
+			order = crowding_factor_a/weighting_a - crowding_factor_b/weighting_b;
+			break;
+		}
 		case by_potential_pax:
 			order = halt1->get_potential_passenger_number(1) - halt2->get_potential_passenger_number(1);
 			break;
