@@ -118,15 +118,25 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 			order = 0;
 			break;
 		case by_waiting_pax:
-			order = (int)(halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)));
+		{
+			// Distinguish between 0 and "disable"
+			const int a = halt1->get_pax_enabled() ? halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) : -1;
+			const int b = halt2->get_pax_enabled() ? halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) : -1;
+			order = (int)(a - b);
 			break;
+		}
 		case by_waiting_mail:
-			order = (int)(halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
+		{
+			// Distinguish between 0 and "disable"
+			const int a = halt1->get_mail_enabled() ? halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)) : -1;
+			const int b = halt2->get_mail_enabled() ? halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)) : -1;
+			order = (int)(a - b);
 			break;
+		}
 		case by_waiting_goods:
 		{
-			const int waiting_goods_a = (int)(halt1->get_finance_history(0, HALT_WAITING) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
-			const int waiting_goods_b = (int)(halt2->get_finance_history(0, HALT_WAITING) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)));
+			const int waiting_goods_a = halt1->get_ware_enabled() ? (int)(halt1->get_finance_history(0, HALT_WAITING) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt1->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL))): -1;
+			const int waiting_goods_b = halt2->get_ware_enabled() ? (int)(halt2->get_finance_history(0, HALT_WAITING) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt2->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL))): -1;
 			order = waiting_goods_a - waiting_goods_b;
 			break;
 		}
