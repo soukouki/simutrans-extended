@@ -691,6 +691,8 @@ public:
 	// true, if this station is overcrowded for this category
 	bool is_overcrowded( const uint8 idx ) const { return (overcrowded[idx/8] & (1<<(idx%8)))!=0; }
 
+	sint64 get_overcrowded_proporion(uint8 typ) const;
+
 	/// @returns total amount of the good waiting at this halt.
 	uint32 get_ware_summe(const goods_desc_t *warentyp) const;
 	uint32 get_ware_summe(const goods_desc_t *warentyp, uint8 g_class, bool chk_only_commuter = false) const;

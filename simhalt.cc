@@ -2796,6 +2796,27 @@ void haltestelle_t::update_alternative_seats(convoihandle_t cnv)
 	}
 }
 
+
+sint64 haltestelle_t::get_overcrowded_proporion(uint8 typ) const
+{
+	sint64 waiting_amount_of_this_typ = 0;
+	switch (typ) {
+		case 0:
+			waiting_amount_of_this_typ = get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS));
+			break;
+		case 1:
+			waiting_amount_of_this_typ = get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
+			break;
+		case 2:
+			waiting_amount_of_this_typ = financial_history[0][HALT_WAITING] - get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
+			break;
+		default:
+			return 0; // error
+	}
+	const sint64 catg_capacity = capacity[typ] ? (sint64)capacity[typ] : 1;
+	return (sint64)(waiting_amount_of_this_typ * 10ll / catg_capacity);
+}
+
 uint32 haltestelle_t::get_ware_summe(const goods_desc_t *wtyp) const
 {
 	int sum = 0;
