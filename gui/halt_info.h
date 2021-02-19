@@ -44,6 +44,21 @@ public:
 };
 
 /**
+ * Helper class to draw halt handled goods categories
+ */
+class gui_halt_handled_goods_images_t : public gui_container_t
+{
+	halthandle_t halt;
+public:
+	gui_halt_handled_goods_images_t(halthandle_t h);
+
+	void draw(scr_coord offset);
+
+	scr_size get_min_size() const OVERRIDE { return size; }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
+/**
  * Helper class to draw freight type capacity bar
  */
 class gui_halt_capacity_bar_t : public gui_container_t
