@@ -369,7 +369,7 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 
 		btn_show_mutual_use.init(button_t::square_state, "show_mutual_use");
 		btn_show_mutual_use.set_tooltip(translator::translate("Also shows the stops of other players you are using"));
-		btn_show_mutual_use.pressed = filter_is_on;
+		btn_show_mutual_use.pressed = show_mutual_stops;
 		btn_show_mutual_use.add_listener(this);
 		add_component(&btn_show_mutual_use);
 
