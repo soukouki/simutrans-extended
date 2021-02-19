@@ -425,6 +425,7 @@ haltestelle_t::haltestelle_t(loadsave_t* file)
 
 	status_color = SYSCOL_TEXT_UNUSED;
 	last_status_color = color_idx_to_rgb(COL_PURPLE);
+	status_color_freight = COL_INACTIVE;
 	last_bar_count = 0;
 
 	enables = NOT_ENABLED;
@@ -497,6 +498,7 @@ haltestelle_t::haltestelle_t(koord k, player_t* player)
 
 	status_color = SYSCOL_TEXT_UNUSED;
 	last_status_color = color_idx_to_rgb(COL_PURPLE);
+	status_color_freight = COL_INACTIVE;
 	last_bar_count = 0;
 
 	sortierung = freight_list_sorter_t::by_name;
@@ -4921,17 +4923,36 @@ void haltestelle_t::recalc_status()
 			}
 		}
 
+		bool has_active_freight_connection = transferring_total;
+		uint32 total_freight = 0;
 		for(  uint32 i = 3;  i < count;  i++  ) {
 			goods_desc_t const* const wtyp = goods_manager_t::get_info(i);
 			const uint32 ware_sum = get_ware_summe(wtyp);
+			if (gibt_ab(wtyp) && status_color_freight != color_idx_to_rgb(COL_OVERCROWD)) {
+				status_color_freight = COL_CLEAR;
+			}
+			if (ware_sum) {
+				has_active_freight_connection = true;
+			}
 
-			total_sum += ware_sum;
+			total_freight += ware_sum;
 			if((ware_sum + transferring_total) > max_ware)
 			{
 				status_bits |= (ware_sum + transferring_total) > max_ware + 32 || enables & CROWDED ? 2 : 1;
 				overcrowded[wtyp->get_index()/8] |= 1<<(wtyp->get_index()%8);
+				status_color_freight = color_idx_to_rgb(COL_OVERCROWD);
 			}
 		}
+		if (!has_active_freight_connection && status_color_freight != COL_CLEAR) {
+			status_color_freight = COL_INACTIVE;
+		}
+		else if (!total_freight && !transferring_total) {
+			status_color_freight = COL_CAUTION;
+		}
+		else if(status_color_freight != color_idx_to_rgb(COL_OVERCROWD)) {
+			status_color_freight = COL_CLEAR;
+		}
+		total_sum+=total_freight;
 	}
 
 	// take the worst color for status
@@ -4951,6 +4972,42 @@ void haltestelle_t::recalc_status()
 	financial_history[0][HALT_WAITING] = total_sum;
 }
 
+
+PIXVAL haltestelle_t::get_status_color(uint8 typ) const
+{
+	switch (typ) {
+		case 0:
+			if (!get_pax_enabled() || !gibt_ab(goods_manager_t::get_info(goods_manager_t::INDEX_PAS))) {
+				return COL_INACTIVE;
+			}
+			if (!is_overcrowded(goods_manager_t::INDEX_PAS)) {
+				return COL_CLEAR;
+			}
+			break;
+		case 1:
+			if (!get_mail_enabled() || !gibt_ab(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL))) {
+				return COL_INACTIVE;
+			}
+			if (!is_overcrowded(goods_manager_t::INDEX_MAIL)) {
+				return COL_CLEAR;
+			}
+			break;
+		case 2:
+			if (!get_ware_enabled()) {
+				return COL_INACTIVE;
+			}
+			return status_color_freight;
+		default:
+			return COL_INACTIVE;
+	}
+	if (get_overcrowded_proporion(typ) == 0) {
+		return COL_CAUTION;
+	}
+	if (get_overcrowded_proporion(typ) < 10) {
+		return COL_CLEAR;
+	}
+	return color_idx_to_rgb(COL_OVERCROWD);
+}
 
 
 /**
