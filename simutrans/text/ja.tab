@@ -2019,10 +2019,6 @@ Vehicle %s is stucked!
 「%s」が\n立ち往生しています！
 Vehicle details
 乗り物の詳細
-Vehicle Name
-車両名
-Vehicle Power
-出力
 Verbrauch
 消費
 Vergroessere die Karte\n
@@ -4091,8 +4087,14 @@ Welcome to Simutrans-Experimental, a game created by Hj. Malthaner and the Simut
 ようこそSimutrans-Extendedへ! Simutrans-StandardはHj. MalthanerとSimutransコミュニティによって開発されました。Simutrans-ExtendedはSimutrans-Standardを元にしてJames E. PettsとSimutransコミュニティによって開発されました。
 Usage/Output
 使用量/発電量
+Vehicle Name
+車両名
+Vehicle Power
+出力
 Power (MW)
 電力 (MW)
+Power: %4d kW\n
+出力: %4d kW\n
 #Show mail service coverage/mail network
 #郵便事業が行われている範囲を表示
 #Show passenger coverage/passenger network
@@ -4101,8 +4103,6 @@ Power (MW)
 #分所要
 # mins. waiting)
 #分待ち)
-Power: %4d kW\n
-出力: %4d kW\n
 #Odometer: %s km
 #積算距離： %skm
 #; %i km/h @ %.2f sec
