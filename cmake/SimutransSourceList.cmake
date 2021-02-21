@@ -4,6 +4,7 @@ target_sources(simutrans-extended PRIVATE
 	bauer/goods_manager.cc
 	bauer/hausbauer.cc
 	bauer/tunnelbauer.cc
+	bauer/tree_builder.cc
 	bauer/vehikelbauer.cc
 	bauer/wegbauer.cc
 	boden/boden.cc
