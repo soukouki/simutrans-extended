@@ -12,6 +12,7 @@
 #include "../simhalt.h"
 #include "../simware.h"
 #include "../simfab.h"
+#include "../simcity.h"
 #include "../unicode.h"
 #include "simwin.h"
 #include "../descriptor/skin_desc.h"
@@ -178,6 +179,14 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 			break;
 		case by_region:
 			order = welt->get_region(halt1->get_basis_pos()) - welt->get_region(halt2->get_basis_pos());
+			if (order == 0) {
+				const koord a = world()->get_city(halt1->get_basis_pos()) ? world()->get_city(halt1->get_basis_pos())->get_pos() : koord(0,0);
+				const koord b = world()->get_city(halt2->get_basis_pos()) ? world()->get_city(halt2->get_basis_pos())->get_pos() : koord(0,0);
+				order = a.x - b.x;
+				if (order == 0) {
+					order = a.y - b.y;
+				}
+			}
 			break;
 	}
 	/**
@@ -369,14 +378,14 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 
 		btn_show_mutual_use.init(button_t::square_state, "show_mutual_use");
 		btn_show_mutual_use.set_tooltip(translator::translate("Also shows the stops of other players you are using"));
-		btn_show_mutual_use.pressed = filter_is_on;
+		btn_show_mutual_use.pressed = show_mutual_stops;
 		btn_show_mutual_use.add_listener(this);
 		add_component(&btn_show_mutual_use);
 
 		// sort ascend/descend button
 		add_table(4, 1);
 		{
-			for (int i = 0; i < SORT_MODES; i++) {
+			for (uint8 i = 0; i < SORT_MODES; i++) {
 				sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
 			}
 			sortedby.set_selection(default_sortmode);
