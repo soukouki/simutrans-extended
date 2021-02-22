@@ -45,6 +45,7 @@ const char *convoi_frame_t::sort_text[SORT_MODES] = {
 	"cl_btn_sort_range"
 };
 
+const slist_tpl<const goods_desc_t*>* convoi_frame_t::waren_filter = NULL;
 const uint8 convoi_frame_t::sortmode_to_label[SORT_MODES] = { 0,1,2,0,0,4,5,6,7,8 };
 /**
  * Scrolled list of gui_convoiinfo_ts.
