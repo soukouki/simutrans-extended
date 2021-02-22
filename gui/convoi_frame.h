@@ -64,7 +64,7 @@ private:
 
 	// actual filter setting
 	bool filter_is_on;
-	const slist_tpl<const goods_desc_t *>*waren_filter;
+	static const slist_tpl<const goods_desc_t *>*waren_filter;
 	char *name_filter;
 	uint32 filter_flags;
 
