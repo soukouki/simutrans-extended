@@ -545,7 +545,7 @@ if ((SIMUTRANS_BACKEND STREQUAL "sdl2") OR (SIMUTRANS_BACKEND STREQUAL "gdi"))
 		target_compile_definitions(simutrans-extended PRIVATE USE_FLUIDSYNTH_MIDI=1)
 		target_link_libraries(simutrans-extended PRIVATE FluidSynth::FluidSynth)
 	else ()
-		target_sources( ${BACKUP_MUSIC} )
+		target_sources( simutrans-extended PRIVATE ${BACKUP_MUSIC} )
 	endif (SIMUTRANS_USE_FLUIDSYNTH_MIDI)
 endif ((SIMUTRANS_BACKEND STREQUAL "sdl2") OR (SIMUTRANS_BACKEND STREQUAL "gdi"))
 
