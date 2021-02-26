@@ -93,7 +93,6 @@ private:
 	static sort_mode_t sortby;
 	static bool sortreverse;
 
-	bool filter_is_on = false;
 	bool show_mutual_stops = false;
 	static int filter_flags;
 
