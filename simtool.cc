@@ -4770,7 +4770,7 @@ DBG_MESSAGE("tool_build_station_t::tool_station_dock_aux()","building dock from 
 			{
 				message.printf(translator::translate("%s has built a new %s near %s."), player->get_name(), "Dock", city_name);
 			}
-			welt->get_message()->add_message(message, pos.get_2d(), message_t::ai, player->get_player_color1());
+			welt->get_message()->add_message(message, pos.get_2d(), message_t::ai, color_idx_to_rgb(player->get_player_color1() + env_t::gui_player_color_dark));
 		}
 	}
 	hausbauer_t::build(halt->get_owner(), bau_pos, layout, desc, &halt);
@@ -5321,7 +5321,7 @@ DBG_MESSAGE("tool_station_aux()", "building %s on square %d,%d for waytype %x", 
 			{
 				message.printf(translator::translate("%s has built a new %s near %s."), player->get_name(), stop, city_name);
 			}
-			welt->get_message()->add_message(message, pos.get_2d(), message_t::ai, player->get_player_color1());
+			welt->get_message()->add_message(message, pos.get_2d(), message_t::ai, color_idx_to_rgb(player->get_player_color1() + env_t::gui_player_color_dark));
 		}
 	}
 	hausbauer_t::build_station_extension_depot(halt->get_owner(), bd->get_pos(), layout, desc, &halt);
@@ -9541,7 +9541,7 @@ bool tool_change_player_t::init( player_t *player_in)
 				{
 					message.printf("%s %s", player->get_name(), translator::translate("is_not_available_for_takeover_any_more"));
 				}
-				welt->get_message()->add_message(message, koord::invalid, message_t::ai, player->get_player_color1());
+				welt->get_message()->add_message(message, koord::invalid, message_t::ai, color_idx_to_rgb(player->get_player_color1() + env_t::gui_player_color_dark));
 			}
 			break;
 		case 'u': // Take over another company
@@ -9551,13 +9551,13 @@ bool tool_change_player_t::init( player_t *player_in)
 				if (err)
 				{
 					message.printf(translator::translate(err));
-					welt->get_message()->add_message(message, koord::invalid, message_t::ai, player->get_player_color1());
+					welt->get_message()->add_message(message, koord::invalid, message_t::ai, color_idx_to_rgb(player->get_player_color1() + env_t::gui_player_color_dark));
 				}
 				else
 				{
 					message.printf("%s %s %s", player->get_name(), translator::translate("has_taken_over"), welt->get_player(state)->get_name());
 					player->take_over(welt->get_player(state));
-					welt->get_message()->add_message(message, koord::invalid, message_t::ai, player->get_player_color1());
+					welt->get_message()->add_message(message, koord::invalid, message_t::ai, color_idx_to_rgb(player->get_player_color1() + env_t::gui_player_color_dark));
 				}
 			}
 			break;
@@ -10038,7 +10038,7 @@ bool tool_access_t::init(player_t *)
 	{
 		message.printf(translator::translate("%s has withdrawn access rights from %s"),  welt->get_player(id_setting_player)->get_name(), welt->get_player(id_receiving_player)->get_name());
 	}
-	welt->get_message()->add_message(message, koord::invalid, message_t::ai, setting_player->get_player_color1());
+	welt->get_message()->add_message(message, koord::invalid, message_t::ai, color_idx_to_rgb(setting_player->get_player_color1() + env_t::gui_player_color_dark));
 	return false;
 }
 
