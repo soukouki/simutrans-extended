@@ -222,9 +222,9 @@ scr_size gui_routebar_t::get_max_size() const
 }
 
 
-void gui_bandgraph_t::add_color_value(const sint32 *value, PIXVAL color)
+void gui_bandgraph_t::add_color_value(const sint32 *value, PIXVAL color, bool cylinder_style)
 {
-	info_t next = { color, value };
+	info_t next = { color, value, cylinder_style };
 	values.insert(next);
 }
 
@@ -258,7 +258,12 @@ void gui_bandgraph_t::draw(scr_coord offset)
 				const scr_coord_val from = size.w * temp / total + 0.5;
 				const scr_coord_val width = from-end;
 				if (width) {
-					display_fillbox_wh_clip_rgb(offset.x + size.w - from, offset.y, width, size.h, i.color, true);
+					if (i.cylinder_style) {
+						display_cylinderbar_wh_clip_rgb(offset.x + size.w - from, offset.y, width, size.h, i.color, true);
+					}
+					else {
+						display_fillbox_wh_clip_rgb(offset.x + size.w - from, offset.y, width, size.h, i.color, true);
+					}
 				}
 				end += width;
 			}
