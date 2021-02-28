@@ -562,6 +562,8 @@ bool gui_theme_t::themes_init(const char *file_name, bool init_fonts, bool init_
 
 	env_t::gui_player_color_bright =   contents.get_int("gui_player_color_bright",   env_t::gui_player_color_bright );
 	env_t::gui_player_color_dark =     contents.get_int("gui_player_color_dark",     env_t::gui_player_color_dark );
+	env_t::gui_titlebar_player_color_background_brightness = env_t::gui_player_color_bright;
+	env_t::gui_titlebar_player_color_background_brightness = contents.get_int("gui_titlebar_player_color_background_brightness", env_t::gui_titlebar_player_color_background_brightness);
 
 	env_t::default_window_title_color = contents.get_color("default_window_title_color", env_t::default_window_title_color,  &env_t::default_window_title_color_rgb );
 	env_t::front_window_text_color =    contents.get_color("front_window_text_color",    env_t::front_window_text_color,  &env_t::front_window_text_color_rgb );
