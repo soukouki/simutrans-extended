@@ -58,6 +58,8 @@ PIXVAL gui_theme_t::gui_color_statusbar_background;
 PIXVAL gui_theme_t::gui_color_statusbar_divider;
 PIXVAL gui_theme_t::gui_highlight_color;
 PIXVAL gui_theme_t::gui_shadow_color;
+PIXVAL gui_theme_t::gui_color_indicator_border_top_left;
+PIXVAL gui_theme_t::gui_color_indicator_border_bottom_right;
 PIXVAL gui_theme_t::gui_color_loadingbar_inner;
 PIXVAL gui_theme_t::gui_color_loadingbar_progress;
 PIXVAL gui_theme_t::gui_color_obsolete;
@@ -184,6 +186,9 @@ void gui_theme_t::init_gui_defaults()
 
 	gui_highlight_color                    = color_idx_to_rgb(MN_GREY4);
 	gui_shadow_color                       = color_idx_to_rgb(MN_GREY0);
+
+	gui_color_indicator_border_top_left     = color_idx_to_rgb(MN_GREY0);
+	gui_color_indicator_border_bottom_right = color_idx_to_rgb(MN_GREY4);
 
 	gui_color_loadingbar_inner             = color_idx_to_rgb(COL_GREY5);
 	gui_color_loadingbar_progress          = color_idx_to_rgb(COL_SOFT_BLUE);
@@ -535,6 +540,8 @@ bool gui_theme_t::themes_init(const char *file_name, bool init_fonts, bool init_
 	gui_theme_t::gui_color_statusbar_divider            = (PIXVAL)contents.get_color("gui_color_statusbar_divider", SYSCOL_STATUSBAR_DIVIDER);
 	gui_theme_t::gui_highlight_color                    = (PIXVAL)contents.get_color("gui_highlight_color", SYSCOL_HIGHLIGHT);
 	gui_theme_t::gui_shadow_color                       = (PIXVAL)contents.get_color("gui_shadow_color", SYSCOL_SHADOW);
+	gui_theme_t::gui_color_indicator_border_top_left    = (PIXVAL)contents.get_color("gui_color_indicator_border_top_left",     SYSCOL_INDICATOR_BORDER1);
+	gui_theme_t::gui_color_indicator_border_bottom_right= (PIXVAL)contents.get_color("gui_color_indicator_border_bottom_right", SYSCOL_INDICATOR_BORDER2);
 	gui_theme_t::gui_color_loadingbar_inner             = (PIXVAL)contents.get_color("gui_color_loadingbar_inner", SYSCOL_LOADINGBAR_INNER);
 	gui_theme_t::gui_color_loadingbar_progress          = (PIXVAL)contents.get_color("gui_color_loadingbar_progress", SYSCOL_LOADINGBAR_PROGRESS);
 	gui_theme_t::gui_color_obsolete                     = (PIXVAL)contents.get_color("gui_color_obsolete", SYSCOL_OBSOLETE);
