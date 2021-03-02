@@ -2303,7 +2303,7 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 					txt_convoi_number.clear();
 					txt_convoi_number.printf("%.2s", cnv->get_car_numbering(sel_index) < 0 ? translator::translate("LOCO_SYM") : "");
 					txt_convoi_number.printf("%d", abs(cnv->get_car_numbering(sel_index)));
-					lb_convoi_number.set_color(veh_type->has_available_upgrade(welt->get_timeline_year_month()) == 2? COL_UPGRADEABLE : COL_WHITE);
+					lb_convoi_number.set_color(veh_type->has_available_upgrade(welt->get_timeline_year_month()) == 2? COL_UPGRADEABLE : SYSCOL_TEXT_HIGHLIGHT);
 					lb_convoi_number.set_pos(scr_coord((grid.x - grid_dx)*sel_index + D_MARGIN_LEFT, 4));
 
 
