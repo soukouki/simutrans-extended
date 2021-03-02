@@ -133,6 +133,7 @@ image_id gui_theme_t::check_button_img[3];
 image_id gui_theme_t::pos_button_img[3];
 
 bool gui_theme_t::gui_drop_shadows;
+bool gui_theme_t::pressed_button_sinks;
 
 /**
  * Initializes theme related parameters to hard coded default values.
@@ -234,6 +235,7 @@ void gui_theme_t::init_gui_defaults()
 	gui_divider_size.h   = D_V_SPACE*2;
 
 	gui_drop_shadows     = false;
+	pressed_button_sinks = true;
 }
 
 
@@ -565,6 +567,7 @@ bool gui_theme_t::themes_init(const char *file_name, bool init_fonts, bool init_
 	env_t::remember_window_positions = contents.get_int("remember_window_positions", env_t::remember_window_positions );
 	env_t::window_snap_distance =      contents.get_int("window_snap_distance",      env_t::window_snap_distance );
 	gui_theme_t::gui_drop_shadows =    contents.get_int("gui_drop_shadows",          gui_theme_t::gui_drop_shadows );
+	gui_theme_t::pressed_button_sinks = contents.get_int("pressed_button_sinks",     gui_theme_t::pressed_button_sinks );
 	env_t::bottom_window_darkness =    contents.get_int("bottom_window_darkness",    env_t::bottom_window_darkness );
 
 	env_t::gui_player_color_bright =   contents.get_int("gui_player_color_bright",   env_t::gui_player_color_bright );
