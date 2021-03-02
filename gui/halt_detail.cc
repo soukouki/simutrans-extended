@@ -1105,7 +1105,7 @@ void halt_detail_goods_t::draw(scr_coord offset)
 				if (skinverwaltung_t::alerts) {
 					display_color_img(skinverwaltung_t::alerts->get_image_id(2), offset.x + D_BUTTON_WIDTH, offset.y + top + FIXED_SYMBOL_YOFF, 0, false, false);
 				}
-				display_proportional_clip_rgb(offset.x + D_BUTTON_WIDTH + GOODS_SYMBOL_CELL_WIDTH, offset.y + top, translator::translate("no data"), ALIGN_LEFT, color_idx_to_rgb(MN_GREY0), true);
+				display_proportional_clip_rgb(offset.x + D_BUTTON_WIDTH + GOODS_SYMBOL_CELL_WIDTH, offset.y + top, translator::translate("no data"), ALIGN_LEFT, SYSCOL_TEXT_INACTIVE, true);
 				top += LINESPACE;
 			}
 
@@ -1257,7 +1257,7 @@ void gui_halt_nearby_factory_info_t::draw(scr_coord offset)
 		}
 	}
 	if (!halt->get_fab_list().get_count()) {
-		display_proportional_clip_rgb(offset.x + D_MARGIN_LEFT, offset.y + yoff, translator::translate("keine"), ALIGN_LEFT, color_idx_to_rgb(MN_GREY0), true);
+		display_proportional_clip_rgb(offset.x + D_MARGIN_LEFT, offset.y + yoff, translator::translate("keine"), ALIGN_LEFT, SYSCOL_TEXT_INACTIVE, true);
 		yoff += LINESPACE;
 	}
 	yoff += LINESPACE;
@@ -1308,10 +1308,10 @@ void gui_halt_nearby_factory_info_t::draw(scr_coord offset)
 		}
 
 		if (required_material.empty()) {
-			display_proportional_clip_rgb(offset.x + D_MARGIN_LEFT, offset.y + yoff, translator::translate("keine"), ALIGN_LEFT, color_idx_to_rgb(MN_GREY0), true);
+			display_proportional_clip_rgb(offset.x + D_MARGIN_LEFT, offset.y + yoff, translator::translate("keine"), ALIGN_LEFT, SYSCOL_TEXT_INACTIVE, true);
 		}
 		if (active_product.empty() && inactive_product.empty()) {
-			display_proportional_clip_rgb(offset.x + xoff + D_MARGIN_LEFT, offset.y + yoff, translator::translate("keine"), ALIGN_LEFT, color_idx_to_rgb(MN_GREY0), true);
+			display_proportional_clip_rgb(offset.x + xoff + D_MARGIN_LEFT, offset.y + yoff, translator::translate("keine"), ALIGN_LEFT, SYSCOL_TEXT_INACTIVE, true);
 		}
 		yoff += LINESPACE * max(input_cnt, output_cnt) + 1;
 	}
@@ -1859,7 +1859,7 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 			buf.printf("%ukm", (uint)km_to_halt);
 		}
 		xoff += proportional_string_width("000.00km");
-		display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_RIGHT, is_walking ? MN_GREY0 : SYSCOL_TEXT, true);
+		display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_RIGHT, is_walking ? SYSCOL_TEXT_INACTIVE : SYSCOL_TEXT, true);
 		if (is_walking && skinverwaltung_t::on_foot) {
 			display_color_img(skinverwaltung_t::on_foot->get_image_id(0), offset.x + D_MARGIN_LEFT, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false);
 		}
@@ -1975,7 +1975,7 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 	}
 
 	if (!halt_list.get_count()) {
-		display_proportional_clip_rgb(offset.x + D_MARGIN_LEFT, offset.y + yoff, translator::translate("keine"), ALIGN_LEFT, MN_GREY0, true);
+		display_proportional_clip_rgb(offset.x + D_MARGIN_LEFT, offset.y + yoff, translator::translate("keine"), ALIGN_LEFT, SYSCOL_TEXT_INACTIVE, true);
 		yoff += LINESPACE;
 	}
 	yoff += D_MARGIN_BOTTOM;
