@@ -1309,7 +1309,7 @@ void gui_halt_nearby_factory_info_t::draw(scr_coord offset)
 				display_colorbox_with_tooltip(offset.x + xoff + GOODS_SYMBOL_CELL_WIDTH, offset.y + yoff + LINESPACE * output_cnt + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, ware->get_color(), NULL);
 				// goods name
 				PIXVAL text_color;
-				display_proportional_clip_rgb(offset.x + xoff + GOODS_SYMBOL_CELL_WIDTH * 2 - 2, offset.y + yoff + LINESPACE * output_cnt, translator::translate(ware->get_name()), ALIGN_LEFT, text_color = active_product.is_contained(ware) ? SYSCOL_TEXT : MN_GREY0, true);
+				display_proportional_clip_rgb(offset.x + xoff + GOODS_SYMBOL_CELL_WIDTH * 2 - 2, offset.y + yoff + LINESPACE * output_cnt, translator::translate(ware->get_name()), ALIGN_LEFT, text_color = active_product.is_contained(ware) ? SYSCOL_TEXT : SYSCOL_TEXT_WEAK, true);
 				output_cnt++;
 			}
 		}
@@ -1763,7 +1763,7 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 				// [average speed]
 				buf.clear();
 				buf.printf(" (%2ukm/h) ", journey_time ? kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time) : 0);
-				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
+				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 
 				// [waiting time]
 				buf.clear();
@@ -1796,7 +1796,7 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 					// [average schedule speed]
 					buf.clear();
 					buf.printf(" (%2ukm/h) ", journey_time+waiting_time ? kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time + waiting_time) : 0);
-					catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
+					catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 					max_x = max(max_x, catg_xoff);
 				}
 #ifdef DEBUG
@@ -1915,7 +1915,7 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 		buf.clear();
 		sint64 average_speed = kmh_from_meters_and_tenths((int)(km_to_halt*1000), cnx->journey_time);
 		buf.printf(" (%2ukm/h)", average_speed);
-		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 #endif
 
 		xoff += D_H_SPACE*2;
@@ -1950,7 +1950,7 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 			buf.clear();
 			sint64 schedule_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time + cnx->waiting_time);
 			buf.printf(" (%2ukm/h) ", schedule_speed);
-			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
+			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 #endif
 
 #ifdef DEBUG
