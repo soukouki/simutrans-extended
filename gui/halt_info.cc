@@ -386,7 +386,7 @@ void gui_halt_waiting_indicator_t::draw(scr_coord offset)
 			}
 			lb_transfer_time[i].buf().append(transfer_time_as_clock);
 			lb_transfer_time[i].update();
-			lb_transfer_time[i].set_color(is_operating ? SYSCOL_TEXT : color_idx_to_rgb(MN_GREY0));
+			lb_transfer_time[i].set_color(is_operating ? SYSCOL_TEXT : SYSCOL_TEXT_INACTIVE);
 
 			if (!is_operating && skinverwaltung_t::alerts) {
 				img_alert.set_visible(true);
