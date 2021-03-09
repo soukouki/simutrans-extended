@@ -234,6 +234,8 @@ public:
 
 	static uint8 gui_player_color_dark;
 	static uint8 gui_player_color_bright;
+	// brightness level of the player color of the titlebar background
+	static uint8 gui_titlebar_player_color_background_brightness;
 
 	// default font name and -size
 	static std::string fontname;
