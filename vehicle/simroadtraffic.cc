@@ -732,6 +732,12 @@ bool private_car_t::can_enter_tile(grund_t *gr)
 					// This may cause private cars to be too cautious at junctions, but is necessary to avoid giving
 					// them effective priority over convoys.
 					dt = get_blocking_vehicle( test, NULL, next_direction, next_90direction, next_90direction, this, next_lane);
+					if (dt && dt->get_typ() != road_vehicle)
+					{
+						// Only give way to player vehicles - or else only one vehicle will be allowed in a junction at
+						// any given time, even if there are no conflicting movements. This can worsen traffic congestion.
+						dt = NULL;
+					}
 				}
 			}
 			// this fails with two crossings together; however, I see no easy way out here ...
