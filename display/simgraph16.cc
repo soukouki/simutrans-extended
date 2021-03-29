@@ -4914,9 +4914,8 @@ int display_multiline_text_rgb(scr_coord_val x, scr_coord_val y, const char *buf
 			if(  px_len>max_px_len  ) {
 				max_px_len = px_len;
 			}
-			buf = next + 1;
 			y += LINESPACE;
-		} while (next != NULL);
+		} while (buf = (next ? next+1 : NULL), buf != NULL);
 	}
 	return max_px_len;
 }
