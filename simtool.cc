@@ -330,7 +330,7 @@ const char *tool_query_t::work( player_t *player, koord3d pos )
 
 		if(  env_t::single_info  ) {
 
-			int old_count = win_get_open_count();
+			uint32 old_count = win_get_open_count();
 
 			if(  is_ctrl_pressed()  ) {
 				// reverse order
