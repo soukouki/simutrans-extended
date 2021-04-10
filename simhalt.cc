@@ -2137,27 +2137,18 @@ uint32 haltestelle_t::find_route(const vector_tpl<halthandle_t>& destination_hal
 
  	koord destination_stop_pos = destination_pos;
 
-	bool is_freight = false;
+	bool is_freight;
 	uint8 g_class;
 	uint8 ware_catg;
 
-	if (ware.is_freight())
-	{
-		is_freight = true;
-		ware_catg = ware.get_desc()->get_catg_index();
-		g_class = 0;
-	}
-	else if (ware.is_mail())
-	{
-		ware_catg = goods_manager_t::INDEX_MAIL;
-		g_class = 0;
-	}
-	else // Passengers
-	{
-		// Class only matters for passengers
-		g_class = ware.g_class;
-		ware_catg = goods_manager_t::INDEX_PAS;
-	}
+
+	assert(ware.is_passenger() == (ware.get_desc()->get_catg_index() == goods_manager_t::INDEX_PAS));
+	assert(ware.is_mail() == (ware.get_desc()->get_catg_index() == goods_manager_t::INDEX_MAIL));
+
+	is_freight = ware.is_freight(); //Obvious
+    ware_catg = ware.get_desc()->get_catg_index(); //pax will always return 0 here; mail will always return 1 here
+    g_class = ware.g_class; //In case of freight always 0
+
 
 	bool found_a_halt = false;
 
