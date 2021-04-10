@@ -102,9 +102,11 @@ endif
 USE_UPNP ?= 0
 USE_FREETYPE ?= 0
 
-ALLEGRO_CONFIG ?= allegro-config
-#SDL2_CONFIG    ?= sdl2-config
-FREETYPE_CONFIG ?= freetype-config
+ALLEGRO_CONFIG   ?= allegro-config
+SDL2_CONFIG      ?= pkg-config sdl2
+#SDL2_CONFIG     ?= sdl2-config
+FREETYPE_CONFIG  ?= pkg-config freetype2
+#FREETYPE_CONFIG ?= freetype-config
 
 ifneq ($(OPTIMISE),)
   CFLAGS += -O3
