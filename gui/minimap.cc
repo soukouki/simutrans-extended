@@ -374,10 +374,10 @@ static void display_harbor( const scr_coord_val xx, const scr_coord_val yy, cons
 
 static void display_thick_line( scr_coord_val x1, scr_coord_val y1, scr_coord_val x2, scr_coord_val y2, PIXVAL col, bool dotting, short dot_full, short dot_empty, short thickness )
 {
-	double delta_x = abs( x1 - x2 );
-	double delta_y = abs( y1 - y2 );
+    scr_coord_val delta_x = abs( x1 - x2 );
+    scr_coord_val delta_y = abs( y1 - y2 );
 
-	if(  delta_x == 0.0  ||  delta_y/delta_x > 2.0  ) {
+	if(  delta_x == 0  ||  delta_y/delta_x > 2.0  ) {
 		// mostly vertical
 		x1 -= thickness/2;
 		x2 -= thickness/2;
@@ -417,8 +417,8 @@ static void display_thick_line( scr_coord_val x1, scr_coord_val y1, scr_coord_va
 				display_direct_line_rgb( x1+i+1, y1+i*y_multiplier, x2+i+1, y2+i*y_multiplier, col );
 			}
 			else {
-				display_direct_line_dotted_rgb ( x1 + i, y1 + i*y_multiplier, x2 + i, y2 + i*y_multiplier, dot_full, dot_empty, col );
-				display_direct_line_dotted_rgb ( x1 + i + 1, y1 + i*y_multiplier, x2 + i + 1, y2 + i*y_multiplier, dot_full, dot_empty, col );
+				display_direct_line_dotted_rgb( x1 + i, y1 + i*y_multiplier, x2 + i, y2 + i*y_multiplier, dot_full, dot_empty, col );
+				display_direct_line_dotted_rgb( x1 + i + 1, y1 + i*y_multiplier, x2 + i + 1, y2 + i*y_multiplier, dot_full, dot_empty, col );
 			}
 		}
 	}
@@ -567,9 +567,9 @@ bool minimap_t::change_zoom_factor(bool magnify)
 		}
 		else {
 			// Ensure that zoom*x < INT32_MAX, for any x < world->get_size_max();
-			// zoom*world->get_size_max() < INT32_MAX <=> zoom < INT32_MAX/world->get_size_max();
-			// hint: will only happen at maximum zoom level if the map is larger than
-			int max_zoom_in = min(16, INT32_MAX/world->get_size_max());
+			// zoom*(world->get_size().x + world->get_size().y)) < INT32_MAX <=> zoom < INT32_MAX/(world->get_size().x + world->get_size().y));
+			// hint: will only happen at maximum zoom level if the map x+y > 134217727, so practically never.
+			int max_zoom_in = min(16, INT32_MAX/(world->get_size().x + world->get_size().y));
 			if(  zoom_in < max_zoom_in  ) {
 				zoom_in++;
 				zoomed = true;
@@ -827,7 +827,7 @@ void minimap_t::calc_map_pixel(const koord k)
 		// show passenger/mail coverage
 		// display coverage
 		case MAP_STATION_COVERAGE:
-			if(  plan->get_haltlist_count()>0 && gr->get_typ() == grund_t::fundament) {
+			if(  plan->get_haltlist_count()>0 && gr->suche_obj(obj_t::gebaeude)) {
 				const nearby_halt_t *const halt_list = plan->get_haltlist();
 				bool show_only_freight_station = (freight_type_group_index_showed_on_map != NULL && freight_type_group_index_showed_on_map != goods_manager_t::mail && freight_type_group_index_showed_on_map != goods_manager_t::passengers);
 				for (int h = 0; h < plan->get_haltlist_count(); h++)
@@ -1229,9 +1229,7 @@ void minimap_t::calc_map()
 	}
 	else {
 		// always the whole map ...
-		if(isometric) {
-			map_data->init( color_idx_to_rgb(COL_BLACK) );
-		}
+        map_data->init( color_idx_to_rgb(COL_BLACK) );
 		koord k;
 		for(  k.y=0;  k.y < world->get_size().y;  k.y++  ) {
 			for(  k.x=0;  k.x < world->get_size().x;  k.x++  ) {
