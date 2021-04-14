@@ -566,10 +566,9 @@ bool minimap_t::change_zoom_factor(bool magnify)
 			zoomed = true;
 		}
 		else {
-			// Ensure that zoom*x < INT32_MAX, for any x < world->get_size_max();
-			// zoom*(world->get_size().x + world->get_size().y)) < INT32_MAX <=> zoom < INT32_MAX/(world->get_size().x + world->get_size().y));
-			// hint: will only happen at maximum zoom level if the map x+y > 134217727, so practically never.
-			int max_zoom_in = min(16, INT32_MAX/(world->get_size().x + world->get_size().y));
+			// check here for maximum zoom-out, otherwise there will be integer overflows
+			// with large maps as we calculate with sint16 coordinates ...
+			int max_zoom_in = min( ((1<<31) - 1) / (2*world->get_size_max()), 16);
 			if(  zoom_in < max_zoom_in  ) {
 				zoom_in++;
 				zoomed = true;
