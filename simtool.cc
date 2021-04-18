@@ -7711,9 +7711,9 @@ uint8 tool_stop_mover_t::is_valid_pos(  player_t *player, const koord3d &pos, co
 		error = "";
 		return 0;
 	}
-	// check halt ownership
+	// check halt access
 	halthandle_t h = haltestelle_t::get_halt(pos,player);
-	if(  h.is_bound()  &&  !player_t::check_owner( player, h->get_owner() )  ) {
+	if(  !h.is_bound()  &&  bd->is_halt()  ) {
 		error = "Das Feld gehoert\neinem anderen Spieler\n";
 		return 0;
 	}
