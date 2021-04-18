@@ -13,6 +13,7 @@
 
 #include "../simworld.h"
 #include "../player/simplay.h"
+#include "../player/finance.h"
 #include "../simtool.h"
 
 #include "../descriptor/tunnel_desc.h"
