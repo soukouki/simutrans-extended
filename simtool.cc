@@ -709,7 +709,7 @@ DBG_MESSAGE("tool_remover()",  "removing tunnel  from %d,%d,%d",gr->get_pos().x,
 		if(gb->is_townhall()) {
 			stadt_t *stadt = welt->find_nearest_city(k);
 			if(!welt->remove_city( stadt )) {
-				msg = "Das Feld gehoert\neinem anderen Spieler\n";
+				msg = NOTICE_OWNED_BY_OTHER_PLAYER;
 				return false;
 			}
 			// townhall is also removed during town removal
@@ -1621,7 +1621,7 @@ const char *tool_marker_t::work( player_t *player, koord3d pos )
 			}
 			return NULL;
 		}
-		return "Das Feld gehoert\neinem anderen Spieler\n";
+		return NOTICE_OWNED_BY_OTHER_PLAYER;
 	}
 
 	return "There is already a marker here.\n";
@@ -1926,7 +1926,7 @@ const char *tool_buy_house_t::work( player_t *player, koord3d pos)
 	// since buildings can have more than one tile, we must handle them together
 	gebaeude_t* gb = gr->find<gebaeude_t>();
 	if(  gb== NULL  ||  !gb->is_city_building()  ||  !player_t::check_owner(gb->get_owner(),player)  ) {
-		return "Das Feld gehoert\neinem anderen Spieler\n";
+		return NOTICE_OWNED_BY_OTHER_PLAYER;
 	}
 
 	if(  gb->get_owner()==player  ) {
@@ -2454,15 +2454,15 @@ static const char *tool_schedule_insert_aux(karte_t *welt, player_t *player, koo
 		if(  !bd->is_halt()  ) {
 			if(w != NULL && w->get_owner() && !w->get_owner()->allows_access_to(player->get_player_nr()))
 			{
-				return "Das Feld gehoert\neinem anderen Spieler\n";
+				return NOTICE_OWNED_BY_OTHER_PLAYER;
 			}
 			if(  bd->get_depot()  &&  !player_t::check_owner( bd->get_depot()->get_owner(), player )  ) {
-				return "Das Feld gehoert\neinem anderen Spieler\n";
+				return NOTICE_OWNED_BY_OTHER_PLAYER;
 			}
 		}
 		if(bd->is_halt() && (!player_t::check_owner(player, bd->get_halt()->get_owner()) && (w != NULL && !(w->get_owner() == NULL || w->get_owner()->allows_access_to(player->get_player_nr())))))
 		{
-			return "Das Feld gehoert\neinem anderen Spieler\n";
+			return NOTICE_OWNED_BY_OTHER_PLAYER;
 		}
 		// ok, now we have a valid ground
 		if(append) {
@@ -3562,7 +3562,7 @@ uint8 tool_build_tunnel_t::is_valid_pos(  player_t *player, const koord3d &pos, 
 			}
 			way_builder_t bauigel(player);
 			if(!bauigel.check_owner( w->get_owner(), player )) {
-				error = "Das Feld gehoert\neinem anderen Spieler\n";
+				error = NOTICE_OWNED_BY_OTHER_PLAYER;
 				return 0;
 			}
 		}
@@ -4317,7 +4317,7 @@ const char *tool_build_station_t::tool_station_building_aux(player_t *player, bo
 										if(!player_t::check_owner( new_owner, test_halt->get_owner())) {
 											// there is another player's halt
 											ok = false;
-											msg = "Das Feld gehoert\neinem anderen Spieler\n";
+											msg = NOTICE_OWNED_BY_OTHER_PLAYER;
 										}
 										else if(!last_halt.is_bound()) {
 											last_halt = test_halt;
@@ -4456,7 +4456,7 @@ const char *tool_build_station_t::tool_station_building_aux(player_t *player, bo
 					halthandle_t test_halt = pl->get_boden_bei(i)->get_halt();
 					if(test_halt.is_bound()) {
 						if(!player_t::check_owner( new_owner, test_halt->get_owner())) {
-							return "Das Feld gehoert\neinem anderen Spieler\n";
+							return NOTICE_OWNED_BY_OTHER_PLAYER;
 						}
 						else if(!halt.is_bound()) {
 							halt = test_halt;
@@ -4605,7 +4605,7 @@ const char *tool_build_station_t::tool_station_dock_aux(player_t *player, koord3
 				halthandle_t test_halt = pl->get_boden_bei(j)->get_halt();
 				if(test_halt.is_bound()) {
 					if(!player_t::check_owner( player, test_halt->get_owner())) {
-						return "Das Feld gehoert\neinem anderen Spieler\n";
+						return NOTICE_OWNED_BY_OTHER_PLAYER;
 					}
 					else if(!halt.is_bound()) {
 						halt = test_halt;
@@ -4732,7 +4732,7 @@ DBG_MESSAGE("tool_build_station_t::tool_station_dock_aux()","building dock from 
 
 	if(neu) {
 		if( gr && gr->get_halt().is_bound()  ) {
-			return "Das Feld gehoert\neinem anderen Spieler\n";
+			return NOTICE_OWNED_BY_OTHER_PLAYER;
 		}
 		// ok, really new stop on this tile then
 		halt = haltestelle_t::create(pos.get_2d(), player);
@@ -5007,7 +5007,7 @@ const char *tool_build_station_t::tool_station_flat_dock_aux(player_t *player, k
 
 	if(neu) {
 		if(  gr  &&  gr->get_halt().is_bound()  ) {
-			return "Das Feld gehoert\neinem anderen Spieler\n";
+			return NOTICE_OWNED_BY_OTHER_PLAYER;
 		}
 		// ok, really new stop on this tile then
 		halt = haltestelle_t::create(k, player);
@@ -5282,7 +5282,7 @@ DBG_MESSAGE("tool_station_aux()", "building %s on square %d,%d for waytype %x", 
 
 	if(neu) {
 		if(  bd && bd->get_halt().is_bound()  ) {
-			return "Das Feld gehoert\neinem anderen Spieler\n";
+			return NOTICE_OWNED_BY_OTHER_PLAYER;
 		}
 		halt = haltestelle_t::create(pos.get_2d(), player);
 		if(halt.is_bound() && env_t::networkmode)
@@ -5686,7 +5686,7 @@ const char *tool_build_station_t::work( player_t *player, koord3d pos )
 	// ownership allowed?
 	halthandle_t halt = gr->get_halt();
 	if(halt.is_bound()  &&  !player_t::check_owner( player, halt->get_owner())) {
-		return "Das Feld gehoert\neinem anderen Spieler\n";
+		return NOTICE_OWNED_BY_OTHER_PLAYER;
 	}
 
 	// check underground / above ground
@@ -5752,7 +5752,7 @@ const char *tool_rotate_building_t::work( player_t *player, koord3d pos )
 	if(  gebaeude_t* gb = gr->find<gebaeude_t>()  ) {
 
 		if(  !player_t::check_owner( gb->get_owner(), player )  ) {
-			return "Das Feld gehoert\neinem anderen Spieler\n";
+			return NOTICE_OWNED_BY_OTHER_PLAYER;
 		}
 
 		// check for harbour (must not rotate)
@@ -6008,7 +6008,7 @@ const char* tool_build_roadsign_t::check_pos_intern(player_t *player, koord3d po
 				rs = gr->find<signal_t>();
 				if (rs) {
 					if(  !player_t::check_owner( rs->get_owner(), player )  ) {
-						return "Das Feld gehoert\neinem anderen Spieler\n";
+						return NOTICE_OWNED_BY_OTHER_PLAYER;
 					}
 				}
 			}
@@ -6017,7 +6017,7 @@ const char* tool_build_roadsign_t::check_pos_intern(player_t *player, koord3d po
 				rs = gr->find<roadsign_t>();
 				if (rs) {
 					if(  !player_t::check_owner( rs->get_owner(), player )  ) {
-						return "Das Feld gehoert\neinem anderen Spieler\n";
+						return NOTICE_OWNED_BY_OTHER_PLAYER;
 					}
 				}
 			}
@@ -6373,7 +6373,7 @@ const char *tool_build_roadsign_t::place_sign_intern( player_t *player, grund_t*
 				signal_t* sig = gr->find<signal_t>();
 				if (sig) {
 					if(  !player_t::check_owner( sig->get_owner(), player )  ) {
-						return "Das Feld gehoert\neinem anderen Spieler\n";
+						return NOTICE_OWNED_BY_OTHER_PLAYER;
 					}
 					// signals have three options
 					ribi_t::ribi sig_dir = sig->get_dir();
@@ -6485,7 +6485,7 @@ const char *tool_build_roadsign_t::place_sign_intern( player_t *player, grund_t*
 				rs = gr->find<roadsign_t>();
 				if (rs) {
 					if(  !player_t::check_owner( rs->get_owner(), player )  ) {
-						return "Das Feld gehoert\neinem anderen Spieler\n";
+						return NOTICE_OWNED_BY_OTHER_PLAYER;
 					}
 					// reverse only if single way sign
 					if (desc->is_single_way() || desc->is_choose_sign()) {
@@ -7714,7 +7714,7 @@ uint8 tool_stop_mover_t::is_valid_pos(  player_t *player, const koord3d &pos, co
 	// check halt access
 	halthandle_t h = haltestelle_t::get_halt(pos,player);
 	if(  !h.is_bound()  &&  bd->is_halt()  ) {
-		error = "Das Feld gehoert\neinem anderen Spieler\n";
+		error = NOTICE_OWNED_BY_OTHER_PLAYER;
 		return 0;
 	}
 	// check for halt on the tile
@@ -8333,7 +8333,7 @@ const char *tool_make_stop_public_t::work( player_t *player, koord3d p )
 		halthandle_t halt = gr->get_halt();
 		if(player != psplayer && !(player_t::check_owner(halt->get_owner(), player) || halt->get_owner() == psplayer))
 		{
-			return "Das Feld gehoert\neinem anderen Spieler\n";
+			return NOTICE_OWNED_BY_OTHER_PLAYER;
 		}
 		else
 		{

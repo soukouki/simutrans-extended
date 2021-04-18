@@ -209,7 +209,7 @@ const char *check_tile( const grund_t *gr, const player_t *player, waytype_t wt,
 
 		if(  w->is_deletable(player) != NULL  ) {
 			// not our way
-			return "Das Feld gehoert\neinem anderen Spieler\n";
+			return NOTICE_OWNED_BY_OTHER_PLAYER;
 		}
 
 		// now check for direction
@@ -217,7 +217,7 @@ const char *check_tile( const grund_t *gr, const player_t *player, waytype_t wt,
 		if(  weg_t *w2 = gr->get_weg_nr(1)  ) {
 			if(  w2->is_deletable(player) != NULL ) {
 				// not our way
-				return "Das Feld gehoert\neinem anderen Spieler\n";
+				return NOTICE_OWNED_BY_OTHER_PLAYER;
 			}
 			if(  !gr->ist_uebergang()  ) {
 				// If road and tram, we have to check both ribis.
@@ -349,7 +349,7 @@ bool bridge_builder_t::is_monorail_junction(koord3d pos, player_t *player, const
 			if(  weg_t *w = gr2->get_weg_nr(0)  ) {
 				if(  !player_t::check_owner(w->get_owner(),player)  ) {
 					// not our way
-					error_msg = "Das Feld gehoert\neinem anderen Spieler\n";
+					error_msg = NOTICE_OWNED_BY_OTHER_PLAYER;
 					return false;
 				}
 				if(  w->get_waytype() == desc->get_waytype()  ) {
