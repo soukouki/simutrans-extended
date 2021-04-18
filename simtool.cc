@@ -7736,11 +7736,6 @@ uint8 tool_stop_mover_t::is_valid_pos(  player_t *player, const koord3d &pos, co
 	else {
 		// read conditions at start point
 		read_start_position(player, start);
-		// check halts vs waypoints
-		if(h.is_bound() ^ last_halt.is_bound()) {
-			error = "Can only move from halt to halt or waypoint to waypoint.";
-			return 0;
-		}
 		// check waytypes
 		if(  (waytype[0] == water_wt  &&  bd->is_water())  ||  bd->hat_weg(waytype[0])  ||  bd->hat_weg(waytype[1])  ) {
 			// ok
