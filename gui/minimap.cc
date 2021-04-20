@@ -52,11 +52,9 @@ static sint32 max_service = 1;
 
 static sint32 max_building_level = 0;
 
-minimap_t * minimap_t::single_instance = NULL;
+minimap_t * minimap_t::single_instance = nullptr;
 karte_ptr_t minimap_t::world;
-minimap_t::MAP_DISPLAY_MODE minimap_t::mode = MAP_TOWN;
-minimap_t::MAP_DISPLAY_MODE minimap_t::last_mode = MAP_TOWN;
-bool minimap_t::is_visible = false;
+
 
 #define MAX_MAP_TYPE_LAND 31
 #define MAX_MAP_TYPE_WATER 5
@@ -1282,20 +1280,8 @@ void minimap_t::calc_map()
 }
 
 
-minimap_t::minimap_t()
-{
-	map_data = NULL;
-	zoom_in = 1;
-	zoom_out = 1;
-	isometric = false;
-	show_contour = true;
-	show_network_load_factor = false;
+minimap_t::minimap_t(){
 	mode = MAP_TOWN;
-	selected_city = NULL;
-	cur_off = new_off = scr_coord(0,0);
-	cur_size = new_size = scr_size(0,0);
-	needs_redraw = true;
-	transport_type_showed_on_map = simline_t::line;
 }
 
 
@@ -1307,7 +1293,7 @@ minimap_t::~minimap_t()
 
 minimap_t *minimap_t::get_instance()
 {
-	if(single_instance == NULL) {
+	if(single_instance == nullptr) {
 		single_instance = new minimap_t();
 	}
 	return single_instance;
@@ -1316,17 +1302,20 @@ minimap_t *minimap_t::get_instance()
 
 void minimap_t::init()
 {
-	delete map_data;
-	map_data = NULL;
 	needs_redraw = true;
-	is_visible = false;
-	show_buildings = true;
+	//is_visible = false;
+	//show_buildings = true;
 
 	calc_map_size();
 	max_building_level = max_cargo = max_passed = 0;
 	max_tourist_ziele = max_waiting = max_origin = max_transfer = max_service = 1;
 	last_schedule_counter = world->get_schedule_counter()-1;
 	set_selected_cnv(convoihandle_t());
+}
+
+void minimap_t::finalize(){
+	delete map_data;
+	map_data = nullptr;
 }
 
 
