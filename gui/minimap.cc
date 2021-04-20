@@ -7,29 +7,20 @@
 #include "../simcolor.h"
 #include "../simconvoi.h"
 #include "../vehicle/simvehicle.h"
-#include "../simworld.h"
 #include "../simdepot.h"
 #include "../simhalt.h"
-#include "../simskin.h"
-#include "../boden/grund.h"
 #include "../simfab.h"
 #include "../simcity.h"
 #include "minimap.h"
 #include "schedule_gui.h"
 
 #include "../dataobj/translator.h"
-#include "../dataobj/settings.h"
 #include "../dataobj/schedule.h"
 #include "../dataobj/powernet.h"
-#include "../dataobj/ribi.h"
-#include "../dataobj/loadsave.h"
 
 #include "../boden/wege/schiene.h"
 #include "../obj/leitung2.h"
 #include "../obj/gebaeude.h"
-#include "../utils/cbuffer_t.h"
-#include "../display/scr_coord.h"
-#include "../display/simgraph.h"
 #include "../display/viewport.h"
 #include "../utils/simrandom.h"
 #include "../player/simplay.h"
@@ -37,7 +28,7 @@
 #include "../tpl/inthashtable_tpl.h"
 #include "../tpl/slist_tpl.h"
 
-#include <math.h>
+#include <cmath>
 
 sint32 minimap_t::max_cargo=0;
 sint32 minimap_t::max_passed=0;
@@ -300,7 +291,7 @@ void minimap_t::add_to_schedule_cache( convoihandle_t cnv, bool with_waypoints )
 // some routines for the minimap with schedules
 static uint32 number_to_radius( uint32 n )
 {
-	return log2( n>>5 );
+	return log2( n>>5u );
 }
 
 
@@ -536,7 +527,7 @@ scr_coord minimap_t::map_to_screen_coord(const koord &k) const
 		y = ( x + y )/2;
 		x = xrot;
 	}
-	return scr_coord(x/zoom_out, y/zoom_out);
+	return {x/zoom_out, y/zoom_out};
 }
 
 
@@ -550,7 +541,7 @@ koord minimap_t::screen_to_map_coord(const scr_coord &c) const
 		x  = (x + y - world->get_size().y)/2;
 		y  = y - x;
 	}
-	return koord(x,y);
+	return {(sint16)x, (sint16)y};
 }
 
 
@@ -565,7 +556,7 @@ bool minimap_t::change_zoom_factor(bool magnify)
 		}
 		else {
 			// check here for maximum zoom-out, otherwise there will be integer overflows
-			// with large maps as we calculate with sint16 coordinates ...
+			// with large maps as we calculate with sint32 coordinates ...
 			int max_zoom_in = min( ((1<<31) - 1) / (2*world->get_size_max()), 16);
 			if(  zoom_in < max_zoom_in  ) {
 				zoom_in++;
@@ -633,7 +624,7 @@ void minimap_t::set_map_color(koord k_, const PIXVAL color)
 	// if map is in normal mode, set new color for map
 	// otherwise do nothing
 	// result: convois will not "paint over" special maps
-	if ( map_data==NULL  ||  !world->is_within_limits(k_)) {
+	if ( map_data==nullptr  ||  !world->is_within_limits(k_)) {
 		return;
 	}
 
@@ -726,8 +717,8 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool s
 				{
 					// object at zero is either factory or boat
 					gebaeude_t *gb = gr->find<gebaeude_t>();
-					fabrik_t *fab = gb ? gb->get_fabrik() : NULL;
-					if(fab==NULL) {
+					fabrik_t *fab = gb ? gb->get_fabrik() : nullptr;
+					if(fab==nullptr) {
 						sint16 height = corner_sw(gr->get_grund_hang());
 						if ( show_contour ) {
 							color = calc_height_color(world->lookup_hgt(gr->get_pos().get_2d()) + height, world->get_water_hgt(gr->get_pos().get_2d()));
@@ -748,8 +739,8 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool s
 				if(show_buildings && gr->get_typ() == grund_t::fundament){
 					// object at zero is either factory or house (or attraction ... )
 					gebaeude_t *gb = gr->find<gebaeude_t>();
-					fabrik_t *fab = gb ? gb->get_fabrik() : NULL;
-					if(fab==NULL) {
+					fabrik_t *fab = gb ? gb->get_fabrik() : nullptr;
+					if(fab==nullptr) {
 						color = color_idx_to_rgb(COL_GREY3);
 					}
 					else {
@@ -771,7 +762,7 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool s
 				}
 				else {
 					const leitung_t* lt = gr->find<leitung_t>();
-					if(lt!=NULL) {
+					if(lt!=nullptr) {
 						color = COL_POWERLINE;
 					}
 					else if (!show_contour) {
@@ -803,7 +794,7 @@ void minimap_t::calc_map_pixel(const koord k)
 
 	// always use to uppermost ground
 	const planquadrat_t *plan=world->access(k);
-	if(plan==NULL  ||  plan->get_boden_count()==0) {
+	if(plan==nullptr  ||  plan->get_boden_count()==0) {
 		return;
 	}
 	// When displaying buildings, give priority to buildings over tunnels and bridges
@@ -826,7 +817,7 @@ void minimap_t::calc_map_pixel(const koord k)
 		case MAP_STATION_COVERAGE:
 			if(  plan->get_haltlist_count()>0 && gr->suche_obj(obj_t::gebaeude)) {
 				const nearby_halt_t *const halt_list = plan->get_haltlist();
-				bool show_only_freight_station = (freight_type_group_index_showed_on_map != NULL && freight_type_group_index_showed_on_map != goods_manager_t::mail && freight_type_group_index_showed_on_map != goods_manager_t::passengers);
+				bool show_only_freight_station = (freight_type_group_index_showed_on_map != nullptr && freight_type_group_index_showed_on_map != goods_manager_t::mail && freight_type_group_index_showed_on_map != goods_manager_t::passengers);
 				for (int h = 0; h < plan->get_haltlist_count(); h++)
 				{
 					const halthandle_t halt = halt_list[h].halt;
@@ -842,12 +833,12 @@ void minimap_t::calc_map_pixel(const koord k)
 					}
 
 					// station handling freight type filter
-					if (freight_type_group_index_showed_on_map == goods_manager_t::none && halt->get_ware_enabled() == true)
+					if (freight_type_group_index_showed_on_map == goods_manager_t::none && halt->get_ware_enabled())
 					{
 						// all freights but not pax or mail
 						;
 					}
-					else if(freight_type_group_index_showed_on_map != NULL && !halt->gibt_ab(freight_type_group_index_showed_on_map))
+					else if(freight_type_group_index_showed_on_map != nullptr && !halt->gibt_ab(freight_type_group_index_showed_on_map))
 					{
 						continue;
 					}
@@ -1031,7 +1022,7 @@ void minimap_t::calc_map_pixel(const koord k)
 		case MAP_POWERLINES:
 			{
 				const leitung_t* lt = gr->find<leitung_t>();
-				if(lt!=NULL) {
+				if(lt!=nullptr) {
 					const uint64 demand = lt->get_net()->get_demand();
 					if (!lt->get_net()->get_demand() || !lt->get_net()->get_supply()) {
 						set_map_color(k, MAP_COL_NODATA);
@@ -1056,10 +1047,10 @@ void minimap_t::calc_map_pixel(const koord k)
 					set_map_color(k, color_idx_to_rgb(gr->get_halt()->get_owner()->get_player_color1()+3));
 				}
 				else if(  weg_t *weg = gr->get_weg_nr(0)  ) {
-					set_map_color(k, color_idx_to_rgb(weg->get_owner()==NULL ? COL_ORANGE : weg->get_owner()->get_player_color1()+3 ));
+					set_map_color(k, color_idx_to_rgb(weg->get_owner()==nullptr ? COL_ORANGE : weg->get_owner()->get_player_color1()+3 ));
 				}
 				if(  gebaeude_t *gb = gr->get_building()  ) {
-					if(  gb->get_owner()!=NULL  ) {
+					if(  gb->get_owner()!=nullptr  ) {
 						set_map_color(k, color_idx_to_rgb(gb->get_owner()->get_player_color1()+3) );
 					}
 				}
@@ -1204,7 +1195,7 @@ void minimap_t::calc_map()
 	// only use bitmap size like screen size
 	scr_size minimap_size ( min( get_size().w, new_size.w ), min( get_size().h, new_size.h ) );
 	// actually the following line should reduce new/deletes, but does not work properly
-	if(  map_data==NULL  ||  (sint16) map_data->get_width()!=minimap_size.w  ||  (sint16) map_data->get_height()!=minimap_size.h  ) {
+	if(  map_data==nullptr  ||  (sint16) map_data->get_width()!=minimap_size.w  ||  (sint16) map_data->get_height()!=minimap_size.h  ) {
 		delete map_data;
 		map_data = new array2d_tpl<PIXVAL> ( minimap_size.w,minimap_size.h);
 	}
@@ -1287,7 +1278,7 @@ minimap_t::minimap_t(){
 
 minimap_t::~minimap_t()
 {
-	delete map_data;
+	finalize();
 }
 
 
@@ -1302,6 +1293,8 @@ minimap_t *minimap_t::get_instance()
 
 void minimap_t::init()
 {
+	//TODO should be called when closing the window;
+	finalize();
 	needs_redraw = true;
 	//is_visible = false;
 	//show_buildings = true;
@@ -1369,11 +1362,11 @@ bool minimap_t::infowin_event(const event_t *ev)
 const fabrik_t* minimap_t::get_factory_near( const koord, bool enlarge ) const
 {
 	const fabrik_t *fab = fabrik_t::get_fab(last_world_pos);
-	for(  int i=0;  i<4  && fab==NULL;  i++  ) {
+	for(  int i=0;  i<4  && fab==nullptr;  i++  ) {
 		fab = fabrik_t::get_fab( last_world_pos+koord::nesw[i] );
 	}
 	if(  enlarge  ) {
-		for(  int i=0;  i<4  && fab==NULL;  i++  ) {
+		for(  int i=0;  i<4  && fab==nullptr;  i++  ) {
 			fab = fabrik_t::get_fab( last_world_pos+koord::nesw[i]*2 );
 		}
 	}
@@ -1452,11 +1445,11 @@ void minimap_t::draw(scr_coord pos)
 		needs_redraw = false;
 	}
 
-	if( map_data==NULL) {
+	if( map_data==nullptr) {
 		return;
 	}
 
-	if(  mode & MAP_PAX_DEST  &&  selected_city!=NULL  ) {
+	if(  mode & MAP_PAX_DEST  &&  selected_city!=nullptr  ) {
 		const uint32 current_pax_destinations = selected_city->get_pax_destinations_new_change();
 		if(  pax_destinations_last_change > current_pax_destinations  ) {
 			// new month started.
@@ -1547,7 +1540,7 @@ void minimap_t::draw(scr_coord pos)
 			}
 
 			// now add all unbound convois
-			player_t * required_vehicle_owner = NULL;
+			player_t * required_vehicle_owner = nullptr;
 			if (player_showed_on_map != -1) {
 				required_vehicle_owner = world->get_player(player_showed_on_map);
 			}
@@ -1556,7 +1549,7 @@ void minimap_t::draw(scr_coord pos)
 					// not there or already part of a line
 					continue;
 				}
-				if(  required_vehicle_owner!= NULL  &&  required_vehicle_owner != cnv->get_owner()  ) {
+				if(  required_vehicle_owner!= nullptr  &&  required_vehicle_owner != cnv->get_owner()  ) {
 					continue;
 				}
 				if(  transport_type_showed_on_map != simline_t::line  ) {
@@ -1929,7 +1922,7 @@ void minimap_t::draw(scr_coord pos)
 				}
 			}
 			else if (
-				((freight_type_group_index_showed_on_map != NULL && freight_type_group_index_showed_on_map != goods_manager_t::none)
+				((freight_type_group_index_showed_on_map != nullptr && freight_type_group_index_showed_on_map != goods_manager_t::none)
 					&& !f->has_goods_catg_demand(freight_type_group_index_showed_on_map->get_catg_index()))) {
 				continue;
 			}
@@ -2058,7 +2051,7 @@ bool minimap_t::is_matching_freight_catg(const minivec_tpl<uint8> &goods_catg_in
 		}
 		return false;
 	}
-	else if(  freight_type_group_index_showed_on_map != NULL  ) {
+	else if(  freight_type_group_index_showed_on_map != nullptr) {
 		for(  uint8 i = 0;  i < goods_catg_index.get_count();  i++  ) {
 			if(  goods_catg_index[i] == freight_type_group_index_showed_on_map->get_catg_index()  ) {
 				return true;
