@@ -35,7 +35,7 @@ class goods_desc_t;
 class minimap_t : public gui_component_t
 {
 public:
-	enum MAP_DISPLAY_MODE {
+	enum MAP_DISPLAY_MODE: unsigned int {
 		PLAIN                       = 0,
 		MAP_TOWN                    = 1u << 0u,
 		MAP_STATION_COVERAGE        = 1u << 1u,
@@ -205,7 +205,7 @@ public:
 
 	int player_showed_on_map{};
 	int transport_type_showed_on_map{simline_t::line};
-	const goods_desc_t *freight_type_group_index_showed_on_map{};
+	const goods_desc_t *freight_type_group_index_showed_on_map{nullptr};
 
 	/**
 	 * returns a color based on an amount (high amount/scale -> color shifts from green to red)

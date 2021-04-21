@@ -26,7 +26,6 @@
 #include "../player/simplay.h"
 
 #include "../tpl/inthashtable_tpl.h"
-#include "../tpl/slist_tpl.h"
 
 #include <cmath>
 
@@ -811,18 +810,18 @@ void minimap_t::calc_map_pixel(const koord k)
 
 	bool any_suitable_stops = false;
 	uint16 min_tiles_to_halt = -1;
-	switch(mode&~MAP_MODE_FLAGS) {
+	switch(mode& ~MAP_MODE_FLAGS) {
 		// show passenger/mail coverage
 		// display coverage
 		case MAP_STATION_COVERAGE:
 			if(  plan->get_haltlist_count()>0 && gr->suche_obj(obj_t::gebaeude)) {
 				const nearby_halt_t *const halt_list = plan->get_haltlist();
-				bool show_only_freight_station = (freight_type_group_index_showed_on_map != nullptr && freight_type_group_index_showed_on_map != goods_manager_t::mail && freight_type_group_index_showed_on_map != goods_manager_t::passengers);
+				bool show_only_freight_station = (freight_type_group_index_showed_on_map != nullptr && freight_type_group_index_showed_on_map != goods_manager_t::none && freight_type_group_index_showed_on_map != goods_manager_t::mail && freight_type_group_index_showed_on_map != goods_manager_t::passengers);
 				for (int h = 0; h < plan->get_haltlist_count(); h++)
 				{
 					const halthandle_t halt = halt_list[h].halt;
 					// player filter
-					if(player_showed_on_map != -1 && (halt->get_owner() != world->get_public_player() && world->get_player(player_showed_on_map) != halt->get_owner()))
+					if(player_showed_on_map != -1 && (world->get_player(player_showed_on_map) != halt->get_owner()))
 					{
 						continue;
 					}
@@ -832,14 +831,7 @@ void minimap_t::calc_map_pixel(const koord k)
 						continue;
 					}
 
-					// station handling freight type filter
-					if (freight_type_group_index_showed_on_map == goods_manager_t::none && halt->get_ware_enabled())
-					{
-						// all freights but not pax or mail
-						;
-					}
-					else if(freight_type_group_index_showed_on_map != nullptr && !halt->gibt_ab(freight_type_group_index_showed_on_map))
-					{
+					if(!(freight_type_group_index_showed_on_map==nullptr || (freight_type_group_index_showed_on_map == goods_manager_t::none && halt->get_ware_enabled()) || halt->gibt_ab(freight_type_group_index_showed_on_map))){
 						continue;
 					}
 
@@ -2059,7 +2051,9 @@ bool minimap_t::is_matching_freight_catg(const minivec_tpl<uint8> &goods_catg_in
 		}
 		return false;
 	}
-	// NULL show all but obey modes
+/* This doesn't make sense anymore.
+ * Formerly it did.
+	// null show all but obey modes
 	if(  mode & MAP_STATION_COVERAGE  ) {
 		return goods_catg_index.is_contained(goods_manager_t::INDEX_PAS);
 	}
@@ -2072,6 +2066,7 @@ bool minimap_t::is_matching_freight_catg(const minivec_tpl<uint8> &goods_catg_in
 		}
 		return false;
 	}
+*/
 	// all true
 	return true;
 }
