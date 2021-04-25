@@ -397,7 +397,7 @@ void map_frame_t::update_buttons()
 
 
 
-static bool compare_factories(const factory_desc_t const* a, const factory_desc_t const* b)
+static bool compare_factories(const factory_desc_t* const a, const factory_desc_t* const b)
 {
 	if (a->get_supplier_count() == 0) {
 		// a source
@@ -465,7 +465,7 @@ void map_frame_t::update_factory_legend()
 			}
 		}
 		// now sort
-		
+
 		// add corresponding legend entries
 		FOR(vector_tpl<const factory_desc_t*>, f, factory_types) {
 			directory_container.new_component<legend_entry_t>(f->get_name(), f->get_color());
