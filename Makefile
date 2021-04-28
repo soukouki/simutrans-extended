@@ -108,6 +108,23 @@ SDL2_CONFIG      ?= pkg-config sdl2
 FREETYPE_CONFIG  ?= pkg-config freetype2
 #FREETYPE_CONFIG ?= freetype-config
 
+ifneq ($(LTO),)
+  CFLAGS += -flto
+  LDFLAGS += -flto
+endif
+
+ifeq ($(shell getconf LONG_BIT),64)
+  CFLAGS += -DHAS_64_BIT_SYSTEM
+endif
+
+ifneq ($(TUNE_NATIVE),)
+	CFLAGS += -march=native -mtune=native
+	LDFLAGS += -march=native -mtune=native
+  ifneq ($(GCC_POPCOUNT),)
+    CFLAGS += -DUSE_GCC_POPCOUNT	
+  endif
+endif
+
 ifneq ($(OPTIMISE),)
   CFLAGS += -O3
   ifeq ($(findstring $(OSTYPE), amiga),)
