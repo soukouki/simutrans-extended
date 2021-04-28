@@ -6014,6 +6014,28 @@ int private_car_destination_finder_t::get_cost(const grund_t* gr, sint32 max_spe
 	sint32 speed = min(max_speed, max_tile_speed);
 
 #ifndef FORBID_CONGESTION_EFFECTS
+
+#ifndef FORBID_CONGESTION_ASSUMPTIONS
+	//cities tend to be congested despite way congestion percentage
+	if(city!=NULL){
+		speed -= speed / 2;
+	}
+
+	//crossings very slow
+	if(w->is_crossing()){
+		speed -= speed / 2;
+	}
+
+	//one way roads tend to be faster
+	if(ribi_t::is_single(w->get_ribi_maske())){
+		speed += speed / 2;
+	}
+
+	if(ribi_t::is_threeway(w->get_ribi_unmasked())){
+		speed -= speed / 2;
+	}
+#endif
+
 	const uint32 congestion_percentage = w->get_congestion_percentage();
 	if (congestion_percentage)
 	{
