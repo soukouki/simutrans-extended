@@ -212,29 +212,29 @@ public:
 	static const ribi layout_to_ribi[4]; // building layout to ribi (for four rotations, for two use doppelt()!
 
 #ifdef USE_GCC_POPCOUNT
-    static bool is_twoway(ribi x) { return get_numways(x)==2; }
-    static bool is_threeway(ribi x) { return get_numways(x)>2; }
+	static bool is_twoway(ribi x) { return get_numways(x)==2; }
+	static bool is_threeway(ribi x) { return get_numways(x)>2; }
 #else
-    static bool is_twoway(ribi x) { return (0x1668>>x)&1; }
-    static bool is_threeway(ribi x) { return (0xE880>>x)&1; }
+	static bool is_twoway(ribi x) { return (0x1668>>x)&1; }
+	static bool is_threeway(ribi x) { return (0xE880>>x)&1; }
 #endif
 
-    static bool is_perpendicular(ribi x, ribi y);
+	static bool is_perpendicular(ribi x, ribi y);
 #ifdef USE_GCC_POPCOUNT
-    static bool is_single(ribi x) { return get_numways(x)==1; }
+	static bool is_single(ribi x) { return get_numways(x)==1; }
 #else
-    static bool is_single(ribi x) { return (0x0116>>x)&1; }
+	static bool is_single(ribi x) { return (0x0116>>x)&1; }
 #endif
-    static bool is_bend(ribi x) { return (0x1248>>x)&1; }
-    static bool is_straight(ribi x) { return (0x0536>>x)&1; }
-    static bool is_straight_ns(ribi x) { return (x | northsouth) == northsouth; }
-    static bool is_straight_ew(ribi x) { return (x | eastwest) == eastwest; }
+	static bool is_bend(ribi x) { return (0x1248>>x)&1; }
+	static bool is_straight(ribi x) { return (0x0536>>x)&1; }
+	static bool is_straight_ns(ribi x) { return (0x0032>>x)&1; }
+	static bool is_straight_ew(ribi x) { return (0x0504>>x)&1; }
 
 	/// Convert single/straight direction into their doubled form (n, ns -> ns), map all others to zero
 #ifdef HAS_64_BIT_SYSTEM
 	static ribi doubles(ribi x) {return (0x00000A0A00550A50lu>>(x*4))&0xf; }
 #else
-	static ribi doubles(ribi x) { return is_straight_ns(x) ? northsouth : (is_straight_ew(x) ? eastwest : none); }
+	static ribi doubles(ribi x) { return doppelr[x]; }
 #endif
 	/// Backward direction for single (or straight) ribi's, bitwise-NOT for all others
 #ifdef HAS_64_BIT_SYSTEM
