@@ -232,13 +232,13 @@ public:
 
 	/// Convert single/straight direction into their doubled form (n, ns -> ns), map all others to zero
 #ifdef HAS_64_BIT_SYSTEM
-	static ribi doubles(ribi x) {return (0x00000A0A00550A50lu>>(x*4))&0xf; }
+	static ribi doubles(ribi x) {return (INT64_C(0x00000A0A00550A50)>>(x*4))&0xf; }
 #else
 	static ribi doubles(ribi x) { return doppelr[x]; }
 #endif
 	/// Backward direction for single (or straight) ribi's, bitwise-NOT for all others
 #ifdef HAS_64_BIT_SYSTEM
-	static ribi backward(ribi x) {return (0x01234A628951C84Flu>>(x*4))&0xF; }
+	static ribi backward(ribi x) {return (INT64_C(0x01234A628951C84F)>>(x*4))&0xF; }
 #else
 	static ribi backward(ribi x) { return backwards[x]; }
 #endif
@@ -261,7 +261,7 @@ public:
 
 	/// Convert ribi to dir
 #ifdef HAS_64_BIT_SYSTEM
-	static dir get_dir(ribi x) {return (0x0002007103006540>>(x*4))&0x7; }
+	static dir get_dir(ribi x) {return (INT64_C(0x0002007103006540)>>(x*4))&0x7; }
 #else
 	static dir get_dir(ribi x) { return dirs[x]; }
 #endif
