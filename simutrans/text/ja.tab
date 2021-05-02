@@ -2019,10 +2019,6 @@ Vehicle %s is stucked!
 「%s」が\n立ち往生しています！
 Vehicle details
 乗り物の詳細
-Vehicle Name
-車両名
-Vehicle Power
-出力
 Verbrauch
 消費
 Vergroessere die Karte\n
@@ -3853,6 +3849,8 @@ Available:
 製造期間：
 Show future
 登場予定
+Show upgraded
+改造車両を表示
 GUI settings
 GUI設定
 map view
@@ -4093,6 +4091,12 @@ Number of convoys per way type, and inactive convoys number in parentheses.
 乗り物タイプごとの編成数。カッコ内は車庫に留置中の編成数
 Number of vehicles per way type, and those monthly maintenance costs.
 乗り物タイプごとの車両数と月あたり車両保存費
+Vehicle not found
+該当なし
+One vehicle found
+該当数: 1
+%u vehicles found
+該当数: %u
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
@@ -4119,8 +4123,14 @@ Welcome to Simutrans-Experimental, a game created by Hj. Malthaner and the Simut
 ようこそSimutrans-Extendedへ! Simutrans-StandardはHj. MalthanerとSimutransコミュニティによって開発されました。Simutrans-ExtendedはSimutrans-Standardを元にしてJames E. PettsとSimutransコミュニティによって開発されました。
 Usage/Output
 使用量/発電量
+Vehicle Name
+車両名
+Vehicle Power
+出力
 Power (MW)
 電力 (MW)
+Power: %4d kW\n
+出力: %4d kW\n
 #Show mail service coverage/mail network
 #郵便事業が行われている範囲を表示
 #Show passenger coverage/passenger network
@@ -4129,8 +4139,6 @@ Power (MW)
 #分所要
 # mins. waiting)
 #分待ち)
-Power: %4d kW\n
-出力: %4d kW\n
 #Odometer: %s km
 #積算距離： %skm
 #; %i km/h @ %.2f sec

@@ -2612,7 +2612,7 @@ void karte_t::create_beaches(  int xoff, int yoff  )
 			if(  gr->is_water()  &&  gr->get_hoehe()==groundwater  &&  gr->kann_alle_obj_entfernen(NULL)==NULL) {
 				koord k( ix, iy );
 				uint8 neighbour_water = 0;
-				bool water[8];
+				bool water[8] = {};
 				// check whether nearby tiles are water
 				for(  int i = 0;  i < 8;  i++  ) {
 					grund_t *gr2 = lookup_kartenboden( k + koord::neighbours[i] );
@@ -2756,14 +2756,14 @@ void karte_t::enlarge_map(settings_t const* sets, sint8 const* const h_field)
 
 	intr_disable();
 
-	bool minimap_was_visible = minimap_t::is_visible;
+	bool minimap_was_visible = minimap_t::get_instance()->is_visible;
 
 	uint32 max_display_progress;
 
 	// If this is not called by karte_t::init
 	if(  old_x != 0  ) {
 		mute_sound(true);
-		minimap_t::is_visible = false;
+		minimap_t::get_instance()->is_visible = false;
 
 		if(is_display_init()) {
 			display_show_pointer(false);
@@ -3074,8 +3074,8 @@ void karte_t::enlarge_map(settings_t const* sets, sint8 const* const h_field)
 		}
 		mute_sound(false);
 
-		minimap_t::is_visible = minimap_was_visible;
 		minimap_t::get_instance()->init();
+		minimap_t::get_instance()->is_visible = minimap_was_visible;
 		minimap_t::get_instance()->calc_map();
 		minimap_t::get_instance()->set_display_mode( minimap_t::get_instance()->get_display_mode() );
 
@@ -4643,7 +4643,7 @@ DBG_MESSAGE( "karte_t::rotate90()", "called" );
 	factory_builder_t::new_world();
 
 	// update minimap
-	if(minimap_t::is_visible) {
+	if(minimap_t::get_instance()->is_visible) {
 		minimap_t::get_instance()->set_display_mode( minimap_t::get_instance()->get_display_mode() );
 	}
 
@@ -5420,7 +5420,7 @@ void karte_t::new_year()
 
 	cbuffer_t buf;
 	buf.printf( translator::translate("Year %i has started."), last_year );
-	msg->add_message(buf,koord::invalid,message_t::general,color_idx_to_rgb(COL_BLACK),skinverwaltung_t::neujahrsymbol->get_image_id(0));
+	msg->add_message(buf,koord::invalid,message_t::general,SYSCOL_TEXT,skinverwaltung_t::neujahrsymbol->get_image_id(0));
 
 	FOR(vector_tpl<convoihandle_t>, const cnv, convoi_array) {
 		cnv->new_year();
@@ -5532,7 +5532,7 @@ void karte_t::recalc_average_speed(bool skip_messages)
 					{
 						cbuffer_t buf;
 						buf.printf(translator::translate("The following %s has become obsolete:\n%s\n"), vehicle_type, translator::translate(info->get_name()));
-						msg->add_message(buf, koord::invalid, message_t::new_vehicle, color_idx_to_rgb(COL_DARK_BLUE), info->get_base_image());
+						msg->add_message(buf, koord::invalid, message_t::new_vehicle, COL_OBSOLETE, info->get_base_image());
 					}
 				}
 			}

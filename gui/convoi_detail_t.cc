@@ -469,6 +469,7 @@ void convoi_detail_t::init(convoihandle_t cnv)
 
 	update_labels();
 
+	reset_min_windowsize();
 	set_windowsize(scr_size(D_DEFAULT_WIDTH, tabs.get_pos().y + container_chart.get_size().h));
 	set_resizemode(diagonal_resize);
 }
@@ -866,7 +867,7 @@ void gui_vehicleinfo_t::draw(scr_coord offset)
 			else {
 				buf.append(car_number);
 			}
-			display_proportional_clip_rgb(pos.x + offset.x + D_MARGIN_LEFT, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2) , true);
+			display_proportional_clip_rgb(pos.x + offset.x + D_MARGIN_LEFT, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 			buf.clear();
 
 			// upgradable symbol
@@ -1093,7 +1094,7 @@ void gui_convoy_payload_info_t::draw(scr_coord offset)
 			else {
 				buf.append(car_number);
 			}
-			display_proportional_clip_rgb(pos.x + offset.x + 1, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2), true);
+			display_proportional_clip_rgb(pos.x + offset.x + 1, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 			buf.clear();
 
 			// vehicle color bar
@@ -1261,7 +1262,7 @@ void gui_convoy_payload_info_t::draw(scr_coord offset)
 }
 
 
-void gui_convoy_payload_info_t::display_loading_bar(KOORD_VAL xp, KOORD_VAL yp, KOORD_VAL w, KOORD_VAL h, PIXVAL color, uint16 loading, uint16 capacity, uint16 overcrowd_capacity)
+void gui_convoy_payload_info_t::display_loading_bar(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, uint16 loading, uint16 capacity, uint16 overcrowd_capacity)
 {
 	if (capacity > 0 || overcrowd_capacity > 0) {
 		// base
@@ -1429,7 +1430,7 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 			else {
 				buf.append(car_number);
 			}
-			display_proportional_clip_rgb(pos.x + offset.x + 1, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2) , true);
+			display_proportional_clip_rgb(pos.x + offset.x + 1, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 			buf.clear();
 
 			// vehicle color bar
@@ -1549,7 +1550,7 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 			extra_y += LINESPACE;
 
 			if (sint64 cost = welt->calc_adjusted_monthly_figure(v->get_desc()->get_maintenance())) {
-				KOORD_VAL len = display_proportional_clip_rgb(pos.x + extra_w + offset.x, pos.y + offset.y + total_height + extra_y, translator::translate("Maintenance"), ALIGN_LEFT, SYSCOL_TEXT, true);
+				int len = display_proportional_clip_rgb(pos.x + extra_w + offset.x, pos.y + offset.y + total_height + extra_y, translator::translate("Maintenance"), ALIGN_LEFT, SYSCOL_TEXT, true);
 				len += display_proportional_clip_rgb(pos.x + extra_w + offset.x + len, pos.y + offset.y + total_height + extra_y, ": ", ALIGN_LEFT, SYSCOL_TEXT, true);
 				money_to_string(number, cost / (100.0));
 				display_proportional_clip_rgb(pos.x + extra_w + offset.x + len, pos.y + offset.y + total_height + extra_y, number, ALIGN_LEFT, MONEY_MINUS, true);
