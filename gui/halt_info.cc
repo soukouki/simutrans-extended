@@ -169,7 +169,7 @@ gui_halt_handled_goods_images_t::gui_halt_handled_goods_images_t(halthandle_t h)
 
 void gui_halt_handled_goods_images_t::draw(scr_coord offset)
 {
-	KOORD_VAL xoff = D_H_SPACE;
+	scr_coord_val xoff = D_H_SPACE;
 	for (uint8 i = 0; i<goods_manager_t::get_max_catg_index(); i++) {
 		uint8 g_class = goods_manager_t::get_classes_catg_index(i) - 1;
 		haltestelle_t::connexions_map *connexions = halt->get_connexions(i, g_class);
