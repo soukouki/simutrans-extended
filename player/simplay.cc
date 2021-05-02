@@ -41,6 +41,8 @@
 #include "../dataobj/environment.h"
 #include "../dataobj/schedule.h"
 
+#include "../network/network_socket_list.h"
+
 #include "../obj/bruecke.h"
 #include "../obj/gebaeude.h"
 #include "../obj/leitung2.h"
@@ -71,8 +73,8 @@ player_t::player_t(uint8 nr) :
 	finance = new finance_t(this, welt);
 	player_nr = nr;
 	player_age = 0;
-	active = false;			// Don't start as an AI player
-	locked = false;			// allowed to change anything
+	active = false; // Don't start as an AI player
+	locked = false; // allowed to change anything
 	unlock_pending = false;
 	has_been_warned_about_no_money_for_renewals = false;
 	selected_signalbox = NULL;
@@ -152,12 +154,8 @@ void player_t::add_money_message(const sint64 amount, const koord pos)
 			add_message(amount, pos);
 
 			// and same for sound too ...
-#ifdef GDI_SOUND
-			if(  amount>=10000  &&  !welt->is_fast_forward()) {
-#else
-			if (amount >= 10000 && !welt->is_fast_forward()) {
-#endif
-				welt->play_sound_area_clipped(pos, SFX_CASH, ignore_wt);
+			if(  amount>=10000  &&  !welt->is_fast_forward()  ) {
+				welt->play_sound_area_clipped(pos, SFX_CASH, CASH_SOUND, ignore_wt );
 			}
 		}
 	}
@@ -276,9 +274,9 @@ void player_t::display_messages()
 
 	FOR(slist_tpl<income_message_t*>, const m, messages) {
 
-		const scr_coord scr_pos = vp->get_screen_coord(koord3d(m->pos,welt->lookup_hgt(m->pos)),koord(0,m->alter >> 4));
+		const scr_coord scr_pos = vp->get_screen_coord(koord3d(m->pos,welt->lookup_hgt(m->pos)),koord(0,m->alter >> 4)) + scr_coord((get_tile_raster_width()-display_calc_proportional_string_len_width(m->str, 0x7FFF))/2,0);
 
-		display_shadow_proportional_rgb(scr_pos.x, scr_pos.y, PLAYER_FLAG | color_idx_to_rgb(player_color_1+3), color_idx_to_rgb(COL_BLACK), m->str, true);
+		display_shadow_proportional_rgb( scr_pos.x, scr_pos.y, PLAYER_FLAG|color_idx_to_rgb(player_color_1+3), color_idx_to_rgb(COL_BLACK), m->str, true);
 		if(  m->pos.x < 3  ||  m->pos.y < 3  ) {
 			// very close to border => renew background
 			welt->set_background_dirty();
@@ -447,8 +445,7 @@ bool player_t::new_month()
 			}
 		}
 	}
-	else
-	{
+	else {
 		finance->set_account_overdrawn( 0 );
 	}
 
@@ -522,6 +519,11 @@ bool player_t::new_month()
 			}
 			// never changed convoi, never built => abandoned
 			if(  abandoned  ) {
+				if (env_t::server) {
+					// server: unlock this player for all clients
+					socket_list_t::unlock_player_all(player_nr, true);
+				}
+				// clients: local unlock
 				pwd_hash.clear();
 				if (ss != player_t::in_liquidation)
 				{
@@ -534,6 +536,7 @@ bool player_t::new_month()
 
 	// subtract maintenance after insolvency check
 	finance->book_account( -finance->get_maintenance_with_bits(TT_ALL) );
+
 	// company gets older ...
 	player_age ++;
 
@@ -741,7 +744,7 @@ void player_t::complete_liquidation()
 								break;
 							case obj_t::way:
 							{
-								weg_t *w = (weg_t *)obj;
+								weg_t *w=(weg_t *)obj;
 								bool mothball = false;
 								if (gr->ist_bruecke() || gr->ist_tunnel())
 								{
@@ -819,7 +822,7 @@ void player_t::rdwr(loadsave_t *file)
 {
 	xml_tag_t sss( file, "spieler_t" );
 
-	if(file->get_version() < 112005) {
+	if(file->is_version_less(112, 5)) {
 		sint64 konto = finance->get_account_balance();
 		file->rdwr_longlong(konto);
 		finance->set_account_balance(konto);
@@ -829,13 +832,13 @@ void player_t::rdwr(loadsave_t *file)
 		finance->set_account_overdrawn( account_overdrawn );
 	}
 
-	if(file->get_version()<101000) {
+	if(file->is_version_less(101, 0)) {
 		// ignore steps
 		sint32 ldummy=0;
 		file->rdwr_long(ldummy);
 	}
 
-	if(file->get_version()<99009) {
+	if(file->is_version_less(99, 9)) {
 		sint32 farbe;
 		file->rdwr_long(farbe);
 		player_color_1 = (uint8)farbe*2;
@@ -847,10 +850,10 @@ void player_t::rdwr(loadsave_t *file)
 	}
 
 	sint32 halt_count=0;
-	if(file->get_version()<99008) {
+	if(file->is_version_less(99, 8)) {
 		file->rdwr_long(halt_count);
 	}
-	if(file->get_version()<=112002) {
+	if(file->is_version_less(112, 3)) {
 		sint32 haltcount = 0;
 		file->rdwr_long(haltcount);
 	}
@@ -861,16 +864,14 @@ void player_t::rdwr(loadsave_t *file)
 	file->rdwr_bool(active);
 
 	// state is not saved anymore
-	if(file->get_version()<99014)
-	{
+	if(file->is_version_less(99, 14)) {
 		sint32 ldummy=0;
 		file->rdwr_long(ldummy);
 		file->rdwr_long(ldummy);
 	}
 
 	// the AI stuff is now saved directly by the different AI
-	if(  file->get_version()<101000)
-	{
+	if(  file->is_version_less(101, 0)) {
 		sint32 ldummy = -1;
 		file->rdwr_long(ldummy);
 		file->rdwr_long(ldummy);
@@ -893,7 +894,7 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 
 	// headquarters stuff
-	if (file->get_version() < 86004)
+	if (file->is_version_less(86, 4))
 	{
 		headquarter_level = 0;
 		headquarter_pos = koord::invalid;
@@ -910,11 +911,11 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 
 	// line management
-	if(file->get_version()>=88003) {
+	if(file->is_version_atleast(88, 3)) {
 		simlinemgmt.rdwr(file,this);
 	}
 
-	if(file->get_version()>102002 && file->get_extended_version() != 7) {
+	if(file->is_version_atleast(102, 3) && file->get_extended_version() != 7) {
 		// password hash
 		for(  int i=0;  i<20;  i++  ) {
 			file->rdwr_byte(pwd_hash[i]);
@@ -933,13 +934,11 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 
 	// save the name too
-	if(file->get_version()>102003 && (file->get_extended_version() >= 9 || file->get_extended_version() == 0))
-	{
+	if(  file->is_version_atleast(102, 4) && (file->get_extended_version() >= 9 || file->get_extended_version() == 0)  ) {
 		file->rdwr_str( player_name_buf, lengthof(player_name_buf) );
 	}
 
-	if(file->get_version() >= 110007 && file->get_extended_version() >= 10)
-	{
+	if(  file->is_version_atleast(110, 7) && file->get_extended_version() >= 10  ) {
 		// Save the colour
 		file->rdwr_byte(player_color_1);
 		file->rdwr_byte(player_color_2);
@@ -954,7 +953,7 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 
 	// save age
-	if(  file->get_version() >= 112002  && (file->get_extended_version() >= 11 || file->get_extended_version() == 0) ) {
+	if(  file->is_version_atleast(112, 2) && (file->get_extended_version() >= 11 || file->get_extended_version() == 0)  ) {
 		file->rdwr_short( player_age );
 	}
 
@@ -968,10 +967,8 @@ DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this )
 	}
 }
 
-/**
- * called after game is fully loaded;
- */
-void player_t::load_finished()
+
+void player_t::finish_rd()
 {
 	simlinemgmt.finish_rd();
 	display_set_player_color_scheme( player_nr, player_color_1, player_color_2 );
@@ -993,8 +990,8 @@ void player_t::rotate90( const sint16 y_size )
 
 void player_t::report_vehicle_problem(convoihandle_t cnv,const koord3d position)
 {
-	switch(cnv->get_state())
-	{
+	switch(cnv->get_state()) {
+
 		case convoi_t::NO_ROUTE_TOO_COMPLEX:
 		DBG_MESSAGE("player_t::report_vehicle_problem", "Vehicle %s can't find a route to (%i,%i) because the route is too long/complex", cnv->get_name(), position.x, position.y);
 			if (this == welt->get_active_player()) {
@@ -1136,19 +1133,18 @@ sint64 player_t::undo()
 					// special case airplane
 					// they can be everywhere, so we allow for everything but runway undo
 					case obj_t::air_vehicle: {
-							if(undo_type!=air_wt) {
-								break;
-							}
-							const air_vehicle_t* aircraft = obj_cast<air_vehicle_t>(gr->obj_bei(i));
-							// flying aircrafts are ok
-							if(!aircraft->is_on_ground()) {
-								break;
-							}
+						if(undo_type!=air_wt) {
+							break;
 						}
-						/* FALLTHROUGH */
-
+						const air_vehicle_t* aircraft = obj_cast<air_vehicle_t>(gr->obj_bei(i));
+						// flying aircrafts are ok
+						if(!aircraft->is_on_ground()) {
+							break;
+						}
+					}
+					/* FALLTHROUGH */
+					// all other are forbidden => no undo any more
 					default:
-						// all other are forbidden => no undo any more
 						last_built.clear();
 						return false;
 				}
@@ -1161,13 +1157,11 @@ sint64 player_t::undo()
 	FOR(vector_tpl<koord3d>, const& i, last_built) {
 		grund_t* const gr = welt->lookup(i);
 		if(  undo_type != powerline_wt  ) {
-			cost += gr->weg_entfernen(undo_type, true);
+			cost += gr->weg_entfernen(undo_type,true);
 			cost -= welt->get_land_value(gr->get_pos());
 		}
 		else {
-			leitung_t* lt = gr->get_leitung();
-			if (lt)
-			{
+			if (leitung_t* lt = gr->get_leitung()) {
 				cost += lt->get_desc()->get_value();
 				lt->cleanup(NULL);
 				delete lt;
@@ -1182,19 +1176,19 @@ sint64 player_t::undo()
 void player_t::tell_tool_result(tool_t *tool, koord3d, const char *err)
 {
 	/* tools can return three kinds of messages
-	* NULL = success
-	* "" = failure, but just do not try again
-	* "bla" error message, which should be shown
-	*/
-	if (welt->get_active_player() == this) {
-		if (err == NULL) {
-			if (tool->ok_sound != NO_SOUND) {
-				sound_play(tool->ok_sound);
+	 * NULL = success
+	 * "" = failure, but just do not try again
+	 * "bla" error message, which should be shown
+	 */
+	if (welt->get_active_player()==this) {
+		if(err==NULL) {
+			if(tool->ok_sound!=NO_SOUND) {
+				sound_play(tool->ok_sound,255,TOOL_SOUND);
 			}
 		}
-		else if (*err != 0) {
+		else if(*err!=0) {
 			// something went really wrong
-			sound_play(SFX_FAILURE);
+			sound_play( SFX_FAILURE, 255, TOOL_SOUND );
 			// look for coordinate in error message
 			// syntax: either @x,y or (x,y)
 			open_error_msg_win(err);

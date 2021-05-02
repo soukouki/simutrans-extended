@@ -38,11 +38,9 @@ public:
 
 	static void register_desc(tunnel_desc_t *desc);
 
-	static bool successfully_loaded();
-
 	static const tunnel_desc_t *get_desc(const char *);
 
-	static stringhashtable_tpl <tunnel_desc_t *> * get_all_tunnels();
+	static stringhashtable_tpl <tunnel_desc_t *, N_BAGS_MEDIUM> * get_all_tunnels();
 
 	static const tunnel_desc_t *get_tunnel_desc(const waytype_t wtyp, const sint32 min_speed,const uint16 time);
 

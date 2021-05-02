@@ -7,7 +7,7 @@
 #define OBJ_BAUM_H
 
 
-#include "../simobj.h"
+#include "simobj.h"
 
 #include "../tpl/stringhashtable_tpl.h"
 #include "../tpl/vector_tpl.h"
@@ -18,6 +18,8 @@
 
 #include <string>
 
+#define TREE_MAX_RANDOM_AGE (703)
+#define TREE_MIN_PROBABILITY (38)
 
 /**
  * Simulated trees for Simutrans.
@@ -28,7 +30,7 @@ private:
 	static FLAGGED_PIXVAL outline_color;
 
 	/** month of birth */
-	uint16 geburt;
+	uint16 purchase_time;
 
 	/** type of tree (was 9 but for more compact saves now only 254 different tree types are allowed) */
 	uint8 tree_id;
@@ -41,11 +43,11 @@ private:
 	// one bit free ;)
 
 	// static for administration
-	static stringhashtable_tpl<const tree_desc_t *> desc_names;
+	static stringhashtable_tpl<const tree_desc_t *, N_BAGS_SMALL> desc_names;
 	static vector_tpl<const tree_desc_t *> tree_list;
 	static weighted_vector_tpl<uint32>* tree_list_per_climate;
 
-	bool saee_baum();
+	bool plant_tree();
 
 	/**
 	 * calculate offsets for new trees
@@ -124,7 +126,7 @@ public:
 	// static functions to handle trees
 
 	// distributes trees on a map
-	static void distribute_trees(int dichte);
+	static void distribute_trees(int density);
 
 	static bool plant_tree_on_coordinate(koord pos, const tree_desc_t *desc, const bool check_climate, const bool random_age );
 
@@ -132,9 +134,9 @@ public:
 	static bool successfully_loaded();
 
 	static uint32 create_forest(koord center, koord size );
-	static void fill_trees(int dichte);
+	static void fill_trees(int density);
 
-	// return list to descs
+	// return list to descriptors
 	static vector_tpl<tree_desc_t const*> const& get_all_desc() { return tree_list; }
 
 	static const tree_desc_t *random_tree_for_climate(climate cl) { uint8 b = random_tree_for_climate_intern(cl);  return b!=invalid_tree_id ? tree_list[b] : NULL; }

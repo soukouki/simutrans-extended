@@ -1,3 +1,8 @@
+/*
+ * This file is part of the Simutrans project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include "gui_colorbox.h"
 #include "../gui_theme.h"
 #include "../../display/simgraph.h"
@@ -38,5 +43,10 @@ void gui_colorbox_t::set_tooltip(const char * t)
 void gui_colorbox_t::draw(scr_coord offset)
 {
 	offset += pos;
-	display_colorbox_with_tooltip(offset.x, offset.y, width, height, color, true, tooltip);
+	if (show_frame) {
+		display_colorbox_with_tooltip(offset.x, offset.y, width, height, color, true, tooltip);
+	}
+	else {
+		display_fillbox_wh_clip_rgb(offset.x, offset.y, width, height, color, true);
+	}
 }

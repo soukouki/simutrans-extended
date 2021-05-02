@@ -5,11 +5,7 @@
 
 #include "../simdebug.h"
 
-// This gets us the max for a signed 32-bit int.  Hopefully.
-#define MAXINT INT_MAX
-
 #include <sys/stat.h>
-//#include <ctype.h>
 
 #include "loadsave_frame.h"
 
@@ -30,7 +26,7 @@
 #include "../utils/simstring.h"
 
 
-stringhashtable_tpl<sve_info_t *> loadsave_frame_t::cached_info;
+stringhashtable_tpl<sve_info_t *, N_BAGS_LARGE> loadsave_frame_t::cached_info;
 
 
 sve_info_t::sve_info_t(const char *pak_, time_t mod_, sint32 fs, uint32 version, uint32 extended_version)
@@ -53,12 +49,8 @@ void sve_info_t::rdwr(loadsave_t *file)
 {
 	const char *s = strdup(pak.c_str());
 	file->rdwr_str(s);
-	if (file->is_loading() && s) {
-		pak = s;
-	}
-	if (s)
-	{
-		free(const_cast<char *>(s));
+	if (file->is_loading()) {
+		pak = s ? s : "<unknown pak>";
 	}
 	file->rdwr_longlong(mod_time);
 	file->rdwr_long(file_size);
@@ -85,12 +77,14 @@ bool loadsave_frame_t::item_action(const char *filename)
 {
 	if(do_load) {
 		welt->switch_server( easy_server.pressed, true );
+		long start_load = dr_time();
 		if(  !welt->load(filename)  ) {
 			welt->switch_server( false, true );
 		}
 		else if(  env_t::server  ) {
 			welt->announce_server(0);
 		}
+		DBG_MESSAGE( "loadsave_frame_t::item_action", "load world %li ms", dr_time() - start_load );
 	}
 	else {
 		// saving a game
@@ -105,7 +99,9 @@ bool loadsave_frame_t::item_action(const char *filename)
 			// and now we need to copy the servergame to the map ...
 #endif
 		}
-		welt->save(filename, loadsave_t::save_mode, env_t::savegame_version_str, env_t::savegame_ex_version_str, env_t::savegame_ex_revision_str, false);
+		long start_save = dr_time();
+		welt->save( filename, false, env_t::savegame_version_str, env_t::savegame_ex_version_str, env_t::savegame_ex_revision_str, false );
+		DBG_MESSAGE( "loadsave_frame_t::item_action", "save world %li ms", dr_time() - start_save );
 		welt->set_dirty();
 		welt->reset_timer();
 	}
@@ -143,10 +139,8 @@ loadsave_frame_t::loadsave_frame_t(bool do_load) : savegame_frame_t(".sve", fals
 		/* We rename the old cache file and remove any incomplete read version.
 		 * Upon an error the cache will be rebuilt then next time.
 		 */
-		remove( SAVE_PATH_X "_load_cached_exp.xml" );
-		rename( SAVE_PATH_X "_cached_exp.xml", SAVE_PATH_X "_load_cached_exp.xml" );
-		const char *cache_file = SAVE_PATH_X "_load_cached_exp.xml";
-		if (file.rd_open(cache_file) && file.get_extended_version() == EX_VERSION_MAJOR) {
+		dr_rename( SAVE_PATH_X "_cached_exp.xml", SAVE_PATH_X "_load_cached_exp.xml" );
+		if(  file.rd_open(SAVE_PATH_X "_load_cached_exp.xml")  == loadsave_t::FILE_STATUS_OK  ) {
 			// ignore comment
 			const char *text=NULL;
 			file.rdwr_str(text);
@@ -198,7 +192,7 @@ void loadsave_frame_t::add_file(const char *fullpath, const char *filename, cons
 	file_table.add_row( new gui_loadsave_table_row_t( fullpath, buttontext ));
 }
 
-/*
+
 gui_loadsave_table_row_t::gui_loadsave_table_row_t(const char *pathname, const char *buttontext) : gui_file_table_row_t(pathname, buttontext)
 {
 	if (error.empty()) {
@@ -225,7 +219,7 @@ gui_loadsave_table_row_t::gui_loadsave_table_row_t(const char *pathname, const c
 			}
 
 			// now insert in hash_table
-			svei = new sve_info_t(test.get_pak_extension(), info.st_mtime, info.st_size, test.get_version(), test.get_extended_version() );
+			svei = new sve_info_t(test.get_pak_extension(), info.st_mtime, info.st_size, test.get_version_int(), test.get_extended_version() );
 			// copy filename
 			char *key = strdup(pathname);
 			sve_info_t *svei_old = loadsave_frame_t::cached_info.set(key, svei);
@@ -271,7 +265,7 @@ const char *gui_file_table_pak_column_t::get_text(const gui_table_row_t &row) co
 sint32 gui_file_table_std_column_t::get_int(const gui_table_row_t &row) const
 {
 	// file version
-	return (sint32)static_cast<const gui_loadsave_table_row_t &>(row).get_version();
+	return (sint32)static_cast<const gui_loadsave_table_row_t &>(row).get_version_int();
 }*/
 
 
@@ -338,12 +332,12 @@ const char *loadsave_frame_t::get_info(const char *fname)
 		/*
 		// read pak_extension from file
 		loadsave_t test;
-		test.rd_open(fname);
+		test.rd_open(fname); // == loadsave_t::FILE_STATUS_OK
 		// add pak extension
 		pak_extension = test.get_pak_extension();
 
 		// now insert in hash_table
-		sve_info_t *svei_new = new sve_info_t(pak_extension.c_str(), sb.st_mtime, sb.st_size, test.get_version(), test.get_extended_version());
+		sve_info_t *svei_new = new sve_info_t(pak_extension.c_str(), sb.st_mtime, sb.st_size, test.get_version_int(), test.get_extended_version());
 		// copy filename
 		char *key = strdup(fname);
 		sve_info_t *svei_old = cached_info.set(key, svei_new);
@@ -374,11 +368,11 @@ loadsave_frame_t::~loadsave_frame_t()
 	// save hashtable
 	loadsave_t file;
 	const char *cache_file = SAVE_PATH_X "_cached_exp.xml";
-	if( file.wr_open(cache_file, loadsave_t::xml, "cache", SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR) )
+	if(  file.wr_open(cache_file, loadsave_t::xml, 0, "cache", SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR) == loadsave_t::FILE_STATUS_OK  )
 	{
 		const char *text="Automatically generated file. Do not edit. An invalid file may crash the game. Deleting is allowed though.";
 		file.rdwr_str(text);
-		FOR(stringhashtable_tpl<sve_info_t*>, const& i, cached_info) {
+		for(auto const& i : cached_info) {
 			// save only existing files
 			if (i.value->file_exists) {
 				xml_tag_t t(&file, "save_game_info");
@@ -395,4 +389,9 @@ loadsave_frame_t::~loadsave_frame_t()
 		}
 		file.close();
 	}
+}
+
+bool loadsave_frame_t::compare_items ( const dir_entry_t & entry, const char *info, const char *)
+{
+	return (strcmp(entry.label->get_text_pointer(), info) < 0);
 }

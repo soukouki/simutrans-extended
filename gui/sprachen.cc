@@ -9,8 +9,10 @@
 #include "../pathes.h"
 #include "../display/simimg.h"
 #include "../simskin.h"
+#include "../simmenu.h"
 #include "../descriptor/skin_desc.h"
 #include "sprachen.h"
+#include "simwin.h"
 #include "components/gui_image.h"
 #include "components/gui_divider.h"
 
@@ -20,6 +22,7 @@
 #include "../dataobj/translator.h"
 #include "../sys/simsys.h"
 #include "../utils/simstring.h"
+#include "../simworld.h"
 
 
 int sprachengui_t::cmp_language_button(sprachengui_t::language_button_t a, sprachengui_t::language_button_t b)
@@ -46,7 +49,7 @@ void sprachengui_t::init_font_from_lang(bool reload_font)
 
 	if(  reload_font  ) {
 		// load large font
-		dr_chdir( env_t::program_dir );
+		dr_chdir( env_t::data_dir );
 		bool ok = false;
 		char prop_font_file_name[4096];
 		tstrncpy( prop_font_file_name, prop_font_file, lengthof(prop_font_file_name) );
@@ -111,7 +114,7 @@ sprachengui_t::sprachengui_t() :
 	new_component_span<gui_divider_t>(2);
 
 	const translator::lang_info* lang = translator::get_langs();
-	dr_chdir( env_t::program_dir );
+	dr_chdir( env_t::data_dir );
 
 	for (int i = 0; i < translator::get_language_count(); ++i, ++lang) {
 		button_t* b = new button_t();
@@ -192,8 +195,24 @@ bool sprachengui_t::action_triggered( gui_action_creator_t *comp, value_t)
 
 		if(b == comp) {
 			b->pressed = true;
+
+			static const char *default_name = "PROP_FONT_FILE";
+
+			const char *prop_font_file_old = translator::translate(default_name);
+
 			translator::set_language(buttons[i].id);
-			init_font_from_lang(true);
+			const char *prop_font_file_new = translator::translate(default_name);
+
+			// choose bdf font if default file names do not match (or are not translated)
+			bool reload_font = prop_font_file_old == default_name  ||  prop_font_file_new == default_name  ||  strcmp(prop_font_file_new, prop_font_file_old) != 0;
+
+			init_font_from_lang(reload_font);
+			destroy_all_win( true );
+
+			if (world()) {
+				// no need to update non-existent toolbars
+				tool_t::update_toolbars();
+			}
 		}
 		else {
 			b->pressed = false;

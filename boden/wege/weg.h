@@ -14,11 +14,11 @@
 
 #include "../../display/simimg.h"
 #include "../../simtypes.h"
-#include "../../simobj.h"
+#include "../../obj/simobj.h"
 #include "../../descriptor/way_desc.h"
 #include "../../dataobj/koord3d.h"
 #include "../../tpl/minivec_tpl.h"
-#include "../../tpl/koordhashtable_tpl.h"
+#include "../../tpl/ordered_vector_tpl.h"
 #include "../../simskin.h"
 
 #ifdef MULTI_THREAD
@@ -92,14 +92,14 @@ public:
 	static void clear_list_of__ways();
 
 	enum {
-		HAS_SIDEWALK   = 0x01,
-		IS_ELECTRIFIED = 0x02,
-		HAS_SIGN       = 0x04,
-		HAS_SIGNAL     = 0x08,
-		HAS_WAYOBJ     = 0x10,
-		HAS_CROSSING   = 0x20,
-		IS_DIAGONAL    = 0x40, // marker for diagonal image
-		IS_SNOW = 0x80	// marker, if above snowline currently
+		HAS_SIDEWALK   = 1 << 0,
+		IS_ELECTRIFIED = 1 << 1,
+		HAS_SIGN       = 1 << 2,
+		HAS_SIGNAL     = 1 << 3,
+		HAS_WAYOBJ     = 1 << 4,
+		HAS_CROSSING   = 1 << 5,
+		IS_DIAGONAL    = 1 << 6, // marker for diagonal image
+		IS_SNOW        = 1 << 7  // marker, if above snowline currently
 	};
 
 	struct runway_directions
@@ -113,6 +113,10 @@ public:
 			runway_9_27 = run_9_27;
 		}
 	};
+
+	static void add_travel_time_update(weg_t* w, uint32 actual, uint32 ideal);
+	static void apply_travel_time_updates();
+	static void clear_travel_time_updates();
 
 private:
 	/**
@@ -205,12 +209,17 @@ private:
 	bool degraded:1;
 
 #ifdef MULTI_THREAD
-	pthread_mutex_t private_car_store_route_mutex;
+	pthread_rwlock_t private_car_store_route_rwlock;
 #endif
 
 protected:
 
-	enum image_type { image_flat, image_slope, image_diagonal, image_switch };
+	enum image_type {
+		image_flat,
+		image_slope,
+		image_diagonal,
+		image_switch
+	};
 
 	/**
 	 * initializes both front and back images
@@ -239,14 +248,17 @@ public:
 	minivec_tpl<gebaeude_t*> connected_buildings;
 
 	// Likewise, out of caution, put this here for the same reason.
-	typedef koordhashtable_tpl<koord, koord3d> private_car_route_map;
+	// n_bags must be fairly low as there are 2 maps per way and usually zero elements per way, up to ~150 in high cases and ~1500 in highest cases
+	typedef ordered_vector_tpl<koord, uint32> private_car_route_map;
 	//typedef std::unordered_map<koord, koord3d> private_car_route_map_2;
-	private_car_route_map private_car_routes[2];
+	private_car_route_map private_car_routes[2][5];
 	//private_car_route_map_2 private_car_routes_std[2];
 	static uint32 private_car_routes_currently_reading_element;
 	static uint32 get_private_car_routes_currently_writing_element() { return private_car_routes_currently_reading_element == 1 ? 0 : 1; }
 
 	void add_private_car_route(koord dest, koord3d next_tile);
+	bool has_private_car_route(koord dest) const;
+	koord3d get_next_on_private_car_route_to(koord dest, bool reading_set=true) const;
 private:
 	/// Set the boolean value to true to modify the set currently used for reading (this must ONLY be done when this is called from a single threaded part of the code).
 	void remove_private_car_route(koord dest, bool reading_set = false);
@@ -436,7 +448,8 @@ public:
 	image_id get_image() const OVERRIDE {return image;}
 
 	inline void set_after_image( image_id b ) { foreground_image = b; }
-	image_id get_front_image() const OVERRIDE { return foreground_image; }
+	image_id get_front_image() const OVERRIDE {return foreground_image;}
+
 
 	// correct maintenance
 	void finish_rd() OVERRIDE;
@@ -496,6 +509,8 @@ public:
 		}
 		return (combined_actual * 100u / combined_ideal) - 100u;
 	}
+
+	uint8 get_map_idx(const koord3d &next_tile) const;
 };
 
 

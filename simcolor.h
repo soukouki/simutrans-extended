@@ -104,18 +104,13 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define COL_SAFETY          color_idx_to_rgb(COL_DARK_GREEN)
 #define COL_INACTIVE        color_idx_to_rgb(COL_GREY3)
 
-// used in tilebar (and text)
-#define COL_ADDITIONAL      color_idx_to_rgb(COL_LIGHT_TURQUOISE)
-#define COL_REDUCED         color_idx_to_rgb(COL_LIGHT_ORANGE)
-#define COL_REDUCED_TEXT    color_idx_to_rgb(COL_LIGHT_ORANGE-2)
-
 #define COL_IN_TRANSIT      color_idx_to_rgb(COL_YELLOW)
 #define COL_STAFF_SHORTAGE  color_idx_to_rgb(COL_DARK_ORCHID)
 
 // used in vehicle status
 #define COL_UPGRADEABLE       color_idx_to_rgb(COL_PURPLE)
 #define COL_OBSOLETE          SYSCOL_OBSOLETE
-#define COL_OUT_OF_PRODUCTION color_idx_to_rgb(COL_SOFT_BLUE)
+#define COL_OUT_OF_PRODUCTION SYSCOL_OUT_OF_PRODUCTION
 //#define COL_OVERCROWDED     color_idx_to_rgb(COL_DARK_PURPLE)
 
 // used in many dialogues' graphs
@@ -147,6 +142,7 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define COL_WAITING         COL_DARK_TURQUOISE
 #define COL_ARRIVED         COL_LIGHT_BLUE
 #define COL_DEPARTED        COL_MAXSPEED
+#define COL_COMMUTER        (22)
 
 //#define COL_POWERLINES      87
 #define COL_ELECTRICITY     60
@@ -165,6 +161,7 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define SYSCOL_TEXT_SHADOW                  gui_theme_t::gui_color_text_shadow
 #define SYSCOL_TEXT_TITLE                   gui_theme_t::gui_color_text_title
 #define SYSCOL_TEXT_STRONG                  gui_theme_t::gui_color_text_strong
+#define SYSCOL_TEXT_WEAK                    gui_theme_t::gui_color_text_weak
 #define SYSCOL_TEXT_INACTIVE                gui_theme_t::gui_color_text_inactive
 #define SYSCOL_TEXT_PLACEHOLDER             gui_theme_t::gui_color_text_placeholder
 #define MONEY_MINUS                         gui_theme_t::gui_color_text_minus
@@ -197,9 +194,12 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define SYSCOL_STATUSBAR_DIVIDER            gui_theme_t::gui_color_statusbar_divider
 #define SYSCOL_HIGHLIGHT                    gui_theme_t::gui_highlight_color
 #define SYSCOL_SHADOW                       gui_theme_t::gui_shadow_color
+#define SYSCOL_INDICATOR_BORDER1            gui_theme_t::gui_color_indicator_border_top_left
+#define SYSCOL_INDICATOR_BORDER2            gui_theme_t::gui_color_indicator_border_bottom_right
 #define SYSCOL_LOADINGBAR_INNER             gui_theme_t::gui_color_loadingbar_inner
 #define SYSCOL_LOADINGBAR_PROGRESS          gui_theme_t::gui_color_loadingbar_progress
 #define SYSCOL_OBSOLETE                     gui_theme_t::gui_color_obsolete
+#define SYSCOL_OUT_OF_PRODUCTION            gui_theme_t::gui_color_out_of_production
 #define SYSCOL_EMPTY                        gui_theme_t::gui_color_empty
 #define SYSCOL_UP_TRIANGLE                  gui_theme_t::gui_color_up_pointing_triangle
 #define SYSCOL_DOWN_TRIANGLE                gui_theme_t::gui_color_down_pointing_triangle

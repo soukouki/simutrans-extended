@@ -64,7 +64,6 @@ gui_color_text_shadow = #BDD3DF
 gui_color_text_title = #338FCC
 gui_color_text_strong = #E46A0B
 
-########Test########
 gui_color_empty = #868c86
 gui_color_obsolete = #2878ff
 
@@ -77,7 +76,7 @@ gui_color_edit_beam = #000000
 #gui_color_chart_background = #ADCBD6
 gui_color_chart_lines_zero = #005C9E
 gui_color_chart_lines_odd = #338FCC
-gui_color_chart_lines_even = #338FCC
+gui_color_chart_lines_even = #005C9E
 
 gui_color_list_text_selected_focus = #FAFAFA
 gui_color_list_text_selected_nofocus = #FAFAFA
@@ -109,15 +108,20 @@ gui_shadow_color = #8FC5E6
 gui_color_text_unused = #E46A0B
 
 # Color of cursor overlay, which is blended over marked ground tiles
-cursor_overlay_color = #ff0000
+#cursor_overlay_color = #ff0000
+# -- pak128.Britain
+cursor_overlay_color = 71
 
 # Colo loadbar, save game, load game, server...
 gui_color_loadingbar_progress = #76b9e6
 gui_color_loadingbar_inner = #D6ECF7
 
 # Color player brigth
-gui_player_color_dark = 1	
+gui_player_color_dark = 1
 gui_player_color_bright = 3
+
+gui_color_up_pointing_triangle = #008000
+gui_color_down_pointing_triangle = #FF3333
 
 ##################################size stuff##################################
 

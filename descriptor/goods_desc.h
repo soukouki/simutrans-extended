@@ -36,10 +36,10 @@ struct fare_stage_t
 };
 
 /**
- *  Child nodes:
- *	0   Name
- *	1   Copyright
- *	2   Text: Name of measurement unit
+ * Child nodes:
+ *  0   Name
+ *  1   Copyright
+ *  2   Text: Name of measurement unit
  */
 class goods_desc_t : public obj_named_desc_t {
 	friend class goods_reader_t;
@@ -171,7 +171,6 @@ public:
 
 	/**
 	* @return speed bonus value of the good
-	* @author Hj. Malthaner
 	* Now deprecated for most purposes, retained just to check
 	* whether to discard goods that have been waiting too long.
 	*/

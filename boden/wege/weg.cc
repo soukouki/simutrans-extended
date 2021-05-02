@@ -4,6 +4,7 @@
  */
 
 #include <stdio.h>
+#include <tuple>
 
 #include "../../tpl/slist_tpl.h"
 
@@ -17,12 +18,13 @@
 #include "kanal.h"
 #include "runway.h"
 
+
 #include "../grund.h"
 #include "../../simmesg.h"
 #include "../../simworld.h"
 #include "../../display/simimg.h"
 #include "../../simhalt.h"
-#include "../../simobj.h"
+#include "../../obj/simobj.h"
 #include "../../player/simplay.h"
 #include "../../obj/wayobj.h"
 #include "../../obj/roadsign.h"
@@ -49,6 +51,7 @@
 #include "../../utils/simthread.h"
 static pthread_mutex_t weg_calc_image_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 static pthread_mutexattr_t mutex_attributes;
+static pthread_rwlockattr_t rwlock_attributes;
 #endif
 
 
@@ -57,6 +60,7 @@ static pthread_mutexattr_t mutex_attributes;
  */
 vector_tpl <weg_t *> alle_wege;
 
+static slist_tpl<std::tuple<weg_t*, uint32, uint32>> pending_road_travel_time_updates;
 /**
  * Get list of all ways
  */
@@ -116,14 +120,14 @@ weg_t* weg_t::alloc(waytype_t wt)
 const char *weg_t::waytype_to_string(waytype_t wt)
 {
 	switch(wt) {
-		case tram_wt:	return "tram_track";
-		case track_wt:	return "track";
-		case monorail_wt: return "monorail_track";
-		case maglev_wt: return "maglev_track";
+		case tram_wt:        return "tram_track";
+		case track_wt:       return "track";
+		case monorail_wt:    return "monorail_track";
+		case maglev_wt:      return "maglev_track";
 		case narrowgauge_wt: return "narrowgauge_track";
-		case road_wt:	return "road";
-		case water_wt:	return "water";
-		case air_wt:	return "air";
+		case road_wt:        return "road";
+		case water_wt:       return "water";
+		case air_wt:         return "air";
 		default:
 			// keep compiler happy; should never reach here anyway
 			break;
@@ -347,7 +351,11 @@ void weg_t::init()
 	replacement_way = NULL;
 #ifdef MULTI_THREAD
 	pthread_mutexattr_init(&mutex_attributes);
-	pthread_mutex_init(&private_car_store_route_mutex, &mutex_attributes);
+	//int error = pthread_rwlockattr_init(&rwlock_attributes);
+	//assert(error == 0);
+	//int error = pthread_rwlock_init(&private_car_store_route_rwlock, &rwlock_attributes);
+	//assert(error == 0);
+	private_car_store_route_rwlock = PTHREAD_RWLOCK_INITIALIZER;
 #endif
 }
 
@@ -359,7 +367,8 @@ weg_t::~weg_t()
 #ifdef MULTI_THREAD
 		welt->await_private_car_threads();
 #endif
-		delete_all_routes_from_here();
+		// This is possibly unnecessary and may lead to crashes
+		//delete_all_routes_from_here();
 
 		alle_wege.remove(this);
 		player_t *player = get_owner();
@@ -375,7 +384,7 @@ weg_t::~weg_t()
 		}
 	}
 #ifdef MULTI_THREAD
-	pthread_mutex_destroy(&private_car_store_route_mutex);
+	pthread_rwlock_destroy(&private_car_store_route_rwlock);
 #endif
 }
 
@@ -385,7 +394,7 @@ void weg_t::rdwr(loadsave_t *file)
 	xml_tag_t t( file, "weg_t" );
 
 	// save owner
-	if(  file->get_version() >= 99006  ) {
+	if(  file->is_version_atleast(99, 6)  ) {
 		sint8 spnum=get_player_nr();
 		file->rdwr_byte(spnum);
 		set_player_nr(spnum);
@@ -395,15 +404,15 @@ void weg_t::rdwr(loadsave_t *file)
 	uint8 dummy8 = ribi;
 	file->rdwr_byte(dummy8);
 	if(  file->is_loading()  ) {
-		ribi = dummy8 & 15;	// before: high bits was maske
-		ribi_maske = 0;	// maske will be restored by signal/roadsign
+		ribi = dummy8 & 15; // before: high bits was maske
+		ribi_maske = 0; // maske will be restored by signal/roadsing
 	}
 
 	sint16 dummy16=max_speed;
 	file->rdwr_short(dummy16);
 	max_speed=dummy16;
 
-	if(  file->get_version() >= 89000  ) {
+	if(  file->is_version_atleast(89, 0)  ) {
 		dummy8 = flags;
 		file->rdwr_byte(dummy8);
 		if(  file->is_loading()  ) {
@@ -526,15 +535,12 @@ void weg_t::rdwr(loadsave_t *file)
 			{
 				for (uint32 i = 0; i < route_array_number; i++)
 				{
-					uint32 private_car_routes_count = private_car_routes[i].get_count();
-					file->rdwr_long(private_car_routes_count);
-					FOR(private_car_route_map, element, private_car_routes[i])
-					{
-						koord destination = element.key;
-						koord3d next_tile = element.value;
-
-						destination.rdwr(file);
-						next_tile.rdwr(file);
+					for(uint32 j=0; j<5; j++) {
+						uint32 private_car_routes_count = private_car_routes[i][j].get_count();
+						file->rdwr_long(private_car_routes_count);
+						for(uint32 k=0; k<private_car_routes_count; k++) {
+							private_car_routes[i][j][k].rdwr(file);
+						}
 					}
 				}
 			}
@@ -542,22 +548,44 @@ void weg_t::rdwr(loadsave_t *file)
 			{
 				for (uint32 i = 0; i < route_array_number; i++)
 				{
-					uint32 private_car_routes_count = 0;
-					file->rdwr_long(private_car_routes_count);
-					for (uint32 j = 0; j < private_car_routes_count; j++)
-					{
-						koord destination;
-						destination.rdwr(file);
-						koord3d next_tile;
-						next_tile.rdwr(file);
-						bool put_succeeded = private_car_routes[i].put(destination, next_tile);
-						assert(put_succeeded);
-						(void)put_succeeded;
+					// Unfortunately, the way private car routes are stored has changed a number of times in an effort to save memory.
+					if((file->get_extended_version()==14 && file->get_extended_revision() >= 19) || file->get_extended_version() > 14) {
+						if(file->get_extended_version() == 14 && file->get_extended_revision() < 37) {
+							uint32 private_car_routes_count = 0;
+							file->rdwr_long(private_car_routes_count);
+							for (uint32 j = 0; j < private_car_routes_count; j++) {
+								koord destination;
+								destination.rdwr(file);
+								if (file->get_extended_revision() < 33) {
+									// Koord3d representation
+									koord3d next_tile;
+									next_tile.rdwr(file);
+									private_car_routes[i][get_map_idx(next_tile)].insert_unique(destination);
+								} else {
+									// Integer-neighbour representation
+									uint8 next_tile_neighbour;
+									file->rdwr_byte(next_tile_neighbour);
+									private_car_routes[i][get_map_idx(private_car_t::neighbour_from_int(get_pos(), next_tile_neighbour))].insert_unique(destination);
+								}
+							}
+						} else {
+							// Container membership representation
+							for(uint8 j=0; j<5; j++) {
+								uint32 private_car_routes_count = 0;
+								file->rdwr_long(private_car_routes_count);
+								private_car_routes[i][j].resize(private_car_routes_count);
+								for(uint32 k=0; k<private_car_routes_count; k++) {
+									koord dest; dest.rdwr(file);
+									private_car_routes[i][j].insert_unique(dest);
+								}
+							}
+
+							if(file->is_version_ex_less(14,39)) {
+								// Correct for nsew->nesw change
+								std::swap(private_car_routes[i][1],private_car_routes[i][2]);
+							}
+						}
 					}
-				}
-				if (route_array_number == 1)
-				{
-					private_car_routes[1].clear();
 				}
 			}
 		}
@@ -678,28 +706,33 @@ void weg_t::info(cbuffer_t & buf) const
 
 			uint32 cities_count = 0;
 			uint32 buildings_count = 0;
-			FOR(private_car_route_map, const& route, private_car_routes[private_car_routes_currently_reading_element])
-			{
-
-				const grund_t* gr = welt->lookup_kartenboden(route.key);
-				const gebaeude_t* building = gr ? gr->get_building() : NULL;
-				if (building)
-				{
-					buildings_count++;
+			for(uint8 i=0;i<5;i++) {
+				for(uint32 j=0;j<private_car_routes[private_car_routes_currently_reading_element][i].get_count();j++){
+					const koord dest = private_car_routes[private_car_routes_currently_reading_element][i][j];
+					const grund_t* gr = welt->lookup_kartenboden(dest);
+					const gebaeude_t* building = gr ? gr->get_building() : NULL;
+					if (building)
+					{
+						buildings_count++;
 #ifdef DEBUG
-					buf.append("\n");
-					buf.append(translator::translate(building->get_individual_name()));
+						buf.append("\n");
+						buf.append(translator::translate(building->get_individual_name()));
 #endif
-				}
+					}
+					else
+					{
+						dbg->message("weg_t::info()", "Building that is a destination of a road route not found");
+					}
 
-				const stadt_t* city = welt->get_city(route.key);
-				if (city && route.key == city->get_townhall_road())
-				{
-					cities_count++;
+					const stadt_t* city = welt->get_city(dest);
+					if (city && dest == city->get_townhall_road())
+					{
+						cities_count++;
 #ifdef DEBUG
-					buf.append("\n");
-					buf.append(city->get_name());
+						buf.append("\n");
+						buf.append(city->get_name());
 #endif
+					}
 				}
 			}
 #ifdef DEBUG
@@ -712,11 +745,10 @@ void weg_t::info(cbuffer_t & buf) const
 	if (wtyp == air_wt && desc->get_styp() == type_runway)
 	{
 		runway_directions run_dirs = get_runway_directions();
-		const double km_per_tile = welt->get_settings().get_meters_per_tile();
 
 		if(run_dirs.runway_36_18)
 		{
-			const double runway_meters_36_18 = (double)get_runway_length(true) * km_per_tile;
+			const double runway_meters_36_18 = welt->tiles_to_km(get_runway_length(true))*1000.0;
 
 			buf.printf("%s: ", translator::translate("runway_36/18"));
 			buf.append(runway_meters_36_18);
@@ -725,7 +757,7 @@ void weg_t::info(cbuffer_t & buf) const
 		}
 		if(run_dirs.runway_9_27)
 		{
-			const double runway_meters_09_27 = (double)get_runway_length(false) * km_per_tile;
+			const double runway_meters_09_27 = welt->tiles_to_km(get_runway_length(false))*1000.0;
 
 			buf.printf("%s: ", translator::translate("runway_09/27"));
 			buf.append(runway_meters_09_27);
@@ -1068,8 +1100,8 @@ void weg_t::info(cbuffer_t & buf) const
 #else
 	// Debug - output stats
 	buf.append("\n");
-	for (int type = 0; type < MAX_WAY_STATISTICS; type++) {
-		for (int month = 0; month < MAX_WAY_STAT_MONTHS; month++) {
+	for (int type=0; type<MAX_WAY_STATISTICS; type++) {
+		for (int month=0; month<MAX_WAY_STAT_MONTHS; month++) {
 			buf.printf("%d ", statistics[month][type]);
 		}
 		buf.append("\n");
@@ -1318,7 +1350,7 @@ bool weg_t::check_season(const bool calc_only_season_change)
 	grund_t *from = welt->lookup( get_pos() );
 
 	// use snow image if above snowline and above ground
-	bool snow = (from->ist_karten_boden() || !from->ist_tunnel()) && (get_pos().z + from->get_weg_yoff() / TILE_HEIGHT_STEP >= welt->get_snowline() || welt->get_climate(get_pos().get_2d()) == arctic_climate);
+	bool snow = (from->ist_karten_boden()  ||  !from->ist_tunnel())  &&  (get_pos().z  + from->get_weg_yoff()/TILE_HEIGHT_STEP >= welt->get_snowline()  ||  welt->get_climate( get_pos().get_2d() ) == arctic_climate);
 	bool old_snow = (flags&IS_SNOW) != 0;
 	if(  !(snow ^ old_snow)  ) {
 		// season is not changing ...
@@ -1337,8 +1369,7 @@ bool weg_t::check_season(const bool calc_only_season_change)
 		return true;
 	}
 
-	if(  is_diagonal()  )
-	{
+	if(  is_diagonal()  ) {
 		if( desc->get_diagonal_image_id(ribi, snow) != IMG_EMPTY  ||
 			desc->get_diagonal_image_id(ribi, snow, true) != IMG_EMPTY)
 		{
@@ -1367,7 +1398,6 @@ bool weg_t::check_season(const bool calc_only_season_change)
 
 	return true;
 }
-
 
 
 #ifdef MULTI_THREAD
@@ -1416,9 +1446,10 @@ void weg_t::calc_image()
 #ifdef MULTI_THREAD
 		pthread_mutex_unlock( &weg_calc_image_mutex );
 #endif
-		return;	// otherwise crashing during enlargement
+		return; // otherwise crashing during enlargement
 	}
-	else if(  from->ist_tunnel() &&  from->ist_karten_boden()  &&  (grund_t::underground_mode==grund_t::ugm_none || (grund_t::underground_mode==grund_t::ugm_level && from->get_hoehe()<grund_t::underground_level))  ) {
+	else if(  from->ist_tunnel() &&  from->ist_karten_boden()  &&  corner_se(from->get_grund_hang()) > 0
+		&&  (grund_t::underground_mode==grund_t::ugm_none || (grund_t::underground_mode==grund_t::ugm_level && from->get_hoehe()<grund_t::underground_level))  ) {
 		// in tunnel mouth, no underground mode
 		// TODO: Consider special treatment of tunnel portal images here.
 		set_image(IMG_EMPTY);
@@ -1470,7 +1501,7 @@ void weg_t::calc_image()
 			if(recursion == 0) {
 				recursion++;
 				for(int r = 0; r < 4; r++) {
-					if(  from->get_neighbour(to, get_waytype(), ribi_t::nsew[r])  ) {
+					if(  from->get_neighbour(to, get_waytype(), ribi_t::nesw[r])  ) {
 						// can fail on water tiles
 						if(  weg_t *w=to->get_weg(get_waytype())  )  {
 							// and will only change the outcome, if it has a diagonal image ...
@@ -1497,7 +1528,7 @@ void weg_t::calc_image()
 			}
 		}
 	}
-	if (image!=old_image) {
+	if(  image!=old_image  ) {
 		sint8 yoff = from ? from->get_weg_yoff() : 0;
 		mark_image_dirty(old_image, yoff);
 		mark_image_dirty(image, from->get_weg_yoff());
@@ -1506,6 +1537,7 @@ void weg_t::calc_image()
 	pthread_mutex_unlock( &weg_calc_image_mutex );
 #endif
 }
+
 
 // checks, if this way qualifies as diagonal
 void weg_t::check_diagonal()
@@ -1586,12 +1618,11 @@ void weg_t::finish_rd()
 
 // returns NULL, if removal is allowed
 // players can remove public owned ways (Depracated)
-const char *weg_t:: is_deletable(const player_t *player)
+const char *weg_t::is_deletable(const player_t *player)
 {
 	if(  get_player_nr()==welt->get_public_player()->get_player_nr()  ) {
 		return NULL;
 	}
-
 	return obj_t::is_deletable(player);
 }
 
@@ -1874,41 +1905,72 @@ signal_t *weg_t::get_signal(ribi_t::ribi direction_of_travel) const
 void weg_t::add_private_car_route(koord destination, koord3d next_tile)
 {
 #ifdef MULTI_THREAD
-	int error = pthread_mutex_lock(&private_car_store_route_mutex);
+	int error = pthread_rwlock_wrlock(&private_car_store_route_rwlock);
 	assert(error == 0);
 	(void)error;
 #endif
-	private_car_routes[get_private_car_routes_currently_writing_element()].set(destination, next_tile);
+	auto map = private_car_routes[get_private_car_routes_currently_writing_element()];
+	const uint8 map_idx = get_map_idx(next_tile);
 
-	//private_car_routes_std[get_private_car_routes_currently_writing_element()].emplace(destination, next_tile); // Old performance test - but this was worse than the Simutrans type
+	if(!map[map_idx].contains(destination)) {
+		for(uint8 i=0;i<5;i++) {
+			if(i != map_idx && map[i].remove(destination)) {
+				break;
+			}
+		}
+		map[map_idx].insert_unique(destination);
+	}
 #ifdef MULTI_THREAD
-	error = pthread_mutex_unlock(&private_car_store_route_mutex);
+	error = pthread_rwlock_unlock(&private_car_store_route_rwlock);
 	assert(error == 0);
+	(void)error;
 #endif
 #ifdef DEBUG_PRIVATE_CAR_ROUTES
 	calc_image();
 #endif
 }
 
+uint8 weg_t::get_map_idx(const koord3d &next_tile) const {
+	const ribi_t::ribi dir = ribi_type(get_pos(), next_tile);
+	if(next_tile != koord3d::invalid) {
+		for (uint8 j = 0; j < 4; j++) {
+			if (dir == ribi_t::nesw[j]) {
+				return j;
+			}
+		}
+	}
+	return (uint8) 4;
+}
+
 void weg_t::delete_all_routes_from_here(bool reading_set)
 {
 	const uint32 routes_index = reading_set ? private_car_routes_currently_reading_element : get_private_car_routes_currently_writing_element();
 
-	if (!private_car_routes[routes_index].empty())
-	{
-		vector_tpl<koord> destinations_to_delete;
-		FOR(private_car_route_map, const& route, private_car_routes[routes_index])
-		{
-			koord dest = route.key;
-			destinations_to_delete.append(dest);
+	vector_tpl<koord> destinations_to_delete;
+#ifdef MULTI_THREAD
+		int error = pthread_rwlock_rdlock(&private_car_store_route_rwlock);
+		assert(error == 0);
+		(void)error;
+#endif
+	for(uint8 i=0;i<5;i++) {
+		auto &map = private_car_routes[routes_index][i];
+		if (!map.is_empty()) {
+			for(uint32 j=0; j<map.get_count();j++) {
+				destinations_to_delete.append(map[j]);
+			}
 		}
+	}
+#ifdef MULTI_THREAD
+		error = pthread_rwlock_unlock(&private_car_store_route_rwlock);
+		assert(error == 0);
+		(void)error;
+#endif
 
 		FOR(vector_tpl<koord>, dest, destinations_to_delete)
 		{
 			// This must be done in a two stage process to avoid memory corruption as the delete_route_to function will affect the very hashtable being iterated.
 			delete_route_to(dest, reading_set);
 		}
-	}
 #ifdef DEBUG_PRIVATE_CAR_ROUTES
 	calc_image();
 #endif
@@ -1930,7 +1992,17 @@ void weg_t::delete_route_to(koord destination, bool reading_set)
 			weg_t* const w = gr->get_weg(road_wt);
 			if (w)
 			{
-				next_tile = w->private_car_routes[routes_index].get(destination);
+#ifdef MULTI_THREAD
+				int error = pthread_rwlock_rdlock(&w->private_car_store_route_rwlock);
+				assert(error == 0);
+				(void)error;
+#endif
+				next_tile = w->get_next_on_private_car_route_to(destination, reading_set);
+#ifdef MULTI_THREAD
+				error = pthread_rwlock_unlock(&w->private_car_store_route_rwlock);
+				assert(error == 0);
+				(void)error;
+#endif
 				w->remove_private_car_route(destination, reading_set);
 			}
 		}
@@ -1946,16 +2018,60 @@ void weg_t::remove_private_car_route(koord destination, bool reading_set)
 {
 	const uint32 routes_index = reading_set ? private_car_routes_currently_reading_element : get_private_car_routes_currently_writing_element();
 #ifdef MULTI_THREAD
-	int error = pthread_mutex_lock(&private_car_store_route_mutex);
+	int error = pthread_rwlock_wrlock(&private_car_store_route_rwlock);
 	assert(error == 0);
 	(void)error;
 #endif
-	private_car_routes[routes_index].remove(destination);
-	//private_car_routes_std[routes_index].erase(destination); // Old test - but this was much slower than the Simutrans hashtable.
+	for(uint8 i=0;i<5;i++) {
+		if(private_car_routes[routes_index][i].remove(destination)) {
+			break;
+		}
+	}
 #ifdef MULTI_THREAD
-	error = pthread_mutex_unlock(&private_car_store_route_mutex);
+	error = pthread_rwlock_unlock(&private_car_store_route_rwlock);
 	assert(error == 0);
 	(void)error;
 #endif
+}
 
+void weg_t::add_travel_time_update(weg_t* w, uint32 actual, uint32 ideal)
+{
+	pending_road_travel_time_updates.append(std::make_tuple(w, actual, ideal));
+}
+
+void weg_t::apply_travel_time_updates() {
+	while(!pending_road_travel_time_updates.empty() ) {
+		weg_t* str;
+		uint32 actual;
+		uint32 ideal;
+		std::tie(str, actual, ideal) = pending_road_travel_time_updates.remove_first();
+		if(str) {
+			str->update_travel_times(actual,ideal);
+		}
+	}
+}
+
+void weg_t::clear_travel_time_updates() {
+	pending_road_travel_time_updates.clear();
+}
+
+koord3d weg_t::get_next_on_private_car_route_to(koord dest, bool reading_set) const {
+	auto map = private_car_routes[reading_set ? private_car_routes_currently_reading_element : get_private_car_routes_currently_writing_element()];
+	for(uint8 i=0; i<5; i++) {
+		if(map[i].contains(dest)) {
+			if(i<4) {
+				grund_t* to;
+				if(welt->lookup(get_pos())->get_neighbour(to, waytype_t::road_wt,ribi_t::nesw[i])) {
+					return to->get_pos();
+				}
+			} else {
+				return koord3d::invalid;
+			}
+		}
+	}
+	return koord3d();
+}
+
+bool weg_t::has_private_car_route(koord dest) const {
+	return get_next_on_private_car_route_to(dest) != koord3d();
 }

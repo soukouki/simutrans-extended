@@ -15,7 +15,7 @@
 // menus
 const skin_desc_t* skinverwaltung_t::tool_icons_general  = NULL;
 const skin_desc_t* skinverwaltung_t::tool_icons_simple   = NULL;
-const skin_desc_t* skinverwaltung_t::tool_icons_dialoge = NULL;
+const skin_desc_t* skinverwaltung_t::tool_icons_dialoge  = NULL;
 const skin_desc_t* skinverwaltung_t::tool_icons_toolbars = NULL;
 const skin_desc_t* skinverwaltung_t::toolbar_background = NULL;
 
@@ -66,7 +66,7 @@ const skin_desc_t* skinverwaltung_t::message_options    = NULL;
 const skin_desc_t* skinverwaltung_t::color_options      = NULL;
 
 const skin_desc_t* skinverwaltung_t::compass_iso        = NULL;
-const skin_desc_t* skinverwaltung_t::compass_map        = NULL;	// compass for minimap
+const skin_desc_t* skinverwaltung_t::compass_map        = NULL; // compass for minimap
 
 const skin_desc_t* skinverwaltung_t::pax_evaluation_icons = NULL;
 const skin_desc_t* skinverwaltung_t::mail_evaluation_icons = NULL;
@@ -82,7 +82,7 @@ const skin_desc_t* skinverwaltung_t::service_frequency  = NULL; // line service 
 const skin_desc_t* skinverwaltung_t::on_foot            = NULL;
 
 // cursors
-const skin_desc_t* skinverwaltung_t::cursor_general     = NULL;	// new cursors
+const skin_desc_t* skinverwaltung_t::cursor_general     = NULL; // new cursors
 const skin_desc_t* skinverwaltung_t::bauigelsymbol      = NULL;
 const skin_desc_t* skinverwaltung_t::belegtzeiger       = NULL;
 const skin_desc_t* skinverwaltung_t::mouse_cursor       = NULL;
@@ -98,7 +98,7 @@ const skin_desc_t* skinverwaltung_t::ribi_arrow         = NULL;
 slist_tpl<const skin_desc_t *>skinverwaltung_t::extra_obj;
 
 
-static spezial_obj_tpl<skin_desc_t> const misc_objekte[] = {
+static special_obj_tpl<skin_desc_t> const misc_objekte[] = {
 	{ &skinverwaltung_t::ribi_arrow,        "RibiArrow"    },
 	{ &skinverwaltung_t::senke,             "PowerDest"    },
 	{ &skinverwaltung_t::pumpe,             "PowerSource"  },
@@ -108,7 +108,7 @@ static spezial_obj_tpl<skin_desc_t> const misc_objekte[] = {
 	{ NULL, NULL }
 };
 
-static spezial_obj_tpl<skin_desc_t> const menu_objekte[] = {
+static special_obj_tpl<skin_desc_t> const menu_objekte[] = {
 	// new menu system
 	{ &skinverwaltung_t::button,            "Button"   },
 	{ &skinverwaltung_t::round_button,      "Roundbutton"  },
@@ -127,7 +127,7 @@ static spezial_obj_tpl<skin_desc_t> const menu_objekte[] = {
 	{ NULL, NULL }
 };
 
-static spezial_obj_tpl<skin_desc_t> const symbol_objekte[] = {
+static special_obj_tpl<skin_desc_t> const symbol_objekte[] = {
 	{ &skinverwaltung_t::missing_scheduled_slot, "MissingScheduledSlot" },
 	{ &skinverwaltung_t::upgradable,         "Upgradable"     },
 	{ &skinverwaltung_t::pax_evaluation_icons, "PassengersEvaluation" },
@@ -159,7 +159,7 @@ static spezial_obj_tpl<skin_desc_t> const symbol_objekte[] = {
 };
 
 // simutrans will work without those
-static spezial_obj_tpl<skin_desc_t> const fakultative_objekte[] = {
+static special_obj_tpl<skin_desc_t> const fakultative_objekte[] = {
 	{ &skinverwaltung_t::biglogosymbol,      "BigLogo"        },
 	{ &skinverwaltung_t::mouse_cursor,       "Mouse"          },
 	{ &skinverwaltung_t::zughaltsymbol,      "TrainStop"      },
@@ -182,7 +182,7 @@ static spezial_obj_tpl<skin_desc_t> const fakultative_objekte[] = {
 	{ NULL, NULL }
 };
 
-static spezial_obj_tpl<skin_desc_t> const cursor_objekte[] = {
+static special_obj_tpl<skin_desc_t> const cursor_objekte[] = {
 	// old cursors
 	{ &skinverwaltung_t::bauigelsymbol,  "Builder"      },
 	{ &skinverwaltung_t::cursor_general, "GeneralTools" },
@@ -193,13 +193,13 @@ static spezial_obj_tpl<skin_desc_t> const cursor_objekte[] = {
 
 bool skinverwaltung_t::successfully_loaded(skintyp_t type)
 {
-	spezial_obj_tpl<skin_desc_t> const* sb;
+	special_obj_tpl<skin_desc_t> const* sd;
 	switch (type) {
-		case menu:    sb = menu_objekte+1;     break;
-		case cursor:  sb = cursor_objekte;     break;
-		case symbol:  sb = symbol_objekte+14;   break;
+		case menu:    sd = menu_objekte+1;     break;
+		case cursor:  sd = cursor_objekte;     break;
+		case symbol:  sd = symbol_objekte+14;   break;
 		case misc:
-			sb = misc_objekte+3;
+			sd = misc_objekte+3;
 			// for compatibility: use sidewalk as tunneltexture
 			if (tunnel_texture==NULL) {
 				tunnel_texture = fussweg;
@@ -208,22 +208,22 @@ bool skinverwaltung_t::successfully_loaded(skintyp_t type)
 		case nothing: return true;
 		default:      return false;
 	}
-	return ::successfully_loaded(sb);
+	return ::successfully_loaded(sd);
 }
 
 
 bool skinverwaltung_t::register_desc(skintyp_t type, const skin_desc_t* desc)
 {
-	spezial_obj_tpl<skin_desc_t> const* sb;
+	special_obj_tpl<skin_desc_t> const* sd;
 	switch (type) {
-		case menu:    sb = menu_objekte;   break;
-		case cursor:  sb = cursor_objekte; break;
-		case symbol:  sb = symbol_objekte; break;
-		case misc:    sb = misc_objekte;   break;
+		case menu:    sd = menu_objekte;   break;
+		case cursor:  sd = cursor_objekte; break;
+		case symbol:  sd = symbol_objekte; break;
+		case misc:    sd = misc_objekte;   break;
 		case nothing: return true;
 		default:      return false;
 	}
-	if(  !::register_desc(sb, desc)  ) {
+	if(  !::register_desc(sd, desc)  ) {
 		// currently no misc objects allowed ...
 		if(  !(type==cursor  ||  type==symbol)  ) {
 			if(  type==menu  ) {

@@ -9,6 +9,11 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h> // strerror
+#ifndef _WIN32
+#include <dirent.h>
+#include <sys/types.h>
+#include "../utils/simstring.h"
+#endif
 
 #include "../simmem.h"
 #include "../simdebug.h"
@@ -64,8 +69,7 @@ static void read_png(unsigned char** block, unsigned* width, unsigned* height, F
 	*height = heightpu32;
 
 	if (*height % base_img_size != 0 || *width % base_img_size != 0) {
-		dbg->fatal("while loading PNG", "Invalid image size in %s.", filename_.c_str());
-		exit(1);
+		dbg->fatal( "while loading PNG", "Invalid image size in %s.", filename_.c_str() );
 	}
 
 	/* tell libpng to strip 16 bit/color files down to 8 bits/color */
@@ -143,7 +147,56 @@ bool load_block(unsigned char** block, unsigned* width, unsigned* height, const 
 	// remember the file name for better error messages.
 	filename_ = fname;
 
-	if (FILE* const file = fopen(fname, "rb")) {
+	FILE* file = fopen(fname, "rb");
+
+#ifndef _WIN32
+	if (!file) {
+		// Try to case-insensitive search.
+		std::string actual_path;
+		size_t len = strlen(fname);
+		actual_path.reserve(len);
+		const char * sep_beg = fname;
+		const char * sep_end = sep_beg + strspn(sep_beg, "/");
+		if (sep_end == sep_beg) {
+			// relative
+			actual_path = "./";
+		}
+
+		char const * end = fname + len;
+
+		std::string name;
+		while (true) {
+			actual_path.insert(actual_path.end(), sep_beg, sep_end);
+			sep_beg = sep_end + strcspn(sep_end, "/");
+			if (sep_beg == sep_end) {
+				break;
+			}
+			name.assign(sep_end, sep_beg);
+		    DIR * dir = opendir(actual_path.c_str());
+			if (!dir) {
+				break;
+			}
+			struct dirent * ent = NULL;
+			while ((ent = readdir(dir)) != NULL) {
+				if (!STRICMP(ent->d_name, name.c_str())) {
+					actual_path += ent->d_name;
+					break;
+				}
+			}
+			closedir(dir);
+			if (!ent) {
+				break;
+			}
+			if (sep_beg == end) {
+				file = fopen(actual_path.c_str(), "rb");
+				break;
+			}
+			sep_end = sep_beg + strspn(sep_beg, "/");
+		}
+	}
+#endif
+
+	if (file) {
 		read_png(block, width, height, file, base_img_size);
 		fclose(file);
 		return true;
@@ -212,8 +265,7 @@ int write_png(const char *file_name, unsigned char *data, int width, int height,
 		}
 	}
 	else {
-		dbg->fatal("write_png", "32 bit not supported!");
-		exit(0);
+		dbg->fatal( "write_png", "32 bit not supported!" );
 	}
 
 	// free all

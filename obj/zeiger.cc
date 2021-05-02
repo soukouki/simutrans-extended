@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include "../simworld.h"
-#include "../simobj.h"
+#include "simobj.h"
 #include "../simhalt.h"
 #include "../boden/grund.h"
 #include "../dataobj/environment.h"
@@ -30,9 +30,9 @@ zeiger_t::zeiger_t(loadsave_t *file) : obj_no_info_t()
 
 zeiger_t::zeiger_t(koord3d pos, player_t *player) :
 #ifdef INLINE_OBJ_TYPE
-    obj_no_info_t(obj_t::zeiger, pos)
+	obj_no_info_t(obj_t::zeiger, pos)
 #else
-    obj_no_info_t(pos)
+	obj_no_info_t(pos)
 #endif
 {
 	set_owner( player );
@@ -109,6 +109,7 @@ void zeiger_t::set_after_image( image_id b )
 	mark_image_dirty( b, 0 );
 	foreground_image = b;
 }
+
 
 void zeiger_t::set_area(koord new_area, bool center, koord new_offset)
 {

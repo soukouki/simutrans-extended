@@ -40,8 +40,14 @@ crossing_logic_t::crossing_logic_t( const crossing_desc_t *desc )
  */
 void crossing_logic_t::info(cbuffer_t & buf) const
 {
-	static char const* const state_str[4] = { "invalid", "open", "request closing", "closed" };
-	assert(state<4);
+	static char const* const state_str[NUM_CROSSING_STATES] =
+	{
+		"invalid",
+		"open",
+		"request closing",
+		"closed"
+	};
+
 	buf.printf("%s%u%s%u%s%s\n",
 		translator::translate("\nway1 reserved by"), on_way1.get_count(),
 		translator::translate("\nway2 reserved by"), on_way2.get_count(),
@@ -164,7 +170,7 @@ void crossing_logic_t::set_state( crossing_state_t new_state )
 {
 	// play sound (if there and closing)
 	if(new_state==CROSSING_CLOSED  &&  desc->get_sound()>=0  &&  !welt->is_fast_forward()) {
-		welt->play_sound_area_clipped(crossings[0]->get_pos().get_2d(), desc->get_sound(), overheadlines_wt);
+		welt->play_sound_area_clipped(crossings[0]->get_pos().get_2d(), desc->get_sound(), CROSSING_SOUND, overheadlines_wt);
 	}
 
 	if(new_state!=state) {
@@ -223,7 +229,7 @@ void crossing_logic_t::register_desc(crossing_desc_t *desc)
 		for(uint8 i=0; i<vec.get_count(); i++) {
 			if (strcmp(vec[i]->get_name(), desc->get_name())==0) {
 				vec.remove_at(i);
-				dbg->warning( "crossing_logic_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
+				dbg->doubled( "crossing", desc->get_name() );
 			}
 		}
 DBG_DEBUG( "crossing_logic_t::register_desc()","%s", desc->get_name() );
@@ -334,7 +340,7 @@ void crossing_logic_t::add( crossing_t *start_cr, crossing_state_t state )
 	}
 	// remove all old crossing logics
 	crossing_logic_t *found_logic = NULL;
-	if(	crossings_logics.get_count()>=1  ) {
+	if(  crossings_logics.get_count()>=1  ) {
 		// leave one logic to be used further
 		while(  crossings_logics.get_count()>1  ) {
 			crossing_logic_t *cl = crossings_logics[0];

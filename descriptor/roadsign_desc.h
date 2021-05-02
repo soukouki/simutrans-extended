@@ -16,12 +16,12 @@
 
 
 /**
- *	Road signs
+ * Road signs
  *
- *  Child nodes:
- *	0   Name
- *	1   Copyright
- *	2   Image list
+ * Child nodes:
+ *  0   Name
+ *  1   Copyright
+ *  2   Image list
  */
 class roadsign_desc_t : public obj_desc_transport_infrastructure_t {
 	friend class roadsign_reader_t;
@@ -31,7 +31,7 @@ private:
 
 	sint8 offset_left; // default 14
 
-	uint16 min_speed;	// 0 = no min speed
+	uint16 min_speed; // 0 = no min speed
 
 	/**
 	 * Whether this signal/sign
@@ -139,7 +139,11 @@ public:
 
 	bool is_signal_type() const
 	{
-		return (flags&(SIGN_SIGNAL|SIGN_PRE_SIGNAL|SIGN_LONGBLOCK_SIGNAL))!=0;
+		return (flags&(
+				SIGN_SIGNAL |
+				SIGN_PRE_SIGNAL |
+				SIGN_LONGBLOCK_SIGNAL)
+			) != 0;
 	}
 
 	// This is currently the definition of a station signal

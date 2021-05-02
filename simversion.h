@@ -34,13 +34,13 @@ extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
 #define SIM_SERVER_MINOR    7
 
 #define EX_VERSION_MAJOR	14
-#define EX_VERSION_MINOR	12
-#define EX_SAVE_MINOR		31
+#define EX_VERSION_MINOR	14
+#define EX_SAVE_MINOR		40
 
 // Do not forget to increment the save game versions in settings_stats.cc when changing this
 
-#define MAKEOBJ_VERSION "60.1"
-// Transparency and new factories(60.0), railcar_tab(60.01), basic constraint + mixed_load_prohibition(60.06). NOTE: standard now 60.2
+#define MAKEOBJ_VERSION "60.2"
+// new factory locations and provisio
 
 #ifndef QUOTEME
 #	define QUOTEME_(x) #x

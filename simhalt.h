@@ -12,7 +12,7 @@
 #include "halthandle_t.h"
 #include "simware.h"
 
-#include "simobj.h"
+#include "obj/simobj.h"
 #include "display/simgraph.h"
 #include "simtypes.h"
 #include "simconst.h"
@@ -91,9 +91,27 @@ struct lines_loaded_t
 class haltestelle_t
 {
 public:
-	enum station_flags { NOT_ENABLED=0, PAX=1, POST=2, WARE=4, CROWDED=8 };
+	enum station_flags {
+		NOT_ENABLED = 0,
+		PAX         = 1 << 0,
+		POST        = 1 << 1,
+		WARE        = 1 << 2,
+		CROWDED     = 1 << 3,
+	};
 
-	enum stationtyp {invalid=0, loadingbay=1, railstation = 2, dock = 4, busstop = 8, airstop = 16, monorailstop = 32, tramstop = 64, maglevstop=128, narrowgaugestop=256 }; //could be combined with or!
+	// can be combined with or!
+	enum stationtyp {
+		invalid         = 0,
+		loadingbay      = 1 << 0,
+		railstation     = 1 << 1,
+		dock            = 1 << 2,
+		busstop         = 1 << 3,
+		airstop         = 1 << 4,
+		monorailstop    = 1 << 5,
+		tramstop        = 1 << 6,
+		maglevstop      = 1 << 7,
+		narrowgaugestop = 1 << 8
+	};
 
 private:
 	/// List of all halts in the game.
@@ -102,13 +120,13 @@ private:
 	/**
 	 * finds a stop by its name
 	 */
-	static stringhashtable_tpl<halthandle_t> all_names;
+	static stringhashtable_tpl<halthandle_t, N_BAGS_LARGE> all_names;
 
 	/**
 	 * Finds a stop by coordinate.
 	 * only used during loading.
 	 */
-	static inthashtable_tpl<sint32,halthandle_t> *all_koords;
+	static inthashtable_tpl<sint32,halthandle_t, N_BAGS_LARGE> *all_koords;
 
 	/**
 	 * A list of lines and freight categories that have already been loaded with all available freight at the halt.
@@ -126,9 +144,9 @@ private:
 	 */
 	void init_financial_history();
 
-	PIXVAL status_color, last_status_color;
+	PIXVAL status_color, last_status_color, status_color_freight;
 	sint16 last_bar_count;
-	vector_tpl<KOORD_VAL> last_bar_height; // caches the last height of the station bar for each good type drawn in display_status(). used for dirty tile management
+	vector_tpl<scr_coord_val> last_bar_height; // caches the last height of the station bar for each good type drawn in display_status(). used for dirty tile management
 	uint32 capacity[3]; // passenger, mail, goods
 	uint8 overcrowded[256/8]; ///< bit field for each goods type (max 256)
 
@@ -211,8 +229,8 @@ public:
 
 	/**
 	 * Returns an index to a halt at koord k
-   	 * optionally limit to that owned by player player
-   	 * by default create a new halt if none found
+	 * optionally limit to that owned by player sp
+	 * by default create a new halt if none found
 	 * Only used during loading.
 	 */
 	static halthandle_t get_halt_koord_index(koord k);
@@ -302,7 +320,7 @@ public:
 
 	bool is_within_walking_distance_of(halthandle_t halt) const;
 
-	typedef quickstone_hashtable_tpl<haltestelle_t, connexion*> connexions_map;
+	typedef quickstone_hashtable_tpl<haltestelle_t, connexion*, N_BAGS_MEDIUM> connexions_map;
 
 	struct waiting_time_set
 	{
@@ -310,7 +328,7 @@ public:
 		uint8 month;
 	};
 
-	typedef inthashtable_tpl<uint32, waiting_time_set > waiting_time_map;
+	typedef inthashtable_tpl<uint32, waiting_time_set, N_BAGS_SMALL> waiting_time_map;
 
 	void add_control_tower() { control_towers ++; }
 	void remove_control_tower() { if(control_towers > 0) control_towers --; }
@@ -342,7 +360,7 @@ public:
 	bool is_using() const;
 
 
-	typedef inthashtable_tpl<uint16, sint64> arrival_times_map;
+	typedef inthashtable_tpl<uint16, sint64, N_BAGS_SMALL> arrival_times_map;
 #ifdef MULTI_THREAD
 	uint32 get_transferring_cargoes_count() const;
 #else
@@ -460,7 +478,7 @@ private:
 	// Store the service frequencies to all other halts so that this does not need to be
 	// recalculated frequently. These are used as proxies for waiting times when no
 	// recent (or any) waiting time data are available.
-	koordhashtable_tpl<service_frequency_specifier, uint32> service_frequencies;
+	koordhashtable_tpl<service_frequency_specifier, uint32, N_BAGS_SMALL> service_frequencies;
 
 	static const sint64 waiting_multiplication_factor = 3ll;
 	static const sint64 waiting_tolerance_ratio = 50ll;
@@ -495,7 +513,7 @@ private:
 
 public:
 	// Added by : Knightly
-	void swap_connexions(const uint8 category, const uint8 g_class, quickstone_hashtable_tpl<haltestelle_t, haltestelle_t::connexion*>* &cxns)
+	void swap_connexions(const uint8 category, const uint8 g_class, haltestelle_t::connexions_map* &cxns)
 	{
 		// swap the connexion hashtables
 		connexions_map *temp = connexions[category][g_class];
@@ -536,11 +554,12 @@ public:
 	 * Calculates a status color for status bars
 	 */
 	PIXVAL get_status_farbe() const { return status_color; }
+	PIXVAL get_status_color(uint8 typ) const;
 
 	/**
 	 * Draws some nice colored bars giving some status information
 	 */
-	void display_status(KOORD_VAL xpos, KOORD_VAL ypos);
+	void display_status(sint16 xpos, sint16 ypos);
 
 	/**
 	 * "Surrounding searches, achievable factories and builds the
@@ -673,9 +692,11 @@ public:
 	// true, if this station is overcrowded for this category
 	bool is_overcrowded( const uint8 idx ) const { return (overcrowded[idx/8] & (1<<(idx%8)))!=0; }
 
+	sint64 get_overcrowded_proporion(uint8 typ) const;
+
 	/// @returns total amount of the good waiting at this halt.
 	uint32 get_ware_summe(const goods_desc_t *warentyp) const;
-	uint32 get_ware_summe(const goods_desc_t *warentyp, uint8 g_class) const;
+	uint32 get_ware_summe(const goods_desc_t *warentyp, uint8 g_class, bool chk_only_commuter = false) const;
 
 	uint32 get_leaving_goods_sum(const goods_desc_t *warentyp, uint8 g_class = 255) const;
 	uint32 get_transferring_goods_sum(const goods_desc_t *warentyp, uint8 g_class = 255) const;
@@ -859,6 +880,21 @@ public:
 
 	/* marks a coverage area */
 	void mark_unmark_coverage(const bool mark, const bool factories = false) const;
+
+	uint32 get_around_population(uint8 g_class = 255) const;
+	uint32 get_around_visitor_demand(uint8 g_class = 255) const;
+	uint32 get_around_job_demand(uint8 g_class = 255) const;
+
+	uint32 get_around_visitor_generated() const;
+	uint32 get_around_succeeded_visiting() const;
+	uint32 get_around_commuter_generated() const;
+	uint32 get_around_succeeded_commuting() const;
+	// Returns the current number of workers, but overflows are truncated per building.
+	uint32 get_around_employee_factor() const;
+
+	uint32 get_around_mail_demand() const;
+	uint32 get_around_mail_generated() const;
+	uint32 get_around_mail_delivery_succeeded() const;
 
 	// @author: jamespetts
 	// Returns the percentage of unhappy people

@@ -33,11 +33,6 @@ void tunnel_reader_t::register_obj(obj_desc_t *&data)
 	pakset_info_t::append(desc->get_name(), get_type(), chk);
 }
 
-bool tunnel_reader_t::successfully_loaded() const
-{
-	return tunnel_builder_t::successfully_loaded();
-}
-
 /**
  * Sets default data for ancient tunnel paks
  */
@@ -63,7 +58,7 @@ void tunnel_reader_t::convert_old_tunnel(tunnel_desc_t *desc)
 obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 {
 	tunnel_desc_t *desc = new tunnel_desc_t();
-	desc->topspeed = 0;	// indicate, that we have to convert this to reasonable date, when read completely
+	desc->topspeed = 0; // indicate, that we have to convert this to reasonable date, when read completely
 
 	if(node.size>0) {
 		// newer versioned node
@@ -101,7 +96,7 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 			desc->wtyp = decode_uint8(p);
 			desc->intro_date = decode_uint16(p);
 			desc->retire_date = decode_uint16(p);
-			desc->axle_load = decode_uint16(p);	// new
+			desc->axle_load = decode_uint16(p); // new
 			desc->number_of_seasons = decode_uint8(p);
 			desc->has_way = decode_uint8(p);
 			desc->broad_portals = decode_uint8(p);
@@ -250,4 +245,3 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 
 	return desc;
 }
-

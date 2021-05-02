@@ -23,7 +23,7 @@ static uint32 const strecke[] = { 6000, 11000, 15000, 20000, 25000, 30000, 35000
 
 static weighted_vector_tpl<const pedestrian_desc_t*> pedestrian_list; // All pedestrians
 static weighted_vector_tpl<const pedestrian_desc_t*> current_pedestrians; // Only those allowed on the current timeline
-stringhashtable_tpl<const pedestrian_desc_t *> pedestrian_t::table;
+stringhashtable_tpl<const pedestrian_desc_t *, N_BAGS_SMALL> pedestrian_t::table;
 
 
 static bool compare_fussgaenger_desc(const pedestrian_desc_t* a, const pedestrian_desc_t* b)
@@ -36,7 +36,7 @@ static bool compare_fussgaenger_desc(const pedestrian_desc_t* a, const pedestria
 bool pedestrian_t::register_desc(const pedestrian_desc_t *desc)
 {
 	if(  table.remove(desc->get_name())  ) {
-		dbg->warning( "pedestrian_desc_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
+		dbg->doubled( "pedestrian", desc->get_name() );
 	}
 	table.put(desc->get_name(), desc);
 	return true;
@@ -51,11 +51,11 @@ bool pedestrian_t::successfully_loaded()
 	}
 	else {
 		vector_tpl<const pedestrian_desc_t*> temp_liste(0);
-		FOR(stringhashtable_tpl<pedestrian_desc_t const*>, const& i, table) {
+		for(auto const& i : table) {
 			// just entered them sorted
 			temp_liste.insert_ordered(i.value, compare_fussgaenger_desc);
 		}
-		FOR(vector_tpl<pedestrian_desc_t const*>, const i, temp_liste) {
+		for(auto const i : temp_liste) {
 			pedestrian_list.append(i, i->get_distribution_weight());
 		}
 	}
@@ -152,7 +152,7 @@ void pedestrian_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version()<89004) {
+	if(file->is_version_less(89, 4)) {
 		time_to_life = pick_any(strecke);
 	}
 }
@@ -304,8 +304,8 @@ void pedestrian_t::hop(grund_t *gr)
 	const uint8 offset = (ribi > 0 && ribi_t::is_single(ribi)) ? 0 : simrand(4, "void pedestrian_t::hop(grund_t *gr)");
 
 	ribi_t::ribi new_direction;
-	for (uint r = 0; r < 4; r++) {
-		new_direction = ribi_t::nsew[(r + offset) & 3];
+	for(uint r = 0; r < 4; r++) {
+		new_direction = ribi_t::nesw[ (r+offset) & 3];
 
 		if ((ribi & new_direction) != 0 && gr->get_neighbour(to, road_wt, new_direction)) {
 			// this is our next target

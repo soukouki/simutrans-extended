@@ -40,20 +40,6 @@
 
 #include "../../dataobj/settings.h"
 
-static const char * engine_type_names [11] =
-{
-  "unknown",
-  "steam",
-  "diesel",
-  "electric",
-  "bio",
-  "sail",
-  "fuel_cell",
-  "hydrogene",
-  "battery",
-  "petrol",
-  "turbine"
-};
 
 #define COL_LACK_OF_MONEY color_idx_to_rgb(COL_DARK_ORANGE)
 #define COL_EXCEED_AXLE_LOAD_LIMIT color_idx_to_rgb(COL_GREY3)
@@ -85,6 +71,7 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	lb_livery_counter(NULL, SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left),
 	convoi_pics(depot_t::get_max_convoy_length(wt)),
 	convoi(&convoi_pics),
+	scrolly_convoi(&cont_convoi),
 	pas(&pas_vec),
 	pas2(&pas2_vec),
 	electrics(&electrics_vec),
@@ -139,8 +126,9 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	convoi.set_player_nr(player_nr);
 	convoi.add_listener(this);
 
-	add_component(&convoi);
-	add_component(&lb_convoi_number);
+	cont_convoi.add_component(&lb_convoi_number);
+	cont_convoi.add_component(&convoi);
+
 	add_component(&lb_convoi_count);
 	add_component(&lb_convoi_count_fluctuation);
 	add_component(&lb_convoi_speed);
@@ -300,7 +288,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	lb_convoi_maintenance.set_text_pointer(txt_convoi_maintenance);
 	lb_convoi_maintenance.set_tooltip(txt_convoi_way_wear_factor);
 	lb_convoi_power.set_text_pointer(txt_convoi_power);
-	lb_convoi_power.set_tooltip(tooltip_convoi_acceleration);
 	lb_convoi_weight.set_text_pointer(txt_convoi_weight);
 	lb_convoi_brake_force.set_text_pointer(txt_convoi_brake_force);
 	lb_convoi_axle_load.set_text_pointer(text_convoi_axle_load);
@@ -464,10 +451,23 @@ void gui_convoy_assembler_t::layout()
 	lb_convoi_count_fluctuation.set_size(scr_size(30, LINESPACE+2));
 	convoi.set_grid(scr_coord(grid.x - grid_dx, grid.y));
 	convoi.set_placement(scr_coord(placement.x - placement_dx, placement.y));
-	convoi.set_pos(scr_coord((max(c1_x, size.w-get_convoy_image_width())/2), y));
+	convoi.set_pos(scr_coord(0, 0));
 	convoi.set_size(scr_size(get_convoy_image_width(), get_convoy_image_height()));
-	y += get_convoy_image_height();
 
+	cont_convoi.set_size(scr_size(get_convoy_clist_width(), grid.y + 5 + 4));
+	scrolly_convoi.set_size(scr_size(size.w - D_MARGIN_LEFT - D_MARGIN_RIGHT, cont_convoi.get_size().h + (3+D_SCROLLBAR_HEIGHT)*(get_convoy_clist_width() >= size.w-D_MARGIN_LEFT-D_MARGIN_RIGHT) ));
+	scrolly_convoi.set_show_scroll_x(true);
+	scrolly_convoi.set_show_scroll_y(false);
+	scrolly_convoi.set_scroll_discrete_x(false);
+	scrolly_convoi.set_size_corner(false);
+	scrolly_convoi.set_pos(scr_coord(D_H_SPACE,y));
+
+	scrolly_convoi.set_scrollbar_mode(scrollbar_t::show_disabled);
+	scrolly_convoi.set_size_corner(false);
+	add_component(&scrolly_convoi);
+	y = get_convoy_height();
+
+	// Convoy parameters ( = below convoy image)
 	lb_convoi_tiles.set_pos(scr_coord(c1_x, y));
 	lb_convoi_tiles.set_size(scr_size(proportional_string_width(translator::translate("Station tiles:")) + proportional_string_width(" 000"), LINESPACE));
 	tile_occupancy.set_pos(scr_coord(c1_x + lb_convoi_tiles.get_size().w, y+3));
@@ -570,7 +570,7 @@ void gui_convoy_assembler_t::layout()
 	// left aligned column 1
 	// right aligned columns 2..4
 
-	y += LINESPACE;
+	y += D_V_SPACE;
 
 	const scr_size column2_size(size.w / 5, D_BUTTON_HEIGHT);
 	const scr_size column3_size(126, D_BUTTON_HEIGHT);
@@ -587,7 +587,7 @@ void gui_convoy_assembler_t::layout()
 	lb_livery_counter.set_pos(scr_coord(livery_counter_x, y));
 	lb_vehicle_filter.set_pos(scr_coord(column3_x, y));
 	lb_veh_action.set_pos(scr_coord(column4_x, y));
-	y += 4 + D_BUTTON_HEIGHT;
+	y += LINESPACE + D_V_SPACE;
 
 	// 1st row
 
@@ -739,7 +739,6 @@ void gui_convoy_assembler_t::draw(scr_coord parent_pos)
 	txt_convoi_brake_force.clear();
 	tooltip_convoi_rolling_resistance.clear();
 	txt_convoi_way_wear_factor.clear();
-	tooltip_convoi_acceleration.clear();
 	txt_convoi_brake_distance.clear();
 	tooltip_convoi_speed.clear();
 	text_convoi_axle_load.clear();
@@ -807,7 +806,7 @@ void gui_convoy_assembler_t::draw(scr_coord parent_pos)
 			total_power += desc->get_power();
 			total_force += desc->get_tractive_effort();
 			maint_per_km += desc->get_running_cost();
-			maint_per_month += desc->get_adjusted_monthly_fixed_cost(welt);
+			maint_per_month += desc->get_adjusted_monthly_fixed_cost();
 			way_wear_factor += (double)desc->get_way_wear_factor();
 			highest_axle_load = max(highest_axle_load, desc->get_axle_load());
 			convoihandle_t cnv;
@@ -981,35 +980,6 @@ void gui_convoy_assembler_t::draw(scr_coord parent_pos)
 			brake_distance_min, brake_distance_max);
 		lb_convoi_speed.set_color(col_convoi_speed);
 
-		// starting acceleration
-		if (!total_power) {
-			tooltip_convoi_acceleration.append(translator::translate("no power at all"));
-		}
-		else{
-			const uint32 starting_acceleration_max = convoy.calc_acceleration(weight_summary_t(min_weight, friction), 0);
-			const uint32 starting_acceleration_min = convoy.calc_acceleration(weight_summary_t(max_weight, friction), 0);
-			tooltip_convoi_acceleration.append(translator::translate("Starting acceleration:"));
-			tooltip_convoi_acceleration.printf(
-				starting_acceleration_min == starting_acceleration_max ? " %.2f km/h/s" : " %.2f - %.2f km/h/s",
-				(double)starting_acceleration_min / 100.0, (double)starting_acceleration_max / 100.0);
-			// acceleration time
-			const double min_acceleration_time = convoy.calc_acceleration_time(weight_summary_t(min_weight, friction), max_speed);
-			const double max_acceleration_time = convoy.calc_acceleration_time(weight_summary_t(max_weight, friction), min_speed);
-			if (min_speed == max_speed) {
-				tooltip_convoi_acceleration.printf(min_weight == max_weight ? translator::translate("; %i km/h @ %.2f sec") : translator::translate("; %i km/h @ %.2f - %.2f sec"),
-					max_speed, min_acceleration_time, max_acceleration_time);
-			}
-			else {
-				tooltip_convoi_acceleration.printf(translator::translate("; %i km/h @ %.2f sec - %i km/h @ %.2f sec"),
-					max_speed, min_acceleration_time, min_speed, max_acceleration_time);
-			}
-			// acceleration distance
-			const uint32 min_acceleration_distance = convoy.calc_acceleration_distance(weight_summary_t(min_weight, friction), max_speed);
-			const uint32 max_acceleration_distance = convoy.calc_acceleration_distance(weight_summary_t(max_weight, friction), min_speed);
-			tooltip_convoi_acceleration.printf(min_weight == max_weight ? translator::translate("; %i m") : translator::translate("; %i m - %i m"),
-				min_acceleration_distance, max_acceleration_distance);
-		}
-
 		{
 			char buf[128];
 			sint64 resale_value = total_cost;
@@ -1028,7 +998,7 @@ void gui_convoy_assembler_t::draw(scr_coord parent_pos)
 			money_to_string(buf, total_cost / 100.0);
 			// FIXME: The correct term must be used for the translation of "Cost:"
 			txt_convoi_cost.append(translator::translate("Cost:"));
-			const PIXVAL col_cost = (uint32)resale_value == total_cost ? SYSCOL_TEXT : COL_SOFT_BLUE;
+			const PIXVAL col_cost = (uint32)resale_value == total_cost ? SYSCOL_TEXT : COL_OUT_OF_PRODUCTION;
 			display_proportional_clip_rgb(parent_pos.x + D_MARGIN_LEFT + proportional_string_width(translator::translate("Cost:")) + 10, parent_pos.y + pos.y + lb_convoi_cost.get_pos().y, buf, ALIGN_LEFT, col_cost, true);
 
 			txt_convoi_maintenance.printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), (double)maint_per_km / 100.0, (double)maint_per_month / 100.0);
@@ -1077,7 +1047,7 @@ void gui_convoy_assembler_t::draw(scr_coord parent_pos)
 		txt_convoi_way_wear_factor.clear();
 		txt_convoi_way_wear_factor.printf("%s: %.4f", translator::translate("Way wear factor"), way_wear_factor);
 
-		if (total_pax > 0 || total_standing_pax > 0 || total_mail > 0)
+		if (!replace_frame && (total_pax > 0 || total_standing_pax > 0 || total_mail > 0))
 		{
 			bt_class_management.set_visible(true);
 		}
@@ -1087,9 +1057,9 @@ void gui_convoy_assembler_t::draw(scr_coord parent_pos)
 		draw_vehicle_bar_help(parent_pos+pos);
 	}
 
-	bt_outdated.pressed = show_outdated_vehicles;	// otherwise the button would not show depressed
-	bt_obsolete.pressed = show_retired_vehicles;	// otherwise the button would not show depressed
-	bt_show_all.pressed = show_all;					// otherwise the button would not show depressed
+	bt_outdated.pressed = show_outdated_vehicles;   // otherwise the button would not show depressed
+	bt_obsolete.pressed = show_retired_vehicles;    // otherwise the button would not show depressed
+	bt_show_all.pressed = show_all;                 // otherwise the button would not show depressed
 	draw_vehicle_info_text(parent_pos+pos);
 	gui_container_t::draw(parent_pos);
 }
@@ -1193,8 +1163,8 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 			if ((depot_frame && depot_frame->get_depot()->is_contained(info)) ||
 				((way_electrified || info->get_engine_type() != vehicle_desc_t::electric) &&
 				(((!info->is_future(month_now)) && (!info->is_retired(month_now))) ||
-					(info->is_retired(month_now) &&	(((show_retired_vehicles && info->is_obsolete(month_now, welt)) ||
-					(show_outdated_vehicles && (!info->is_obsolete(month_now, welt)))))))))
+					(info->is_retired(month_now) &&	(((show_retired_vehicles && info->is_obsolete(month_now)) ||
+					(show_outdated_vehicles && (!info->is_obsolete(month_now)))))))))
 			{
 				// check if allowed
 				bool append = true;
@@ -1617,14 +1587,14 @@ void gui_convoy_assembler_t::init_convoy_color_bars(vector_tpl<const vehicle_des
 	uint32 i=0;
 	// change green into blue for retired vehicles
 	PIXVAL base_col = (!vehs->get_element(i)->is_future(month_now) && !vehs->get_element(i)->is_retired(month_now)) ? COL_SAFETY :
-		(vehicles[i]->is_obsolete(month_now, welt)) ? COL_OBSOLETE : COL_OUT_OF_PRODUCTION;
+		(vehicles[i]->is_obsolete(month_now)) ? COL_OBSOLETE : COL_OUT_OF_PRODUCTION;
 	uint32 end = vehs->get_count();
 	set_vehicle_bar_shape(convoi_pics[0], vehs->get_element(0));
 	convoi_pics[0]->lcolor = vehs->get_element(0)->can_follow(NULL) ? base_col : COL_CAUTION;
 	for (i = 1; i < end; i++)
 	{
 		if (vehs->get_element(i)->is_future(month_now) || vehs->get_element(i)->is_retired(month_now)) {
-			if (vehicles[i]->is_obsolete(month_now, welt)) {
+			if (vehicles[i]->is_obsolete(month_now)) {
 				base_col = COL_OBSOLETE;
 			}
 			else {
@@ -1766,7 +1736,7 @@ void gui_convoy_assembler_t::update_data()
 		gui_image_list_t::image_data_t& img  = *i.value;
 
 		PIXVAL ok_color = info->is_future(month_now) || info->is_retired(month_now) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
-		if (info->is_obsolete(month_now, welt)) {
+		if (info->is_obsolete(month_now)) {
 			ok_color = COL_OBSOLETE;
 		}
 
@@ -1775,7 +1745,7 @@ void gui_convoy_assembler_t::update_data()
 		img.rcolor = ok_color;
 		set_vehicle_bar_shape(&img, info);
 		if (info->get_upgrades_count()) {
-			img.has_upgrade = info->has_available_upgrade(month_now, welt->get_settings().get_show_future_vehicle_info());
+			img.has_upgrade = info->has_available_upgrade(month_now);
 		}
 
 		/*
@@ -2172,25 +2142,25 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 		new_vehicle_length = new_vehicle_length_sb_force_zero ? 0 : veh_type->get_length();
 		uint8 auto_addition_length = 0;
 		if (!new_vehicle_length_sb_force_zero) {
-			auto_addition_length = veh_action == va_insert ? veh_type->calc_auto_connection_length(false) : veh_type->calc_auto_connection_length(true);
-			vehicle_fluctuation += veh_action == va_insert ? veh_type->get_auto_connection_vehicle_count(false) : veh_type->get_auto_connection_vehicle_count(true);
+			auto_addition_length = veh_type->calc_auto_connection_length(!(veh_action == va_insert));
+			vehicle_fluctuation += veh_type->get_auto_connection_vehicle_count(!(veh_action == va_insert));
 			vehicle_fluctuation++;
 			lb_convoi_count.set_visible(true);
 		}
-		tile_occupancy.set_new_veh_length(new_vehicle_length + auto_addition_length, veh_action == va_insert ? true : false, new_vehicle_length_sb_force_zero ? 0xFFu : new_vehicle_length);
+		tile_occupancy.set_new_veh_length(new_vehicle_length + auto_addition_length, (veh_action == va_insert), new_vehicle_length_sb_force_zero ? 0xFFu : new_vehicle_length);
 		if (!new_vehicle_length_sb_force_zero) {
 			if (veh_action == va_append && auto_addition_length == 0) {
-				tile_occupancy.set_assembling_incomplete(vec[sel_index]->rcolor == COL_YELLOW ? true : false);
+				tile_occupancy.set_assembling_incomplete(vec[sel_index]->rcolor == COL_YELLOW);
 			}
 			else if (veh_action == va_insert && auto_addition_length == 0) {
-				tile_occupancy.set_assembling_incomplete(vec[sel_index]->lcolor == COL_YELLOW ? true : false);
+				tile_occupancy.set_assembling_incomplete(vec[sel_index]->lcolor == COL_YELLOW);
 			}
 			else {
 				tile_occupancy.set_assembling_incomplete(false);
 			}
 		}
 		else if(convoi_pics.get_count()){
-			tile_occupancy.set_assembling_incomplete((convoi_pics[0]->lcolor == COL_YELLOW || convoi_pics[convoi_pics.get_count() - 1]->rcolor == COL_YELLOW) ? true : false);
+			tile_occupancy.set_assembling_incomplete((convoi_pics[0]->lcolor == COL_YELLOW || convoi_pics[convoi_pics.get_count() - 1]->rcolor == COL_YELLOW));
 		}
 
 		// Search and focus on upgrade targets in convoy
@@ -2333,7 +2303,7 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 					txt_convoi_number.clear();
 					txt_convoi_number.printf("%.2s", cnv->get_car_numbering(sel_index) < 0 ? translator::translate("LOCO_SYM") : "");
 					txt_convoi_number.printf("%d", abs(cnv->get_car_numbering(sel_index)));
-					lb_convoi_number.set_color(veh_type->has_available_upgrade(welt->get_timeline_year_month(), welt->get_settings().get_show_future_vehicle_info()) == 2? COL_UPGRADEABLE : COL_WHITE);
+					lb_convoi_number.set_color(veh_type->has_available_upgrade(welt->get_timeline_year_month()) == 2? COL_UPGRADEABLE : SYSCOL_TEXT_HIGHLIGHT);
 					lb_convoi_number.set_pos(scr_coord((grid.x - grid_dx)*sel_index + D_MARGIN_LEFT, 4));
 
 
@@ -2384,7 +2354,7 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 		if (veh_type->get_power() > 0)
 		{
 			const uint8 et = (uint8)veh_type->get_engine_type() + 1;
-			buf.printf(" (%s)", translator::translate(engine_type_names[et]));
+			buf.printf(" (%s)", translator::translate( vehicle_builder_t::engine_type_names[et] ));
 		}
 		buf.append("\n");
 
@@ -2408,7 +2378,7 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 		}
 		buf.printf(translator::translate("Cost: %8s %s"), tmp, resale_entry);
 		buf.append("\n");
-		buf.printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), veh_type->get_running_cost() / 100.0, veh_type->get_adjusted_monthly_fixed_cost(welt) / 100.0);
+		buf.printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), veh_type->get_running_cost() / 100.0, veh_type->get_adjusted_monthly_fixed_cost() / 100.0);
 		buf.append("\n");
 
 		// Physics information:
@@ -2464,7 +2434,7 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 				min_weight * 0.001f, max_speed, translator::translate("..."), max_weight * 0.001f, min_speed);
 			buf.append("\n");
 			const uint8 et = (uint8)veh_type->get_engine_type() + 1;
-			buf.printf(translator::translate("Power/tractive force (%s): %4d kW / %d kN\n"), translator::translate(engine_type_names[et]), veh_type->get_power(), veh_type->get_tractive_effort());
+			buf.printf(translator::translate("Power/tractive force (%s): %4d kW / %d kN\n"), translator::translate( vehicle_builder_t::engine_type_names[et] ), veh_type->get_power(), veh_type->get_tractive_effort());
 			if (veh_type->get_gear() != 64) // Do this entry really have to be here...??? If not, it should be skipped. Space is precious..
 			{
 				buf.printf("%s %0.2f : 1", translator::translate("Gear:"), veh_type->get_gear() / 64.0);
@@ -2478,25 +2448,8 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 		else
 		{
 			buf.printf("%s ", translator::translate("unpowered"));
-			linespace_skips += 2;
 		}
-		if (linespace_skips > 0)
-		{
-			for (int i = 0; i < linespace_skips; i++)
-			{
-				buf.append("\n");
-			}
-		}
-		linespace_skips = 0;
-
-		// Copyright information:
-		if (char const* const copyright = veh_type->get_copyright())
-		{
-			buf.printf(translator::translate("Constructed by %s"), copyright);
-		}
-		buf.append("\n");
-
-		display_multiline_text_rgb(pos.x + 4, pos.y + tabs.get_pos().y + tabs.get_size().h + 31 + LINESPACE * 1 + 4 + 16, buf, SYSCOL_TEXT);
+		display_multiline_text_rgb(pos.x + D_MARGIN_LEFT, pos.y + tabs.get_pos().y + tabs.get_size().h + (D_BUTTON_HEIGHT+D_V_SPACE)*3, buf, SYSCOL_TEXT);
 
 		buf.clear();
 		// column 2
@@ -2716,13 +2669,20 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 		}
 
 		lines+=2;
+		// Copyright information:
+		if (char const* const copyright = veh_type->get_copyright())
+		{
+			buf.append("\n\n");
+			buf.printf(translator::translate("Constructed by %s"), copyright);
+			lines++;
+		}
 		display_multiline_text_rgb(pos.x + 335/*370*/, top, buf, SYSCOL_TEXT);
 		buf.clear();
 		top += lines * LINESPACE;
 
 		// vehicle number fluctuation counter
 		if (vehicle_fluctuation != 0) {
-			const PIXVAL counter_col = vehicle_fluctuation > 0 ? COL_ADDITIONAL : COL_REDUCED_TEXT;
+			const PIXVAL counter_col = vehicle_fluctuation > 0 ? SYSCOL_UP_TRIANGLE : SYSCOL_DOWN_TRIANGLE;
 			sprintf(txt_convoi_count_fluctuation, "%s%i", vehicle_fluctuation > 0 ? "+" : "", vehicle_fluctuation);
 			lb_convoi_count_fluctuation.set_visible(true);
 			if (!txt_convoi_count.len()) {
@@ -2735,9 +2695,9 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 			lb_convoi_count_fluctuation.set_visible(false);
 		}
 
-		const int MAX_ROWS = 15-lines; // Maximum display line of possession livery scheme or upgrade info
+		const uint8 MAX_ROWS = max(16-lines, 0); // Maximum display line of possession livery scheme or upgrade info
 		// livery counter and avairavle livery scheme list
-		if (veh_type->get_livery_count() > 0) {
+		if (veh_type->get_livery_count() > 0 && MAX_ROWS) {
 			// display the available number of liveries
 			txt_livery_count.clear();
 			txt_livery_count.printf("(%i)", veh_type->get_available_livery_count(welt));
@@ -2797,9 +2757,10 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 			lb_livery_counter.set_text(NULL);
 		}
 
+		/*
 		// upgrade info
 		sel_index = convoi.index_at(pos, x, y);
-		if (sel_index != -1) {
+		if (sel_index != -1 && MAX_ROWS) {
 			const uint16 month_now = welt->get_timeline_year_month();
 			const uint8 upgradable_state = veh_type->has_available_upgrade(month_now, welt->get_settings().get_show_future_vehicle_info());
 			if (upgradable_state)
@@ -2854,7 +2815,7 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 					}
 				}
 			}
-		}
+		}*/
 	}
 	else {
 		// nothing select, initialize
@@ -3151,7 +3112,7 @@ void gui_convoy_assembler_t::draw_vehicle_bar_help(scr_coord offset)
 	sint16 top;
 	top = offset.y + D_V_SPACE + grid.y;
 	left = offset.x + D_MARGIN_LEFT;
-	display_proportional_clip_rgb(left + grid.x / 2, top - grid.y / 2, translator::translate("Select vehicles to make up a convoy"), ALIGN_LEFT, color_idx_to_rgb(MN_GREY0), true);
+	display_proportional_clip_rgb(left + grid.x / 2, top - grid.y / 2, translator::translate("Select vehicles to make up a convoy"), ALIGN_LEFT, SYSCOL_TEXT_INACTIVE, true);
 
 //	// color help
 //	display_proportional_clip_rgb(left, top - LINESPACE, translator::translate("Vehicle bar color legend:"), ALIGN_LEFT, SYSCOL_TEXT, true);
@@ -3179,70 +3140,70 @@ void gui_convoy_assembler_t::draw_vehicle_bar_help(scr_coord offset)
 	display_proportional_clip_rgb(left, top, translator::translate("Vehicle bar shape legend:"), ALIGN_LEFT, SYSCOL_TEXT, true);
 	top += LINESPACE;
 	left += D_MARGIN_LEFT;
-	display_veh_form_wh_clip_rgb(left, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_head, 0, false);
-	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_tail, 0, true);
-	padding = display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_one_direction"), ALIGN_LEFT, CITY_KI, true);
+	display_veh_form_wh_clip_rgb(left, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_head, 0, false);
+	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_tail, 0, true);
+	padding = display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_one_direction"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 
 	top += LINESPACE;
-	display_veh_form_wh_clip_rgb(left, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_head, 1, false);
-	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, (vehicle_desc_t::can_be_head + vehicle_desc_t::can_be_tail), 1, true);
-	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_cab_head"), ALIGN_LEFT, CITY_KI, true));
+	display_veh_form_wh_clip_rgb(left, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_head, 1, false);
+	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, (vehicle_desc_t::can_be_head + vehicle_desc_t::can_be_tail), 1, true);
+	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_cab_head"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true));
 
 	top += LINESPACE;
-	display_veh_form_wh_clip_rgb(left, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_tail, 1, false);
-	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_tail, 1, true);
-	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_can_be_at_rear"), ALIGN_LEFT, CITY_KI, true));
+	display_veh_form_wh_clip_rgb(left, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_tail, 1, false);
+	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::can_be_tail, 1, true);
+	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_can_be_at_rear"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true));
 
 	top += LINESPACE;
-	display_veh_form_wh_clip_rgb(left, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, 0, 0, false);
-	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, 0, 0, true);
-	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_intermediate"), ALIGN_LEFT, CITY_KI, true));
+	display_veh_form_wh_clip_rgb(left, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, 0, 0, false);
+	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, 0, 0, true);
+	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_intermediate"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true));
 
 	/*
 	top += LINESPACE;
-	display_veh_form_wh_clip_rgb(left, top + 2, VEHICLE_BAR_HEIGHT * 2, COL_SAFETY, true, vehicle_desc_t::unknown_constraint, 0, false);
-	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2, top + 2, VEHICLE_BAR_HEIGHT * 2, COL_SAFETY, true, vehicle_desc_t::unknown_constraint, 0, true);
-	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 4 + 3, top, translator::translate("helptxt_unknown_constraint"), ALIGN_LEFT, CITY_KI, true));
+	display_veh_form_wh_clip_rgb(left, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT * 2, COL_SAFETY, true, vehicle_desc_t::unknown_constraint, 0, false);
+	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT * 2, COL_SAFETY, true, vehicle_desc_t::unknown_constraint, 0, true);
+	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 4 + 3, top, translator::translate("helptxt_unknown_constraint"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true));
 
 	top += LINESPACE;
-	display_veh_form_wh_clip_rgb(left, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::fixed_coupling_prev, 0, false, false);
-	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + 2, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::fixed_coupling_next, 0, true, false);
-	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_fixed_outside_depot"), ALIGN_LEFT, CITY_KI, true));
+	display_veh_form_wh_clip_rgb(left, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::fixed_coupling_prev, 0, false, false);
+	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2, COL_SAFETY, true, vehicle_desc_t::fixed_coupling_next, 0, true, false);
+	padding = max(padding, display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_fixed_outside_depot"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true));
 	*/
 
 	// 2nd colmn
 	top = offset.y + D_V_SPACE + grid.y + LINESPACE;
 	left += padding + VEHICLE_BAR_HEIGHT * 4 + D_H_SPACE + D_MARGIN_LEFT;
 
-	display_fillbox_wh_clip_rgb(left+1, top+2, VEHICLE_BAR_HEIGHT*2 - 2, VEHICLE_BAR_HEIGHT, COL_SAFETY, true);
-	display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("helptxt_powered_vehicle"), ALIGN_LEFT, CITY_KI, true);
+	display_fillbox_wh_clip_rgb(left+1, top+ FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2 - 2, VEHICLE_BAR_HEIGHT, COL_SAFETY, true);
+	display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("helptxt_powered_vehicle"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 
 	top += LINESPACE;
-	display_fillbox_wh_clip_rgb(left+1, top + 2, VEHICLE_BAR_HEIGHT*2 - 2, VEHICLE_BAR_HEIGHT, COL_SAFETY, true);
-	display_blend_wh_rgb(left+3, top + 3, VEHICLE_BAR_HEIGHT*2 - 6, VEHICLE_BAR_HEIGHT - 2, color_idx_to_rgb(COL_WHITE), 30);
-	display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*2 + 3, top, translator::translate("helptxt_unpowered_vehicle"), ALIGN_LEFT, CITY_KI, true);
+	display_fillbox_wh_clip_rgb(left+1, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2 - 2, VEHICLE_BAR_HEIGHT, COL_SAFETY, true);
+	display_blend_wh_rgb(left+3, top + FIXED_SYMBOL_YOFF + 1, VEHICLE_BAR_HEIGHT*2 - 6, VEHICLE_BAR_HEIGHT - 2, color_idx_to_rgb(COL_WHITE), 30);
+	display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*2 + 3, top, translator::translate("helptxt_unpowered_vehicle"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 
 	if (skinverwaltung_t::upgradable) {
 		top += LINESPACE;
 		display_color_img(skinverwaltung_t::upgradable->get_image_id(1), left + 1, top + FIXED_SYMBOL_YOFF, 0, false, false);
-		display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("Upgrade available"), ALIGN_LEFT, CITY_KI, true);
+		display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("Upgrade available"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 
 		top += LINESPACE;
 		display_color_img(skinverwaltung_t::upgradable->get_image_id(0), left + 1, top + FIXED_SYMBOL_YOFF, 0, false, false);
 		if (welt->get_settings().get_show_future_vehicle_info()) {
-			display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("Upgrade is not available yet"), ALIGN_LEFT, CITY_KI, true);
+			display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("Upgrade is not available yet"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 		}
 		else {
-			display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("Upgrade will be available in the near future"), ALIGN_LEFT, CITY_KI, true);
+			display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("Upgrade will be available in the near future"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 		}
 	}
 
 	/*
 	top += LINESPACE*3;
 
-	display_veh_form_wh_clip_rgb(left, top + 2, VEHICLE_BAR_HEIGHT*2 - 1, COL_SAFETY, true, (vehicle_desc_t::permanent_coupling_next + vehicle_desc_t::fixed_coupling_next), 0, true, false);
-	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2 + 1, top + 2, VEHICLE_BAR_HEIGHT*2 - 1, COL_SAFETY, true, (vehicle_desc_t::permanent_coupling_prev + vehicle_desc_t::fixed_coupling_prev), 0, false, false);
-	display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_permanent_couple"), ALIGN_LEFT, CITY_KI, true);
+	display_veh_form_wh_clip_rgb(left, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2 - 1, COL_SAFETY, true, (vehicle_desc_t::permanent_coupling_next + vehicle_desc_t::fixed_coupling_next), 0, true, false);
+	display_veh_form_wh_clip_rgb(left + VEHICLE_BAR_HEIGHT*2 + 1, top + FIXED_SYMBOL_YOFF, VEHICLE_BAR_HEIGHT*2 - 1, COL_SAFETY, true, (vehicle_desc_t::permanent_coupling_prev + vehicle_desc_t::fixed_coupling_prev), 0, false, false);
+	display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*4 + 3, top, translator::translate("helptxt_permanent_couple"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 	*/
 
 }

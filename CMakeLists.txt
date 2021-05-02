@@ -66,6 +66,7 @@ option(SIMUTRANS_VALGRIND_SUPPORT  "Add support for valgrind \"memcheck\" tool" 
 if (Freetype_FOUND)
 	option(SIMUTRANS_USE_FREETYPE "Enable TrueType font support using freetype library" OFF)
 endif (Freetype_FOUND)
+set(SIMUTRANS_USE_FREETYPE OFF)
 
 if (MiniUPNP_FOUND)
 	option(SIMUTRANS_USE_UPNP "Use MiniUPNP for easier server setup" ON)
@@ -74,6 +75,10 @@ endif (MiniUPNP_FOUND)
 if (ZSTD_FOUND)
 	option(SIMUTRANS_USE_ZSTD "Enable support for zstd save file compression (larger save files than bzip2, but faster)" ON)
 endif (ZSTD_FOUND)
+
+if (FluidSynth_FOUND)
+	option(SIMUTRANS_USE_FLUIDSYNTH_MIDI "Enable FluidSynth for MIDI playback" ON)
+endif (FluidSynth_FOUND)
 
 option(SIMUTRANS_ENABLE_PROFILING "Enable profiling code" OFF)
 option(SIMUTRANS_USE_SYSLOG "Enable logging to syslog" OFF)
@@ -194,6 +199,7 @@ add_executable(simutrans-extended
 	gui/banner.cc
 	gui/base_info.cc
 	gui/baum_edit.cc
+	gui/building_info.cc
 	gui/citybuilding_edit.cc
 	gui/city_info.cc
 	gui/citylist_frame_t.cc
@@ -207,7 +213,6 @@ add_executable(simutrans-extended
 	gui/components/gui_colorbox.cc
 	gui/components/gui_combobox.cc
 	gui/components/gui_component.cc
-	gui/components/gui_component_table.cc
 	gui/components/gui_container.cc
 	gui/components/gui_convoiinfo.cc
 	gui/components/gui_convoy_assembler.cc
@@ -255,6 +260,7 @@ add_executable(simutrans-extended
 	gui/goods_frame_t.cc
 	gui/goods_stats_t.cc
 	gui/ground_info.cc
+	gui/groundobj_edit.cc
 	gui/gui_frame.cc
 	gui/gui_theme.cc
 	gui/halt_detail.cc
@@ -265,7 +271,6 @@ add_executable(simutrans-extended
 	gui/help_frame.cc
 	gui/headquarter_info.cc
 	gui/jump_frame.cc
-	gui/karte.cc
 	gui/kennfarbe.cc
 	gui/label_info.cc
 	gui/labellist_frame_t.cc
@@ -281,6 +286,7 @@ add_executable(simutrans-extended
 	gui/message_frame_t.cc
 	gui/message_option_t.cc
 	gui/message_stats_t.cc
+	gui/minimap.cc
 	gui/money_frame.cc
 	gui/obj_info.cc
 	gui/onewaysign_info.cc
@@ -316,6 +322,11 @@ add_executable(simutrans-extended
 	gui/vehiclelist_frame.cc
 	gui/vehicle_class_manager.cc
 	gui/welt.cc
+	io/rdwr/bzip2_file_rdwr_stream.cc
+	io/rdwr/raw_file_rdwr_stream.cc
+	io/rdwr/rdwr_stream.cc
+	io/rdwr/zlib_file_rdwr_stream.cc
+	io/classify_file.cc
 	network/checksum.cc
 	network/memory_rw.cc
 	network/network_address.cc
@@ -340,6 +351,7 @@ add_executable(simutrans-extended
 	obj/pillar.cc
 	obj/roadsign.cc
 	obj/signal.cc
+	obj/simobj.cc
 	obj/tunnel.cc
 	obj/wayobj.cc
 	obj/wolke.cc
@@ -395,7 +407,6 @@ add_executable(simutrans-extended
 	simmem.cc
 	simmenu.cc
 	simmesg.cc
-	simobj.cc
 	simplan.cc
 	simsignalbox.cc
 	simskin.cc
@@ -466,7 +477,7 @@ endif (WIN32)
 
 
 if (SIMUTRANS_BACKEND STREQUAL "sdl2")
-	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_s2.cc sound/sdl2_sound.cc ${BACKUP_MUSIC})
+	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_s2.cc sound/sdl2_sound.cc)
 	target_link_libraries(simutrans-extended PRIVATE SDL2::Core)
 	target_compile_definitions(simutrans-extended PRIVATE COLOUR_DEPTH=16)
 
@@ -484,7 +495,7 @@ elseif (SIMUTRANS_BACKEND STREQUAL "mixer_sdl2")
 	endif ()
 
 elseif (SIMUTRANS_BACKEND STREQUAL "gdi")
-	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_w.cc sys/simsys_w32_png.cc ${BACKUP_SOUND} ${BACKUP_MUSIC})
+	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_w.cc sys/simsys_w32_png.cc ${BACKUP_SOUND} )
 	target_link_libraries(simutrans-extended PRIVATE imm32)
 	target_compile_definitions(simutrans-extended PRIVATE COLOUR_DEPTH=16)
 
@@ -522,10 +533,21 @@ if (SIMUTRANS_USE_UPNP)
 endif (SIMUTRANS_USE_UPNP)
 
 if (SIMUTRANS_USE_ZSTD)
+	target_sources(simutrans-extended PRIVATE io/rdwr/zstd_file_rdwr_stream.cc)
 	target_compile_definitions(simutrans-extended PRIVATE USE_ZSTD=1)
 	target_link_libraries(simutrans-extended PRIVATE ZSTD::ZSTD)
 endif (SIMUTRANS_USE_ZSTD)
 
+# only consider FluidSynth for SDL2 and GDI backends
+if ((SIMUTRANS_BACKEND STREQUAL "sdl2") OR (SIMUTRANS_BACKEND STREQUAL "gdi"))
+	if (SIMUTRANS_USE_FLUIDSYNTH_MIDI)
+		target_sources(simutrans-extended PRIVATE music/fluidsynth.cc gui/loadsoundfont_frame.cc)
+		target_compile_definitions(simutrans-extended PRIVATE USE_FLUIDSYNTH_MIDI=1)
+		target_link_libraries(simutrans-extended PRIVATE FluidSynth::FluidSynth)
+	else ()
+		target_sources( simutrans-extended PRIVATE ${BACKUP_MUSIC} )
+	endif (SIMUTRANS_USE_FLUIDSYNTH_MIDI)
+endif ((SIMUTRANS_BACKEND STREQUAL "sdl2") OR (SIMUTRANS_BACKEND STREQUAL "gdi"))
 
 #
 # compile options

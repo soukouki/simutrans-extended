@@ -47,7 +47,7 @@
 #include "../unicode.h"
 
 
-#include "karte.h"
+#include "minimap.h"
 
 uint16 schedule_list_gui_t::livery_scheme_index = 0;
 
@@ -143,7 +143,8 @@ const char *schedule_list_gui_t::sort_text[SORT_MODES] = {
 	"cl_btn_sort_max_speed",
 	"cl_btn_sort_power",
 	"cl_btn_sort_value",
-	"cl_btn_sort_age"
+	"cl_btn_sort_age",
+	"cl_btn_sort_range"
 };
 
 schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
@@ -335,7 +336,7 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	add_component(&livery_selector);
 
 	// sort button
-	sort_asc.init(button_t::arrowup_state, "", scr_coord(BUTTON1_X + D_BUTTON_WIDTH * 1.5 + D_H_SPACE, 3), D_ARROW_UP_SIZE);
+	sort_asc.init(button_t::arrowup_state, "", scr_coord(BUTTON1_X + D_BUTTON_WIDTH * 1.5 + D_H_SPACE, (D_BUTTON_HEIGHT-D_ARROW_UP_HEIGHT)/2), D_ARROW_UP_SIZE);
 	sort_asc.set_tooltip(translator::translate("cl_btn_sort_asc"));
 	sort_asc.add_listener(this);
 	sort_asc.pressed = sortreverse;
@@ -430,16 +431,16 @@ bool schedule_list_gui_t::infowin_event(const event_t *ev)
 	if(ev->ev_class == INFOWIN) {
 		if(ev->ev_code == WIN_CLOSE) {
 			// hide schedule on minimap (may not current, but for safe)
-			reliefkarte_t::get_karte()->set_current_cnv( convoihandle_t() );
+			minimap_t::get_instance()->set_selected_cnv( convoihandle_t() );
 		}
 		else if(  (ev->ev_code==WIN_OPEN  ||  ev->ev_code==WIN_TOP)  &&  line.is_bound() ) {
 			if(  line->count_convoys()>0  ) {
 				// set this schedule as current to show on minimap if possible
-				reliefkarte_t::get_karte()->set_current_cnv( line->get_convoy(0) );
+				minimap_t::get_instance()->set_selected_cnv( line->get_convoy(0) );
 			}
 			else {
 				// set this schedule as current to show on minimap if possible
-				reliefkarte_t::get_karte()->set_current_cnv( convoihandle_t() );
+				minimap_t::get_instance()->set_selected_cnv( convoihandle_t() );
 			}
 		}
 	}
@@ -725,17 +726,10 @@ void schedule_list_gui_t::display(scr_coord pos)
 
 	sint64 profit = line->get_finance_history(0,LINE_PROFIT);
 
-	sint64 total_trip_times = 0;
-	sint64 convoys_with_trip_data = 0;
 	for (int i = 0; i<icnv; i++) {
 		convoihandle_t const cnv = line->get_convoy(i);
 		// we do not want to count the capacity of depot convois
 		if (!cnv->in_depot()) {
-			total_trip_times += cnv->get_average_round_trip_time();
-			if(cnv->get_average_round_trip_time())
-			{
-				convoys_with_trip_data++;
-			}
 			for (unsigned j = 0; j<cnv->get_vehicle_count(); j++) {
 				capacity += cnv->get_vehicle(j)->get_cargo_max();
 				load += cnv->get_vehicle(j)->get_total_cargo();
@@ -750,23 +744,9 @@ void schedule_list_gui_t::display(scr_coord pos)
 		loadfactor = (load * 100) / capacity;
 	}
 
-	sint64 service_frequency = convoys_with_trip_data ? total_trip_times / convoys_with_trip_data : 0; // In ticks.
-	if(icnv)
-	{
-		service_frequency /= icnv;
-	}
-
-	const int spacing = line->get_schedule()->get_spacing();
-	if(icnv && spacing > 0)
-	{
-		// Check whether the spacing setting affects things.
-		sint64 spacing_ticks = welt->ticks_per_world_month / (sint64)spacing;
-		const uint32 spacing_time = welt->ticks_to_tenths_of_minutes(spacing_ticks);
-		service_frequency = max(spacing_time, service_frequency);
-	}
-
 	buf.clear();
 	// Display service frequency
+	const sint64 service_frequency = line->get_service_frequency();
 	if(service_frequency)
 	{
 		buf.printf(translator::translate("Service frequency"));
@@ -828,7 +808,7 @@ void schedule_list_gui_t::display(scr_coord pos)
 			display_color_img_with_tooltip(skinverwaltung_t::upgradable->get_image_id(1), pos.x + left, pos.y + top + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate(line_alert_helptexts[4]));
 			left += GOODS_SYMBOL_CELL_WIDTH;
 		}
-		else if (!buf.len() && line->get_state_color() == COL_PURPLE) {
+		else if (!buf.len() && line->get_state() & simline_t::line_has_upgradeable_vehicles) {
 			buf.append(translator::translate(line_alert_helptexts[4]));
 		}
 	}
@@ -846,7 +826,7 @@ void schedule_list_gui_t::display(scr_coord pos)
 			display_color_img_with_tooltip(skinverwaltung_t::pax_evaluation_icons->get_image_id(1), pos.x + left, pos.y + top + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate(line_alert_helptexts[3]));
 			left += GOODS_SYMBOL_CELL_WIDTH;
 		}
-		else if (!buf.len() && line->get_state_color() == COL_DARK_PURPLE) {
+		else if (!buf.len() && line->get_state() & simline_t::line_overcrowded) {
 			buf.append(translator::translate(line_alert_helptexts[3]));
 		}
 	}
@@ -883,7 +863,7 @@ void schedule_list_gui_t::build_line_list(int selected_tab)
 {
 	sint32 sel = -1;
 	scl.clear_elements();
-	player->simlinemgmt.get_lines(tabs_to_lineindex[selected_tab], &lines, get_filter_type_bits());
+	player->simlinemgmt.get_lines(tabs_to_lineindex[selected_tab], &lines, get_filter_type_bits(), true);
 
 	FOR(vector_tpl<linehandle_t>, const l, lines) {
 		// search name
@@ -941,6 +921,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 			scr_size csize = cinfo->get_min_size();
 			cinfo->set_size(scr_size(400, csize.h-D_MARGINS_Y));
 			cinfo->set_mode(selected_cnvlist_mode[player->get_player_nr()]);
+			cinfo->set_switchable_label(sortby);
 			convoy_infos.append(cinfo);
 			cont.add_component(cinfo);
 			ypos += csize.h - D_MARGIN_TOP-D_V_SPACE*2;
@@ -1042,10 +1023,10 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		// has this line a single running convoi?
 		if(  new_line.is_bound()  &&  new_line->count_convoys() > 0  ) {
 			// set this schedule as current to show on minimap if possible
-			reliefkarte_t::get_karte()->set_current_cnv( new_line->get_convoy(0) );
+			minimap_t::get_instance()->set_selected_cnv( new_line->get_convoy(0) );
 		}
 		else {
-			reliefkarte_t::get_karte()->set_current_cnv( convoihandle_t() );
+			minimap_t::get_instance()->set_selected_cnv( convoihandle_t() );
 		}
 
 		delete last_schedule;
@@ -1072,7 +1053,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		chart.set_visible(true);
 
 		// hide schedule on minimap (may not current, but for safe)
-		reliefkarte_t::get_karte()->set_current_cnv( convoihandle_t() );
+		minimap_t::get_instance()->set_selected_cnv( convoihandle_t() );
 
 		delete last_schedule;
 		last_schedule = NULL;
@@ -1187,7 +1168,7 @@ void schedule_list_gui_t::rdwr( loadsave_t *file )
 	size.rdwr( file );
 	simline_t::rdwr_linehandle_t(file, line);
 	int chart_records = line_cost_t::MAX_LINE_COST;
-	if (file->get_version() < 112008) {
+	if(  file->is_version_less(112, 8)  ) {
 		chart_records = 8;
 	}
 	else if (file->get_extended_version() < 14 || (file->get_extended_version() == 14 && file->get_extended_revision() < 25)) {

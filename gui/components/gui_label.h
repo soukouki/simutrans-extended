@@ -46,6 +46,7 @@ protected:
 	const char * tooltip;
 
 	using gui_component_t::init;
+	scr_coord_val fixed_width=0;
 
 public:
 	gui_label_t(const char* text=NULL, PIXVAL color=SYSCOL_TEXT, align_t align=left);
@@ -108,6 +109,8 @@ public:
 	void set_tooltip(const char * t);
 
 	void set_min_size(scr_size);
+
+	void set_fixed_width(const scr_coord_val width);
 
 	align_t get_align() const { return align; }
 
@@ -184,6 +187,79 @@ public:
 	void set_show_border_value(bool yesno) { show_border_value = yesno; };
 
 	void draw(scr_coord offset) OVERRIDE;
+};
+
+class gui_data_bar_t : public gui_label_t
+{
+private:
+	sint64 max = 100;
+	sint64 value = 0;
+	bool show_value = true;
+	bool show_percentage = false;
+	bool show_digit = true;
+	PIXVAL bar_color;
+
+public:
+	gui_data_bar_t(PIXVAL color = SYSCOL_TEXT) :
+		gui_label_t(NULL, color, align_t::right) { }
+
+	void init(const sint64 value, const sint64 max=100, const scr_coord_val width=D_LABEL_WIDTH, PIXVAL bar_col = COL_SAFETY, bool show_value = true, bool show_percentage = false, bool show_digit=true) {
+		set_value(value);
+		set_max(max);
+		set_bar_color(bar_col);
+		set_show_value(show_value);
+		set_show_percentage(show_percentage);
+		set_show_digit(show_digit);
+		set_fixed_width(width);
+		set_size(scr_size(width, size.h));
+	}
+
+	void set_value(const sint64 v) { value = v; };
+	void set_max(const sint64 m) { max = m; };
+	void set_show_value(bool yesno) { show_value = yesno; };
+	void set_show_percentage(bool yesno) { show_percentage = yesno; };
+	void set_show_digit(bool yesno) { show_digit = yesno; };
+	void set_bar_color(PIXVAL col_val) { bar_color = col_val; };
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE { return scr_size(fixed_width, size.h);  };
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
+class gui_heading_t : public gui_component_t
+{
+private:
+	PIXVAL text_color;
+	PIXVAL frame_color;
+	uint8 style;
+
+	const char * text;	// only for direct access of non-translatable things. Do not use!
+	const char * tooltip;
+
+public:
+	gui_heading_t(const char* text = NULL, PIXVAL text_color = SYSCOL_TEXT_HIGHLIGHT, PIXVAL frame_color = SYSCOL_TEXT, uint8 style = 0);
+
+	void init(const char* text_par, scr_coord pos_par, PIXVAL color_par = SYSCOL_TEXT_HIGHLIGHT, PIXVAL frame_color_par = SYSCOL_TEXT, uint8 style_par = 0) {
+		set_pos(pos_par);
+		set_text(text_par);
+		set_text_color(color_par);
+		set_frame_color(frame_color_par);
+		set_style(style_par);
+	}
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	void set_text(const char *text);
+
+	void set_text_color(PIXVAL col) { text_color = col; }
+	void set_frame_color(PIXVAL f_col) { frame_color = f_col; }
+	void set_style(uint8 s) { style = s; }
+	void set_tooltip(const char * t) { tooltip = t; }
+
+	scr_size get_min_size() const OVERRIDE;
+
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 
 #endif

@@ -20,7 +20,7 @@ class tool_selector_t;
 /**
  * This class deals with building single- and multi-tile buildings. It knows the descriptions
  * of (nearly) all buildings as regards type, height, size, images and animations.
- * To be able to build a new house the house description must be registered by register_besch().
+ * To be able to build a new house the house description must be registered by register_desc().
  *
  * To ensure all monuments are only present once per map, there is a list
  * which monuments have been built and which not.
@@ -81,7 +81,7 @@ public:
 	/**
 	 * Fills menu with icons of buildings of a given waytype.
 	 * This is needed for station extensions and headquarters.
- 	 */
+	 */
 	static void fill_menu(tool_selector_t* tool_selector, building_desc_t::btype, waytype_t wt, sint16 sound_ok);
 
 	/// @returns a random commercial building matching the requirements.
@@ -97,7 +97,7 @@ public:
 	static const building_desc_t* get_residential(int level, koord size, uint16 time, climate cl, uint8 region, bool allow_earlier = false, uint32 clusters = 0l);
 
 	/// @returns headquarters with level @p level (takes the first matching one)
-	static const building_desc_t* get_headquarter(int level, uint16 time);
+	static const building_desc_t* get_headquarters(int level, uint16 time);
 
 	/// @returns a random tourist attraction matching the requirements.
 	static const building_desc_t* get_random_attraction(uint16 time, bool ignore_retire, climate cl)
@@ -139,7 +139,7 @@ public:
 	 * Building size can be larger than 1x1.
 	 * Also the underlying ground will be changed to foundation.
 	 * @param param if building a factory, pointer to the factory,
-	 * 				if building a stop, pointer to the halt handle.
+	 *              if building a stop, pointer to the halt handle.
 	 *
 	 * @return The first built part of the building. Usually at @p pos, if this
 	 *         building tile is not empty.
@@ -157,7 +157,7 @@ public:
 	static const vector_tpl<const building_desc_t *> *get_list(building_desc_t::btype typ);
 
 	/// @returns city building list of type @p typ (res/com/ind)
-	static const vector_tpl<const building_desc_t *> *get_citybuilding_list(building_desc_t::btype typ);
+	static const vector_tpl<const building_desc_t *> *get_citybuilding_list(building_desc_t::btype  typ);
 
 	static void new_month();
 };

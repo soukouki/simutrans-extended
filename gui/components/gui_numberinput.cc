@@ -47,7 +47,7 @@ void gui_numberinput_t::set_size(scr_size size_par) {
 
 	textinp.set_size( scr_size( size_par.w - bt_left.get_size().w - bt_right.get_size().w - D_H_SPACE, size_par.h) );
 
-	bt_left.set_pos( scr_coord(0,(size.h-D_POS_BUTTON_HEIGHT)/2) );
+	bt_left.set_pos( scr_coord(0,(size.h-D_ARROW_LEFT_HEIGHT)/2) );
 	textinp.align_to( &bt_left, ALIGN_LEFT | ALIGN_EXTERIOR_H | ALIGN_CENTER_V, scr_coord( D_H_SPACE / 2, 0) );
 	bt_right.align_to( &textinp, ALIGN_LEFT | ALIGN_EXTERIOR_H | ALIGN_CENTER_V, scr_coord( D_H_SPACE / 2, 0) );
 }
@@ -249,19 +249,29 @@ bool gui_numberinput_t::infowin_event(const event_t *ev)
 		translate_event(&ev2, -bt_right.get_pos().x, -bt_right.get_pos().y);
 		return bt_right.infowin_event(&ev2);
 	}
+	else if(  ev->ev_class == INFOWIN  &&  ev->ev_code == WIN_UNTOP  ) {
+		// losing focus
+		set_value( get_text_value() );
+		// just to be sure, value may be the same
+		call_listeners(value_t(value));
+		return false;
+	}
 	else {
 		// since button have different callback ...
 		bool result = false;
 		sint32 new_value = value;
 
 		// mouse wheel -> fast increase / decrease
-		if(IS_WHEELUP(ev)){
-			new_value = get_next_value();
+		if (getroffen(ev->mx + pos.x, ev->my + pos.y)) {
+			if(IS_WHEELUP(ev)) {
+				new_value = get_next_value();
+				result = true;
+			}
+			else if(IS_WHEELDOWN(ev)){
+				new_value = get_prev_value();
+				result = true;
+			}
 		}
-		else if(IS_WHEELDOWN(ev)){
-			new_value = get_prev_value();
-		}
-
 		// catch non-number keys
 		if(  ev->ev_class == EVENT_KEYBOARD  ||  value==new_value  ) {
 			// assume false input
@@ -319,15 +329,6 @@ bool gui_numberinput_t::infowin_event(const event_t *ev)
 
 		return result;
 	}
-
-	if(  ev->ev_class == INFOWIN  &&  ev->ev_code == WIN_UNTOP  ) {
-		// loosing focus ...
-		set_value( get_text_value() );
-		// just to be sure: call listener (value may be same)
-		call_listeners(value_t(value));
-	}
-
-	return false;
 }
 
 

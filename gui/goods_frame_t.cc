@@ -36,7 +36,6 @@ uint32 goods_frame_t::vehicle_speed = 50;
  * Values: 0 = Unsorted (passengers and mail first)
  *         1 = Alphabetical
  *         2 = Revenue
- * @author prissi
  */
 goods_frame_t::sort_mode_t goods_frame_t::sortby = by_number;
 static uint8 default_sortmode = 0;
@@ -44,7 +43,6 @@ static uint8 default_sortmode = 0;
 /**
  * This variable defines the sort order (ascending or descending)
  * Values: 1 = ascending, 2 = descending)
- * @author Markus Weber
  */
 bool goods_frame_t::sortreverse = false;
 
@@ -66,7 +64,6 @@ const char *goods_frame_t::sort_text[SORT_MODES] = {
  * This variable controls whether all goods are displayed, or
  * just the ones relevant to the current game
  * Values: false = all goods shown, true = relevant goods shown
- * @author falconne
  */
 bool goods_frame_t::filter_goods = false;
 
@@ -134,6 +131,8 @@ goods_frame_t::goods_frame_t() :
 			sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
 		}
 		sortedby.set_selection(default_sortmode);
+		sortedby.set_width_fixed(true);
+		sortedby.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
 		sortedby.add_listener(this);
 		add_component(&sortedby); // (1,1)
 
@@ -286,7 +285,6 @@ bool goods_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 
 /**
  * Draw the component
- * @author Hj. Malthaner
  */
 void goods_frame_t::draw(scr_coord pos, scr_size size)
 {

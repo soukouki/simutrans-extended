@@ -152,8 +152,6 @@ static bool passes_filter_type(haltestelle_t const& s)
 	return false;
 }
 
-typedef quickstone_hashtable_tpl<haltestelle_t, haltestelle_t::connexion*> connexions_map_single_remote;
-
 static bool passes_filter_special(haltestelle_t & s)
 {
 	if (!halt_list_frame_t::get_filter(halt_list_frame_t::spezial_filter)) return true;
@@ -184,7 +182,7 @@ static bool passes_filter_special(haltestelle_t & s)
 			if(!s.get_connexions(i, g_class)->empty())
 			{
 				// There might be a walking connexion here - do not count a walking connexion.
-				FOR(connexions_map_single_remote, &c, *s.get_connexions(i, g_class) )
+				for(auto &c : *s.get_connexions(i, g_class) )
 				{
 					if(c.value->best_line.is_bound() || c.value->best_convoy.is_bound())
 					{
@@ -299,7 +297,7 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 
 		filter_on.init(button_t::square_state, "cl_txt_filter");
 		filter_on.set_tooltip(translator::translate("cl_btn_filter_tooltip"));
-		filter_on.pressed = filter_is_on;
+		filter_on.pressed = get_filter(any_filter);
 		filter_on.add_listener(this);
 		add_component(&filter_on);
 
@@ -310,6 +308,8 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 				sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
 			}
 			sortedby.set_selection(default_sortmode);
+			sortedby.set_width_fixed(true);
+			sortedby.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
 			sortedby.add_listener(this);
 			add_component(&sortedby);
 
@@ -359,7 +359,7 @@ halt_list_frame_t::~halt_list_frame_t()
 */
 void halt_list_frame_t::fill_list()
 {
-	last_world_stops = haltestelle_t::get_alle_haltestellen().get_count();				// count of stations
+	last_world_stops = haltestelle_t::get_alle_haltestellen().get_count(); // count of stations
 
 	scrolly->clear_elements();
 	FOR(vector_tpl<halthandle_t>, const halt, haltestelle_t::get_alle_haltestellen()) {
@@ -395,8 +395,7 @@ bool halt_list_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* 
 {
 	if (comp == &filter_on) {
 		set_filter(any_filter, !get_filter(any_filter));
-		filter_is_on = !filter_is_on;
-		filter_on.pressed = filter_is_on;
+		filter_on.pressed = get_filter(any_filter);
 		sort_list();
 	}
 	else if (comp == &sortedby) {

@@ -7,10 +7,14 @@
 #define SYS_SIMSYS_H
 
 
-#include <stddef.h>
 #include "../simtypes.h"
+#include "../display/scr_coord.h"
+
+#ifndef NETTOOL
 #include <zlib.h>
-#include <string>
+#endif
+
+#include <cstddef>
 
 // Provide chdir().
 #if defined(_WIN32) && !defined(__CYGWIN__)
@@ -21,7 +25,7 @@
 
 /* Variable for message processing */
 
-/* Klassen */
+/* Classes */
 
 #define SIM_NOEVENT         0
 #define SIM_MOUSE_BUTTONS   1
@@ -44,7 +48,7 @@
 
 /* Global Variable for message processing */
 
-struct sys_event
+struct sys_event_t
 {
 	unsigned long type;
 	union {
@@ -54,14 +58,14 @@ struct sys_event
 	int mx;                  /* es sind negative Koodinaten mgl */
 	int my;
 	int mb;
-	/**
-	 * new window size for SYSTEM_RESIZE
-	 */
-	int size_x, size_y;
+
+	/// new window size for SYSTEM_RESIZE
+	scr_size new_window_size;
+
 	unsigned int key_mod; /* key mod, like ALT, STRG, SHIFT */
 };
 
-extern struct sys_event sys_event;
+extern sys_event_t sys_event;
 
 extern char const PATH_SEPARATOR[];
 
@@ -78,7 +82,7 @@ struct resolution
 };
 resolution dr_query_screen_resolution();
 
-int dr_os_open(int w, int h, int fullscreen);
+int dr_os_open(int w, int h, bool fullscreen);
 void dr_os_close();
 
 // returns the locale; NULL if unknown
@@ -105,7 +109,7 @@ bool dr_cantrash();
 int dr_remove(const char *path);
 
 // rename a file and delete eventually existing file new_utf8
-int dr_rename(const char *existing_utf8, const char *new_utf8);
+int dr_rename( const char *existing_utf8, const char *new_utf8 );
 
 // Functions the same as chdir except path must be UTF-8 encoded.
 int dr_chdir(const char *path);
@@ -116,8 +120,10 @@ char *dr_getcwd(char *buf, size_t size);
 // Functions the same as fopen except filename must be UTF-8 encoded.
 FILE *dr_fopen(const char *filename, const char *mode);
 
+#ifndef NETTOOL
 // Functions the same as gzopen except path must be UTF-8 encoded.
 gzFile dr_gzopen(const char *path, const char *mode);
+#endif
 
 // Functions the same as stat except path must be UTF-8 encoded.
 int dr_stat(const char *path, struct stat *buf);
@@ -136,8 +142,8 @@ void dr_textur(int xp, int yp, int w, int h);
 int dr_textur_resize(unsigned short** textur, int w, int h);
 
 // needed for screen update
-void dr_prepare_flush();	// waits, if previous update not yet finished
-void dr_flush();	// copy to screen (eventually multithreaded)
+void dr_prepare_flush(); // waits, if previous update not yet finished
+void dr_flush();         // copy to screen (eventually multithreaded)
 
 /**
  * Transform a 24 bit RGB color into the system format.
@@ -188,12 +194,12 @@ void dr_copy(const char *source, size_t length);
 size_t dr_paste(char *target, size_t max_length);
 
 /**
- * Open a program/starts a script to download pak sets from sourceforge
- * @param path_to_program : actual simutrans pakfile directory
+ * Open a program/starts a script to download pak sets.
+ * @param data_dir : The current simutrans data directory (usually the same as env_t::data_dir)
  * @param portable : true if local files to be save in simutransdir
  * @return false, if nothing was downloaded
  */
-bool dr_download_pakset( const char *path_to_program, bool portable );
+bool dr_download_pakset( const char *data_dir, bool portable );
 
 /**
  * Shows the touch keyboard when using systems without a hardware keyboard.

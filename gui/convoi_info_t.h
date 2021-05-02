@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of the Simutrans-Extended project under the Artistic License.
  * (see LICENSE.txt)
  */
@@ -20,6 +20,7 @@
 #include "components/gui_tab_panel.h"
 #include "components/gui_button_to_chart.h"
 #include "components/gui_combobox.h"
+#include "components/gui_image.h"
 #include "../convoihandle_t.h"
 #include "simwin.h"
 
@@ -35,18 +36,18 @@ class convoi_info_t : public gui_frame_t, private action_listener_t
 {
 public:
 	enum sort_mode_t {
-		by_destination = 0,
-		by_via = 1,
-		by_amount_via = 2,
-		by_amount = 3,
-		by_origin = 4,
-		by_origin_sum = 5,
-		by_destination_detail = 6,
-		by_wealth_detail = 7,
-		by_wealth_via = 8,
+		by_destination          = 0,
+		by_via                  = 1,
+		by_amount_via           = 2,
+		by_amount               = 3,
+		by_origin               = 4,
+		by_origin_sum           = 5,
+		by_destination_detail   = 6,
+		by_wealth_detail        = 7,
+		by_wealth_via           = 8,
 		by_accommodation_detail = 9,
-		by_accommodation_via = 10,
-		SORT_MODES = 11
+		by_accommodation_via    = 10,
+		SORT_MODES              = 11
 	};
 
 private:
@@ -63,6 +64,7 @@ private:
 	gui_loadingbar_t loading_bar;
 	gui_speedbar_t speed_bar;
 	gui_routebar_t route_bar;
+	gui_image_t img_reverse_route;
 	gui_chart_t chart;
 	button_t button;
 	button_t follow_button;
@@ -80,7 +82,7 @@ private:
 	gui_scrollpane_t scroll_freight;
 
 	gui_combobox_t freight_sort_selector;
-	button_t line_button;	// goto line ...
+	button_t line_button; // goto line ...
 	bool line_bound;
 
 	convoihandle_t cnv;
@@ -128,6 +130,8 @@ public:
 	 * component is displayed.
 	 */
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
+
+	bool has_min_sizer() const OVERRIDE { return true; }
 
 	bool is_weltpos() OVERRIDE;
 

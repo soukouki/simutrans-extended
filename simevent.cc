@@ -11,9 +11,9 @@
 
 static int cx = -1; // coordinates of last mouse click event
 static int cy = -1; // initialised to "nowhere"
-static int control_shift_state = 0;	// none pressed
-static event_t meta_event(EVENT_NONE);	// for storing meta-events like double-clicks and triple-clicks
-static unsigned int last_meta_class = EVENT_NONE;
+static int control_shift_state = 0; // none pressed
+static event_t meta_event(EVENT_NONE); // for storing meta-events like double-clicks and triple-clicks
+static event_class_t last_meta_class = EVENT_NONE;
 static slist_tpl<event_t *> queued_events;
 
 int event_get_last_control_shift()
@@ -24,7 +24,7 @@ int event_get_last_control_shift()
 }
 
 
-unsigned int last_meta_event_get_class()
+event_class_t last_meta_event_get_class()
 {
 	return last_meta_class;
 }
@@ -50,7 +50,7 @@ static void fill_event(event_t* const ev)
 	static unsigned int  prev_ev_class = EVENT_NONE;
 	static unsigned int  prev_ev_code = 0;
 	static unsigned long prev_ev_time = 0;
-	static unsigned char repeat_count = 0;	// number of consecutive sequences of click-release
+	static unsigned char repeat_count = 0; // number of consecutive sequences of click-release
 
 	// for autorepeat buttons we track button state, press time and a repeat time
 
@@ -154,10 +154,9 @@ static void fill_event(event_t* const ev)
 			break;
 
 		case SIM_SYSTEM:
-			ev->ev_class = EVENT_SYSTEM;
-			ev->ev_code  = sys_event.code;
-			ev->size_x = sys_event.size_x;
-			ev->size_y = sys_event.size_y;
+			ev->ev_class        = EVENT_SYSTEM;
+			ev->ev_code         = sys_event.code;
+			ev->new_window_size = sys_event.new_window_size;
 			break;
 	}
 
@@ -193,7 +192,7 @@ static void fill_event(event_t* const ev)
 			// case : triple-click
 			meta_event = *ev;
 			meta_event.ev_class = EVENT_TRIPLE_CLICK;
-			repeat_count = 0;	// reset -> start over again
+			repeat_count = 0; // reset -> start over again
 		}
 	}
 	else if(  ev->ev_class!=EVENT_NONE  &&  prev_ev_class!=EVENT_NONE  ) {

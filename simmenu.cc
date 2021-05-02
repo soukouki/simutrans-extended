@@ -74,52 +74,56 @@ tool_t *create_general_tool(int toolnr)
 {
 	tool_t* tool = NULL;
 	switch(toolnr) {
-		case TOOL_QUERY:          tool = new tool_query_t(); break;
-		case TOOL_REMOVER:          tool = new tool_remover_t(); break;
-		case TOOL_RAISE_LAND:       tool = new tool_raise_t(); break;
-		case TOOL_LOWER_LAND:       tool = new tool_lower_t(); break;
-		case TOOL_SETSLOPE:         tool = new tool_setslope_t(); break;
-		case TOOL_RESTORESLOPE:     tool = new tool_restoreslope_t(); break;
-		case TOOL_MARKER:           tool = new tool_marker_t(); break;
-		case TOOL_CLEAR_RESERVATION:tool = new tool_clear_reservation_t(); break;
-		case TOOL_TRANSFORMER:      tool = new tool_transformer_t(); break;
-		case TOOL_ADD_CITY:         tool = new tool_add_city_t(); break;
-		case TOOL_CHANGE_CITY_SIZE: tool = new tool_change_city_size_t(); break;
-		case TOOL_PLANT_TREE:       tool = new tool_plant_tree_t(); break;
-		case TOOL_SCHEDULE_ADD:     tool = new tool_schedule_add_t(); break;
-		case TOOL_SCHEDULE_INS:     tool = new tool_schedule_ins_t(); break;
-		case TOOL_BUILD_WAY:          tool = new tool_build_way_t(); break;
-		case TOOL_BUILD_BRIDGE:      tool = new tool_build_bridge_t(); break;
-		case TOOL_BUILD_TUNNEL:        tool = new tool_build_tunnel_t(); break;
-		case TOOL_WAYREMOVER:       tool = new tool_wayremover_t(); break;
-		case TOOL_BUILD_WAYOBJ:           tool = new tool_build_wayobj_t(); break;
-		case TOOL_BUILD_STATION:          tool = new tool_build_station_t(); break;
-		case TOOL_BUILD_ROADSIGN:         tool = new tool_build_roadsign_t(); break;
-		case TOOL_BUILD_DEPOT:            tool = new tool_build_depot_t(); break;
-		case TOOL_BUILD_SIGNALBOX:		  tool = new tool_signalbox_t(); break;
-		case TOOL_BUILD_HOUSE:       tool = new tool_build_house_t(); break;
-		case TOOL_BUILD_LAND_CHAIN:       tool = new tool_build_land_chain_t(); break;
-		case TOOL_CITY_CHAIN:       tool = new tool_city_chain_t(); break;
-		case TOOL_BUILD_FACTORY:    tool = new tool_build_factory_t(); break;
-		case TOOL_LINK_FACTORY:     tool = new tool_link_factory_t(); break;
-		case TOOL_HEADQUARTER:      tool = new tool_headquarter_t(); break;
-		case TOOL_LOCK_GAME:        tool = new tool_lock_game_t(); break;
-		case TOOL_ADD_CITYCAR:      tool = new tool_add_citycar_t(); break;
-		case TOOL_FOREST:           tool = new tool_forest_t(); break;
-		case TOOL_STOP_MOVER:       tool = new tool_stop_mover_t(); break;
-		case TOOL_MAKE_STOP_PUBLIC: tool = new tool_make_stop_public_t(); break;
-		case TOOL_REMOVE_WAYOBJ:    tool = new tool_remove_wayobj_t(); break;
-		case TOOL_SLICED_AND_UNDERGROUND_VIEW: tool = new tool_show_underground_t(); break;
-		case TOOL_BUY_HOUSE:        tool = new tool_buy_house_t(); break;
-		case TOOL_BUILD_CITYROAD:         tool = new tool_build_cityroad(); break;
-		case TOOL_ERROR_MESSAGE: tool = new tool_error_message_t(); break;
-		case TOOL_CHANGE_WATER_HEIGHT: tool = new tool_change_water_height_t(); break;
-		case TOOL_SET_CLIMATE:      tool = new tool_set_climate_t(); break;
-		case TOOL_ROTATE_BUILDING:		tool = new tool_rotate_building_t(); break;
-		case TOOL_REASSIGN_SIGNAL:      tool = new tool_reassign_signal_t(); break;
-		default:                   dbg->error("create_general_tool()","cannot satisfy request for general_tool[%i]!",toolnr);
-		                           return NULL;
+		case TOOL_QUERY:                       tool = new tool_query_t();               break;
+		case TOOL_REMOVER:                     tool = new tool_remover_t();             break;
+		case TOOL_RAISE_LAND:                  tool = new tool_raise_t();               break;
+		case TOOL_LOWER_LAND:                  tool = new tool_lower_t();               break;
+		case TOOL_SETSLOPE:                    tool = new tool_setslope_t();            break;
+		case TOOL_RESTORESLOPE:                tool = new tool_restoreslope_t();        break;
+		case TOOL_MARKER:                      tool = new tool_marker_t();              break;
+		case TOOL_CLEAR_RESERVATION:           tool = new tool_clear_reservation_t();   break;
+		case TOOL_TRANSFORMER:                 tool = new tool_transformer_t();         break;
+		case TOOL_ADD_CITY:                    tool = new tool_add_city_t();            break;
+		case TOOL_CHANGE_CITY_SIZE:            tool = new tool_change_city_size_t();    break;
+		case TOOL_PLANT_TREE:                  tool = new tool_plant_tree_t();          break;
+		case TOOL_SCHEDULE_ADD:                tool = new tool_schedule_add_t();        break;
+		case TOOL_SCHEDULE_INS:                tool = new tool_schedule_ins_t();        break;
+		case TOOL_BUILD_WAY:                   tool = new tool_build_way_t();           break;
+		case TOOL_BUILD_BRIDGE:                tool = new tool_build_bridge_t();        break;
+		case TOOL_BUILD_TUNNEL:                tool = new tool_build_tunnel_t();        break;
+		case TOOL_WAYREMOVER:                  tool = new tool_wayremover_t();          break;
+		case TOOL_BUILD_WAYOBJ:                tool = new tool_build_wayobj_t();        break;
+		case TOOL_BUILD_STATION:               tool = new tool_build_station_t();       break;
+		case TOOL_BUILD_ROADSIGN:              tool = new tool_build_roadsign_t();      break;
+		case TOOL_BUILD_DEPOT:                 tool = new tool_build_depot_t();         break;
+		case TOOL_BUILD_SIGNALBOX:             tool = new tool_signalbox_t();           break;
+		case TOOL_BUILD_HOUSE:                 tool = new tool_build_house_t();         break;
+		case TOOL_BUILD_LAND_CHAIN:            tool = new tool_build_land_chain_t();    break;
+		case TOOL_CITY_CHAIN:                  tool = new tool_city_chain_t();          break;
+		case TOOL_BUILD_FACTORY:               tool = new tool_build_factory_t();       break;
+		case TOOL_LINK_FACTORY:                tool = new tool_link_factory_t();        break;
+		case TOOL_HEADQUARTER:                 tool = new tool_headquarter_t();         break;
+		case TOOL_LOCK_GAME:                   tool = new tool_lock_game_t();           break;
+		case TOOL_ADD_CITYCAR:                 tool = new tool_add_citycar_t();         break;
+		case TOOL_FOREST:                      tool = new tool_forest_t();              break;
+		case TOOL_STOP_MOVER:                  tool = new tool_stop_mover_t();          break;
+		case TOOL_MAKE_STOP_PUBLIC:            tool = new tool_make_stop_public_t();    break;
+		case TOOL_REMOVE_WAYOBJ:               tool = new tool_remove_wayobj_t();       break;
+		case TOOL_SLICED_AND_UNDERGROUND_VIEW: tool = new tool_show_underground_t();    break;
+		case TOOL_BUY_HOUSE:                   tool = new tool_buy_house_t();           break;
+		case TOOL_BUILD_CITYROAD:              tool = new tool_build_cityroad();        break;
+		case TOOL_ERROR_MESSAGE:               tool = new tool_error_message_t();       break;
+		case TOOL_CHANGE_WATER_HEIGHT:         tool = new tool_change_water_height_t(); break;
+		case TOOL_SET_CLIMATE:                 tool = new tool_set_climate_t();         break;
+		case TOOL_ROTATE_BUILDING:             tool = new tool_rotate_building_t();     break;
+		case TOOL_PLANT_GROUNDOBJ:             tool = new tool_plant_groundobj_t();     break;
+		case TOOL_REASSIGN_SIGNAL_DEPRECATED:
+		case TOOL_REASSIGN_SIGNAL:             tool = new tool_reassign_signal_t();     break;
+		default:
+			dbg->error("create_general_tool()","cannot satisfy request for general_tool[%i]!",toolnr);
+			return NULL;
 	}
+
 	// check for right id (exception: TOOL_SLICED_AND_UNDERGROUND_VIEW)
 	assert(tool->get_id()  ==  (toolnr | GENERAL_TOOL)  ||  toolnr == TOOL_SLICED_AND_UNDERGROUND_VIEW  ||  toolnr == TOOL_REASSIGN_SIGNAL_DEPRECATED);
 	return tool;
@@ -151,15 +155,14 @@ tool_t *create_simple_tool(int toolnr)
 		case TOOL_FILL_TREES:           tool = new tool_fill_trees_t();           break;
 		case TOOL_DAYNIGHT_LEVEL:       tool = new tool_daynight_level_t();       break;
 		case TOOL_VEHICLE_TOOLTIPS:     tool = new tool_vehicle_tooltips_t();     break;
-		case TOOL_CONVOY_NAMEPLATES: tool = new tool_convoy_nameplate_t(); break;
-		case TOOL_CONVOY_LOADINGBAR: tool = new tool_convoy_loadingbar_t(); break;
+		case TOOL_CONVOY_NAMEPLATES:    tool = new tool_convoy_nameplate_t();     break;
+		case TOOL_CONVOY_LOADINGBAR:    tool = new tool_convoy_loadingbar_t();    break;
 		case TOOL_TOOGLE_PAX:           tool = new tool_toggle_pax_station_t();   break;
 		case TOOL_TOOGLE_PEDESTRIANS:   tool = new tool_toggle_pedestrians_t();   break;
 		case TOOL_TRAFFIC_LEVEL:        tool = new tool_traffic_level_t();        break;
 		case TOOL_CHANGE_CONVOI:        tool = new tool_change_convoi_t();        break;
 		case TOOL_CHANGE_LINE:          tool = new tool_change_line_t();          break;
 		case TOOL_CHANGE_DEPOT:         tool = new tool_change_depot_t();         break;
-		case UNUSED_WKZ_PWDHASH_TOOL: dbg->warning("create_simple_tool()","deprecated tool [%i] requested", toolnr); return NULL;
 		case TOOL_CHANGE_PLAYER:        tool = new tool_change_player_t();        break;
 		case TOOL_CHANGE_TRAFFIC_LIGHT: tool = new tool_change_traffic_light_t(); break;
 		case TOOL_CHANGE_CITY:          tool = new tool_change_city_t();          break;
@@ -176,10 +179,14 @@ tool_t *create_simple_tool(int toolnr)
 		case TOOL_RECOLOUR_TOOL:		tool = new tool_recolour_t(); break;
 		case TOOL_ACCESS_TOOL_DEPRECATED:
 		case TOOL_ACCESS_TOOL:		tool = new tool_access_t(); break;
+		case UNUSED_WKZ_PWDHASH_TOOL:
+			dbg->warning("create_simple_tool()","deprecated tool [%i] requested", toolnr);
+			return NULL;
 		default:
 			dbg->error("create_simple_tool()","cannot satisfy request for simple_tool[%i]!",toolnr);
 			return NULL;
 	}
+
 	assert(tool->get_id()  ==  (toolnr | SIMPLE_TOOL)  ||  (toolnr == TOOL_RECOLOUR_TOOL_DEPRECATED ||  toolnr == TOOL_ACCESS_TOOL_DEPRECATED));
 	return tool;
 }
@@ -189,44 +196,47 @@ tool_t *create_dialog_tool(int toolnr)
 {
 	tool_t* tool = NULL;
 	switch(toolnr) {
-		case DIALOG_HELP:           tool = new dialog_help_t(); break;
-		case DIALOG_OPTIONS:        tool = new dialog_options_t(); break;
-		case DIALOG_MINIMAP:        tool = new dialog_minimap_t(); break;
-		case DIALOG_LINEOVERVIEW:   tool = new dialog_lines_t(); break;
-		case DIALOG_MESSAGES:       tool = new dialog_messages_t(); break;
-		case DIALOG_FINANCES:       tool = new dialog_finances_t(); break;
-		case DIALOG_PLAYERS:        tool = new dialog_players_t(); break;
-		case DIALOG_DISPLAYOPTIONS: tool = new dialog_displayoptions_t(); break;
-		case DIALOG_SOUND:          tool = new dialog_sound_t(); break;
-		case DIALOG_LANGUAGE:       tool = new dialog_language_t(); break;
-		case DIALOG_PLAYERCOLOR:    tool = new dialog_playercolor_t(); break;
-		case DIALOG_JUMP:           tool = new dialog_jump_t(); break;
-		case DIALOG_LOAD:           tool = new dialog_load_t(); break;
-		case DIALOG_SAVE:           tool = new dialog_save_t(); break;
-		case DIALOG_LIST_HALT:      tool = new dialog_list_halt_t(); break;
-		case DIALOG_LIST_CONVOI:    tool = new dialog_list_convoi_t(); break;
-		case DIALOG_LIST_TOWN:      tool = new dialog_list_town_t(); break;
-		case DIALOG_LIST_GOODS:     tool = new dialog_list_goods_t(); break;
-		case DIALOG_LIST_FACTORY:   tool = new dialog_list_factory_t(); break;
-		case DIALOG_LIST_CURIOSITY: tool = new dialog_list_curiosity_t(); break;
-		case DIALOG_EDIT_FACTORY:   tool = new dialog_edit_factory_t(); break;
-		case DIALOG_EDIT_ATTRACTION:tool = new dialog_edit_attraction_t(); break;
-		case DIALOG_EDIT_HOUSE:     tool = new dialog_edit_house_t(); break;
-		case DIALOG_EDIT_TREE:      tool = new dialog_edit_tree_t(); break;
-		case DIALOG_ENLARGE_MAP:    tool = new dialog_enlarge_map_t(); break;
-		case DIALOG_LIST_LABEL:     tool = new dialog_list_label_t(); break;
-		case DIALOG_CLIMATES:       tool = new dialog_climates_t(); break;
-		case DIALOG_SETTINGS:       tool = new dialog_settings_t(); break;
-		case DIALOG_GAMEINFO:       tool = new dialog_gameinfo_t(); break;
-		case DIALOG_THEMES:         tool = new dialog_themes_t(); break;
-		case DIALOG_SCENARIO:       tool = new dialog_scenario_t(); break;
-		case DIALOG_SCENARIO_INFO:  tool = new dialog_scenario_info_t(); break;
-		case DIALOG_LIST_DEPOT:     tool = new dialog_list_depot_t(); break;
-		case DIALOG_LIST_VEHICLE:   tool = new dialog_list_vehicle_t(); break;
-		case DIALOG_LIST_SIGNALBOX: tool = new dialog_list_signalbox_t(); break;
-		default:                 dbg->error("create_dialog_tool()","cannot satisfy request for dialog_tool[%i]!",toolnr);
-		                         return NULL;
+		case DIALOG_HELP:            tool = new dialog_help_t();            break;
+		case DIALOG_OPTIONS:         tool = new dialog_options_t();         break;
+		case DIALOG_MINIMAP:         tool = new dialog_minimap_t();         break;
+		case DIALOG_LINEOVERVIEW:    tool = new dialog_lines_t();           break;
+		case DIALOG_MESSAGES:        tool = new dialog_messages_t();        break;
+		case DIALOG_FINANCES:        tool = new dialog_finances_t();        break;
+		case DIALOG_PLAYERS:         tool = new dialog_players_t();         break;
+		case DIALOG_DISPLAYOPTIONS:  tool = new dialog_displayoptions_t();  break;
+		case DIALOG_SOUND:           tool = new dialog_sound_t();           break;
+		case DIALOG_LANGUAGE:        tool = new dialog_language_t();        break;
+		case DIALOG_PLAYERCOLOR:     tool = new dialog_playercolor_t();     break;
+		case DIALOG_JUMP:            tool = new dialog_jump_t();            break;
+		case DIALOG_LOAD:            tool = new dialog_load_t();            break;
+		case DIALOG_SAVE:            tool = new dialog_save_t();            break;
+		case DIALOG_LIST_HALT:       tool = new dialog_list_halt_t();       break;
+		case DIALOG_LIST_CONVOI:     tool = new dialog_list_convoi_t();     break;
+		case DIALOG_LIST_TOWN:       tool = new dialog_list_town_t();       break;
+		case DIALOG_LIST_GOODS:      tool = new dialog_list_goods_t();      break;
+		case DIALOG_LIST_FACTORY:    tool = new dialog_list_factory_t();    break;
+		case DIALOG_LIST_CURIOSITY:  tool = new dialog_list_curiosity_t();  break;
+		case DIALOG_EDIT_FACTORY:    tool = new dialog_edit_factory_t();    break;
+		case DIALOG_EDIT_ATTRACTION: tool = new dialog_edit_attraction_t(); break;
+		case DIALOG_EDIT_HOUSE:      tool = new dialog_edit_house_t();      break;
+		case DIALOG_EDIT_TREE:       tool = new dialog_edit_tree_t();       break;
+		case DIALOG_ENLARGE_MAP:     tool = new dialog_enlarge_map_t();     break;
+		case DIALOG_LIST_LABEL:      tool = new dialog_list_label_t();      break;
+		case DIALOG_CLIMATES:        tool = new dialog_climates_t();        break;
+		case DIALOG_SETTINGS:        tool = new dialog_settings_t();        break;
+		case DIALOG_GAMEINFO:        tool = new dialog_gameinfo_t();        break;
+		case DIALOG_THEMES:          tool = new dialog_themes_t();          break;
+		case DIALOG_SCENARIO:        tool = new dialog_scenario_t();        break;
+		case DIALOG_SCENARIO_INFO:   tool = new dialog_scenario_info_t();   break;
+		case DIALOG_LIST_DEPOT:      tool = new dialog_list_depot_t();      break;
+		case DIALOG_LIST_VEHICLE:    tool = new dialog_list_vehicle_t();    break;
+		case DIALOG_LIST_SIGNALBOX:  tool = new dialog_list_signalbox_t();  break;
+		case DIALOG_EDIT_GROUNDOBJ:  tool = new dialog_edit_groundobj_t();  break;
+		default:
+			dbg->error("create_dialog_tool()","cannot satisfy request for dialog_tool[%i]!",toolnr);
+			return NULL;
 	}
+
 	assert(tool->get_id() == (toolnr | DIALOG_TOOL));
 	return tool;
 }
@@ -250,12 +260,39 @@ tool_t *create_tool(int toolnr)
 }
 
 
-static utf32 str_to_key( const char *str )
+static utf32 str_to_key( const char *str, uint8 *modifier )
 {
+	*modifier = 0;	// default no modufier check
 	if(  str[1]==','  ||  str[1]<=' ') {
 		return (uint8)*str;
 	}
 	else {
+		// check for control char
+		if(str[0]=='^') {
+			if( str[1]==0  ||  str[1]=='^'  ) {
+				return str[1];
+			}
+			else {
+				*modifier = 2;
+				// only single character following =>make is 1..26 value
+				if(  isalpha( str[1] )  ) {
+					return tolower(str[1]) - 'a' + 1;
+				}
+				str++;
+			}
+		}
+		// add shift as requested modifier?
+		if(str[0]=='+') {
+			if(  str[ 1 ] == '+' ||  str[1]==0  ) {
+				return '+';
+			}
+			*modifier = 1;
+			str++;
+		}
+		// direct value (decimal)
+		if(str[0]=='#') {
+			return (str[1]=='#') ? str[1] : atoi(str+1);
+		}
 		// check for utf8
 		if(  127<(uint8)*str  ) {
 			size_t len = 0;
@@ -263,14 +300,6 @@ static utf32 str_to_key( const char *str )
 			if(str[len]==',') {
 				return c;
 			}
-		}
-		// control char
-		if(str[0]=='^') {
-			return (str[1]&(~32))-64;
-		}
-		// direct value (decimal)
-		if(str[0]=='#') {
-			return atoi(str+1);
 		}
 		// Function key?
 		if(str[0]=='F') {
@@ -282,6 +311,10 @@ static utf32 str_to_key( const char *str )
 		// COMMA
 		if (strstart(str, "COMMA")) {
 			return ',';
+		}
+		// Scroll lock
+		if (strstart(str, "SCROLLLOCK")) {
+			return SIM_KEY_SCROLLLOCK;
 		}
 		// break/pause key
 		if (strstart(str, "PAUSE")) {
@@ -296,8 +329,17 @@ static utf32 str_to_key( const char *str )
 			return SIM_KEY_END;
 		}
 		// END
-		if (strstart(str, "END")) {
-			return SIM_KEY_END;
+		if (strstart(str, "ESC")) {
+			// but currently fixed binding!
+			return SIM_KEY_ESCAPE;
+		}
+		if (strstart(str, "DEL")) {
+			// but currently fixed binding!
+			return SIM_KEY_DELETE;
+		}
+		if (strstart(str, "BACKSPACE")) {
+			// but currently fixed binding!
+			return SIM_KEY_BACKSPACE;
 		}
 		// NUMPAD
 		if(  const char *c=strstart(str, "NUM_")  ) {
@@ -367,7 +409,7 @@ void tool_t::read_menu(const std::string &objfilename)
 {
 	char_to_tool.clear();
 	tabfile_t menuconf;
-	// only use pak specific menus, since otherwise  images may be missing
+	// only use pak specific menus, since otherwise images may be missing
 	if (!menuconf.open((objfilename+"config/menuconf.tab").c_str())) {
 		dbg->fatal("tool_t::init_menu()", "Can't read %sconfig/menuconf.tab", objfilename.c_str() );
 	}
@@ -490,12 +532,13 @@ void tool_t::read_menu(const std::string &objfilename)
 					str++;
 				}
 				if(*str>=' ') {
-					tool->command_key = str_to_key(str);
+					tool->command_key = str_to_key(str,&(tool->command_flags));
 					char_to_tool.append(tool);
 				}
 			}
 		}
 	}
+
 	// now the toolbar tools
 	DBG_MESSAGE( "tool_t::read_menu()", "Reading toolbars" );
 	toolbar_last_used_t::last_used_tools = new toolbar_last_used_t( TOOL_LAST_USED | TOOLBAR_TOOL, "Last used tools", "last_used.txt" );
@@ -524,7 +567,7 @@ void tool_t::read_menu(const std::string &objfilename)
 			const char *toolname = str;
 			image_id icon = IMG_EMPTY;
 			const char *key_str = NULL;
-			const char *param_str = NULL;	// in case of toolbars, it will also contain the tooltip
+			const char *param_str = NULL; // in case of toolbars, it will also contain the tooltip
 			// parse until next zero-level comma
 			uint level = 0;
 			while(*str) {
@@ -635,7 +678,8 @@ void tool_t::read_menu(const std::string &objfilename)
 				else {
 					dbg->error( "tool_t::read_menu()", "When parsing menuconf.tab: No simple tool %i defined (max %i)!", toolnr, (toolnr<0x80) ? SIMPLE_TOOL_STANDARD_COUNT : SIMPLE_TOOL_COUNT );
 				}
-			} else if (char const* const c = strstart(toolname, "dialog_tool[")) {
+			}
+			else if (char const* const c = strstart(toolname, "dialog_tool[")) {
 				uint8 const toolnr = atoi(c);
 				if(  toolnr<DIALOG_TOOL_COUNT  &&  ( toolnr<DIALOG_TOOL_STANDARD_COUNT || toolnr>=0x80 )  ) {
 					if(create_tool) {
@@ -688,7 +732,7 @@ void tool_t::read_menu(const std::string &objfilename)
 					addtool->icon = icon;
 				}
 				if(key_str!=NULL) {
-					addtool->command_key = str_to_key(key_str);
+					addtool->command_key = str_to_key(key_str,&(addtool->command_flags));
 					char_to_tool.append(addtool);
 				}
 				if(param_str!=NULL  &&  ((addtool->get_id() & TOOLBAR_TOOL) == 0)) {
@@ -776,7 +820,7 @@ const char *kartenboden_tool_t::check_pos(player_t *, koord3d pos )
 image_id toolbar_t::get_icon(player_t *player) const
 {
 	// no image for edit tools => do not open
-	if(  icon==IMG_EMPTY  ||  (player!=NULL  &&  strcmp(default_param,"EDITTOOLS")==0  &&  player->get_player_nr()!=1)  ) {
+	if(  icon==IMG_EMPTY  ||  (player!=NULL  &&  strcmp(default_param,"EDITTOOLS")==0  &&  player->get_player_nr()!=welt->get_public_player()->get_player_nr())  ) {
 		return IMG_EMPTY;
 	}
 	// now have we a least one visible tool?
@@ -929,7 +973,7 @@ bool toolbar_t::exit(player_t *)
 void toolbar_last_used_t::update(player_t *sp)
 {
 	tools.clear();
-	if(  sp  ){
+	if(  sp  ) {
 		for(  slist_tpl<tool_t *>::iterator iter = all_tools[sp->get_player_nr()].begin();  iter != all_tools[sp->get_player_nr()].end();  ++iter  ) {
 			tools.append( *iter );
 		}
@@ -940,7 +984,7 @@ void toolbar_last_used_t::update(player_t *sp)
 
 void toolbar_last_used_t::clear()
 {
-	for(  int i=0;  i <MAX_PLAYER_COUNT;  i++  ) {
+	for(  int i=0;  i < MAX_PLAYER_COUNT;  i++  ) {
 		all_tools[i].clear();
 	}
 	tools.clear();
@@ -960,7 +1004,7 @@ void toolbar_last_used_t::append( tool_t *t, player_t *sp )
 		TOOL_RENAME|SIMPLE_TOOL
 	};
 
-	if(  !sp ||  t->get_icon(sp)==IMG_EMPTY  ) {
+	if(  !sp  ||  t->get_icon(sp)==IMG_EMPTY  ) {
 		return;
 	}
 
@@ -986,6 +1030,8 @@ void toolbar_last_used_t::append( tool_t *t, player_t *sp )
 		update( sp );
 	}
 }
+
+
 
 bool two_click_tool_t::init(player_t *)
 {
@@ -1019,7 +1065,7 @@ bool two_click_tool_t::is_work_here_network_safe(player_t *player, koord3d pos )
 	if(  !is_first_click()  ) {
 		return false;
 	}
-	const char *error = "";	//default: nosound
+	const char *error = ""; //default: nosound
 	uint8 value = is_valid_pos( player, pos, error, koord3d::invalid );
 	DBG_MESSAGE("two_click_tool_t::is_work_here_network_safe", "Position %s valid=%d", pos.get_str(), value );
 	if(  value == 0  ) {
@@ -1137,7 +1183,7 @@ const char *two_click_tool_t::move(player_t *player, uint16 buttonstate, koord3d
 }
 
 
-void two_click_tool_t::start_at(koord3d &new_start )
+void two_click_tool_t::start_at( koord3d &new_start )
 {
 	first_click_var = false;
 	start = new_start;

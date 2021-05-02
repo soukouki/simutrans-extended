@@ -28,7 +28,14 @@ class goods_desc_t;
 class goods_frame_t : public gui_frame_t, private action_listener_t
 {
 private:
-	enum sort_mode_t { by_number, by_name, by_revenue, by_category, by_weight, SORT_MODES };
+	enum sort_mode_t {
+		by_number   = 0,
+		by_name     = 1,
+		by_revenue  = 2,
+		by_category = 3,
+		by_weight   = 4,
+		SORT_MODES  = 5
+	};
 	static const char *sort_text[SORT_MODES];
 
 	// static, so we remember the last settings
@@ -45,27 +52,16 @@ private:
 	static sort_mode_t sortby;
 	static bool filter_goods;
 
-	char		speed[6];
-	char		distance_txt[6];
-	char		comfort_txt[6];
-	char		catering_txt[6];
-	char		class_txt[6];
-	cbuffer_t	descriptive_text;
+	char speed[6];
+	char distance_txt[6];
+	char comfort_txt[6];
+	char catering_txt[6];
+	char class_txt[6];
+	cbuffer_t descriptive_text;
 	vector_tpl<const goods_desc_t*> good_list;
 
-	gui_combobox_t	sortedby;
-	button_t		sort_asc, sort_desc;
-
-	/*
-	button_t		speed_up;
-	button_t		speed_down;
-	button_t		distance_up;
-	button_t		distance_down;
-	button_t		comfort_up;
-	button_t		comfort_down;
-	button_t		catering_up;
-	button_t		catering_down;
-	*/
+	gui_combobox_t sortedby;
+	button_t sort_asc, sort_desc;
 
 	// replace button list with numberinput components for faster navigation
 	// @author: HeinBloed, April 2012
@@ -73,7 +69,7 @@ private:
 
 	gui_aligned_container_t *sort_row;
 
-	button_t		filter_goods_toggle;
+	button_t filter_goods_toggle;
 
 	goods_stats_t goods_stats;
 	gui_scrollpane_t scrolly;

@@ -4,7 +4,7 @@
  */
 
 #include "simdebug.h"
-#include "simobj.h"
+#include "obj/simobj.h"
 #include "simfab.h"
 #include "display/simgraph.h"
 #include "simmenu.h"
@@ -28,7 +28,7 @@
 #include "dataobj/loadsave.h"
 #include "dataobj/environment.h"
 
-#include "gui/karte.h"
+#include "gui/minimap.h"
 
 
 karte_ptr_t planquadrat_t::welt;
@@ -105,12 +105,13 @@ void planquadrat_t::boden_hinzufuegen(grund_t *bd)
 		// completely empty
 		data.one = bd;
 		ground_size = 1;
-		reliefkarte_t::get_karte()->calc_map_pixel(bd->get_pos().get_2d());
+		minimap_t::get_instance()->calc_map_pixel(bd->get_pos().get_2d());
 		return;
 	}
 	else if(ground_size==1) {
 		// needs to convert to array
-//	assert(data.one->get_hoehe()!=bd->get_hoehe());
+//		assert(data.one->get_hoehe()!=bd->get_hoehe());
+
 		if(data.one->get_hoehe()==bd->get_hoehe()) {
 DBG_MESSAGE("planquadrat_t::boden_hinzufuegen()","addition ground %s at (%i,%i,%i) will be ignored!",bd->get_name(),bd->get_pos().x,bd->get_pos().y,bd->get_pos().z);
 			return;
@@ -120,7 +121,7 @@ DBG_MESSAGE("planquadrat_t::boden_hinzufuegen()","addition ground %s at (%i,%i,%
 		tmp[1] = bd;
 		data.some = tmp;
 		ground_size = 2;
-		reliefkarte_t::get_karte()->calc_map_pixel(bd->get_pos().get_2d());
+		minimap_t::get_instance()->calc_map_pixel(bd->get_pos().get_2d());
 		return;
 	}
 	else {
@@ -149,7 +150,7 @@ DBG_MESSAGE("planquadrat_t::boden_hinzufuegen()","addition ground %s at (%i,%i,%
 		ground_size ++;
 		delete [] data.some;
 		data.some = tmp;
-		reliefkarte_t::get_karte()->calc_map_pixel(bd->get_pos().get_2d());
+		minimap_t::get_instance()->calc_map_pixel(bd->get_pos().get_2d());
 	}
 }
 
@@ -202,7 +203,7 @@ void planquadrat_t::kartenboden_setzen(grund_t *bd, bool startup)
 		// water tiles need neighbor tiles, which might not be initialized at startup
 		bd->calc_image();
 	}
-	reliefkarte_t::get_karte()->calc_map_pixel(bd->get_pos().get_2d());
+	minimap_t::get_instance()->calc_map_pixel(bd->get_pos().get_2d());
 }
 
 
@@ -269,16 +270,17 @@ void planquadrat_t::rdwr(loadsave_t *file, koord pos )
 
 			switch(gtyp) {
 				case -1: gr = NULL; break;
-				case grund_t::boden:	    gr = new boden_t(file, pos);                 break;
-				case grund_t::wasser:	    gr = new wasser_t(file, pos);                break;
-				case grund_t::fundament:	    gr = new fundament_t(file, pos);	     break;
-				case grund_t::tunnelboden:	    gr = new tunnelboden_t(file, pos);       break;
-				case grund_t::brueckenboden:    gr = new brueckenboden_t(file, pos);     break;
-				case grund_t::monorailboden:	    gr = new monorailboden_t(file, pos); break;
+				case grund_t::boden:         gr = new boden_t(file, pos);         break;
+				case grund_t::wasser:        gr = new wasser_t(file, pos);        break;
+				case grund_t::fundament:     gr = new fundament_t(file, pos);     break;
+				case grund_t::tunnelboden:   gr = new tunnelboden_t(file, pos);   break;
+				case grund_t::brueckenboden: gr = new brueckenboden_t(file, pos); break;
+				case grund_t::monorailboden: gr = new monorailboden_t(file, pos); break;
 				default:
 					gr = 0; // keep compiler happy, fatal() never returns
 					dbg->fatal("planquadrat_t::rdwr()","Error while loading game: Unknown ground type '%d'",gtyp);
 			}
+
 			// check if we have a matching building here, otherwise set to nothing
 			if (gr  &&  gtyp == grund_t::fundament  &&  gr->find<gebaeude_t>() == NULL) {
 				koord3d pos = gr->get_pos();
@@ -421,14 +423,14 @@ void planquadrat_t::abgesenkt()
 			kartenboden_setzen( gr );
 			// recalc water ribis of neighbors
 			for(int r=0; r<4; r++) {
-				grund_t *gr2 = welt->lookup_kartenboden(k + koord::nsew[r]);
+				grund_t *gr2 = welt->lookup_kartenboden(k + koord::nesw[r]);
 				if (gr2  &&  gr2->is_water()) {
 					gr2->calc_image();
 				}
 			}
 		}
 		else {
-			reliefkarte_t::get_karte()->calc_map_pixel(k);
+			minimap_t::get_instance()->calc_map_pixel(k);
 		}
 		gr->set_grund_hang( slope );
 	}
@@ -450,7 +452,7 @@ void planquadrat_t::angehoben()
 			kartenboden_setzen( gr );
 			// recalc water ribis
 			for(int r=0; r<4; r++) {
-				grund_t *gr2 = welt->lookup_kartenboden(k + koord::nsew[r]);
+				grund_t *gr2 = welt->lookup_kartenboden(k + koord::nesw[r]);
 				if(  gr2  &&  gr2->is_water()  ) {
 					gr2->calc_image();
 				}
@@ -462,14 +464,14 @@ void planquadrat_t::angehoben()
 			kartenboden_setzen( gr );
 			// recalc water ribis
 			for(int r=0; r<4; r++) {
-				grund_t *gr2 = welt->lookup_kartenboden(k + koord::nsew[r]);
+				grund_t *gr2 = welt->lookup_kartenboden(k + koord::nesw[r]);
 				if(  gr2  &&  gr2->is_water()  ) {
 					gr2->calc_image();
 				}
 			}
 		}
 		else {
-			reliefkarte_t::get_karte()->calc_map_pixel(k);
+			minimap_t::get_instance()->calc_map_pixel(k);
 		}
 	}
 }
@@ -532,7 +534,7 @@ void planquadrat_t::display_obj(const sint16 xpos, const sint16 ypos, const sint
 				// not too low?
 				if(  htop >= hmin  ) {
 					// something on top: clip horizontally to prevent trees etc shining trough bridges
-					const sint16 yh = ypos - tile_raster_scale_y( (h - h0) * TILE_HEIGHT_STEP, raster_tile_width ) + ((3 * raster_tile_width) >> 2);
+					const sint16 yh = ypos - tile_raster_scale_y( (h + corner_nw(data.some[j]->get_grund_hang()) - h0) * TILE_HEIGHT_STEP, raster_tile_width ) + ((3 * raster_tile_width) >> 2);
 					if(  yh >= p_cr.y  ) {
 						display_push_clip_wh(p_cr.x, yh, p_cr.w, p_cr.h + p_cr.y - yh  CLIP_NUM_PAR);
 					}
@@ -596,11 +598,13 @@ void planquadrat_t::display_overlay(const sint16 xpos, const sint16 ypos) const
 
 	// building transformers - show outlines of factories
 
-/*	alternative method of finding selected tool - may be more useful in future but use simpler method for now
+/*
+	// alternative method of finding selected tool - may be more useful in future but use simpler method for now
 	tool_t *tool = welt->get_tool(welt->get_active_player_nr());
 	int tool_id = tool->get_id();
 
-	if(tool_id==(TOOL_TRANSFORMER|GENERAL_TOOL)....	*/
+	if(tool_id==(TOOL_TRANSFORMER|GENERAL_TOOL)....
+*/
 
 	if ((grund_t::underground_mode == grund_t::ugm_all
 		 || (grund_t::underground_mode == grund_t::ugm_level  &&  gr->get_hoehe() == grund_t::underground_level + welt->get_settings().get_way_height_clearance()))

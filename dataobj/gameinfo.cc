@@ -15,7 +15,7 @@
 #include "../simhalt.h"
 #include "../descriptor/ground_desc.h"
 #include "../player/simplay.h"
-#include "../gui/karte.h"
+#include "../gui/minimap.h"
 #include "../utils/simrandom.h"
 #include "../utils/simstring.h"
 #include "loadsave.h"
@@ -53,7 +53,7 @@ gameinfo_t::gameinfo_t(karte_t *welt) :
 		for( uint16 j = 0; j < MINIMAP_SIZE; j++ ) {
 			const koord pos(i * gr_x / MINIMAP_SIZE, j * gr_y / MINIMAP_SIZE);
 			const grund_t* gr = welt->lookup_kartenboden(pos);
-			map_rgb.at(i,j) = reliefkarte_t::calc_relief_farbe(gr);
+			map_rgb.at(i,j) = minimap_t::calc_ground_color(gr);
 			map_idx.at(i,j) = color_rgb_to_idx( map_rgb.at(i,j) );
 		}
 	}
@@ -131,9 +131,16 @@ void gameinfo_t::rdwr(loadsave_t *file)
 	file->rdwr_long( size_y );
 	for( int y=0;  y<MINIMAP_SIZE;  y++  ) {
 		for( int x=0;  x<MINIMAP_SIZE;  x++  ) {
-			file->rdwr_short( map_idx.at(x,y) );
-			if (file->is_loading()) {
-				map_rgb.at(x,y) = color_idx_to_rgb(map_idx.at(x,y));
+			if( file->is_version_ex_atleast(14, 32) ) {
+				file->rdwr_short(map_idx.at(x, y));
+				if (file->is_loading()) {
+					map_rgb.at(x,y) = color_idx_to_rgb(map_idx.at(x,y));
+				}
+			}
+			else if(file->is_loading()) {
+				uint8 color_idx;
+				file->rdwr_byte(color_idx);
+				map_rgb.at(x, y) = get_color_rgb(color_idx);
 			}
 		}
 	}
@@ -163,7 +170,7 @@ void gameinfo_t::rdwr(loadsave_t *file)
 
 	char temp[PATH_MAX];
 	tstrncpy( temp, game_comment.c_str(), lengthof(temp) );
-	file->rdwr_str( temp, lengthof(temp) );	// game_comment
+	file->rdwr_str( temp, lengthof(temp) ); // game_comment
 	if(  file->is_loading()  ) {
 		game_comment = temp;
 	}

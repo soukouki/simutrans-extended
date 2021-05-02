@@ -66,13 +66,14 @@ private:
 	depot_t *depot;
 	gui_label_buf_t lb_name, lb_cnv_count, lb_vh_count, lb_region;
 	gui_image_t waytype_symbol;
-	button_t	gotopos;
+	button_t gotopos;
 
 	void update_label();
 
 public:
 	static uint8 sort_mode;
 	static bool reverse;
+	static uint16 name_width;
 
 	depotlist_stats_t(depot_t *);
 

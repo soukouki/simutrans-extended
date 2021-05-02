@@ -49,7 +49,7 @@
 
 #include "gui/halt_info.h"
 #include "gui/halt_detail.h"
-#include "gui/karte.h"
+#include "gui/minimap.h"
 
 #include "utils/simrandom.h"
 #include "utils/simstring.h"
@@ -62,13 +62,13 @@ karte_ptr_t haltestelle_t::welt;
 
 vector_tpl<halthandle_t> haltestelle_t::alle_haltestellen;
 
-stringhashtable_tpl<halthandle_t> haltestelle_t::all_names;
+stringhashtable_tpl<halthandle_t, N_BAGS_LARGE> haltestelle_t::all_names;
 
 vector_tpl<lines_loaded_t> haltestelle_t::lines_loaded;
 
 uint8 haltestelle_t::pedestrian_limit = 0;
 // hash table only used during loading
-inthashtable_tpl<sint32,halthandle_t> *haltestelle_t::all_koords = NULL;
+inthashtable_tpl<sint32,halthandle_t,N_BAGS_LARGE> *haltestelle_t::all_koords = NULL;
 // since size_x*size_y < 0x1000000, we have just to shift the high bits
 #define get_halt_key(k,width) ( ((k).x*(width)+(k).y) /*+ ((k).z << 25)*/ )
 
@@ -104,7 +104,7 @@ static vector_tpl<linehandle_t>stale_lines;
 
 void haltestelle_t::start_load_game()
 {
-	all_koords = new inthashtable_tpl<sint32,halthandle_t>;
+	all_koords = new inthashtable_tpl<sint32,halthandle_t,N_BAGS_LARGE>;
 }
 
 
@@ -334,7 +334,7 @@ DBG_DEBUG("haltestelle_t::remove()","not last");
 	// if building was removed this is false!
 	if(bd) {
 		bd->calc_image();
-		reliefkarte_t::get_karte()->calc_map_pixel(pos.get_2d());
+		minimap_t::get_instance()->calc_map_pixel(pos.get_2d());
 	}
 	return true;
 }
@@ -425,6 +425,7 @@ haltestelle_t::haltestelle_t(loadsave_t* file)
 
 	status_color = SYSCOL_TEXT_UNUSED;
 	last_status_color = color_idx_to_rgb(COL_PURPLE);
+	status_color_freight = COL_INACTIVE;
 	last_bar_count = 0;
 
 	enables = NOT_ENABLED;
@@ -497,9 +498,11 @@ haltestelle_t::haltestelle_t(koord k, player_t* player)
 
 	status_color = SYSCOL_TEXT_UNUSED;
 	last_status_color = color_idx_to_rgb(COL_PURPLE);
+	status_color_freight = COL_INACTIVE;
 	last_bar_count = 0;
 
 	sortierung = freight_list_sorter_t::by_name;
+	resort_freight_info = true;
 	init_financial_history();
 
 	check_waiting = 0;
@@ -796,7 +799,7 @@ void haltestelle_t::set_name(const char *new_name)
 		if(!gr->find<label_t>()) {
 			gr->set_text( new_name );
 			if(new_name  &&  all_names.set(gr->get_text(),self).is_bound() ) {
- 				DBG_MESSAGE("haltestelle_t::set_name()","name %s already used!",new_name);
+				DBG_MESSAGE("haltestelle_t::set_name()","name %s already used!",new_name);
 			}
 		}
 		// Knightly : need to update the title text of the associated halt detail and info dialogs, if present
@@ -1432,7 +1435,6 @@ void haltestelle_t::step()
 
 /**
  * Called every month
- * @author Hj. Malthaner
  */
 void haltestelle_t::new_month()
 {
@@ -1744,7 +1746,7 @@ sint8 haltestelle_t::is_connected(halthandle_t halt, uint8 catg_index) const
 
 uint32 haltestelle_t::get_average_waiting_time(halthandle_t halt, uint8 category, uint8 g_class)
 {
-	inthashtable_tpl<uint32, haltestelle_t::waiting_time_set> * const wt = waiting_times[category][g_class];
+	inthashtable_tpl<uint32, haltestelle_t::waiting_time_set, N_BAGS_SMALL> * const wt = waiting_times[category][g_class];
 	if(wt->is_contained((halt.get_id())))
 	{
 		fixed_list_tpl<uint32, 32> times = waiting_times[category][g_class]->get(halt.get_id()).times;
@@ -1959,7 +1961,7 @@ uint32 haltestelle_t::calc_service_frequency(halthandle_t destination, uint8 cat
 
 linehandle_t haltestelle_t::get_preferred_line(halthandle_t transfer, uint8 category, uint8 g_class) const
 {
-	if(connexions[category][g_class]->empty() || connexions[category][g_class]->get(transfer) == NULL)
+	if(category >= goods_manager_t::get_max_catg_index() || connexions[category][g_class]->empty() || connexions[category][g_class]->get(transfer) == NULL)
 	{
 		linehandle_t dummy;
 		return dummy;
@@ -1970,7 +1972,7 @@ linehandle_t haltestelle_t::get_preferred_line(halthandle_t transfer, uint8 cate
 
 convoihandle_t haltestelle_t::get_preferred_convoy(halthandle_t transfer, uint8 category, uint8 g_class) const
 {
-	if(connexions[category][g_class]->empty() || connexions[category][g_class]->get(transfer) == NULL)
+	if(category >= goods_manager_t::get_max_catg_index() || connexions[category][g_class]->empty() || connexions[category][g_class]->get(transfer) == NULL)
 	{
 		convoihandle_t dummy;
 		return dummy;
@@ -2137,27 +2139,18 @@ uint32 haltestelle_t::find_route(const vector_tpl<halthandle_t>& destination_hal
 
  	koord destination_stop_pos = destination_pos;
 
-	bool is_freight = false;
+	bool is_freight;
 	uint8 g_class;
 	uint8 ware_catg;
 
-	if (ware.is_freight())
-	{
-		is_freight = true;
-		ware_catg = ware.get_desc()->get_catg_index();
-		g_class = 0;
-	}
-	else if (ware.is_mail())
-	{
-		ware_catg = goods_manager_t::INDEX_MAIL;
-		g_class = 0;
-	}
-	else // Passengers
-	{
-		// Class only matters for passengers
-		g_class = ware.g_class;
-		ware_catg = goods_manager_t::INDEX_PAS;
-	}
+
+	assert(ware.is_passenger() == (ware.get_desc()->get_catg_index() == goods_manager_t::INDEX_PAS));
+	assert(ware.is_mail() == (ware.get_desc()->get_catg_index() == goods_manager_t::INDEX_MAIL));
+
+	is_freight = ware.is_freight(); //Obvious
+    ware_catg = ware.get_desc()->get_catg_index(); //pax will always return 0 here; mail will always return 1 here
+    g_class = ware.g_class; //In case of freight always 0
+
 
 	bool found_a_halt = false;
 
@@ -2369,19 +2362,7 @@ bool haltestelle_t::fetch_goods(slist_tpl<ware_t> &load, const goods_desc_t *goo
 			if(ware->menge > 0)
 			{
 				i++;
-				if (mixed_load_prohibition) {
-					// this vehicle only load with the same kind of goods initially loaded
-					if (!goods_restriction) {
-						goods_restriction = ware->get_index();
-					}
-					if (ware->get_index() == goods_restriction) {
-						goods_to_check.insert(ware);
-					}
-					else {
-						other_classes_available = true;
-					}
-				}
-				else if (ware->get_class() >= g_class)
+				if (ware->get_class() >= g_class)
 				{
 					// We know at this stage that we cannot load passengers of a *lower* class into higher class accommodation,
 					// but we cannot yet know whether or not to load passengers of a higher class into lower class accommodation.
@@ -2672,6 +2653,17 @@ bool haltestelle_t::fetch_goods(slist_tpl<ware_t> &load, const goods_desc_t *goo
 						}
 					}
 
+					if (mixed_load_prohibition) {
+						// this vehicle only load with the same kind of goods initially loaded
+						if (goods_restriction == goods_manager_t::INDEX_NONE) {
+							goods_restriction = next_to_load->get_index();
+						}
+						if (next_to_load->get_index() != goods_restriction) {
+							schedule->increment_index(&index, &reverse);
+							continue;
+						}
+					}
+
 					// Refuse to be overcrowded if alternative exists
 					connexion * const next_connexion = get_connexions(catg_index, g_class)->get(check_halt);
 					if(next_connexion  &&  overcrowded  &&  next_connexion->alternative_seats)
@@ -2797,6 +2789,27 @@ void haltestelle_t::update_alternative_seats(convoihandle_t cnv)
 	}
 }
 
+
+sint64 haltestelle_t::get_overcrowded_proporion(uint8 typ) const
+{
+	sint64 waiting_amount_of_this_typ = 0;
+	switch (typ) {
+		case 0:
+			waiting_amount_of_this_typ = get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS));
+			break;
+		case 1:
+			waiting_amount_of_this_typ = get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
+			break;
+		case 2:
+			waiting_amount_of_this_typ = financial_history[0][HALT_WAITING] - get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
+			break;
+		default:
+			return 0; // error
+	}
+	const sint64 catg_capacity = capacity[typ] ? (sint64)capacity[typ] : 1;
+	return (sint64)(waiting_amount_of_this_typ * 10ll / catg_capacity);
+}
+
 uint32 haltestelle_t::get_ware_summe(const goods_desc_t *wtyp) const
 {
 	int sum = 0;
@@ -2811,7 +2824,7 @@ uint32 haltestelle_t::get_ware_summe(const goods_desc_t *wtyp) const
 	return sum;
 }
 
-uint32 haltestelle_t::get_ware_summe(const goods_desc_t *wtyp, uint8 g_class) const
+uint32 haltestelle_t::get_ware_summe(const goods_desc_t *wtyp, uint8 g_class, bool chk_only_commuter) const
 {
 	if (g_class >= wtyp->get_number_of_classes()) {
 		return 0;
@@ -2820,7 +2833,8 @@ uint32 haltestelle_t::get_ware_summe(const goods_desc_t *wtyp, uint8 g_class) co
 	const vector_tpl<ware_t> * warray = cargo[wtyp->get_catg_index()];
 	if (warray != NULL) {
 		FOR(vector_tpl<ware_t>, const& i, *warray) {
-			if (wtyp->get_index() == i.get_index() && g_class == i.get_class()) {
+			if (wtyp->get_index() == i.get_index() && g_class == i.get_class()
+				&& (!chk_only_commuter || (chk_only_commuter && wtyp == goods_manager_t::passengers && i.is_commuting_trip))) {
 				sum += i.menge;
 			}
 		}
@@ -3359,6 +3373,7 @@ void haltestelle_t::get_freight_info(cbuffer_t & buf)
 			FOR(vector_tpl<transferring_cargo_t>, tc, transferring_cargoes[i])
 			{
 				ware = tc.ware;
+				ware.set_last_transfer(self);
 				ware_transfers.append(ware);
 			}
 		}
@@ -3786,10 +3801,8 @@ void haltestelle_t::rdwr(loadsave_t *file)
 	sint32 owner_n;
 	koord3d k;
 	// will restore halthandle_t after loading
-	if(file->get_version() > 110005)
-	{
-		if(file->is_saving())
-		{
+	if(file->is_version_atleast(110, 6)) {
+		if(file->is_saving()) {
 			if(!self.is_bound())
 			{
 				// Something has gone a bit wrong here, as the handle to self is not bound.
@@ -3836,16 +3849,16 @@ void haltestelle_t::rdwr(loadsave_t *file)
 		owner_n = welt->sp2num( owner );
 	}
 
-	if(file->get_version()<99008) {
+	if(file->is_version_less(99, 8)) {
 		init_pos.rdwr( file );
 	}
 	file->rdwr_long(owner_n);
 
-	if(file->get_version()<=88005) {
+	if(file->is_version_less(88, 6)) {
 		bool dummy;
 		file->rdwr_bool(dummy); // pax
 		file->rdwr_bool(dummy); // mail
-		file->rdwr_bool(dummy);	// ware
+		file->rdwr_bool(dummy); // ware
 	}
 
 	if(file->is_loading()) {
@@ -3911,13 +3924,11 @@ void haltestelle_t::rdwr(loadsave_t *file)
 			vector_tpl<ware_t> *warray = cargo[i];
 			uint32 ware_count = 1;
 
-			if(warray)
-			{
-				s = "y";	// needs to be non-empty
+			if(warray) {
+				s = "y"; // needs to be non-empty
 				file->rdwr_str(s);
 				bool has_uint16_count;
-				if(file->get_version() <= 112002 || file->get_extended_version() <= 10)
-				{
+				if(  file->is_version_less(112, 3) || file->get_extended_version() <= 10  ) {
 					const uint32 count = warray->get_count();
 					uint16 short_count = min(count, 65535u);
 					file->rdwr_short(short_count);
@@ -3961,8 +3972,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 		file->rdwr_str(s, lengthof(s));
 		while(*s) {
 			uint32 count;
-			if(  file->get_version() <= 112002  || (file->get_extended_version() > 0 && file->get_extended_version() <= 10) ) {
-				// Older versions stored only 16-bit count values.
+			if(  file->is_version_less(112, 3)  || (file->get_extended_version() > 0 && file->get_extended_version() <= 10)  ) {
 				uint16 scount;
 				file->rdwr_short(scount);
 				count = scount;
@@ -3998,7 +4008,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 
 		// old games save the list with stations
 		// however, we have to rebuilt them anyway for the new format
-		if(file->get_version()<99013) {
+		if(file->is_version_less(99, 13)) {
 			uint16 count;
 			file->rdwr_short(count);
 
@@ -4042,8 +4052,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 				{
 					// Walked passengers in Standard
 					// (Extended stores these in cities, not stops)
-					if(file->get_version() >= 111001)
-					{
+					if(  file->is_version_atleast(111, 1)  ) {
 						sint64 dummy = 0;
 						file->rdwr_longlong(dummy);
 					}
@@ -4305,8 +4314,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_extended_version() >=9 && file->get_version() >= 110000)
-	{
+	if(  file->get_extended_version() >=9 && file->is_version_atleast(110, 0)  ) {
 		file->rdwr_bool(do_alternative_seats_calculation);
 	}
 
@@ -4333,8 +4341,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 				add_halt_within_walking_distance(halt);
 			}
 		}
-		if(file->get_version() >= 111002)
-		{
+		if(  file->is_version_atleast(111, 2)  ) {
 			file->rdwr_byte(control_towers);
 		}
 	}
@@ -4367,7 +4374,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_extended_version() >= 12 || (file->get_version() >= 112007 && file->get_extended_version() >= 11))
+	if(file->get_extended_version() >= 12 || (file->is_version_atleast(112, 7) && file->get_extended_version() >= 11))
 	{
 		file->rdwr_byte(check_waiting);
 	}
@@ -4907,17 +4914,36 @@ void haltestelle_t::recalc_status()
 			}
 		}
 
+		bool has_active_freight_connection = transferring_total;
+		uint32 total_freight = 0;
 		for(  uint32 i = 3;  i < count;  i++  ) {
 			goods_desc_t const* const wtyp = goods_manager_t::get_info(i);
 			const uint32 ware_sum = get_ware_summe(wtyp);
+			if (gibt_ab(wtyp) && status_color_freight != color_idx_to_rgb(COL_OVERCROWD)) {
+				status_color_freight = COL_CLEAR;
+			}
+			if (ware_sum) {
+				has_active_freight_connection = true;
+			}
 
-			total_sum += ware_sum;
+			total_freight += ware_sum;
 			if((ware_sum + transferring_total) > max_ware)
 			{
 				status_bits |= (ware_sum + transferring_total) > max_ware + 32 || enables & CROWDED ? 2 : 1;
 				overcrowded[wtyp->get_index()/8] |= 1<<(wtyp->get_index()%8);
+				status_color_freight = color_idx_to_rgb(COL_OVERCROWD);
 			}
 		}
+		if (!has_active_freight_connection && status_color_freight != COL_CLEAR) {
+			status_color_freight = COL_INACTIVE;
+		}
+		else if (!total_freight && !transferring_total) {
+			status_color_freight = COL_CAUTION;
+		}
+		else if(status_color_freight != color_idx_to_rgb(COL_OVERCROWD)) {
+			status_color_freight = COL_CLEAR;
+		}
+		total_sum+=total_freight;
 	}
 
 	// take the worst color for status
@@ -4938,11 +4964,47 @@ void haltestelle_t::recalc_status()
 }
 
 
+PIXVAL haltestelle_t::get_status_color(uint8 typ) const
+{
+	switch (typ) {
+		case 0:
+			if (!get_pax_enabled() || !gibt_ab(goods_manager_t::get_info(goods_manager_t::INDEX_PAS))) {
+				return COL_INACTIVE;
+			}
+			if (!is_overcrowded(goods_manager_t::INDEX_PAS)) {
+				return COL_CLEAR;
+			}
+			break;
+		case 1:
+			if (!get_mail_enabled() || !gibt_ab(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL))) {
+				return COL_INACTIVE;
+			}
+			if (!is_overcrowded(goods_manager_t::INDEX_MAIL)) {
+				return COL_CLEAR;
+			}
+			break;
+		case 2:
+			if (!get_ware_enabled()) {
+				return COL_INACTIVE;
+			}
+			return status_color_freight;
+		default:
+			return COL_INACTIVE;
+	}
+	if (get_overcrowded_proporion(typ) == 0) {
+		return COL_CAUTION;
+	}
+	if (get_overcrowded_proporion(typ) < 10) {
+		return COL_CLEAR;
+	}
+	return color_idx_to_rgb(COL_OVERCROWD);
+}
+
 
 /**
  * Draws some nice colored bars giving some status information
  */
-void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
+void haltestelle_t::display_status(sint16 xpos, sint16 ypos)
 {
 	// ignore freight that cannot reach to this station
 	sint16 count = 0;
@@ -4987,13 +5049,13 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 
 	if(  count != last_bar_count  ) {
 		// bars will shift x positions, mark entire station bar region dirty
-		KOORD_VAL max_bar_height = 0;
+		scr_coord_val max_bar_height = 0;
 		for(  sint16 i = 0;  i < last_bar_count;  i++  ) {
 			if(  last_bar_height[i] > max_bar_height  ) {
 				max_bar_height = last_bar_height[i];
 			}
 		}
-		const KOORD_VAL x = xpos - (last_bar_count * D_WAITINGBAR_WIDTH - get_tile_raster_width()) / 2;
+		const scr_coord_val x = xpos - (last_bar_count * D_WAITINGBAR_WIDTH - get_tile_raster_width()) / 2;
 		mark_rect_dirty_wc( x - 1 - D_WAITINGBAR_WIDTH, ypos - 11 - max_bar_height - 6, x + last_bar_count * D_WAITINGBAR_WIDTH + 12 - 2, ypos - 11 );
 
 		// reset bar heights for new count
@@ -5007,19 +5069,22 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 
 	ypos -= D_LABEL_HEIGHT/2 +D_WAITINGBAR_WIDTH;
 	xpos -= (count * D_WAITINGBAR_WIDTH - get_tile_raster_width()) / 2;
-	const KOORD_VAL x = xpos;
+	const int x = xpos;
 
 	sint16 bar_height_index = 0;
 	uint32 max_capacity;
 	uint32 total_ware = 0;
 	for (uint8 i = 0; i < goods_manager_t::get_count(); i++) {
-		if (i == 2) {
+		if (i == goods_manager_t::INDEX_NONE) {
 			if (env_t::freight_waiting_bar_level == 1 /* category */) {
 				break;
 			}
 			else {
 				continue; // ignore freight none
 			}
+		}
+		if (i==goods_manager_t::INDEX_PAS && !get_pax_enabled() || i==goods_manager_t::INDEX_MAIL && !get_mail_enabled() || i>goods_manager_t::INDEX_NONE && !get_ware_enabled()) {
+			continue;
 		}
 		uint8 g_class = 1;
 		const goods_desc_t *wtyp = goods_manager_t::get_info(i);
@@ -5059,8 +5124,8 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 					display_fillbox_wh_clip_rgb(xpos + (D_WAITINGBAR_WIDTH / 2) - 2, ypos - v - 5, 4, 1, color_idx_to_rgb(COL_WHITE), false);
 				}
 
-				if (last_bar_height[bar_height_index] != (KOORD_VAL)v) {
-					if ((KOORD_VAL)v > last_bar_height[bar_height_index]) {
+				if (last_bar_height[bar_height_index] != (scr_coord_val)v) {
+					if ((scr_coord_val)v > last_bar_height[bar_height_index]) {
 						// bar will be longer, mark new height dirty
 						mark_rect_dirty_wc(xpos, ypos - v - 6, xpos + 4 - 1, ypos + 4 - 1);
 					}
@@ -5094,8 +5159,8 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 			display_fillbox_wh_clip_rgb(xpos + (D_WAITINGBAR_WIDTH / 2) - 2, ypos - v - 5, 4, 1, color_idx_to_rgb(COL_WHITE), false);
 		}
 
-		if (last_bar_height[bar_height_index] != (KOORD_VAL)v) {
-			if ((KOORD_VAL)v > last_bar_height[bar_height_index]) {
+		if (last_bar_height[bar_height_index] != (scr_coord_val)v) {
+			if ((scr_coord_val)v > last_bar_height[bar_height_index]) {
 				// bar will be longer, mark new height dirty
 				mark_rect_dirty_wc(xpos, ypos - v - 6, xpos + 4 - 1, ypos + 4 - 1);
 			}
@@ -5118,8 +5183,7 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 			total_ware = 0; // category total
 			// first, count category waiting total
 			if (gibt_ab(goods_manager_t::get_info_catg_index(i))) {
-				const uint8  count = goods_manager_t::get_count();
-				for (uint8 j = 3; j < count; j++) {
+				for (uint8 j = 3; j < goods_manager_t::get_count(); j++) {
 					goods_desc_t const* const wtyp2 = goods_manager_t::get_info(j);
 					if (wtyp2->get_catg_index() != i) {
 						continue;
@@ -5129,7 +5193,7 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 			}
 
 			// second, draw the bar
-			KOORD_VAL yoff = 0;
+			scr_coord_val yoff = 0;
 			max_capacity = get_capacity(2);
 			if (gibt_ab(goods_manager_t::get_info_catg_index(i))) {
 				uint32 v = min(total_ware, get_capacity(2));
@@ -5139,14 +5203,13 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 				else {
 					v = (v / 4) + 2;
 				}
-				const uint8  count = goods_manager_t::get_count();
-				for (uint8 j = 3; j < count; j++) {
+				for (uint8 j = 3; j < goods_manager_t::get_count(); j++) {
 					goods_desc_t const* const wtyp2 = goods_manager_t::get_info(j);
 					if (wtyp2->get_catg_index() != i) {
 						continue;
 					}
 					if (total_ware) {
-						KOORD_VAL h = (v*get_ware_summe(wtyp2) + total_ware-1) / total_ware;
+						scr_coord_val h = (v*get_ware_summe(wtyp2) + total_ware-1) / total_ware;
 						h = min(h, v-yoff);
 
 						display_fillbox_wh_clip_rgb(xpos, ypos - v - 1 + yoff, 1, h, color_idx_to_rgb(COL_GREY4), false);
@@ -5162,8 +5225,8 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 					display_fillbox_wh_clip_rgb(xpos + (D_WAITINGBAR_WIDTH / 2) - 2, ypos - v - 5, 4, 1, color_idx_to_rgb(COL_WHITE), false);
 				}
 
-				if (last_bar_height[bar_height_index] != (KOORD_VAL)v) {
-					if ((KOORD_VAL)v > last_bar_height[bar_height_index]) {
+				if (last_bar_height[bar_height_index] != (scr_coord_val)v) {
+					if ((scr_coord_val)v > last_bar_height[bar_height_index]) {
 						// bar will be longer, mark new height dirty
 						mark_rect_dirty_wc(xpos, ypos - v - 6, xpos + 4 - 1, ypos + 4 - 1);
 					}
@@ -5533,6 +5596,306 @@ void haltestelle_t::mark_unmark_coverage(const bool mark, const bool factories) 
 	}
 }
 
+
+uint32 haltestelle_t::get_around_population(uint8 g_class) const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				sum += (g_class == 255) ? gb->get_adjusted_population() : gb->get_adjusted_population_by_class(g_class);
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_visitor_demand(uint8 g_class) const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				sum += (g_class == 255) ? gb->get_adjusted_visitor_demand() : gb->get_adjusted_visitor_demand_by_class(g_class);
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_job_demand(uint8 g_class) const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				sum += (g_class == 255) ? gb->get_adjusted_jobs() : gb->get_adjusted_jobs_by_class(g_class);
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_visitor_generated() const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				sum += gb->get_passengers_generated_visiting();
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_succeeded_visiting() const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				// Must not exceed 100%! That is, the number of successes <= the number of generations must be, in any buildings
+				sum += min(gb->get_passengers_succeeded_visiting(), gb->get_passengers_generated_visiting());
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_commuter_generated() const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				sum += gb->get_passengers_generated_commuting();
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_succeeded_commuting() const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				// Must not exceed 100%! That is, the number of successes <= the number of generations must be, in any buildings
+				sum += min(gb->get_passengers_succeeded_commuting(), gb->get_passengers_generated_commuting());
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_employee_factor() const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				sum += gb->get_adjusted_jobs() - max(gb->check_remaining_available_jobs(),0);
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_mail_demand() const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				sum += gb->get_adjusted_mail_demand();
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_mail_generated() const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				sum += gb->get_mail_generated();
+			}
+		}
+	}
+	return sum;
+}
+
+uint32 haltestelle_t::get_around_mail_delivery_succeeded() const
+{
+	uint32 sum = 0;
+	uint16 const cov = welt->get_settings().get_station_coverage();
+
+	koord ul(32767, 32767);
+	koord lr(0, 0);
+	FOR(slist_tpl<tile_t>, const& i, tiles) {
+		ul.clip_max(i.grund->get_pos().get_2d());
+		lr.clip_min(i.grund->get_pos().get_2d());
+	}
+
+	ul.x = max(0, ul.x - cov);
+	ul.y = max(0, ul.y - cov);
+	lr.x = min(welt->get_size().x, lr.x + 1 + cov);
+	lr.y = min(welt->get_size().y, lr.y + 1 + cov);
+	for (int y = ul.y; y < lr.y; y++) {
+		for (int x = ul.x; x < lr.x; x++) {
+			gebaeude_t* const gb = welt->access_nocheck(x, y)->get_kartenboden()->find<gebaeude_t>();
+			if (gb && gb == gb->get_first_tile()) {
+				// Must not exceed 100%! That is, the number of successes <= the number of generations must be, in any buildings
+				sum += min(gb->get_mail_delivery_succeeded(), gb->get_mail_generated());
+			}
+		}
+	}
+	return sum;
+}
 
 
 /* Find a tile where this type of vehicle could stop
@@ -5932,45 +6295,17 @@ void haltestelle_t::calc_transfer_time()
 	// Adjust for overcrowding - transfer time increases with a more crowded stop.
 	// TODO: Better separate waiting times for different types of goods.
 
-	const uint8 max_categories = goods_manager_t::get_max_catg_index();
-	sint64 waiting_passengers = 0;
-	sint64 waiting_goods = 0;
 	// TODO: Consider adding waiting mail here, too
 	// This would require a separete mail transfer time.
 
-	for(uint8 i = 0; i < max_categories; i++)
+	if(get_overcrowded_proporion(0) >= 10)
 	{
-		if(cargo[i])
-		{
-			if (i == goods_manager_t::INDEX_PAS)
-			{
-				vector_tpl<ware_t> * warray = cargo[i];
-				FOR(vector_tpl<ware_t>, &w, *warray)
-				{
-					waiting_passengers += w.menge;
-				}
-			}
-			else if (i > goods_manager_t::INDEX_NONE)
-			{
-				vector_tpl<ware_t> * warray = cargo[i];
-				FOR(vector_tpl<ware_t>, &w, *warray)
-				{
-					waiting_goods += w.menge;
-				}
-			}
-		}
+		transfer_time = (uint32)std::min(std::max((sint64)transfer_time, (get_overcrowded_proporion(0) * (2ll * get_overcrowded_proporion(0))) / 10ll), (sint64)transfer_time * 10ll);
 	}
 
-	if(capacity[0] > 0 && waiting_passengers > capacity[0])
+	if(get_overcrowded_proporion(2) >= 10)
 	{
-		const sint64 overcrowded_proporion_passengers = waiting_passengers * 10ll / capacity[0];
-		transfer_time = (uint32)std::min(std::max((sint64)transfer_time, (overcrowded_proporion_passengers * (2ll * overcrowded_proporion_passengers)) / 10ll), (sint64)transfer_time * 10ll);
-	}
-
-	if(capacity[2] > 0 && waiting_goods > capacity[2])
-	{
-		const sint64 overcrowded_proportion_goods = waiting_goods * 10ll / capacity[2];
-		transshipment_time = (uint32)std::min(std::max((sint64)transshipment_time, (overcrowded_proportion_goods * (2ll *overcrowded_proportion_goods)) / 10ll), (sint64)transshipment_time * 10ll);
+		transshipment_time = (uint32)std::min(std::max((sint64)transshipment_time, (get_overcrowded_proporion(2) * (2ll * get_overcrowded_proporion(2))) / 10ll), (sint64)transshipment_time * 10ll);
 	}
 
 	// For reference, with a transshipment speed of 1 km/h and a walking speed of 5 km/h,

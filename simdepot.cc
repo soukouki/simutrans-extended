@@ -47,7 +47,7 @@ depot_t::depot_t(loadsave_t *file) : gebaeude_t()
 #endif
 {
 	rdwr(file);
-	if(file->get_version()<88002) {
+	if(file->is_version_less(88, 2)) {
 		set_yoff(0);
 	}
 	all_depots.append(this);
@@ -62,7 +62,7 @@ depot_t::depot_t(obj_t::typ type, koord3d pos, player_t *player, const building_
     gebaeude_t(type, pos, player, t)
 #else
 depot_t::depot_t(koord3d pos, player_t *player, const building_tile_desc_t *t) :
-    gebaeude_t(pos, player, t)
+	gebaeude_t(pos, player, t)
 #endif
 {
 	all_depots.append(this);
@@ -222,7 +222,7 @@ void depot_t::show_info()
 vehicle_t* depot_t::buy_vehicle(const vehicle_desc_t* info, uint16 livery_scheme_index)
 {
 	DBG_DEBUG("depot_t::buy_vehicle()", info->get_name());
-	vehicle_t* veh = vehicle_builder_t::build(get_pos(), get_owner(), NULL, info, false, livery_scheme_index); //"owner" = "owner" (Google)
+	vehicle_t* veh = vehicle_builder_t::build(get_pos(), get_owner(), NULL, info, false, livery_scheme_index);
 	DBG_DEBUG("depot_t::buy_vehicle()", "vehiclebauer %p", veh);
 	vehicles.append(veh);
 	DBG_DEBUG("depot_t::buy_vehicle()", "appended %i vehicle", vehicles.get_count());
@@ -668,8 +668,8 @@ void depot_t::rdwr(loadsave_t *file)
 	gebaeude_t::rdwr(file);
 
 	rdwr_vehicle(vehicles, file);
-	if (file->get_version() < 81033) {
-		// waggons are stored extra, just add them to vehicles
+	if (file->is_version_less(81, 33)) {
+		// wagons are stored extra, just add them to vehicles
 		assert(file->is_loading());
 		rdwr_vehicle(vehicles, file);
 	}
@@ -750,7 +750,7 @@ void depot_t::rdwr_vehicle(slist_tpl<vehicle_t *> &list, loadsave_t *file)
 const char * depot_t:: is_deletable(const player_t *player)
 {
 	if(player!=get_owner()  &&  player!=welt->get_public_player()) {
-		return "Das Feld gehoert\neinem anderen Spieler\n";
+		return NOTICE_OWNED_BY_OTHER_PLAYER;
 	}
 	if (!vehicles.empty()) {
 		return "There are still vehicles\nstored in this depot!\n";

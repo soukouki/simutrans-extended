@@ -29,12 +29,11 @@
 
 #include "simconst.h"
 
-#include "simobj.h"
+#include "obj/simobj.h"
 #include "convoy.h"
 
 /*
  * Waiting time for infinite loading (ms)
- * @author Hj- Malthaner
  */
 #define WAIT_INFINITE 9223372036854775807ll
 #define MAX_MONTHS               12 // Max history
@@ -55,7 +54,7 @@ class departure_point_t;
 * The table of point-to-point average journey times.
 * @author jamespetts
 */
-typedef koordhashtable_tpl<id_pair, average_tpl<uint32> > journey_times_map;
+typedef koordhashtable_tpl<id_pair, average_tpl<uint32>, N_BAGS_SMALL> journey_times_map;
 
 #ifdef MULTI_THREAD
 struct route_range_specification
@@ -89,7 +88,8 @@ public:
 	/** Constants */
 	enum { max_vehicle=8, max_rail_vehicle = 64 };
 
-	enum states {INITIAL,
+	enum states {
+		INITIAL,
 		EDIT_SCHEDULE,
 		ROUTING_1,
 		ROUTING_2,
@@ -225,13 +225,13 @@ private:
 	bool re_ordered; // Whether this convoy's vehicles are currently arranged in reverse order.
 protected:
 	virtual void update_vehicle_summary(vehicle_summary_t &vehicle) OVERRIDE;
-	virtual void update_adverse_summary(adverse_summary_t &adverse) OVERRIDE;
 	virtual void update_freight_summary(freight_summary_t &freight) OVERRIDE;
 	virtual void update_weight_summary(weight_summary_t &weight);
 	virtual float32e8_t get_brake_summary(/*const float32e8_t &speed*/ /* in m/s */) OVERRIDE;
-	virtual float32e8_t get_force_summary(const float32e8_t &speed /* in m/s */) OVERRIDE;
 	virtual float32e8_t get_power_summary(const float32e8_t &speed /* in m/s */) OVERRIDE;
 public:
+	virtual void update_adverse_summary(adverse_summary_t &adverse) OVERRIDE;
+	virtual float32e8_t get_force_summary(const float32e8_t &speed /* in m/s */) OVERRIDE;
 	virtual sint16 get_current_friction() OVERRIDE;
 
 	// weight_summary becomes invalid, when vehicle_summary or envirion_summary
@@ -562,7 +562,7 @@ private:
 	 * "last_departure_time" member.
 	 * Modified October 2011 to include accumulated distance.
 	 */
-	typedef koordhashtable_tpl<departure_point_t, departure_data_t> departure_map;
+	typedef koordhashtable_tpl<departure_point_t, departure_data_t, N_BAGS_SMALL> departure_map;
 	departure_map departures;
 
 	/*
@@ -576,7 +576,7 @@ private:
 	 * via D has elapsed. The key is the ID for the pair of stops, and
 	 * the value is the last departure time booked between those stops.
 	 */
-	typedef koordhashtable_tpl<id_pair, sint64> departure_time_map;
+	typedef koordhashtable_tpl<id_pair, sint64, N_BAGS_SMALL> departure_time_map;
 	departure_time_map departures_already_booked;
 
 	/**
@@ -585,7 +585,7 @@ private:
 	* convoy will arrive at each stop in its schedule by concatenating
 	* strings of these and adding the waiting time for each stop.
 	*/
-	typedef koordhashtable_tpl<departure_point_t, average_tpl<uint16> > timings_map;
+	typedef koordhashtable_tpl<departure_point_t, average_tpl<uint16>, N_BAGS_SMALL> timings_map;
 	timings_map journey_times_between_schedule_points;
 
 	// @author: suitougreentea

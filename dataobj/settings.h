@@ -119,7 +119,7 @@ private:
 	sint32 growthfactor_medium;
 	sint32 growthfactor_large;
 
-	sint16 special_building_distance;	// distance between attraction to factory or other special buildings
+	sint16 special_building_distance; // distance between attraction to factory or other special buildings
 	uint32 industry_increase;
 	uint32 city_isolation_factor;
 
@@ -348,7 +348,29 @@ private:
 	* the faster the performance. Reduce this number if momentary
 	* unresponsiveness be noticed frequently.
 	*/
-	uint32 max_route_tiles_to_process_in_a_step = 1024;
+	uint32 max_route_tiles_to_process_in_a_step = 16384;
+
+	/**
+	* Same as max_route_tiles_to_process_in_a_step, but this is the number
+	* used when running as a server when paused because no clients are
+	* connected and configured to run background tasks while paused.
+	*/
+	uint32 max_route_tiles_to_process_in_a_step_paused_background = 65535;
+
+	/**
+	* These settings allow fine tuning the private car routing algorithm
+	* apropos how many routes are recorded. On larger maps, recording
+	* private car routes can take up a large amount of memory, so it
+	* can be useful to be able to disable some sorts of private car route
+	* recording.
+	*
+	* The numbers represent the maximum visitor demand threshold for the destination
+	* to which this rule applies. If 0, the rule does not apply.
+	*/
+	uint32 private_car_route_to_attraction_visitor_demand_threshold = 120;
+	uint32 private_car_route_to_industry_visitor_demand_threshold = 120;
+	bool do_not_record_private_car_routes_to_distant_non_consumer_industries = true;
+	bool do_not_record_private_car_routes_to_city_buildings = true;
 
 	/**
 	* This modifies the base journey time tolerance for passenger
@@ -571,7 +593,7 @@ private:
 	sint16 used_vehicle_reduction;
 
 	uint32 random_counter;
-	uint32 frames_per_second;	// only used in network mode ...
+	uint32 frames_per_second; // only used in network mode ...
 	uint32 frames_per_step;
 	uint32 server_frames_ahead;
 
@@ -603,7 +625,7 @@ private:
 
 public:
 	/* the big cost section */
-	sint32 maint_building;	// normal building
+	sint32 maint_building; // normal building
 
 	sint64 cst_multiply_dock;
 	sint64 cst_multiply_station;
@@ -728,8 +750,11 @@ public:
 
 	uint32 assumed_curve_radius_45_degrees;
 
-	sint32 max_speed_drive_by_sight_kmh;
-	sint32 max_speed_drive_by_sight;
+	sint32 max_speed_drive_by_sight_kmh = 9999;
+	sint32 max_speed_drive_by_sight = SINT32_MAX_VALUE;
+
+	sint32 max_speed_drive_by_sight_tram_kmh = 9999;
+	sint32 max_speed_drive_by_sight_tram = SINT32_MAX_VALUE;
 
 	uint32 time_interval_seconds_to_clear;
 	uint32 time_interval_seconds_to_caution;
@@ -1018,7 +1043,11 @@ public:
 	void set_allow_airports_without_control_towers(bool value) { allow_airports_without_control_towers = value; }
 
 	// allowed modes are 0,1,2
-	enum { TO_PREVIOUS=0, TO_TRANSFER, TO_DESTINATION };
+	enum {
+		TO_PREVIOUS = 0,
+		TO_TRANSFER,
+		TO_DESTINATION
+	};
 
 
 	bool is_avoid_overcrowding() const { return avoid_overcrowding; }
@@ -1219,8 +1248,8 @@ public:
 
 	uint32 get_max_diversion_tiles() const { return max_diversion_tiles; }
 
-	sint8 get_way_height_clearance() const { return way_height_clearance; }
-	void set_way_height_clearance( sint8 n ) { way_height_clearance = n; }
+	uint8 get_way_height_clearance() const { return way_height_clearance; }
+	void set_way_height_clearance( uint8 n ) { way_height_clearance = n; }
 
 	uint32 get_default_ai_construction_speed() const { return default_ai_construction_speed; }
 	void set_default_ai_construction_speed( uint32 n ) { default_ai_construction_speed = n; }
@@ -1239,6 +1268,8 @@ public:
 
 	sint32 get_max_speed_drive_by_sight_kmh() const { return max_speed_drive_by_sight_kmh; }
 	sint32 get_max_speed_drive_by_sight() const { return max_speed_drive_by_sight; }
+	sint32 get_max_speed_drive_by_sight_tram_kmh() const { return max_speed_drive_by_sight_tram_kmh; }
+	sint32 get_max_speed_drive_by_sight_tram() const { return max_speed_drive_by_sight_tram; }
 
 	uint32 get_time_interval_seconds_to_clear() const { return time_interval_seconds_to_clear; }
 	uint32 get_time_interval_seconds_to_caution() const { return time_interval_seconds_to_caution; }
@@ -1261,6 +1292,17 @@ public:
 
 	uint32 get_max_route_tiles_to_process_in_a_step() const { return max_route_tiles_to_process_in_a_step; }
 	void set_max_route_tiles_to_process_in_a_step(uint32 value) { max_route_tiles_to_process_in_a_step = value; }
+	uint32 get_max_route_tiles_to_process_in_a_step_paused_background() const { return max_route_tiles_to_process_in_a_step_paused_background; }
+	void set_max_route_tiles_to_process_in_a_step_paused_background(uint32 value) { max_route_tiles_to_process_in_a_step_paused_background = value; }
+
+	uint32 get_do_not_record_private_car_routes_to_city_attractions() const { return private_car_route_to_attraction_visitor_demand_threshold; }
+	void set_do_not_record_private_car_routes_to_city_attractions(uint32 value) { private_car_route_to_attraction_visitor_demand_threshold = value; }
+	uint32 get_do_not_record_private_car_routes_to_city_industries() const { return private_car_route_to_industry_visitor_demand_threshold; }
+	void set_do_not_record_private_car_routes_to_city_industries(uint32 value) { private_car_route_to_industry_visitor_demand_threshold = value; }
+	bool get_do_not_record_private_car_routes_to_distant_non_consumer_industries() const { return do_not_record_private_car_routes_to_distant_non_consumer_industries; }
+	void set_do_not_record_private_car_routes_to_distant_non_consumer_industries(bool value) { do_not_record_private_car_routes_to_distant_non_consumer_industries = value; }
+	bool get_do_not_record_private_car_routes_to_city_buildings() const { return do_not_record_private_car_routes_to_city_buildings; }
+	void set_do_not_record_private_car_routes_to_city_buildings(bool value) { do_not_record_private_car_routes_to_city_buildings = value; }
 };
 
 #endif

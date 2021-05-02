@@ -212,25 +212,25 @@ public:
 	void perlin_hoehe_loop(sint16, sint16, sint16, sint16);
 
 	enum player_cost {
-		WORLD_CITICENS=0,		//!< total people
-		WORLD_JOBS,				//!< total jobs
-		WORLD_VISITOR_DEMAND,	//!< total visitor demand
-		WORLD_GROWTH,			//!< growth (just for convenience)
-		WORLD_TOWNS,			//!< number of all cities
-		WORLD_FACTORIES,		//!< number of all consuming only factories
-		WORLD_CONVOIS,			//!< total number of convois
-		WORLD_CITYCARS,			//!< number of passengers completing their journeys by private car
-		WORLD_PAS_RATIO,		//!< percentage of passengers that started successful
-		WORLD_PAS_GENERATED,	//!< total number generated
-		WORLD_MAIL_RATIO,		//!< percentage of mail that started successful
-		WORLD_MAIL_GENERATED,	//!< all letters generated
-		WORLD_GOODS_RATIO,		//!< ratio of chain completeness
-		WORLD_TRANSPORTED_GOODS,//!< all transported goods
-		WORLD_CAR_OWNERSHIP,	//!< The proportion of people with access to a private car
+		WORLD_CITIZENS=0,        ///< total people
+		WORLD_JOBS,              ///< total jobs
+		WORLD_VISITOR_DEMAND,    ///< total visitor demand
+		WORLD_GROWTH,            ///< growth (just for convenience)
+		WORLD_TOWNS,             ///< number of all cities
+		WORLD_FACTORIES,         ///< number of all consuming only factories
+		WORLD_CONVOIS,           ///< total number of convois
+		WORLD_CITYCARS,          ///< number of passengers completing their journeys by private car
+		WORLD_PAS_RATIO,         ///< percentage of passengers that started successful
+		WORLD_PAS_GENERATED,     ///< total number generated
+		WORLD_MAIL_RATIO,        ///< percentage of mail that started successful
+		WORLD_MAIL_GENERATED,    ///< all letters generated
+		WORLD_GOODS_RATIO,       ///< ratio of chain completeness
+		WORLD_TRANSPORTED_GOODS, ///< all transported goods
+		WORLD_CAR_OWNERSHIP,     ///< The proportion of people with access to a private car
 		MAX_WORLD_COST
 	};
 
-	#define MAX_WORLD_HISTORY_YEARS  (12) // number of years to keep history
+	#define MAX_WORLD_HISTORY_YEARS   (12) // number of years to keep history
 	#define MAX_WORLD_HISTORY_MONTHS  (12) // number of months to keep history
 
 	enum route_status_type
@@ -245,13 +245,28 @@ public:
 		on_foot
 	};
 
-	enum { NORMAL=0, PAUSE_FLAG = 0x01, FAST_FORWARD=0x02, FIX_RATIO=0x04 };
+	enum {
+		NORMAL       = 0,
+		PAUSE_FLAG   = 1 << 0,
+		FAST_FORWARD = 1 << 1,
+		FIX_RATIO    = 1 << 2
+	};
 
 	/**
 	 * Missing things during loading:
 	 * factories, vehicles, roadsigns or catenary may be severe
 	 */
-	enum missing_level_t { NOT_MISSING=0, MISSING_FACTORY=1, MISSING_VEHICLE=2, MISSING_SIGN=3, MISSING_WAYOBJ=4, MISSING_ERROR=4, MISSING_BRIDGE, MISSING_BUILDING, MISSING_WAY };
+	enum missing_level_t {
+		NOT_MISSING     = 0,
+		MISSING_FACTORY = 1,
+		MISSING_VEHICLE = 2,
+		MISSING_SIGN    = 3,
+		MISSING_WAYOBJ  = 4,
+		MISSING_ERROR   = 4,
+		MISSING_BRIDGE,
+		MISSING_BUILDING,
+		MISSING_WAY
+	};
 
 	void set_car_ownership_history_month(int month, sint64 value) { finance_history_month[month][WORLD_CAR_OWNERSHIP] = value; }
 	void set_car_ownership_history_year(int year, sint64 value) { finance_history_year[year][WORLD_CAR_OWNERSHIP] = value; }
@@ -461,7 +476,7 @@ private:
 	 * @pre can_raise_to should be called before this method.
 	 * @see can_raise_to
 	 * @returns count of full raise operations (4 corners raised one level)
-	 * @note Clear tile, reset water/land type, calc reliefkarte (relief map) pixel.
+	 * @note Clear tile, reset water/land type, calc minimap pixel.
 	 */
 	int  raise_to(sint16 x, sint16 y, sint8 hsw, sint8 hse, sint8 hne, sint8 hnw);
 
@@ -485,7 +500,7 @@ private:
 	 * @pre can_lower_to should be called before this method.
 	 * @see can_lower_to
 	 * @returns count of full lower operations (4 corners lowered one level)
-	 * @note Clear tile, reset water/land type, calc reliefkarte (relief map) pixel.
+	 * @note Clear tile, reset water/land type, calc minimap pixel.
 	 */
 	int  lower_to(sint16 x, sint16 y, sint8 hsw, sint8 hse, sint8 hne, sint8 hnw);
 
@@ -759,7 +774,7 @@ private:
 	/**
 	 * Internal saving method.
 	 */
-	void save(loadsave_t *file,bool silent);
+	void save(loadsave_t *file, bool silent);
 
 	/**
 	 * Internal loading method.
@@ -780,6 +795,11 @@ private:
 	 * Will create rivers.
 	 */
 	void create_rivers(sint16 number);
+
+	/**
+	 * Will create lakes (multithreaded).
+	 */
+	void create_lakes_loop(sint16, sint16, sint16, sint16);
 
 	/**
 	 * Will create lakes.
@@ -829,7 +849,10 @@ private:
 	 */
 	uint32 server_last_announce_time;
 
-	enum { SYNCX_FLAG = 0x01, GRIDS_FLAG = 0x02 };
+	enum {
+		SYNCX_FLAG = 1 << 0,
+		GRIDS_FLAG = 1 << 1
+	};
 
 	void world_xy_loop(xy_loop_func func, uint8 flags);
 	static void *world_xy_loop_thread(void *);
@@ -912,8 +935,16 @@ private:
 	// >0: This is the number of parallel operations to use.
 	sint32 parallel_operations;
 
+	// These two maximum speeds are calculated monthly from player vehicle
+	// statistics and available vehicle statistics combined.
+	sint32 max_convoy_speed_ground;
+	sint32 max_convoy_speed_air;
+
 	/// A helper method for use in init/new month
 	void recalc_passenger_destination_weights();
+
+	/// To prevent pause_step constantly re-checking the private car routes when not necessary.
+	bool private_car_route_check_complete = false;
 
 #ifdef MULTI_THREAD
 	bool passengers_and_mail_threads_working;
@@ -969,6 +1000,7 @@ private:
 
 	destination find_destination(trip_type trip, uint8 g_class);
 
+	static sint32 cities_to_process;
 #ifdef MULTI_THREAD
 	friend void *check_road_connexions_threaded(void* args);
 	friend void *unreserve_route_threaded(void* args);
@@ -976,7 +1008,6 @@ private:
 	friend void *step_convoys_threaded(void* args);
 	friend void *path_explorer_threaded(void* args);
 	friend void *step_individual_convoy_threaded(void* args);
-	static sint32 cities_to_process;
 	static vector_tpl<convoihandle_t> convoys_next_step;
 	public:
 	static bool threads_initialised;
@@ -1149,6 +1180,11 @@ public:
 	 */
 	bool is_destroying() const { return destroying; }
 
+	uint32 get_cities_awaiting_private_car_route_check_count() const;
+#ifndef NETTOOL
+	uint32 get_cities_to_process() const { return cities_to_process; }
+#endif
+
 #ifdef MULTI_THREAD
 	/**
 	* @returns true if threads are being terminated
@@ -1229,7 +1265,13 @@ public:
 	 */
 	void call_change_player_tool(uint8 cmd, uint8 player_nr, uint16 param, bool scripted_call=false);
 
-	enum change_player_tool_cmds { new_player=1, toggle_freeplay=2, delete_player=3 };
+	enum change_player_tool_cmds {
+		new_player           = 1,
+		toggle_freeplay      = 2,
+		delete_player        = 3,
+		toggle_player_active = 4
+	};
+
 	/**
 	 * @param exec If false checks whether execution is allowed, if true executes tool.
 	 * @returns Whether execution is allowed.
@@ -1333,7 +1375,7 @@ public:
 		}
 	}
 
-	sint32 get_time_multiplier() const { return time_multiplier; }
+	sint32 get_time_multiplier() const;
 	void change_time_multiplier( sint32 delta );
 
 	/**
@@ -1428,12 +1470,12 @@ public:
 			{
 				// This situation can lead to loss of precision.
 				const sint64 adjusted_monthly_figure = (nominal_monthly_figure * 100ll) / adjustment_factor;
-				return (adjusted_monthly_figure * (1 << (ticks_per_world_month_shift - base_bits_per_month))) / 100ll;
+				return (adjusted_monthly_figure * (1u << (ticks_per_world_month_shift - base_bits_per_month))) / 100ll;
 			}
 			else
 			{
 				const sint64 adjusted_monthly_figure = nominal_monthly_figure / adjustment_factor;
-				return (adjusted_monthly_figure * (1 << (ticks_per_world_month_shift - base_bits_per_month)));
+				return (adjusted_monthly_figure * (1u << (ticks_per_world_month_shift - base_bits_per_month)));
 			}
 		}
 		else
@@ -1567,6 +1609,10 @@ public:
 		return seconds_to_ticks(seconds, get_settings().get_meters_per_tile());
 	}
 #endif
+	inline double tiles_to_km(uint32 tiles) const
+	{
+		return (double)tiles * get_settings().get_meters_per_tile() / 1000.0;
+	}
 	/**
 	* Adds a single tile of a building to the relevant world list for passenger
 	* and mail generation purposes
@@ -1910,7 +1956,7 @@ private:
 	 * lakes are left where there is no drainage
 	 */
 	void drain_tile(koord k, sint8 water_height);
-	bool can_flood_to_depth(koord k, sint8 new_water_height, sint8 *stage, sint8 *our_stage) const;
+	bool can_flood_to_depth(koord k, sint8 new_water_height, sint8 *stage, sint8 *our_stage, sint16, sint16, sint16, sint16) const;
 
 public:
 	void flood_to_depth(sint8 new_water_height, sint8 *stage);
@@ -2114,16 +2160,16 @@ public:
 	 * @return The natural slope at a position.
 	 * @note Uses the corner height for the best slope.
 	 */
-	uint8	recalc_natural_slope( const koord k, sint8 &new_height ) const;
+	uint8 recalc_natural_slope( const koord k, sint8 &new_height ) const;
 
 	/**
 	 * Returns the natural slope a a position using the grid.
 	 * @note No checking, and only using the grind for calculation.
 	 */
-	uint8	calc_natural_slope( const koord k ) const;
+	uint8 calc_natural_slope( const koord k ) const;
 
 	// Getter/setter methods for maintaining the industry density
-	inline uint32 get_target_industry_density() const { return ((uint32)finance_history_month[0][WORLD_CITICENS] * (sint64)industry_density_proportion) / 1000000ll; }
+	inline uint32 get_target_industry_density() const { return ((uint32)finance_history_month[0][WORLD_CITIZENS] * (sint64)industry_density_proportion) / 1000000ll; }
 	inline uint32 get_actual_industry_density() const { return actual_industry_density; }
 
 	inline void decrease_actual_industry_density(uint32 value) { actual_industry_density -= value; }
@@ -2155,7 +2201,7 @@ public:
 	 * File version used when loading (or current if generated)
 	 * @note Useful for finish_rd
 	 */
-	loadsave_t::combined_version load_version;
+	extended_version_t load_version;
 
 	/**
 	 * Checks if the planquadrat (tile) at coordinate (x,y)
@@ -2345,11 +2391,15 @@ public:
 	/**
 	 * Synchronous stepping of objects like vehicles.
 	 */
-	void sync_step(uint32 delta_t, bool sync, bool display );	// advance also the timer
+	void sync_step(uint32 delta_t, bool sync, bool display ); // advance also the timer
+
 	/**
 	 * Tasks that are more time-consuming, like route search of vehicles and production of factories.
 	 */
 	void step();
+
+	/// Tasks undertaken by a server when paused
+	void pause_step();
 
 //private:
 	inline planquadrat_t *access_nocheck(int i, int j) const {
@@ -2448,11 +2498,6 @@ public:
 	void recalc_transitions_loop(sint16, sint16, sint16, sint16);
 
 	/**
-	 * Loop creating grounds on all plans from height and water height - suitable for multithreading
-	 */
-	void create_grounds_loop(sint16, sint16, sint16, sint16);
-
-	/**
 	 * Loop cleans grounds so that they have correct boden and slope - suitable for multithreading
 	 */
 	void cleanup_grounds_loop(sint16, sint16, sint16, sint16);
@@ -2500,9 +2545,9 @@ public:
 	 * The sound plays lower when the position is outside the visible region.
 	 * @param pos Position at which the event took place.
 	 * @param idx Index of the sound
-	 * @author Hj. Malthaner
+	 * @param idx t is the type of sound (for selective muting etc.)
 	 */
-	bool play_sound_area_clipped(koord k, uint16 idx, waytype_t cooldown_type);
+	bool play_sound_area_clipped(koord k, uint16 idx, sound_type_t t, waytype_t cooldown_type);
 
 	void mute_sound( bool state ) { is_sound = !state; }
 
@@ -2515,7 +2560,7 @@ public:
 	 * Saves the map to a file.
 	 * @param Filename name of the file to write.
 	 */
-	void save(const char *filename, const loadsave_t::mode_t savemode, const char *version, const char *ex_version, const char* ex_revision, bool silent);
+	void save(const char *filename, bool autosave, const char *version, const char *ex_version, const char* ex_revision, bool silent);
 
 	/**
 	 * Loads a map from a file.
@@ -2650,9 +2695,11 @@ public:
 	inline void add_time_interval_signal_to_check(signal_t* sig) { time_interval_signals_to_check.append_unique(sig); }
 	inline bool remove_time_interval_signal_to_check(signal_t* sig) { return time_interval_signals_to_check.remove(sig); }
 
+	void calc_max_vehicle_speeds();
+
 private:
 
-	void calc_generic_road_time_per_tile_city() { generic_road_time_per_tile_city = calc_generic_road_time_per_tile(city_road); }
+	void calc_generic_road_time_per_tile_city() { generic_road_time_per_tile_city = calc_generic_road_time_per_tile(NULL); }
 	void calc_generic_road_time_per_tile_intercity();
 	void calc_max_road_check_depth();
 
@@ -2661,6 +2708,10 @@ private:
 	uint32 get_next_command_step();
 
 	void get_nearby_halts_of_tiles(const minivec_tpl<const planquadrat_t*> &tile_list, const goods_desc_t * wtyp, vector_tpl<nearby_halt_t> &halts) const;
+
+	void refresh_private_car_routes();
+
+	static void clear_private_car_routes() ;
 };
 
 

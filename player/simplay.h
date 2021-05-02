@@ -35,7 +35,15 @@ class finance_t;
 class player_t
 {
 public:
-	enum { EMPTY=0, HUMAN=1, AI_GOODS=2, AI_PASSENGER=3, MAX_AI, PASSWORD_PROTECTED=128 };
+	enum {
+		EMPTY        = 0,
+		HUMAN        = 1,
+		AI_GOODS     = 2,
+		AI_PASSENGER = 3,
+		AI_SCRIPTED  = 4,
+		MAX_AI,
+		PASSWORD_PROTECTED = 128
+	};
 
 protected:
 	char player_name_buf[256];
@@ -51,9 +59,10 @@ protected:
 	// when was the company founded
 	uint16 player_age;
 
+
 	/**
-	* Floating massages for all players here
-	*/
+	 * Floating massages for all players here
+	 */
 	class income_message_t {
 	public:
 		char str[33];
@@ -166,9 +175,9 @@ public:
 	 * @param amount earned money
 	 * @param wt transport type used in accounting statistics
 	 * @param cathegory parameter
-	 * 	0 ... passenger
-	 *	1 ... mail
-	 *	2 ... good (and powerlines revenue)
+	 *  0 ... passenger
+	 *  1 ... mail
+	 *  2 ... good (and powerlines revenue)
 	 */
 	void book_revenue(const sint64 amount, const koord k, const waytype_t wt=ignore_wt, sint32 cathegory=2);
 
@@ -301,7 +310,7 @@ public:
 	 * @param welt World this players belong to.
 	 * @param player_nr Number assigned to this player - it's an ID.
 	 */
-	player_t( uint8 player_nr );
+	player_t(uint8 player_nr );
 
 	virtual ~player_t();
 
@@ -368,7 +377,7 @@ public:
 	/*
 	 * Called after game is fully loaded;
 	 */
-	virtual void load_finished();
+	virtual void finish_rd();
 
 	virtual void rotate90( const sint16 y_size );
 
@@ -385,7 +394,7 @@ public:
 	/**
 	 * Report the player one of his vehicles has a problem
 	 */
-	virtual void report_vehicle_problem(convoihandle_t cnv,const koord3d ziel);
+	virtual void report_vehicle_problem(convoihandle_t cnv,const koord3d position);
 
 	/**
 	 * Tells the player the result of tool-work commands.
@@ -398,7 +407,7 @@ public:
 	 * is going to be deleted (flag==0)
 	 */
 	enum notification_factory_t {
-		notify_delete	// notified immediately before object is deleted (and before nulled in the slist_tpl<>)!
+		notify_delete // notified immediately before object is deleted (and before nulled in the slist_tpl<>)!
 	};
 	virtual void notify_factory(notification_factory_t, const fabrik_t*) {}
 
@@ -414,10 +423,12 @@ public:
 	 * Function for UNDO
 	 */
 	void init_undo(waytype_t t, unsigned short max );
+
 	/**
 	 * Function for UNDO
 	 */
 	void add_undo(koord3d k);
+
 	/**
 	 * Function for UNDO
 	 */

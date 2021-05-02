@@ -56,7 +56,7 @@ const char *translator::lang_info::translate(const char *text) const
 /* Made to be dynamic, allowing any number of languages to be loaded */
 static translator::lang_info langs[40];
 static translator::lang_info *current_langinfo = langs;
-static stringhashtable_tpl<const char*> compatibility;
+static stringhashtable_tpl<const char*, N_BAGS_LARGE> compatibility;
 
 
 translator translator::single_instance;
@@ -74,20 +74,6 @@ const translator::lang_info* translator::get_langs()
 }
 
 
-#ifdef need_dump_hashtable
-// diagnosis
-static void dump_hashtable(stringhashtable_tpl<const char*>* tbl)
-{
-	printf("keys\n====\n");
-	tbl->dump_stats();
-	printf("entries\n=======\n");
-	FOR(stringhashtable_tpl<char const*>, const& i, *tbl) {
-		printf("%s\n", i.object);
-	}
-	fflush(NULL);
-}
-#endif
-
 /* first two file functions needed in connection with utf */
 
 /**
@@ -95,8 +81,8 @@ static void dump_hashtable(stringhashtable_tpl<const char*>* tbl)
  */
 static bool is_unicode_file(FILE* f)
 {
-	unsigned char	str[2];
-	int	pos = ftell(f);
+	unsigned char str[2];
+	int pos = ftell(f);
 //	DBG_DEBUG("is_unicode_file()", "checking for unicode");
 //	fflush(NULL);
 	fread( str, 1, 2,  f );
@@ -124,10 +110,6 @@ static bool is_unicode_file(FILE* f)
 
 
 
-// the bytes in an UTF sequence have always the format 10xxxxxx
-static inline int is_cont_char(utf8 c) { return (c & 0xC0) == 0x80; }
-
-
 // recodes string to put them into the tables
 static char *recode(const char *src, bool translate_from_utf, bool translate_to_utf, bool is_latin2 )
 {
@@ -144,7 +126,12 @@ static char *recode(const char *src, bool translate_from_utf, bool translate_to_
 
 	do {
 		if (*src =='\\') {
-			src +=2;
+			if (*(src + 1) == 0) {
+				// backslash at end of line -> corrupted
+				break;
+			}
+
+			src += 2;
 			*dst++ = c = '\n';
 		}
 		else {
@@ -237,14 +224,14 @@ void translator::load_custom_list( int lang, vector_tpl<char *>&name_list, const
 	}
 	// not found => try pak location
 	if(  file==NULL  ) {
-		string local_file_name(env_t::program_dir);
+		string local_file_name(env_t::data_dir);
 		local_file_name = local_file_name + pakset_path + "text/" + fileprefix + langs[lang].iso_base + ".txt";
 		DBG_DEBUG("translator::load_custom_list()", "try to read city name list from '%s'", local_file_name.c_str());
 		file = dr_fopen(local_file_name.c_str(), "rb");
 	}
 	// not found => try global translations
 	if(  file==NULL  ) {
-		string local_file_name(env_t::program_dir);
+		string local_file_name(env_t::data_dir);
 		local_file_name = local_file_name + "text/" + fileprefix + langs[lang].iso_base + ".txt";
 		DBG_DEBUG("translator::load_custom_list()", "try to read city name list from '%s'", local_file_name.c_str());
 		file = dr_fopen(local_file_name.c_str(), "rb");
@@ -528,7 +515,7 @@ void translator::init_custom_names(int lang)
 /* now on to the translate stuff */
 
 
-static void load_language_file_body(FILE* file, stringhashtable_tpl<const char*>* table, bool language_is_utf, bool file_is_utf, bool language_is_latin2 )
+static void load_language_file_body(FILE* file, stringhashtable_tpl<const char*, N_BAGS_LARGE>* table, bool language_is_utf, bool file_is_utf, bool language_is_latin2 )
 {
 	char buffer1 [4096];
 	char buffer2 [4096];
@@ -558,7 +545,7 @@ static void load_language_file_body(FILE* file, stringhashtable_tpl<const char*>
 
 void translator::load_language_file(FILE* file)
 {
-	char buffer1 [256];
+	char buffer1[256];
 	bool file_is_utf = is_unicode_file(file);
 
 	// Read language name
@@ -576,9 +563,9 @@ void translator::load_language_file(FILE* file)
 			if(  strcmp(buffer1,"PROP_FONT_FILE") == 0  ) {
 				fgets_line( buffer1, sizeof(buffer1), file );
 				// HACK: so we guess about latin2 from the font name!
-				langs[single_instance.lang_count].is_latin2_based = strcmp( buffer1, "prop-latin2.fnt" ) == 0;
+				langs[single_instance.lang_count].is_latin2_based = STRNICMP( buffer1+5, "latin2", 6 )==0;
 				// we must register now a unicode font
-				langs[single_instance.lang_count].texts.set( "PROP_FONT_FILE", "cyr.bdf" );
+				langs[single_instance.lang_count].texts.set( "PROP_FONT_FILE", langs[single_instance.lang_count].is_latin2_based ? "cyr.bdf" : strdup(buffer1) );
 				break;
 			}
 		}
@@ -637,7 +624,7 @@ void translator::load_files_from_folder(const char *folder_name, const char *wha
 
 bool translator::load(const string &path_to_pakset)
 {
-	dr_chdir( env_t::program_dir );
+	dr_chdir( env_t::data_dir );
 	tstrncpy(pakset_path, path_to_pakset.c_str(), lengthof(pakset_path));
 
 	//initialize these values to 0(ie. nothing loaded)
@@ -684,7 +671,7 @@ bool translator::load(const string &path_to_pakset)
 		// there can be more than one file per language, provided it is name like iso_xyz.tab
 		const string folderName("addons/" + path_to_pakset + "text/");
 		load_files_from_folder(folderName.c_str(), "pak addons");
-		dr_chdir( env_t::program_dir );
+		dr_chdir( env_t::data_dir );
 	}
 
 	//if NO languages were loaded then game cannot continue
@@ -710,14 +697,8 @@ bool translator::load(const string &path_to_pakset)
 			DBG_MESSAGE("translator::load()", "pakset addon compatibility texts loaded.");
 			fclose(file);
 		}
-		dr_chdir( env_t::program_dir );
+		dr_chdir( env_t::data_dir );
 	}
-
-#if DEBUG>=4
-#ifdef need_dump_hashtable
-	dump_hashtable(&compatibility);
-#endif
-#endif
 
 	// use english if available
 	current_langinfo = get_lang_by_iso("en");
@@ -777,6 +758,10 @@ void translator::set_language(const char *iso)
 			set_language(i);
 			return;
 		}
+	}
+	// if the request language does not exist
+	if( single_instance.current_lang == -1 ) {
+		set_language(0);
 	}
 }
 

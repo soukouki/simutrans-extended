@@ -6,7 +6,7 @@
 #include "../dataobj/schedule.h"
 #include "../dataobj/translator.h"
 #include "../dataobj/loadsave.h"
-#include "../gui/karte.h"
+#include "minimap.h"
 #include "../simline.h"
 #include "../gui/simwin.h"
 #include "../simtool.h"
@@ -21,7 +21,7 @@ line_management_gui_t::line_management_gui_t(linehandle_t line, player_t* player
 	this->line = line;
 	// has this line a single running convoi?
 	if(  line->count_convoys() > 0  ) {
-		reliefkarte_t::get_karte()->set_current_cnv( line->get_convoy(0) );
+		minimap_t::get_instance()->set_selected_cnv( line->get_convoy(0) );
 	}
 	show_line_selector(false);
 }
@@ -29,7 +29,7 @@ line_management_gui_t::line_management_gui_t(linehandle_t line, player_t* player
 
 line_management_gui_t::~line_management_gui_t()
 {
-	delete old_schedule;	// since we pass a *copy* of the line's schedule to the base class
+	delete old_schedule; // since we pass a *copy* of the line's schedule to the base class
 	old_schedule = NULL;
 }
 
@@ -102,7 +102,7 @@ void line_management_gui_t::rdwr(loadsave_t *file)
 	schedule->rdwr(file);
 	if(  file->is_loading()  ) {
 		player_t *player = welt->get_player(player_nr);
-		assert(player);	// since it was alive during saving, this should never happen
+		assert(player); // since it was alive during saving, this should never happen
 
 		if(  line.is_bound()  &&  old_schedule->matches( welt, line->get_schedule() )  ) {
 			// now we can open the window ...

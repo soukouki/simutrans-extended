@@ -8,7 +8,7 @@
 #include "gui_world_view_t.h"
 #include "../../simworld.h"
 #include "../../display/viewport.h"
-#include "../../simobj.h"
+#include "../../obj/simobj.h"
 #include "../../display/simgraph.h"
 #include "../../simcolor.h"
 #include "../../vehicle/simvehicle.h"
@@ -40,9 +40,9 @@ world_view_t::world_view_t(scr_size size ) :
 
 
 world_view_t::world_view_t() :
-	raster(get_base_tile_raster_width()),
 	prepared_rect(),
-	display_rect()
+	display_rect(),
+	raster(get_base_tile_raster_width())
 {
 	world_view_t::view_list.append(this);
 }
@@ -64,8 +64,9 @@ bool world_view_t::infowin_event(const event_t* ev)
 		if (welt->is_within_limits(pos.get_2d())) {
 			welt->get_viewport()->change_world_position(pos);
 		}
+		return true;
 	}
-	return true;
+	return false;
 }
 
 
@@ -227,7 +228,7 @@ void world_view_t::internal_draw(const scr_coord offset, obj_t const* const obj)
 	}
 
 	display_set_clip_wh(old_clip.x, old_clip.y, old_clip.w, old_clip.h);
-	display_ddd_box_clip_rgb(pos.x - 1, pos.y - 1, size.w + 2, size.h + 2, color_idx_to_rgb(MN_GREY0), color_idx_to_rgb(MN_GREY4));
+	display_ddd_box_clip_rgb(pos.x - 1, pos.y - 1, size.w + 2, size.h + 2, SYSCOL_INDICATOR_BORDER1, SYSCOL_INDICATOR_BORDER2);
 }
 
 

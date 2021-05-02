@@ -8,7 +8,7 @@
 
 
 #include "../ifc/sync_steppable.h"
-#include "../simobj.h"
+#include "simobj.h"
 #include "../simcolor.h"
 #include "../tpl/minivec_tpl.h"
 #include "../simworld.h"
@@ -230,8 +230,6 @@ public:
 	/// @copydoc obj_t::info
 	void info(cbuffer_t & buf) const OVERRIDE;
 
-	void get_class_percentage(cbuffer_t & buf) const;
-
 	void rdwr(loadsave_t *file) OVERRIDE;
 
 	void display_coverage_radius(bool display);
@@ -264,6 +262,8 @@ public:
 	gebaeude_t* access_first_tile();
 
 
+	uint16 get_passengers_generated_visiting() const { return passengers_generated_visiting; }
+	uint16 get_passengers_generated_commuting() const { return passengers_generated_commuting; }
 	uint16 get_passengers_succeeded_visiting() const { return passengers_succeeded_visiting; }
 	uint16 get_passengers_succeeded_commuting() const { return passengers_succeeded_commuting; }
 
@@ -315,13 +315,16 @@ public:
 	void set_commute_trip(uint16 number);
 
 	uint16 get_adjusted_population() const;
+	uint16 get_adjusted_population_by_class(uint8 p_class) const;
 
 	uint16 get_visitor_demand() const;
 	uint16 get_adjusted_visitor_demand() const;
+	uint16 get_adjusted_visitor_demand_by_class(uint8 p_class) const;
 	inline void set_adjusted_visitor_demand(uint16 new_visitor_demand) { adjusted_people.visitor_demand = new_visitor_demand; }
 
 	inline uint16 get_jobs() const { return jobs; }
 	inline uint16 get_adjusted_jobs() const { return adjusted_jobs; }
+	uint16 get_adjusted_jobs_by_class(uint8 p_class) const;
 	inline void set_adjusted_jobs(uint16 new_jobs) { adjusted_jobs = new_jobs; }
 
 	inline uint16 get_mail_demand() const { return mail_demand; }

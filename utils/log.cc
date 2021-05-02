@@ -16,6 +16,7 @@
 
 #include "log.h"
 #include "../simdebug.h"
+#include "../sys/simsys.h"
 
 
 #ifdef MAKEOBJ
@@ -33,7 +34,6 @@
 #include "../gui/messagebox.h"
 #include "../display/simgraph.h"
 #include "../gui/simwin.h"
-#include "../sys/simsys.h"
 
 #include "../dataobj/environment.h"
 #endif // NETTOOL
@@ -48,8 +48,8 @@ void log_t::debug(const char *who, const char *format, ...)
 		va_list argptr;
 		va_start(argptr, format);
 
-		if( log ) {                         /* only log when a log */
-			fprintf(log ,"Debug: %s:\t",who);      /* is already open */
+		if( log ) {                           /* only log when a log */
+			fprintf(log ,"Debug: %s:\t",who); /* is already open */
 			vfprintf(log, format, argptr);
 			fprintf(log,"\n");
 
@@ -60,8 +60,8 @@ void log_t::debug(const char *who, const char *format, ...)
 		va_end(argptr);
 
 		va_start(argptr, format);
-		if( tee ) {                         /* only log when a log */
-			fprintf(tee, "Debug: %s:\t",who);      /* is already open */
+		if( tee ) {                           /* only log when a log */
+			fprintf(tee, "Debug: %s:\t",who); /* is already open */
 			vfprintf(tee, format, argptr);
 			fprintf(tee,"\n");
 		}
@@ -90,8 +90,8 @@ void log_t::message(const char *who, const char *format, ...)
 		va_list argptr;
 		va_start(argptr, format);
 
-		if( log ) {                         /* only log when a log */
-			fprintf(log ,"Message: %s:\t",who);      /* is already open */
+		if( log ) {                             /* only log when a log */
+			fprintf(log ,"Message: %s:\t",who); /* is already open */
 			vfprintf(log, format, argptr);
 			fprintf(log,"\n");
 
@@ -102,8 +102,8 @@ void log_t::message(const char *who, const char *format, ...)
 		va_end(argptr);
 
 		va_start(argptr, format);
-		if( tee ) {                         /* only log when a log */
-			fprintf(tee, "Message: %s:\t",who);      /* is already open */
+		if( tee ) {                             /* only log when a log */
+			fprintf(tee, "Message: %s:\t",who); /* is already open */
 			vfprintf(tee, format, argptr);
 			fprintf(tee,"\n");
 		}
@@ -132,8 +132,8 @@ void log_t::warning(const char *who, const char *format, ...)
 		va_list argptr;
 		va_start(argptr, format);
 
-		if( log ) {                         /* only log when a log */
-			fprintf(log ,"Warning: %s:\t",who);      /* is already open */
+		if( log ) {                             /* only log when a log */
+			fprintf(log ,"Warning: %s:\t",who); /* is already open */
 			vfprintf(log, format, argptr);
 			fprintf(log,"\n");
 
@@ -144,8 +144,8 @@ void log_t::warning(const char *who, const char *format, ...)
 		va_end(argptr);
 
 		va_start(argptr, format);
-		if( tee ) {                         /* only log when a log */
-			fprintf(tee, "Warning: %s:\t",who);      /* is already open */
+		if( tee ) {                             /* only log when a log */
+			fprintf(tee, "Warning: %s:\t",who); /* is already open */
 			vfprintf(tee, format, argptr);
 			fprintf(tee,"\n");
 		}
@@ -174,8 +174,8 @@ void log_t::error(const char *who, const char *format, ...)
 		va_list argptr;
 		va_start(argptr, format);
 
-		if( log ) {                         /* only log when a log */
-			fprintf(log ,"ERROR: %s:\t",who);      /* is already open */
+		if( log ) {                           /* only log when a log */
+			fprintf(log ,"ERROR: %s:\t",who); /* is already open */
 			vfprintf(log, format, argptr);
 			fprintf(log,"\n");
 
@@ -189,8 +189,8 @@ void log_t::error(const char *who, const char *format, ...)
 		va_end(argptr);
 
 		va_start(argptr, format);
-		if( tee ) {                         /* only log when a log */
-			fprintf(tee, "ERROR: %s:\t",who);      /* is already open */
+		if( tee ) {                           /* only log when a log */
+			fprintf(tee, "ERROR: %s:\t",who); /* is already open */
 			vfprintf(tee, format, argptr);
 			fprintf(tee,"\n");
 
@@ -212,6 +212,36 @@ void log_t::error(const char *who, const char *format, ...)
 #endif
 	}
 }
+
+
+
+/**
+ * writes a warning into the log.
+ */
+void log_t::doubled(const char *what, const char *name )
+{
+	if(debuglevel>=2) {
+
+		if( log ) {                             /* only log when a log */
+			fprintf(log ,"Warning: object %s::%s is overlaid!\n",what,name); /* is already open */
+			if( force_flush ) {
+				fflush(log);
+			}
+		}
+
+		if( tee ) {
+			fprintf(tee, "Warning: object %s::%s is overlaid!\n",what,name);
+		}
+
+#ifdef SYSLOG
+		if(  syslog  ) {
+			::syslog( LOG_WARNING, "Warning: object %s::%s is overlaid!", what, name );
+		}
+#endif
+	}
+	doublettes.append( (std::string)what+"::"+name+"<br/>" );
+}
+
 
 
 /**
@@ -252,16 +282,18 @@ void log_t::fatal(const char *who, const char *format, ...)
 	va_end(argptr);
 
 #if defined MAKEOBJ
+	(void)n;
 	exit(1);
 #elif defined NETTOOL
 	// no display available
+	(void)n;
 	puts( buffer );
 #else
 	// not MAKEOBJ/NETTOOL
 #  ifdef MSG_LEVEL
 	int old_level = env_t::verbose_debug;
 #  endif
-	env_t::verbose_debug = 0;	// no more window concerning messages
+	env_t::verbose_debug = 0; // no more window concerning messages
 	if(is_display_init()) {
 		// show notification
 		destroy_all_win( true );
@@ -320,8 +352,8 @@ void log_t::vmessage(const char *what, const char *who, const char *format, va_l
 				fflush(log);
 			}
 		}
-		if( tee ) {                         /* only log when a log */
-			fprintf(tee,"%s: %s:\t", what, who);      /* is already open */;
+		if( tee ) {                              /* only log when a log */
+			fprintf(tee,"%s: %s:\t", what, who); /* is already open */
 			vfprintf(tee, format, args2);
 			fprintf(tee,"\n");
 		}
@@ -333,25 +365,28 @@ void log_t::vmessage(const char *what, const char *who, const char *format, va_l
 
 
 // create a logfile for log_debug=true
-log_t::log_t( const char *logfilename, bool force_flush, bool log_debug, bool log_console, const char *greeting, const char* syslogtag )
+log_t::log_t( const char *logfilename, bool force_flush, bool log_debug, bool log_console, const char *greeting, const char* syslogtag ) :
+	log(NULL),
+	tee(NULL),
+	force_flush(force_flush), // if true will always flush when an entry is written to the log
+	log_debug(log_debug),
+	tag(NULL),
+	syslog(false)
 {
-	log = NULL;
-	syslog = false;
-	this->force_flush = force_flush; /* wenn true wird jedesmal geflusht */
-					 /* wenn ein Eintrag ins log geschrieben wurde */
-	this->log_debug = log_debug;
-
 	if(logfilename == NULL) {
 		log = NULL;                       /* not a log */
 		tee = NULL;
-	} else if(strcmp(logfilename,"stdio") == 0) {
+	}
+	else if(strcmp(logfilename,"stdio") == 0) {
 		log = stdout;
 		tee = NULL;
-	} else if(strcmp(logfilename,"stderr") == 0) {
+	}
+	else if(strcmp(logfilename,"stderr") == 0) {
 		log = stderr;
 		tee = NULL;
 #ifdef SYSLOG
-	} else if(  strcmp( logfilename, "syslog" ) == 0  ) {
+	}
+	else if(  strcmp( logfilename, "syslog" ) == 0  ) {
 		syslog = true;
 		if (  syslogtag  ) {
 			tag = syslogtag;

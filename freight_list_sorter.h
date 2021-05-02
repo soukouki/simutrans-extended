@@ -24,18 +24,20 @@ public:
 	static const uint8 all_classes = 255;
 
 	enum sort_mode_t {
-		by_name = 0,
-		by_via = 1,
+		by_name    = 0,
+		by_via     = 1,
 		by_via_sum = 2,
-		by_amount = 3,
-		by_origin = 4,
+		by_amount  = 3,
+		by_origin  = 4,
 		by_origin_amount = 5,
 		by_destination_detail = 6,
 		by_wealth_detail = 7,
 		by_wealth_via = 8,
 		by_accommodation_detail = 9,
-		by_accommodation_via = 10
-		};
+		by_accommodation_via = 10,
+		by_line = 11,
+		by_line_via = 12
+	};
 
 	static void sort_freight(vector_tpl<ware_t> const& warray, cbuffer_t& buf, sort_mode_t sort_mode, const slist_tpl<ware_t>* full_list, const char* what_doing, const uint8 accommodation = all_classes, const uint32 accommodation_capacity = 0, const ware_t *accommodation_ware = NULL, const bool show_empty = false);
 

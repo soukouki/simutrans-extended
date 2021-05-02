@@ -18,10 +18,9 @@
 
 void way_reader_t::register_obj(obj_desc_t *&data)
 {
-    way_desc_t *desc = static_cast<way_desc_t *>(data);
+	way_desc_t *desc = static_cast<way_desc_t *>(data);
 
-    way_builder_t::register_desc(desc);
-//    printf("...Weg %s geladen\n", desc->get_name());
+	way_builder_t::register_desc(desc);
 	obj_for_xref(get_type(), desc->get_name(), data);
 
 	checksum_t *chk = new checksum_t();
@@ -32,7 +31,7 @@ void way_reader_t::register_obj(obj_desc_t *&data)
 
 bool way_reader_t::successfully_loaded() const
 {
-    return way_builder_t::successfully_loaded();
+	return way_builder_t::successfully_loaded();
 }
 
 
@@ -94,7 +93,7 @@ obj_desc_t * way_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 			desc->topspeed = decode_uint32(p);
 			desc->intro_date = decode_uint16(p);
 			desc->retire_date = decode_uint16(p);
-			desc->axle_load = decode_uint16(p);	// new
+			desc->axle_load = decode_uint16(p); // new
 			desc->wtyp = decode_uint8(p);
 			desc->styp = decode_uint8(p);
 			desc->draw_as_obj = decode_uint8(p);

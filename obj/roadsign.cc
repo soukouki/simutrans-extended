@@ -7,7 +7,7 @@
 
 #include "../simunits.h"
 #include "../simdebug.h"
-#include "../simobj.h"
+#include "simobj.h"
 #include "../display/simimg.h"
 #include "../player/simplay.h"
 #include "../simtool.h"
@@ -42,7 +42,7 @@
 
 const roadsign_desc_t *roadsign_t::default_signal = NULL;
 
-stringhashtable_tpl<roadsign_desc_t *> roadsign_t::table;
+stringhashtable_tpl<roadsign_desc_t *, N_BAGS_MEDIUM> roadsign_t::table;
 vector_tpl<roadsign_desc_t*> roadsign_t::list;
 
 
@@ -148,7 +148,7 @@ roadsign_t::~roadsign_t()
 	if(  desc  ) {
 		const grund_t *gr = welt->lookup(get_pos());
 		if(gr) {
-			weg_t* weg = gr->get_weg(desc->get_wtyp()!=tram_wt ? desc->get_wtyp() : track_wt);
+			weg_t *weg = gr->get_weg(desc->get_wtyp()!=tram_wt ? desc->get_wtyp() : track_wt);
 			if(weg) {
 				if (!preview) {
 					player_t* owner = get_owner();
@@ -158,7 +158,7 @@ roadsign_t::~roadsign_t()
 						sint32 maint = get_desc()->get_maintenance();
 						player_t::add_maintenance(owner, -maint, weg->get_waytype());
 					}
-					if (desc->is_single_way() || desc->is_signal_type()) {
+					if (desc->is_single_way()  ||  desc->is_signal_type()) {
 						// signal removed, remove direction mask
 						weg->set_ribi_maske(ribi_t::none);
 					}
@@ -639,7 +639,7 @@ sync_result roadsign_t::sync_step(uint32 /*delta_t*/)
 		uint8 new_state = (ticks >= ticks_ns);
 		if(state!=new_state) {
 			state = new_state;
-			dir = (new_state == 0) ? ribi_t::northsouth : ribi_t::eastwest;
+			dir = (new_state==0) ? ribi_t::northsouth : ribi_t::eastwest;
 			calc_image();
 		}
 	}
@@ -711,7 +711,7 @@ void roadsign_t::rdwr(loadsave_t *file)
 	else {
 		lane_affinity = 4; // not applied
 	}
-	if(  file->get_version()<=102002  ) {
+	if(  file->is_version_less(102, 3)  ) {
 		file->rdwr_byte(dummy);
 		if(  file->is_loading()  ) {
 			ticks_ns = ticks_ow = 16;
@@ -721,7 +721,7 @@ void roadsign_t::rdwr(loadsave_t *file)
 		file->rdwr_byte(ticks_ns);
 		file->rdwr_byte(ticks_ow);
 	}
-	if(  file->get_version()>=110007 || file->get_extended_version() >= 10 ) {
+	if(  file->is_version_atleast(110, 7) || file->get_extended_version() >= 10  ) {
 		file->rdwr_byte(ticks_offset);
 	}
 	else {
@@ -741,7 +741,7 @@ void roadsign_t::rdwr(loadsave_t *file)
 	dummy = dir;
 	file->rdwr_byte(dummy);
 	dir = dummy;
-	if(file->get_version()<89000) {
+	if(file->is_version_less(89, 0)) {
 		dir = ribi_t::backward(dir);
 	}
 
@@ -765,7 +765,7 @@ void roadsign_t::rdwr(loadsave_t *file)
 			}
 		}
 		// init ownership of private ways signs
-		if(  file->get_version()<110007  &&  desc  &&  desc->is_private_way()  ) {
+		if(  file->is_version_less(110, 7)  &&  desc  &&  desc->is_private_way()  ) {
 			ticks_ns = 0xFD;
 			ticks_ow = 0xFF;
 		}
@@ -827,7 +827,7 @@ bool roadsign_t::successfully_loaded()
 		DBG_MESSAGE("roadsign_t", "No signs found - feature disabled");
 	}
 
-	FOR (stringhashtable_tpl<roadsign_desc_t *>, const &i, table) {
+	for (auto const &i : table) {
 		roadsign_t::list.append(i.value);
 	}
 
@@ -838,10 +838,8 @@ bool roadsign_t::successfully_loaded()
 bool roadsign_t::register_desc(roadsign_desc_t *desc)
 {
 	// avoid duplicates with same name
-	const roadsign_desc_t *old_desc = table.get(desc->get_name());
-	if(old_desc) {
-		dbg->warning( "roadsign_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
-		table.remove(desc->get_name());
+	if(const roadsign_desc_t *old_desc = table.remove(desc->get_name())) {
+		dbg->doubled( "roadsign", desc->get_name() );
 		tool_t::general_tool.remove( old_desc->get_builder() );
 		delete old_desc->get_builder();
 		delete old_desc;
@@ -884,7 +882,7 @@ void roadsign_t::fill_menu(tool_selector_t *tool_selector, waytype_t wtyp, sint1
 
 	vector_tpl<const roadsign_desc_t *>matching;
 
-	FOR(stringhashtable_tpl<roadsign_desc_t *>, const& i, table) {
+	for(auto const& i : table) {
 		roadsign_desc_t const* const desc = i.value;
 
 		bool allowed_given_current_signalbox;
@@ -943,7 +941,7 @@ void roadsign_t::fill_menu(tool_selector_t *tool_selector, waytype_t wtyp, sint1
  */
 const roadsign_desc_t *roadsign_t::roadsign_search(roadsign_desc_t::types const flag, waytype_t const wt, uint16 const time)
 {
-	FOR(stringhashtable_tpl<roadsign_desc_t *>, const& i, table) {
+	for(auto const& i : table) {
 		roadsign_desc_t const* const desc = i.value;
 		if(  desc->is_available(time)  &&  desc->get_wtyp()==wt  &&  desc->get_flags()==flag  ) {
 			return desc;
@@ -957,7 +955,7 @@ const roadsign_desc_t* roadsign_t::find_best_upgrade(bool underground)
 	const uint16 time = welt->get_timeline_year_month();
 	const roadsign_desc_t* best_candidate = NULL;
 
-	FOR(stringhashtable_tpl<roadsign_desc_t *>, const& i, table)
+	for(auto const& i : table)
 	{
 		roadsign_desc_t const* const new_roadsign_type = i.value;
 		if(new_roadsign_type->is_available(time)

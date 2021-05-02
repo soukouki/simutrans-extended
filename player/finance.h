@@ -37,6 +37,11 @@ char const *const NOTICE_NO_TREES = "Trees disabled!";
 char const *const NOTICE_UNSUITABLE_GROUND = "No suitable ground!";
 
 /**
+* Message returned when a tool fails because the target is owned by another player and access is not granted.
+*/
+char const *const NOTICE_OWNED_BY_OTHER_PLAYER = "Das Feld gehoert\neinem anderen Spieler\n";
+
+/**
 * Message returned when a depot cannot be placed.
 */
 char const *const NOTICE_DEPOT_BAD_POS = "Cannot built depot here!";
@@ -108,25 +113,25 @@ enum accounting_type_common {
  * Supersedes COST_ types, that CAN be distinguished by type of transport.
  */
 enum accounting_type_vehicles {
-	ATV_REVENUE_PASSENGER=0, ///< Revenue from passenger transport
-	ATV_REVENUE_MAIL,        ///< Revenue from mail transport
-	ATV_REVENUE_GOOD,        ///< Revenue from good transport
-	ATV_REVENUE_TRANSPORT,	 ///< Operating profit = passenger + mail + goods = was: COST_INCOME
-	ATV_TOLL_RECEIVED,	 ///< Toll paid to you by another player
-	ATV_REVENUE,             ///< Operating profit = revenue_transport + toll = passenger + mail+ goods + toll_received
+	ATV_REVENUE_PASSENGER = 0, ///< Revenue from passenger transport
+	ATV_REVENUE_MAIL,          ///< Revenue from mail transport
+	ATV_REVENUE_GOOD,          ///< Revenue from good transport
+	ATV_REVENUE_TRANSPORT,     ///< Operating profit = passenger + mail + goods = was: COST_INCOME
+	ATV_TOLL_RECEIVED,         ///< Toll paid to you by another player
+	ATV_REVENUE,               ///< Operating profit = revenue_transport + toll = passenger + mail+ goods + toll_received
 
 	ATV_RUNNING_COST,               ///< Distance based running costs, was: COST_VEHICLE_RUN
 	ATV_VEHICLE_MAINTENANCE,        ///< Monthly vehicle maintenance.
 	ATV_INFRASTRUCTURE_MAINTENANCE, ///< Infrastructure maintenance (roads, railway, ...), was: COST_MAINTENANCE
-	ATV_TOLL_PAID,			  ///< Toll paid by you to another player
-	ATV_EXPENDITURE,		        ///< Total expenditure = RUNNING_COSTS+VEHICLE_MAINTENANCE+INFRACTRUCTURE_MAINTENANCE+TOLL_PAID
-	ATV_OPERATING_PROFIT,		  ///< ATV_REVENUE - ATV_EXPENDITURE, was: COST_OPERATING_PROFIT
-	ATV_NEW_VEHICLE,			  ///< New vehicles
-	ATV_CONSTRUCTION_COST,		  ///< Construction cost, COST_CONSTRUCTION mapped here
-	ATV_PROFIT,			        ///< ATV_OPERATING_PROFIT - (CONSTRUCTION_COST + NEW_VEHICLE) + COST_INTEREST, was: COST_PROFIT
-	ATV_WAY_TOLL,			  ///< = ATV_TOLL_PAID + ATV_TOLL_RECEIVED, was: COST_WAY_TOLLS
-	ATV_NON_FINANCIAL_ASSETS,	  ///< Value of vehicles owned by your company, was: COST_ASSETS
-	ATV_PROFIT_MARGIN,		  ///< ATV_OPERATING_PROFIT / ATV_REVENUE, was: COST_MARGIN
+	ATV_TOLL_PAID,                  ///< Toll paid by you to another player
+	ATV_EXPENDITURE,                ///< Total expenditure = RUNNING_COSTS+VEHICLE_MAINTENANCE+INFRACTRUCTURE_MAINTENANCE+TOLL_PAID
+	ATV_OPERATING_PROFIT,           ///< ATV_REVENUE - ATV_EXPENDITURE, was: COST_OPERATING_PROFIT
+	ATV_NEW_VEHICLE,                ///< New vehicles
+	ATV_CONSTRUCTION_COST,          ///< Construction cost, COST_CONSTRUCTION mapped here
+	ATV_PROFIT,                     ///< ATV_OPERATING_PROFIT - (CONSTRUCTION_COST + NEW_VEHICLE) + COST_INTEREST, was: COST_PROFIT
+	ATV_WAY_TOLL,                   ///< = ATV_TOLL_PAID + ATV_TOLL_RECEIVED, was: COST_WAY_TOLLS
+	ATV_NON_FINANCIAL_ASSETS,       ///< Value of vehicles owned by your company, was: COST_ASSETS
+	ATV_PROFIT_MARGIN,              ///< ATV_OPERATING_PROFIT / ATV_REVENUE, was: COST_MARGIN
 
 	ATV_TRANSPORTED_PASSENGER, ///< Number of transported passengers
 	ATV_TRANSPORTED_MAIL,      ///< Number of transported mail
@@ -203,18 +208,18 @@ class finance_t {
 
 	/**
 	 * Finance history having relation with particular type of service
- 	 */
+	 */
 	sint64 veh_year[TT_MAX][MAX_PLAYER_HISTORY_YEARS][ATV_MAX];
 	sint64 veh_month[TT_MAX][MAX_PLAYER_HISTORY_MONTHS][ATV_MAX];
 
 	/**
- 	 * Monthly maintenance cost
- 	 */
+	 * Monthly maintenance cost
+	 */
 	sint64 maintenance[TT_MAX];
 
 	/**
 	 * Monthly vehicle maintenance cost per transport type.
- 	 */
+	 */
 	// Unused because vehicle maintenance varies monthly for each vehicle.
 	// sint64 vehicle_maintenance[TT_MAX];
 
@@ -403,7 +408,6 @@ public:
 	}
 
 	/**
-	 * Calculates the finance history for player
 	 * Calculates the finance history for player.
 	 * This method has to be called before reading any variables besides account_balance!
 	 */
@@ -506,7 +510,7 @@ public:
 	/**
 	 * Returns the finance history (distinguishable by type of transport) for player.
 	 * Call calc_finance_history before use!
-	 * @param wt one of transport_type
+	 * @param tt one of transport_type
 	 * @param year 0 .. current year, 1 .. last year, etc
 	 * @param type one of accounting_type_vehicles
 	 */
@@ -520,7 +524,7 @@ public:
 
 	/**
 	 * @returns maintenance
-	 * @param wt transport type (Truck, Ship Air, ...)
+	 * @param tt transport type (Truck, Ship Air, ...)
 	 */
 	sint64 get_maintenance(transport_type tt=TT_ALL) const { assert(tt<TT_MAX); return maintenance[tt]; }
 
@@ -598,14 +602,14 @@ public:
 	void set_starting_money(sint64 amount) {  starting_money = amount; }
 
 	/**
- 	 * Translates building_desc_t to transport_type
+	 * Translates building_desc_t to transport_type
 	 * Building can be assigned to transport type using utyp
- 	 */
+	 */
 	static transport_type translate_utyp_to_tt(int utyp);
 
 	/**
- 	 * Translates waytype_t to transport_type
- 	 */
+	 * Translates waytype_t to transport_type
+	 */
 	static transport_type translate_waytype_to_tt(waytype_t wt);
 
 	static waytype_t translate_tt_to_waytype(transport_type tt);

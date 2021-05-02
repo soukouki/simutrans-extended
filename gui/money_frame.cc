@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of the Simutrans-Extended project under the Artistic License.
  * (see LICENSE.txt)
  */
@@ -102,36 +102,36 @@ static const uint8 cost_type[3*MAX_PLAYER_COST_BUTTON] =
 {
 	ATV_REVENUE_TRANSPORT,          TT_ALL, MONEY,    // Income
 	ATV_RUNNING_COST,               TT_ALL, MONEY,    // Vehicle running costs
-	ATV_VEHICLE_MAINTENANCE,		TT_ALL, MONEY,	  // Vehicle monthly maintenance
+	ATV_VEHICLE_MAINTENANCE,        TT_ALL, MONEY,    // Vehicle monthly maintenance
 	ATV_INFRASTRUCTURE_MAINTENANCE, TT_ALL, MONEY,    // Upkeep
 	ATV_WAY_TOLL,                   TT_ALL, MONEY,
 	ATV_OPERATING_PROFIT,           TT_ALL, MONEY,
 	ATV_NEW_VEHICLE,                TT_ALL, MONEY,   // New vehicles
-	ATV_CONSTRUCTION_COST,	        TT_ALL, MONEY,   // Construction
-	ATC_INTEREST,					TT_MAX, MONEY,	// Interest paid servicing debt
+	ATV_CONSTRUCTION_COST,          TT_ALL, MONEY,   // Construction
+	ATC_INTEREST,                   TT_MAX, MONEY,   // Interest paid servicing debt
 	ATV_PROFIT,                     TT_ALL, MONEY,
 	ATV_TRANSPORTED,                TT_ALL, STANDARD, // all transported goods
 	ATC_CASH,                       TT_MAX, MONEY,   // Cash
 	ATV_NON_FINANCIAL_ASSETS,       TT_ALL, MONEY,   // value of all vehicles and buildings
 	ATC_NETWEALTH,                  TT_MAX, MONEY,   // Total Cash + Assets
-	ATC_SOFT_CREDIT_LIMIT,			TT_MAX, MONEY,	// Maximum amount that can be borrowed
-	ATC_HARD_CREDIT_LIMIT,			TT_MAX, MONEY,	// Borrowing which will lead to insolvency
-	ATV_PROFIT_MARGIN,              TT_ALL, STANDARD
+	ATC_SOFT_CREDIT_LIMIT,          TT_MAX, MONEY,	// Maximum amount that can be borrowed
+	ATC_HARD_CREDIT_LIMIT,          TT_MAX, MONEY,	// Borrowing which will lead to insolvency
+	ATV_PROFIT_MARGIN,              TT_ALL, PERCENT
 };
 
 static const sint8 cell_to_buttons[] =
 {
-	0,		-1,		-1,		-1,		-1,
-	1,		-1,		-1,		-1,		-1,
-	2,		-1,		-1,		-1,		-1,
-	3,		-1,		-1,		-1,		-1,
-	4,		-1,		-1,		-1,		-1,
-	5,		-1,		-1,		11,		-1,
-	6,		-1,		-1,		12,		-1,
-	7,		-1,		-1,		13,		-1,
-	8,		-1,		-1,		14,		-1,
-	9,		-1,		-1,		15,		-1,
-	10,		-1,		-1,		16,		-1
+	0,  -1,  -1,  -1,  -1,
+	1,  -1,  -1,  -1,  -1,
+	2,  -1,  -1,  -1,  -1,
+	3,  -1,  -1,  -1,  -1,
+	4,  -1,  -1,  -1,  -1,
+	5,  -1,  -1,  11,  -1,
+	6,  -1,  -1,  12,  -1,
+	7,  -1,  -1,  13,  -1,
+	8,  -1,  -1,  14,  -1,
+	9,  -1,  -1,  15,  -1,
+	10, -1,  -1,  16,  -1
 };
 
 
@@ -170,17 +170,17 @@ static const uint16 label_type[] =
 
 static const sint8 cell_to_moneylabel[] =
 {
-	-1, 	 0,		 1,		-1,		-1,
-	-1, 	 2,		 3,		-1,		-1,
-	-1, 	 4,		 5,		-1,		-1,
-	-1, 	 6,		 7,		-1,		-1,
-	-1, 	 8,		 9,		-1,		-1,
-	-1, 	10,		11,		-1,		22,
-	-1, 	12,		13,		-1,		23,
-	-1, 	14,		15,		-1,		24,
-	-1, 	16,		17,		-1,		25,
-	-1, 	18,		19,		-1,		26,
-	-1, 	20,		21,		-1,		27,
+	-1,   0,   1,  -1,  -1,
+	-1,   2,   3,  -1,  -1,
+	-1,   4,   5,  -1,  -1,
+	-1,   6,   7,  -1,  -1,
+	-1,   8,   9,  -1,  -1,
+	-1,  10,  11,  -1,  22,
+	-1,  12,  13,  -1,  23,
+	-1,  14,  15,  -1,  24,
+	-1,  16,  17,  -1,  25,
+	-1,  18,  19,  -1,  26,
+	-1,  20,  21,  -1,  27,
 };
 
 /* order has to be same as in enum transport_type in file finance.h */
@@ -299,13 +299,13 @@ bool money_frame_t::is_chart_table_zero(int ttoption)
 }
 
 
-money_frame_t::money_frame_t(player_t *player)
-  : gui_frame_t( translator::translate("Finanzen"), player),
-		maintenance_money(MONEY_PLUS, gui_label_t::money_right),
-		scenario_desc(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left),
-		scenario_completion(SYSCOL_TEXT, gui_label_t::left),
-		warn(SYSCOL_TEXT_STRONG, gui_label_t::centered),
-		transport_type_option(0)
+money_frame_t::money_frame_t(player_t *player) :
+	gui_frame_t( translator::translate("Finanzen"), player),
+	maintenance_money(MONEY_PLUS, gui_label_t::money_right),
+	scenario_desc(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left),
+	scenario_completion(SYSCOL_TEXT, gui_label_t::left),
+	warn(SYSCOL_TEXT_STRONG, gui_label_t::centered),
+	transport_type_option(0)
 {
 	if(welt->get_player(0)!=player) {
 		money_frame_title.printf(translator::translate("Finances of %s"), translator::translate(player->get_name()) );
@@ -412,7 +412,7 @@ money_frame_t::money_frame_t(player_t *player)
 					button_to_chart.append(b, current_chart, curve);
 				}
 				else if (l >= 0) {
-					//	money_frame_label_t(uint8 tt, uint8 t, uint8 lt, uint8 i, bool mon)
+					// money_frame_label_t(uint8 tt, uint8 t, uint8 lt, uint8 i, bool mon)
 					money_labels.append( current->new_component<money_frame_label_t>(label_type[4*l], label_type[4*l+1], label_type[4*l+3], label_type[4*l+2], i==1) );
 				}
 				else {

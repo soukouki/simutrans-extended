@@ -178,10 +178,10 @@ void export_factory(HSQUIRRELVM vm)
 	 * To print a list of all available goods names use this example:
 	 * @code
 	 * foreach(key,value in input) {
-	 * 	// print raw name of the good
-	 * 	print("Input slot key: " + key)
-	 * 	// print current storage
-	 * 	print("Input slot storage: " + value.get_storage()[0])
+	 *     // print raw name of the good
+	 *     print("Input slot key: " + key)
+	 *     // print current storage
+	 *     print("Input slot storage: " + value.get_storage()[0])
 	 * }
 	 * @endcode
 	 * To catch the output of this example see @ref sec_err.
@@ -202,7 +202,7 @@ void export_factory(HSQUIRRELVM vm)
 	 * Get list of consumers of this factory.
 	 * @returns array of coordinates of consumers
 	 */
-	register_method(vm, &fabrik_t::get_lieferziele, "get_consumers");
+	register_method(vm, &fabrik_t::get_consumers, "get_consumers");
 
 	/**
 	 * Get list of consumers of this factory.

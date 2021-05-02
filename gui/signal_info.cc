@@ -30,6 +30,7 @@ signal_info_t::signal_info_t(signal_t* const s) :
 		bt_goto_signalbox.init(button_t::posbutton, NULL);
 		bt_goto_signalbox.set_visible(false);
 		bt_goto_signalbox.set_tooltip(translator::translate("goto_signalbox"));
+		bt_goto_signalbox.set_rigid(true);
 		add_component(&bt_goto_signalbox);
 		bt_goto_signalbox.add_listener(this);
 
@@ -156,9 +157,11 @@ signal_info_t::signal_info_t(signal_t* const s) :
 		add_component(&lb_sb_name);
 
 		bt_info_signalbox.init(button_t::roundbox, "Details");
+		bt_info_signalbox.set_size(scr_size(D_BUTTON_WIDTH*2/3, D_BUTTON_HEIGHT));
 		bt_info_signalbox.set_visible(false);
 		bt_info_signalbox.set_tooltip(translator::translate("open_signalbox_info"));
 		bt_info_signalbox.add_listener(this);
+		bt_info_signalbox.set_rigid(true);
 		add_component(&bt_info_signalbox);
 
 		new_component<gui_empty_t>();

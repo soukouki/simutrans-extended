@@ -106,8 +106,9 @@ const char *convoi_info_t::sort_text[SORT_MODES] =
 };
 
 
-convoi_info_t::convoi_info_t(convoihandle_t cnv)
-	: gui_frame_t(""),
+
+convoi_info_t::convoi_info_t(convoihandle_t cnv) :
+	gui_frame_t(""),
 	text(&freight_info),
 	view(scr_size(max(64, get_base_tile_raster_width()), max(56, (get_base_tile_raster_width() * 7) / 8))),
 	loading_bar(cnv),
@@ -164,12 +165,21 @@ void convoi_info_t::init(convoihandle_t cnv)
 				add_component(&route_bar);
 
 				add_component(&container_line,2);
-				container_line.set_table_layout(3,1);
+				container_line.set_table_layout(4,1);
 				container_line.add_component(&line_button);
 				container_line.new_component<gui_label_t>("Serves Line:");
 				container_line.add_component(&line_label);
+				if (skinverwaltung_t::reverse_arrows) {
+					img_reverse_route.set_image(cnv->get_schedule()->is_mirrored() ? skinverwaltung_t::reverse_arrows->get_image_id(0) : skinverwaltung_t::reverse_arrows->get_image_id(1), true);
+					img_reverse_route.set_visible(cnv->get_reverse_schedule());
+					img_reverse_route.set_rigid(true);
+					container_line.add_component(&img_reverse_route);
+				}
+				else {
+					container_line.new_component<gui_empty_t>();
+				}
 				// goto line button
-				line_button.init( button_t::posbutton, NULL);
+				line_button.init( button_t::arrowright, NULL );
 				line_button.set_targetpos3d( koord3d::invalid );
 				line_button.add_listener( this );
 				line_bound = false;
@@ -254,36 +264,15 @@ void convoi_info_t::init(convoihandle_t cnv)
 		}
 		freight_sort_selector.set_focusable(true);
 		freight_sort_selector.set_selection(env_t::default_sortmode);
-		freight_sort_selector.set_highlight_color(1);
+		freight_sort_selector.set_width_fixed(true);
+		freight_sort_selector.set_size(scr_size(D_BUTTON_WIDTH*2, D_EDIT_HEIGHT));
 		freight_sort_selector.add_listener(this);
 		container_freight.add_component(&freight_sort_selector);
-
 	}
 	container_freight.end_table();
 	container_freight.add_component(&text);
 
 	switch_mode.add_tab(&container_stats, translator::translate("Chart"));
-
-	/*
-#ifdef ACCELERATION_BUTTON
-	//Bernd Gabriel, Sep, 24 2009: acceleration curve:
-
-	for (int i = 0; i < MAX_MONTHS; i++)
-	{
-		physics_curves[i][0] = 0;
-	}
-
-	chart.add_curve(color_idx_to_rgb(cost_type_color[btn]), (sint64*)physics_curves, 1,0, MAX_MONTHS, cost_type_money[btn], false, true, cost_type_money[btn]*2);
-	filterButtons[btn].init(button_t::box_state, cost_type[btn],
-			scr_coord(BUTTON1_X+(D_BUTTON_WIDTH+D_H_SPACE)*(btn%4), view.get_size().h+174+(D_BUTTON_HEIGHT+D_H_SPACE)*(btn/4)),
-			D_BUTTON_SIZE);
-	filterButtons[btn].add_listener(this);
-	filterButtons[btn].background_color = color_idx_to_rgb(cost_type_color[btn]);
-	filterButtons[btn].set_visible(false);
-	filterButtons[btn].pressed = false;
-	add_component(filterButtons + btn);
-#endif
-*/
 
 	container_stats.set_table_layout(1,0);
 
@@ -577,8 +566,14 @@ void convoi_info_t::update_labels()
 		scroll_freight.set_size( scroll_freight.get_size() );
 	}
 
+	if (skinverwaltung_t::reverse_arrows) {
+		img_reverse_route.set_image(cnv->get_schedule()->is_mirrored() ? skinverwaltung_t::reverse_arrows->get_image_id(0) : skinverwaltung_t::reverse_arrows->get_image_id(1), true);
+		img_reverse_route.set_visible(cnv->get_reverse_schedule());
+	}
+
 	// realign container - necessary if strings changed length
 	container_top->set_size( container_top->get_size() );
+	set_min_windowsize(scr_size(max(D_DEFAULT_WIDTH, get_min_windowsize().w), D_TITLEBAR_HEIGHT + switch_mode.get_pos().y + D_TAB_HEADER_HEIGHT + D_MARGIN_TOP));
 }
 
 
@@ -593,28 +588,6 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 	{
 		destroy_win(this);
 	}
-
-		//Bernd Gabriel, Dec, 02 2009: common existing_convoy_t for acceleration curve and weight/speed info.
-		//convoi_t &convoy = *cnv.get_rep();
-/*
-#ifdef ACCELERATION_BUTTON
-		//Bernd Gabriel, Sep, 24 2009: acceleration curve:
-		if (filterButtons[ACCELERATION_BUTTON].is_visible() && filterButtons[ACCELERATION_BUTTON].pressed)
-		{
-			const int akt_speed_soll = kmh_to_speed(convoy.calc_max_speed(convoy.get_weight_summary()));
-			float32e8_t akt_v = 0;
-			sint32 akt_speed = 0;
-			sint32 sp_soll = 0;
-			int i = MAX_MONTHS;
-			physics_curves[--i][0] = akt_speed;
-			while (i > 0)
-			{
-				convoy.calc_move(welt->get_settings(), 15 * 64, akt_speed_soll, akt_speed_soll, SINT32_MAX_VALUE, SINT32_MAX_VALUE, akt_speed, sp_soll, akt_v);
-				physics_curves[--i][0] = speed_to_kmh(akt_speed);
-			}
-		}
-#endif
-*/
 
 	// make titlebar dirty to display the correct coordinates
 	if(cnv->get_owner()==welt->get_active_player()  &&  !welt->get_active_player()->is_locked()) {
@@ -655,6 +628,8 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 		replace_button.set_text(cnv->get_replace() ? "Replacing" : "Replace");
 		replace_button.enable();
 		reverse_button.pressed = cnv->get_reverse_schedule();
+		reverse_button.set_text(cnv->get_schedule()->is_mirrored() ? "Return trip" : "reverse route");
+		reverse_button.set_tooltip(cnv->get_schedule()->is_mirrored() ? "during the return trip of the mirror schedule" : "When this is set, the vehicle will visit stops in reverse order.");
 		reverse_button.enable();
 		times_history_button.enable();
 	}

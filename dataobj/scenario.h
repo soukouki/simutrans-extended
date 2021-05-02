@@ -35,8 +35,8 @@ class scenario_t
 private:
 	/// possible states of scenario
 	enum scenario_state_t {
-		INACTIVE = 0,         ///< scenario inactive
-		SCRIPTED = 7,         ///< scenario active (non-network game or at server)
+		INACTIVE         = 0, ///< scenario inactive
+		SCRIPTED         = 7, ///< scenario active (non-network game or at server)
 		SCRIPTED_NETWORK = 8  ///< scenario active, network game at client
 	};
 
@@ -85,7 +85,11 @@ private:
 	 * tools or to have toolbars reflect allowed tools.
 	 */
 	struct forbidden_t {
-		enum forbid_type { forbid_tool = 1, forbid_tool_rect = 2};
+		enum forbid_type {
+			forbid_tool      = 1,
+			forbid_tool_rect = 2
+		};
+
 		forbid_type type;
 		uint8 player_nr;
 		/// id of tool to be forbidden, as set by constructors of classes derived from
@@ -238,6 +242,12 @@ public:
 
 	/// @return true if scenario is scripted
 	bool is_scripted() const { return what_scenario == SCRIPTED  ||  what_scenario == SCRIPTED_NETWORK; }
+
+	/**
+	 * compiles and executes given string
+	 * @returns error msg (or NULL if succeeded)
+	 */
+	const char* eval_string(const char* squirrel_string) const;
 
 	/**
 	 * Get percentage of scenario completion. Does not call script to update this value.

@@ -61,6 +61,7 @@ fabrik_info_t::fabrik_info_t(fabrik_t* fab_, const gebaeude_t* gb) :
 	prod(&prod_buf),
 	txt(&info_buf),
 	storage(fab_),
+	container_details(gb, get_titlecolor()),
 	scrolly_info(&container_info),
 	scrolly_details(&container_details),
 	all_suppliers(fab_, true),
@@ -192,7 +193,6 @@ void fabrik_info_t::rename_factory()
 
 /**
  * Set window size and adjust component sizes and/or positions accordingly
- * @author Markus Weber
  */
 void fabrik_info_t::set_windowsize(scr_size size)
 {
@@ -247,7 +247,7 @@ void fabrik_info_t::draw(scr_coord pos, scr_size size)
 	int left = D_MARGIN_LEFT + D_INDICATOR_WIDTH + D_H_SPACE;
 	int top = pos.y + view.get_pos().y + D_TITLEBAR_HEIGHT;
 
-	display_ddd_box_clip_rgb(pos.x + view.get_pos().x, top + view.get_size().h, view.get_size().w, D_INDICATOR_HEIGHT + 2, color_idx_to_rgb(MN_GREY0), color_idx_to_rgb(MN_GREY4));
+	display_ddd_box_clip_rgb(pos.x + view.get_pos().x, top + view.get_size().h, view.get_size().w, D_INDICATOR_HEIGHT + 2, SYSCOL_INDICATOR_BORDER1, SYSCOL_INDICATOR_BORDER2);
 	// tooltip for staffing_bar
 	if (abs((int)(pos.x + view.get_pos().x + view.get_size().h/2 - get_mouse_x())) < view.get_size().h/2 && abs((int)(top + view.get_size().h + (D_INDICATOR_HEIGHT+2)/2 - get_mouse_y())) < (D_INDICATOR_HEIGHT+2)/2) {
 		prod_buf.append(translator::translate("staffing_bar_tooltip_help"));
@@ -446,18 +446,18 @@ void fabrik_info_t::update_components()
 	}
 
 	// consumers
-	if (fab->get_lieferziele().get_count() != old_consumers_count) {
+	if (fab->get_consumers().get_count() != old_consumers_count) {
 		lb_consumers.set_pos(scr_coord(D_H_SPACE, y));
 		all_consumers.recalc_size();
-		if (fab->get_lieferziele().get_count()) {
+		if (fab->get_consumers().get_count()) {
 			lb_consumers.set_visible(true);
 		}
 		all_consumers.set_pos(scr_coord(0, y+LINESPACE));
 
-		old_consumers_count = fab->get_lieferziele().get_count();
+		old_consumers_count = fab->get_consumers().get_count();
 	}
-	if (fab->get_lieferziele().get_count()) {
-		y += (fab->get_lieferziele().get_count()+2) * (LINESPACE+1);
+	if (fab->get_consumers().get_count()) {
+		y += (fab->get_consumers().get_count() + 2) * (LINESPACE + 1);
 	}
 
 	// connected stops
@@ -475,10 +475,6 @@ void fabrik_info_t::update_components()
 	if (y != container_info.get_size().h) {
 		container_info.set_size(scr_size(400, y));
 	}
-
-	// details tab
-	txt.recalc_size();
-	container_details.set_size(scr_size(D_BUTTON_WIDTH * 3, txt.get_size().h));
 
 	set_dirty();
 }
@@ -502,6 +498,7 @@ fabrik_info_t::fabrik_info_t() :
 	prod(&prod_buf),
 	txt(&info_buf),
 	storage(NULL),
+	container_details(NULL, get_titlecolor()),
 	scrolly_info(&container_info),
 	scrolly_details(&container_details),
 	all_suppliers(NULL, true),
@@ -565,6 +562,7 @@ void fabrik_info_t::rdwr( loadsave_t *file )
 			goods_chart.set_factory(fab);
 			chart.set_factory(fab);
 
+			container_details.init(gb, get_titlecolor());
 			init(fab, gb);
 			scrolly_info.set_scroll_amount_y(scroll_y);
 			scrolly_info.set_scroll_position(scroll_x, scroll_y);

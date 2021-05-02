@@ -39,9 +39,9 @@ network_command_t* network_command_t::read_from_packet(packet_t *p)
 	network_command_t* nwc = NULL;
 	switch (p->get_id()) {
 		case NWC_GAMEINFO:    nwc = new nwc_gameinfo_t(); break;
-		case NWC_NICK:	      nwc = new nwc_nick_t(); break;
-		case NWC_CHAT:	      nwc = new nwc_chat_t(); break;
-		case NWC_JOIN:	      nwc = new nwc_join_t(); break;
+		case NWC_NICK:        nwc = new nwc_nick_t(); break;
+		case NWC_CHAT:        nwc = new nwc_chat_t(); break;
+		case NWC_JOIN:        nwc = new nwc_join_t(); break;
 		case NWC_SYNC:        nwc = new nwc_sync_t(); break;
 		case NWC_GAME:        nwc = new nwc_game_t(); break;
 		case NWC_READY:       nwc = new nwc_ready_t(); break;
@@ -88,7 +88,7 @@ bool nwc_gameinfo_t::execute(karte_t *welt)
 		// init the rest of the packet
 		SOCKET s = packet->get_sender();
 		loadsave_t fd;
-		if(  fd.wr_open( "serverinfo.sve", loadsave_t::xml_bzip2, "info", SERVER_SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR )  ) {
+		if(  fd.wr_open( "serverinfo.sve", loadsave_t::xml_bzip2, 0, "info", SERVER_SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR ) == loadsave_t::FILE_STATUS_OK   ) {
 			gameinfo_t gi(welt);
 			gi.rdwr( &fd );
 			fd.close();
@@ -184,7 +184,7 @@ void nwc_nick_t::server_tools(karte_t *welt, uint32 client_id, uint8 what, const
 	socket_info_t &info = socket_list_t::get_client(client_id);
 
 	cbuffer_t buf;
-	buf.printf("%d,", message_t::general | message_t::local_flag);
+	buf.printf("%d,", message_t::general | message_t::playermsg_flag);
 
 	switch(what) {
 		case WELCOME: {
@@ -297,7 +297,7 @@ void nwc_chat_t::add_message (karte_t* welt) const
 	}
 	else {
 		// Whisper, do not store message in savegame
-		flag |= message_t::local_flag;
+		flag |= message_t::playermsg_flag;
 		if (  player_nr < PLAYER_UNOWNED  ) {
 			buf.printf( "%s <%s> --> %s: %s", clientname.c_str(), welt->get_player( player_nr )->get_name(), destination.c_str(), message.c_str() );
 		}
@@ -696,7 +696,7 @@ void nwc_sync_t::do_command(karte_t *welt)
 		bool old_restore_UI = env_t::restore_UI;
 		env_t::restore_UI = true;
 
-		welt->save( fn, loadsave_t::autosave_mode, SERVER_SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR, false );
+		welt->save( fn, true, SERVER_SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR, false );
 		uint32 old_sync_steps = welt->get_sync_steps();
 		welt->load( fn );
 		env_t::restore_UI = old_restore_UI;
@@ -716,10 +716,13 @@ void nwc_sync_t::do_command(karte_t *welt)
 		// first save password hashes
 		sprintf( fn, "server%d-pwdhash.sve", env_t::server );
 		loadsave_t file;
-		if(file.wr_open(fn, loadsave_t::zipped, "hashes", SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR))
-		{
+		if(file.wr_open(fn, loadsave_t::zipped, 1, "hashes", SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR) == loadsave_t::FILE_STATUS_OK) {
 			welt->rdwr_player_password_hashes( &file );
 			file.close();
+		}
+		else
+		{
+			dbg->warning("nwc_sync_t::do_command", "Could not save %s. Passwords may be reset on loading game.", fn);
 		}
 
 		// remove passwords before transfer on the server and set default client mask
@@ -739,7 +742,7 @@ void nwc_sync_t::do_command(karte_t *welt)
 		sprintf( fn, "server%d-network.sve", env_t::server );
 		bool old_restore_UI = env_t::restore_UI;
 		env_t::restore_UI = true;
-		welt->save( fn, loadsave_t::save_mode, SERVER_SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR, false );
+		welt->save( fn, false, SERVER_SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR, false );
 
 		// ok, now sending game
 		// this sends nwc_game_t
@@ -1304,7 +1307,7 @@ network_broadcast_world_command_t* nwc_tool_t::clone(karte_t *welt)
 bool nwc_tool_t::ignore_old_events() const
 {
 	// messages are allowed to arrive at any time (return true if message)
-	return tool_id==(SIMPLE_TOOL|TOOL_ADD_MESSAGE);
+	return tool_id==(GENERAL_TOOL|TOOL_ADD_MESSAGE);
 }
 
 

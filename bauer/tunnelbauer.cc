@@ -9,10 +9,11 @@
 
 #include "tunnelbauer.h"
 
-#include "../gui/karte.h"
+#include "../gui/minimap.h"
 
 #include "../simworld.h"
 #include "../player/simplay.h"
+#include "../player/finance.h"
 #include "../simtool.h"
 
 #include "../descriptor/tunnel_desc.h"
@@ -39,43 +40,32 @@
 
 karte_ptr_t tunnel_builder_t::welt;
 
-static stringhashtable_tpl<tunnel_desc_t *> tunnel_by_name;
+static stringhashtable_tpl<tunnel_desc_t *, N_BAGS_MEDIUM> tunnel_by_name;
 
 
 void tunnel_builder_t::register_desc(tunnel_desc_t *desc)
 {
 	// avoid duplicates with same name
-	if( const tunnel_desc_t *old_desc = tunnel_by_name.get(desc->get_name()) ) {
-		dbg->warning( "tunnel_builder_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
-		tunnel_by_name.remove(desc->get_name());
+	if( const tunnel_desc_t *old_desc = tunnel_by_name.remove(desc->get_name()) ) {
+		dbg->doubled( "tunnel", desc->get_name() );
 		tool_t::general_tool.remove( old_desc->get_builder() );
 		delete old_desc->get_builder();
-//		delete old_desc; becasue deleting PowerTunnel seems to corrupt memprz, and the small memory loss in not reallz worth the troubles
+		// we cannot delete old_desc, since then xref-resolving will crash
 	}
+	// add the tool
+	tool_build_tunnel_t *tool = new tool_build_tunnel_t();
+	tool->set_icon( desc->get_cursor()->get_image_id(1) );
+	tool->cursor = desc->get_cursor()->get_image_id(0);
+	tool->set_default_param( desc->get_name() );
+	tool_t::general_tool.append( tool );
+	desc->set_builder( tool );
 	tunnel_by_name.put(desc->get_name(), desc);
 }
 
-stringhashtable_tpl <tunnel_desc_t *> * tunnel_builder_t::get_all_tunnels()
+stringhashtable_tpl <tunnel_desc_t *, N_BAGS_MEDIUM> * tunnel_builder_t::get_all_tunnels()
 {
 	return &tunnel_by_name;
 }
-
-// to allow overlaying, the tool must be registered here!
-bool tunnel_builder_t::successfully_loaded()
-{
-	FOR( stringhashtable_tpl<tunnel_desc_t*>, & i, tunnel_by_name ) {
-		// add the tool
-		tunnel_desc_t* desc = i.value;
-		tool_build_tunnel_t *tool = new tool_build_tunnel_t();
-		tool->set_icon( desc->get_cursor()->get_image_id(1) );
-		tool->cursor = desc->get_cursor()->get_image_id(0);
-		tool->set_default_param( desc->get_name() );
-		tool_t::general_tool.append( tool );
-		desc->set_builder( tool );
-	}
-	return true;
-}
-
 
 const tunnel_desc_t *tunnel_builder_t::get_desc(const char *name)
 {
@@ -90,7 +80,7 @@ const tunnel_desc_t *tunnel_builder_t::get_tunnel_desc(const waytype_t wtyp, con
 {
 	const tunnel_desc_t *find_desc = NULL;
 
-	FOR(stringhashtable_tpl<tunnel_desc_t*>, const& i, tunnel_by_name) {
+	for(auto const & i: tunnel_by_name) {
 		tunnel_desc_t* const desc = i.value;
 		if(  desc->get_waytype()==wtyp  ) {
 			if(  desc->is_available(time)  ) {
@@ -133,7 +123,7 @@ void tunnel_builder_t::fill_menu(tool_selector_t* tool_selector, const waytype_t
 	const uint16 time=welt->get_timeline_year_month();
 	vector_tpl<const tunnel_desc_t*> matching(tunnel_by_name.get_count());
 
-	FOR(stringhashtable_tpl<tunnel_desc_t*>, const& i, tunnel_by_name) {
+	for(auto const & i : tunnel_by_name) {
 		tunnel_desc_t* const desc = i.value;
 		if(  desc->get_waytype()==wtyp  &&  desc->is_available(time)  ) {
 			matching.insert_ordered(desc, compare_tunnels);
@@ -190,7 +180,7 @@ koord3d tunnel_builder_t::find_end_pos(player_t *player, koord3d pos, koord zv, 
 		}
 
 		// check water level
-		if (gr->is_water()  && welt->lookup_hgt(pos.get_2d()) <= pos.z) {
+		if (gr->is_water()  &&  welt->lookup_hgt(pos.get_2d()) <= pos.z) {
 			return koord3d::invalid;
 		}
 
@@ -206,7 +196,7 @@ koord3d tunnel_builder_t::find_end_pos(player_t *player, koord3d pos, koord zv, 
 		if(  gr == NULL  ) {
 			// check for slope down ...
 			gr = welt->lookup(pos + koord3d(0,0,-1));
- 			if(  !gr  ) {
+			if(  !gr  ) {
 				gr = welt->lookup(pos + koord3d(0,0,-2));
 			}
 			if(  gr  &&  gr->get_weg_hang() == slope_t::flat  ) {
@@ -362,32 +352,39 @@ const char *tunnel_builder_t::build( player_t *player, koord pos, const tunnel_d
 
 	// Search tunnel end and check intermediate tiles
 	const char *err = NULL;
-	koord3d end = find_end_pos(player, gr->get_pos(), zv, desc, full_tunnel, &err);
-	if (err) {
-		return err;
-	}
+	koord3d end = koord3d::invalid;
 
 	if(player && !player->can_afford(desc->get_value()))
 	{
 		return "That would exceed\nyour credit limit.";
 	}
+	else {
+		end = find_end_pos(player, gr->get_pos(), zv, desc, full_tunnel, &err);
+		if (err) {
+			return err;
+		}
+	}
+
 
 	if(!welt->is_within_limits(end.get_2d())) {
 		return "Tunnel must start on single way!";
 	}
 
 	// check ownership
-	if (const grund_t *gr_end = welt->lookup(end)) {
-		if (weg_t *weg_end = gr_end->get_weg(waytyp)) {
-			if (weg_end-> is_deletable(player)!=NULL) {
-				return "Das Feld gehoert\neinem anderen Spieler\n";
+	const grund_t *end_gr = welt->lookup(end);
+	if (end_gr) {
+		if (weg_t *weg_end = end_gr->get_weg(waytyp)) {
+			if (weg_end->is_deletable(player)!=NULL) {
+				return NOTICE_OWNED_BY_OTHER_PLAYER;
+			}
+			if(  full_tunnel  &&  end_gr->get_typ() == grund_t::tunnelboden  ) {
+				full_tunnel = false;
 			}
 		}
 	}
 
 	// Begin and end found, we can build
 
-	const grund_t *end_gr = welt->lookup(end);
 	slope_t::type end_slope = slope_type(-zv) * env_t::pak_height_conversion_factor;
 	if(  full_tunnel  &&  (!end_gr  ||  end_gr->get_grund_hang()!=end_slope)  ) {
 		// end slope not at correct height - we have already checked in find_end_pos that we can change this
@@ -471,7 +468,7 @@ bool tunnel_builder_t::build_tunnel(player_t *player, koord3d start, koord3d end
 		gr->set_flag(grund_t::dirty);
 	}
 
-	if (  end == start  ) {
+	if(  end == start  ) {
 		// already finished
 		return true;
 	}
@@ -480,8 +477,7 @@ bool tunnel_builder_t::build_tunnel(player_t *player, koord3d start, koord3d end
 	while(pos.get_2d()!=end.get_2d()) {
 		tunnelboden_t *tunnel = new tunnelboden_t( pos, 0);
 		welt->access(pos.get_2d())->boden_hinzufuegen(tunnel);
-		if(waytyp != powerline_wt)
-		{
+		if(waytyp != powerline_wt) {
 			const uint32 max_speed = min(desc->get_topspeed(), way_desc->get_topspeed());
 			const uint32 max_axle_load = min(desc->get_axle_load(), way_desc->get_axle_load());
 			weg = weg_t::alloc(desc->get_waytype());
@@ -557,9 +553,7 @@ bool tunnel_builder_t::build_tunnel(player_t *player, koord3d start, koord3d end
 	else {
 		// construct end tunnel tile
 		tunnelboden_t *tunnel = new tunnelboden_t( pos, 0);
-
 		welt->access(pos.get_2d())->boden_hinzufuegen(tunnel);
-
 		if(waytyp != powerline_wt) {
 			weg = weg_t::alloc(desc->get_waytype());
 			weg->set_desc(way_desc);
@@ -634,8 +628,7 @@ void tunnel_builder_t::build_tunnel_portal(player_t *player, koord3d end, koord 
 		else {
 			// needs still one
 			weg = weg_t::alloc( desc->get_waytype() );
-			if(  way_desc  )
-			{
+			if(  way_desc  ) {
 				weg->set_desc( way_desc );
 			}
 			else
@@ -770,6 +763,7 @@ const char *tunnel_builder_t::remove(player_t *player, koord3d start, waytype_t 
 		if(  from->kann_alle_obj_entfernen(player)  ) {
 			return "Der Tunnel ist nicht frei!\n";
 		}
+
 		ribi_t::ribi waytype_ribi = ribi_t::none;
 		if(  waytyp == powerline_wt  ) {
 			if(  from->get_leitung()  ) {
@@ -782,10 +776,11 @@ const char *tunnel_builder_t::remove(player_t *player, koord3d start, waytype_t 
 		if(  !remove_all  &&  ribi_t::is_threeway(waytype_ribi)  ) {
 			return "This tunnel branches. You can try Control+Click to remove.";
 		}
+
 		// Nachbarn raussuchen
 		for(int r = 0; r < 4; r++) {
-			if((zv == koord::invalid || zv == koord::nsew[r]) &&
-				from->get_neighbour(to, delete_waytyp, ribi_t::nsew[r]) &&
+			if((zv == koord::invalid || zv == koord::nesw[r]) &&
+				from->get_neighbour(to, delete_waytyp, ribi_t::nesw[r]) &&
 				!marker.is_marked(to) &&
 				(waytyp != powerline_wt || to->get_leitung()))
 			{
@@ -803,14 +798,14 @@ const char *tunnel_builder_t::remove(player_t *player, koord3d start, waytype_t 
 		if(gr->get_weg_nr(1)) {
 			gr->remove_everything_from_way(player,gr->get_weg_nr(1)->get_waytype(),ribi_t::none);
 		}
-		gr->remove_everything_from_way(player,waytyp,ribi_t::none);	// removes stop and signals correctly
+		gr->remove_everything_from_way(player,waytyp,ribi_t::none); // removes stop and signals correctly
 		// remove everything else
 		gr->obj_loesche_alle(player);
 		gr->mark_image_dirty();
 		welt->access(pos.get_2d())->boden_entfernen(gr);
 		delete gr;
 
-		reliefkarte_t::get_karte()->calc_map_pixel( pos.get_2d() );
+		minimap_t::get_instance()->calc_map_pixel( pos.get_2d() );
 	}
 
 	// And now we can delete the tunnel ends
@@ -845,7 +840,7 @@ const char *tunnel_builder_t::remove(player_t *player, koord3d start, waytype_t 
 
 			tunnel_t *t = gr->find<tunnel_t>();
 			uint8 broad_type = t->get_broad_type();
-			gr->remove_everything_from_way(player,waytyp,ribi);	// removes stop and signals correctly
+			gr->remove_everything_from_way(player,waytyp,ribi); // removes stop and signals correctly
 
 			// remove tunnel portals
 			t = gr->find<tunnel_t>();
@@ -887,8 +882,7 @@ const char *tunnel_builder_t::remove(player_t *player, koord3d start, waytype_t 
 
 		// then add the new ground, copy everything and replace the old one
 		grund_t *gr_new = new boden_t(pos, gr->get_grund_hang());
-		gr_new->take_obj_from( gr );
-		welt->access(pos.get_2d())->kartenboden_setzen(gr_new );
+		welt->access(pos.get_2d())->kartenboden_setzen(gr_new);
 
 		if(gr_new->get_leitung()) {
 			gr_new->get_leitung()->finish_rd();

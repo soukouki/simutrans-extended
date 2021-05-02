@@ -51,7 +51,7 @@ private:
 
 	button_t easy_server; // only active on loading savegames
 
-	static stringhashtable_tpl<sve_info_t *> cached_info;
+	static stringhashtable_tpl<sve_info_t *, N_BAGS_LARGE> cached_info;
 
 protected:
 	/**
@@ -66,6 +66,9 @@ protected:
 	// FIXME: need incorporating r7664
 	//// sort with respect to info, which is date
 	////bool compare_items ( const dir_entry_t & entry, const char *info, const char *) OVERRIDE;
+
+	// sort with respect to info, which is date
+	virtual bool compare_items ( const dir_entry_t & entry, const char *info, const char *);
 
 public:
 	/**

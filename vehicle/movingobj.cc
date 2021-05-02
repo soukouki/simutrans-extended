@@ -8,7 +8,7 @@
 
 #include "../simdebug.h"
 #include "../simworld.h"
-#include "../simobj.h"
+#include "../obj/simobj.h"
 #include "../display/simimg.h"
 #include "../player/simplay.h"
 #include "../simtypes.h"
@@ -34,7 +34,7 @@
 
 vector_tpl<const groundobj_desc_t *> movingobj_t::movingobj_typen(0);
 
-stringhashtable_tpl<groundobj_desc_t *> movingobj_t::desc_names;
+stringhashtable_tpl<groundobj_desc_t *, N_BAGS_MEDIUM> movingobj_t::desc_names;
 
 
 bool compare_groundobj_desc(const groundobj_desc_t* a, const groundobj_desc_t* b);
@@ -43,11 +43,11 @@ bool compare_groundobj_desc(const groundobj_desc_t* a, const groundobj_desc_t* b
 bool movingobj_t::successfully_loaded()
 {
 	movingobj_typen.resize(desc_names.get_count());
-	FOR(stringhashtable_tpl<groundobj_desc_t*>, const& i, desc_names) {
+	for(auto const& i : desc_names) {
 		movingobj_typen.insert_ordered(i.value, compare_groundobj_desc);
 	}
 	// iterate again to assign the index
-	FOR(stringhashtable_tpl<groundobj_desc_t*>, const& i, desc_names) {
+	for(auto const& i : desc_names) {
 		i.value->index = movingobj_typen.index_of(i.value);
 	}
 
@@ -64,7 +64,7 @@ bool movingobj_t::register_desc(groundobj_desc_t *desc)
 {
 	// remove duplicates
 	if(  desc_names.remove( desc->get_name() )  ) {
-		dbg->warning( "movingobj_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
+		dbg->doubled( "movingobj", desc->get_name() );
 	}
 	desc_names.put(desc->get_name(), desc );
 	return true;
@@ -170,7 +170,7 @@ movingobj_t::movingobj_t(koord3d pos, const groundobj_desc_t *b ) :
 {
 	movingobjtype = movingobj_typen.index_of(b);
 	weg_next = 0;
-	timetochange = 0;	// will do random direct change anyway during next step
+	timetochange = 0; // will do random direct change anyway during next step
 	direction = calc_set_direction( koord3d(0,0,0), koord3d(koord::west,0) );
 	calc_image();
 	welt->sync.add( this );
@@ -370,7 +370,7 @@ grund_t* movingobj_t::hop_check()
 		uint8 until=0;
 		// find all tiles we can go
 		for(  int i=0;  i<4;  i++  ) {
-			const grund_t *check = welt->lookup_kartenboden(pos+koord::nsew[i]);
+			const grund_t *check = welt->lookup_kartenboden(pos+koord::nesw[i]);
 			if(check_next_tile(check)  &&  check->get_pos()!=get_pos()) {
 				to[until++] = check;
 			}

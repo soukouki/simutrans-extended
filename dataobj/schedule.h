@@ -59,7 +59,15 @@ protected:
 
 public:
 	enum schedule_type {
-		schedule = 0, truck_schedule = 1, train_schedule = 2, ship_schedule = 3, airplane_schedule = 4, monorail_schedule = 5, tram_schedule = 6, maglev_schedule = 7, narrowgauge_schedule = 8
+		schedule             = 0,
+		truck_schedule       = 1,
+		train_schedule       = 2,
+		ship_schedule        = 3,
+		airplane_schedule    = 4,
+		monorail_schedule    = 5,
+		tram_schedule        = 6,
+		maglev_schedule      = 7,
+		narrowgauge_schedule = 8
 	};
 
 	minivec_tpl<schedule_entry_t> entries;
@@ -437,6 +445,6 @@ public:
     uint32 get_average_seconds() const;
 };
 
-typedef koordhashtable_tpl<departure_point_t, times_history_data_t> times_history_map;
+typedef koordhashtable_tpl<departure_point_t, times_history_data_t, N_BAGS_SMALL> times_history_map;
 
 #endif

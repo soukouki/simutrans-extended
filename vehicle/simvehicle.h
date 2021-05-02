@@ -11,7 +11,7 @@
 #include <string>
 #include "../simtypes.h"
 #include "../simworld.h"
-#include "../simobj.h"
+#include "../obj/simobj.h"
 #include "../halthandle_t.h"
 #include "../convoihandle_t.h"
 #include "../ifc/simtestdriver.h"
@@ -173,7 +173,7 @@ protected:
 	void calc_image() OVERRIDE = 0;
 
 	// check for road vehicle, if next tile is free
-	vehicle_base_t *no_cars_blocking( const grund_t *gr, const convoi_t *cnv, const uint8 current_direction, const uint8 next_direction, const uint8 next_90direction, const private_car_t *pcar, sint8 lane_on_the_tile );
+	vehicle_base_t *get_blocking_vehicle(const grund_t *gr, const convoi_t *cnv, const uint8 current_direction, const uint8 next_direction, const uint8 next_90direction, const private_car_t *pcar, sint8 lane_on_the_tile );
 
 	// If true, two vehicles might crash by lane crossing.
 	bool judge_lane_crossing( const uint8 current_direction, const uint8 next_direction, const uint8 other_next_direction, const bool is_overtaking, const bool forced_to_change_lane ) const;
@@ -196,7 +196,7 @@ public:
 	// if true, this convoi needs to restart for correct alignment
 	bool need_realignment() const;
 
-	virtual uint32 do_drive(uint32 dist);	// basis movement code
+	virtual uint32 do_drive(uint32 dist); // basis movement code
 
 	inline void set_image( image_id b ) { image = b; }
 	image_id get_image() const OVERRIDE {return image;}
@@ -329,7 +329,7 @@ private:
 protected:
 	void hop(grund_t*) OVERRIDE;
 
-	virtual void update_bookkeeping(uint32 steps);
+	void update_bookkeeping(uint32 steps) OVERRIDE;
 
 	// current limit (due to track etc.)
 	sint32 speed_limit;
@@ -352,25 +352,24 @@ protected:
 	*/
 	uint16 route_index;
 
-	uint16 total_freight;	// since the sum is needed quite often, it is cached (not differentiated by class)
-	slist_tpl<ware_t> *fracht;   // list of goods being transported (array for each class)
+	uint16 total_freight; // since the sum is needed quite often, it is cached (not differentiated by class)
+	slist_tpl<ware_t> *fracht;  // list of goods being transported (array for each class)
 
 	const vehicle_desc_t *desc;
 
-	convoi_t *cnv;		// != NULL if the vehicle is part of a Convoi
+	convoi_t *cnv;  // != NULL if the vehicle is part of a Convoi
 
 	/**
-	* Previous position on our path
-	* @author Hj. Malthaner
-	*/
+	 * Previous position on our path
+	 */
 	koord3d pos_prev;
 
 	uint8 number_of_classes;
 
-	bool leading:1;	// true, if vehicle is first vehicle of a convoi
-	bool last:1;	// true, if vehicle is last vehicle of a convoi
+	bool leading:1; // true, if vehicle is first vehicle of a convoi
+	bool last:1;    // true, if vehicle is last vehicle of a convoi
 	bool smoke:1;
-	bool check_for_finish:1;		// true, if on the last tile
+	bool check_for_finish:1; // true, if on the last tile
 	bool has_driven:1;
 
 	void calc_image() OVERRIDE;
@@ -665,8 +664,8 @@ public:
 	uint16 get_accommodation_capacity(uint8 g_class, bool include_lower_classes = false) const;
 	uint16 get_fare_capacity(uint8 g_class, bool include_lower_classes = false) const;
 
-	// BG, 06.06.2009: update player's fixed maintenance
-	void finish_rd();
+	// update player's fixed maintenance
+	void finish_rd() OVERRIDE;
 	void before_delete();
 
 	void set_current_livery(const char* liv) { current_livery = liv; }
@@ -767,10 +766,10 @@ protected:
 public:
 	waytype_t get_waytype() const OVERRIDE { return track_wt; }
 
-	void rdwr_from_convoi(loadsave_t *file);
+	void rdwr_from_convoi(loadsave_t *file) OVERRIDE;
 
 	// since we might need to unreserve previously used blocks, we must do this before calculation a new route
-	route_t::route_result_t calc_route(koord3d start, koord3d ziel, sint32 max_speed, bool is_tall, route_t* route);
+	route_t::route_result_t calc_route(koord3d start, koord3d ziel, sint32 max_speed, bool is_tall, route_t* route) OVERRIDE;
 
 	// how expensive to go here (for way search)
 	int get_cost(const grund_t *, const sint32, koord) OVERRIDE;
@@ -915,7 +914,7 @@ protected:
 	// how expensive to go here (for way search)
 	int get_cost(const grund_t *, const sint32, koord) OVERRIDE { return 1; }
 
-	void calc_drag_coefficient(const grund_t *gr);
+	void calc_drag_coefficient(const grund_t *gr) OVERRIDE;
 
 	bool check_next_tile(const grund_t *bd) const OVERRIDE;
 
@@ -952,7 +951,15 @@ public:
 class air_vehicle_t : public vehicle_t
 {
 public:
-	enum flight_state { taxiing=0, departing=1, flying=2, landing=3, looking_for_parking=4, circling=5, taxiing_to_halt=6  };
+	enum flight_state {
+		taxiing             = 0,
+		departing           = 1,
+		flying              = 2,
+		landing             = 3,
+		looking_for_parking = 4,
+		circling            = 5,
+		taxiing_to_halt     = 6
+	};
 
 private:
 
@@ -971,7 +978,7 @@ private:
 	//koord3d search_start;
 	//koord3d search_end;
 
-	flight_state state;	// functions needed for the search without destination from find_route
+	flight_state state; // functions needed for the search without destination from find_route
 
 	sint16 flying_height;
 	sint16 target_height;

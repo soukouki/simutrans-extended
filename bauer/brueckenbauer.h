@@ -58,6 +58,7 @@ public:
 	 *
 	 * @param player the player wanting to build the  bridge.
 	 * @param gr the ground to check.
+	 * @param r is ribi_t::none of the direction from bridge to ground.
 	 * @return true, if bridge ramp can be built here.
 	 */
 	static bool can_place_ramp(player_t *player, const grund_t *gr, waytype_t wt, ribi_t::ribi r );
@@ -100,7 +101,7 @@ public:
 	static void build_bridge(player_t *player, const koord3d start, const koord3d end, koord zv, sint8 bridge_height, const bridge_desc_t *desc, const way_desc_t *way_desc) {  build_bridge(player,start,end,zv,bridge_height,desc,way_desc,twoway_mode); }
 
 	/**
-	 * Registers a new bridge type
+	 * Registers a new bridge type and adds it to the list of build tools.
 	 *
 	 * @param desc Description of the bridge to register.
 	 */
@@ -109,15 +110,8 @@ public:
 
 	static bool laden_erfolgreich();
 
-	static stringhashtable_tpl<bridge_desc_t *> * get_all_bridges();
+	static stringhashtable_tpl<bridge_desc_t *, N_BAGS_MEDIUM> * get_all_bridges();
 
-
-	/**
-	* adds it to the list of build tools.
-	*
-	* @param desc Description of the bridge to register.
-	*/
-	static bool successfully_loaded();
 
 	/**
 	 * Method to retrieve bridge descriptor

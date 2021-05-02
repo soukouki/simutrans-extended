@@ -34,17 +34,37 @@ public:
 	 * roundbox:      button for "load", "cancel" and such options
 	 * arrow-buttons: buttons with arrows, cannot have text
 	 * repeat arrows: calls the caller until the mouse is released
-	 * scrollbar:     well you guess it. Not used by gui_frame_t things ...
 	 * flexible:      flag, can be set to box, square to get infinitely enlarging buttons
 	 */
 	enum type {
-		square=1, box, roundbox, arrowleft, arrowright, arrowup, arrowdown, repeatarrowleft, repeatarrowright, posbutton,
-		square_state=129, box_state, roundbox_state, arrowleft_state, arrowright_state, arrowup_state, arrowdown_state, scrollbar_horizontal_state, scrollbar_vertical_state, repeatarrowleft_state, repeatarrowright_state,
+		square = 1,
+		box,
+		roundbox,
+		imagebox,
+		arrowleft,
+		arrowright,
+		arrowup,
+		arrowdown,
+		repeatarrowleft,
+		repeatarrowright,
+		posbutton,
+		TYPE_MASK = (1 << 7) - 1,
+
+		state            = 1 << 7,
+		square_state     = square     | state,
+		box_state        = box        | state,
+		roundbox_state   = roundbox   | state,
+		imagebox_state   = imagebox   | state,
+		arrowright_state = arrowright | state,
+		arrowup_state    = arrowup    | state,
+		arrowdown_state  = arrowdown  | state,
 		automatic = 256,
-		square_automatic    = square_state + automatic,
-		box_state_automatic = box_state + automatic,
-		posbutton_automatic = posbutton + automatic,
-		flexible = 512
+		square_automatic    = square_state | automatic,
+		box_state_automatic = box_state    | automatic,
+		imagebox_automatic  = imagebox     | automatic,
+		posbutton_automatic = posbutton    | automatic,
+
+		flexible = 1 << 9
 	};
 
 protected:
@@ -72,11 +92,11 @@ private:
 	 * The displayed text of the button
 	 * direct access provided to avoid translations
 	 */
-	union {
-		const char * text;
-		struct { sint16 x, y; sint8 z; } targetpos;
-	};
+	const char *text;
 	const char *translated_text;
+
+	koord3d targetpos;
+	image_id img;
 
 	// any click will go to this world
 	static karte_ptr_t welt;
@@ -86,8 +106,6 @@ private:
 	// Hide these
 	button_t(const button_t&);        // forbidden
 	void operator =(const button_t&); // forbidden
-
-	image_id image;
 
 public:
 	PIXVAL background_color;
@@ -117,7 +135,10 @@ public:
 	 * Set position for posbuttons, will be returned on calling listener
 	 */
 	void set_targetpos( const koord k ); // assuming this is on map ground
-	void set_targetpos3d( const koord3d k ) { targetpos.x = k.x; targetpos.y = k.y; targetpos.z= k.z; }
+	void set_targetpos3d( const koord3d k ) { targetpos = k; }
+
+	// only relevant for imagebox
+	void set_image(image_id id) { img = id; }
 
 	/**
 	 * Set the displayed text of the button when not to translate
@@ -128,8 +149,6 @@ public:
 	 * Sets the tooltip of this button
 	 */
 	void set_tooltip(const char * tooltip);
-
-	void set_image(image_id b) { image = b; };
 
 	/**
 	 * @return true when x, y is within button area, i.e. the button was clicked
