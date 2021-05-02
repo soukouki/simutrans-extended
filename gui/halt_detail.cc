@@ -658,7 +658,7 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 	if (good_category != goods_manager_t::mail && good_category != goods_manager_t::passengers) {
 		return; // this table is for pax and mail
 	}
-	KOORD_VAL y = offset.y;
+	scr_coord_val y = offset.y;
 
 	uint base_capacity = halt->get_capacity(good_category->get_catg_index()) ? max(halt->get_capacity(good_category->get_catg_index()), 10) : 10; // Note that capacity may have 0 even if pax_enabled
 	uint transferring_sum = 0;

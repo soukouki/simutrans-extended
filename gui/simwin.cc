@@ -59,6 +59,9 @@
 #include "themeselector.h"
 #include "goods_frame_t.h"
 #include "loadfont_frame.h"
+#ifdef USE_FLUIDSYNTH_MIDI
+#include "loadsoundfont_frame.h"
+#endif
 #include "scenario_info.h"
 #include "depotlist_frame.h"
 
@@ -594,6 +597,9 @@ void rdwr_all_win(loadsave_t *file)
 					case magic_factory_info:   w = new fabrik_info_t(); break;
 					case magic_goodslist:      w = new goods_frame_t(); break;
 					case magic_font:           w = new loadfont_frame_t(); break;
+#ifdef USE_FLUIDSYNTH_MIDI
+					case magic_soundfont:      w = new loadsoundfont_frame_t(); break;
+#endif
 					case magic_scenario_info:  w = new scenario_info_t(); break;
 
 					default:
@@ -1746,11 +1752,11 @@ void win_display_flush(double konto)
 	char const *time = tick_to_string( wl->get_ticks(), true );
 
 	// statusbar background
-	KOORD_VAL const status_bar_height = win_get_statusbar_height();
-	KOORD_VAL const status_bar_y = disp_height - status_bar_height;
-	KOORD_VAL const status_bar_text_y = status_bar_y + (status_bar_height - LINESPACE) / 2;
-	KOORD_VAL const status_bar_icon_y = status_bar_y + (status_bar_height - 15) / 2;
-	display_set_clip_wh( 0, 0, disp_width, disp_height );
+	scr_coord_val const status_bar_height = win_get_statusbar_height();
+	scr_coord_val const status_bar_y = disp_height - status_bar_height;
+	scr_coord_val const status_bar_text_y = status_bar_y + (status_bar_height - LINESPACE) / 2;
+	scr_coord_val const status_bar_icon_y = status_bar_y + (status_bar_height - 15) / 2;
+	display_set_clip_wh(0, 0, disp_width, disp_height);
 	display_fillbox_wh_rgb(0, status_bar_y - 1, disp_width, 1, SYSCOL_STATUSBAR_DIVIDER, false);
 	display_fillbox_wh_rgb(0, status_bar_y, disp_width, status_bar_height, SYSCOL_STATUSBAR_BACKGROUND, false);
 
