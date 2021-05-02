@@ -76,7 +76,6 @@ file_classify_status_t classify_file(const char *path, file_info_t *info)
 		{
 #endif
 			info->file_type = file_info_t::TYPE_ZSTD;
-			info->version = INVALID_FILE_VERSION;
 			info->ext_version = extended_version_t::INVALID;
 			info->header_size = 0;
 		}
