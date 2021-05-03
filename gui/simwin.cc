@@ -340,7 +340,7 @@ static void win_draw_window_title(const scr_coord pos, const scr_size size,
 	PIXVAL darker  = display_blend_colors(title_color, color_idx_to_rgb(COL_BLACK), 25);
 
 	if (sticky) {
-		display_blend_wh_rgb(pos.x, pos.y, size.w, D_TITLEBAR_HEIGHT, title_color, 35);
+		display_blend_wh_rgb(pos.x, pos.y, size.w, D_TITLEBAR_HEIGHT, title_color, 60);
 	}
 	else {
 		// fill title bar with color
