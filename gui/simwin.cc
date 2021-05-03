@@ -332,7 +332,7 @@ static void win_draw_window_title(const scr_coord pos, const scr_size size,
 		const bool sticky,
 		const bool goto_pushed,
 		const bool locked,
-	simwin_gadget_flags_t &flags )
+		simwin_gadget_flags_t &flags )
 {
 	PUSH_CLIP_FIT(pos.x, pos.y, size.w, size.h);
 
@@ -346,7 +346,6 @@ static void win_draw_window_title(const scr_coord pos, const scr_size size,
 		// fill title bar with color
 		display_fillbox_wh_clip_rgb(pos.x, pos.y, size.w, D_TITLEBAR_HEIGHT, title_color, true);
 	}
-	display_fillbox_wh_clip_rgb(pos.x, pos.y, size.w, D_TITLEBAR_HEIGHT, title_color, false);
 
 	// border of title bar
 	display_fillbox_wh_clip_rgb( pos.x + 1, pos.y,                         size.w - 2, 1, lighter, false ); // top
