@@ -414,7 +414,7 @@ void button_t::draw(scr_coord offset)
 					for (uint8 row=0; row*4<bars_height; row++) {
 						display_fillbox_wh_clip_rgb(area_drawing.x + 6/*arrow width(5)+margin(1)*/, area_drawing.y + bars_height - block_height - row*block_height*2, block_height*(row+1), block_height, SYSCOL_BUTTON_TEXT, false);
 					}
-			}
+				}
 				else {
 					// asc
 					display_fillbox_wh_clip_rgb(area_drawing.x+1, area_drawing.y+bars_height-2, 3, 1, SYSCOL_BUTTON_TEXT, false);
