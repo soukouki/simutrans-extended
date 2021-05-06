@@ -107,8 +107,6 @@ bool obj_reader_t::load(const char *path, const char *message)
 			fclose(listfp);
 			return true;
 		}
-
-		return false;
 	}
 	else {
 		// No dat-file? Then is the list a directory?
@@ -128,9 +126,8 @@ bool obj_reader_t::load(const char *path, const char *message)
 
 		if(drawing  &&  skinverwaltung_t::biglogosymbol==NULL) {
 			display_fillbox_wh_rgb( 0, 0, display_get_width(), display_get_height(), color_idx_to_rgb(COL_BLACK), true );
-			if (!read_file((name+"symbol.BigLogo.pak").c_str())) {
-				dbg->warning("obj_reader_t::load()", "File 'symbol.BigLogo.pak' cannot be read, startup logo will not be displayed!");
-			}
+			read_file((name+"symbol.BigLogo.pak").c_str());
+DBG_MESSAGE("obj_reader_t::load()","big logo %p", skinverwaltung_t::biglogosymbol);
 		}
 
 		loadingscreen_t ls( message, max, true );
@@ -139,7 +136,7 @@ bool obj_reader_t::load(const char *path, const char *message)
 			// defining the pak tile width ....
 			read_file((name+"ground.Outside.pak").c_str());
 			if(ground_desc_t::outside==NULL) {
-				dbg->warning("obj_reader_t::load()", "ground.Outside.pak not found, cannot guess tile size! (driving on left will not work!)");
+				dbg->warning("obj_reader_t::load()","ground.Outside.pak not found, cannot guess tile size! (driving on left will not work!)");
 			}
 			else {
 				if (char const* const copyright = ground_desc_t::outside->get_copyright()) {
@@ -152,10 +149,7 @@ DBG_MESSAGE("obj_reader_t::load()", "reading from '%s'", name.c_str());
 
 		uint n = 0;
 		FORX(searchfolder_t, const& i, find, ++n) {
-			if (!read_file(i)) {
-				dbg->warning("obj_reader_t::load()", "Cannot load '%s', some objects might be unavailable!", i);
-			}
-
+			read_file(i);
 			if ((n & step) == 0 && drawing) {
 				ls.set_progress(n);
 			}
@@ -164,6 +158,7 @@ DBG_MESSAGE("obj_reader_t::load()", "reading from '%s'", name.c_str());
 
 		return find.begin()!=find.end();
 	}
+	return false;
 }
 
 
