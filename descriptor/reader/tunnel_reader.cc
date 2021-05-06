@@ -73,7 +73,7 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 	char *p = desc_buf.begin();
 
 	const uint16 v = decode_uint16(p);
-	const int version = v & 0x8000 ? v & 0x7FFF : 0;
+	int version = v & 0x8000 ? v & 0x7FFF : 0;
 
 	// Whether the read file is from Simutrans-Extended
 	//@author: jamespetts
