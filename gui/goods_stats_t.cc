@@ -38,7 +38,15 @@ void goods_stats_t::update_goodslist(vector_tpl<const goods_desc_t*>goods, uint3
 
 	FOR(vector_tpl<const goods_desc_t*>, wtyp, goods) {
 		new_component<gui_colorbox_t>(wtyp->get_color())->set_size(scr_size(LINESPACE/2 + 2, LINESPACE/2 + 2));
-		new_component<gui_label_t>(wtyp->get_name());
+
+		gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
+		if (wtyp->get_number_of_classes() > 1) {
+			lb->buf().printf("%s (%s)", wtyp->get_name(), goods_manager_t::get_translated_wealth_name(wtyp->get_catg_index(),min(g_class, wtyp->get_number_of_classes()-1)));
+		}
+		else {
+			lb->buf().append(wtyp->get_name());
+		}
+		lb->update();
 
 		// Massively cleaned up by neroden, June 2013
 		// Roundoff is deliberate here (get two-digit speed)... question this
@@ -54,7 +62,7 @@ void goods_stats_t::update_goodslist(vector_tpl<const goods_desc_t*>goods, uint3
 		// Convert to simucents.  Should be very fast.
 		sint64 price = (revenue + 2048) / 4096;
 
-		gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+		lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
 		lb->buf().append_money(price / 100.0);
 		lb->update();
 
