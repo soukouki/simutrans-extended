@@ -69,6 +69,12 @@ private:
 
 	gui_aligned_container_t *sort_row;
 
+	// expand/collapse things
+	gui_aligned_container_t input_container;
+	gui_label_t lb_collapsed;
+	button_t show_hide_input;
+	bool show_input = false;
+
 	button_t filter_goods_toggle;
 
 	goods_stats_t goods_stats;

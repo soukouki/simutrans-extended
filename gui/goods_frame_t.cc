@@ -74,11 +74,20 @@ goods_frame_t::goods_frame_t() :
 {
 	set_table_layout(1, 0);
 
-	add_table(2, 5);
+	add_table(3,1)->set_alignment(ALIGN_TOP);
 	{
+		show_hide_input.init(button_t::roundbox, "+");
+		show_hide_input.set_width(display_get_char_width('+') + gui_theme_t::gui_button_text_offset.w + gui_theme_t::gui_button_text_offset_right.x);
+		show_hide_input.add_listener(this);
+		add_component(&show_hide_input);
+
+		lb_collapsed.set_text("Open the fare calculation input field");
+		add_component(&lb_collapsed);
+
 		speed[0] = 0;
 
-		new_component<gui_label_t>("distance");
+		input_container.set_table_layout(2,5);
+		input_container.new_component<gui_label_t>("distance");
 
 		distance_txt[0] = 0;
 		comfort_txt[0] = 0;
@@ -90,35 +99,39 @@ goods_frame_t::goods_frame_t() :
 		distance_input.set_value( distance );
 		distance_input.wrap_mode( false );
 		distance_input.add_listener( this );
-		add_component(&distance_input);
+		input_container.add_component(&distance_input);
 
-		new_component<gui_label_t>("Comfort");
+		input_container.new_component<gui_label_t>("Comfort");
 		comfort_input.set_limits( 1, 255 );
 		comfort_input.set_value( comfort );
 		comfort_input.wrap_mode( false );
 		comfort_input.add_listener( this );
-		add_component(&comfort_input);
+		input_container.add_component(&comfort_input);
 
-		new_component<gui_label_t>("Catering level");
+		input_container.new_component<gui_label_t>("Catering level");
 		catering_input.set_limits( 0, 5 );
 		catering_input.set_value( catering_level );
 		catering_input.wrap_mode( false );
 		catering_input.add_listener( this );
-		add_component(&catering_input);
+		input_container.add_component(&catering_input);
 
-		new_component<gui_label_t>("Average speed");
+		input_container.new_component<gui_label_t>("Average speed");
 		speed_input.set_limits(19, 9999);
 		speed_input.set_value(vehicle_speed);
 		speed_input.wrap_mode(false);
 		speed_input.add_listener(this);
-		add_component(&speed_input);
+		input_container.add_component(&speed_input);
 
-		new_component<gui_label_t>("Class");
+		input_container.new_component<gui_label_t>("Class");
 		class_input.set_limits(0, max(goods_manager_t::passengers->get_number_of_classes() - 1, goods_manager_t::mail->get_number_of_classes() - 1)); // TODO: Extrapolate this to show the class names as well as just the number
 		class_input.set_value(g_class);
 		class_input.wrap_mode(false);
 		class_input.add_listener(this);
-		add_component(&class_input);
+		input_container.add_component(&class_input);
+
+		input_container.set_visible(false);
+
+		add_component(&input_container);
 	}
 	end_table();
 
@@ -271,6 +284,14 @@ bool goods_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 		filter_goods = !filter_goods;
 		filter_goods_toggle.pressed = filter_goods;
 		sort_list();
+	}
+	else if (comp == &show_hide_input) {
+		show_input = !show_input;
+		show_hide_input.set_text(show_input ? "-" : "+");
+		show_hide_input.pressed = show_input;
+		input_container.set_visible(show_input);
+		lb_collapsed.set_visible(!show_input);
+		reset_min_windowsize();
 	}
 
 	return true;
