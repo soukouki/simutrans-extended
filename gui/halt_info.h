@@ -58,6 +58,19 @@ public:
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 
+class gui_halt_waiting_summary_t : public gui_container_t
+{
+	halthandle_t halt;
+	cbuffer_t buf;
+public:
+	gui_halt_waiting_summary_t(halthandle_t h);
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE { return size; }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
 /**
  * Helper class to draw freight type capacity bar
  */
@@ -94,7 +107,6 @@ public:
 
 	void draw(scr_coord offset) OVERRIDE;
 };
-
 
 /**
  * Main class: the station info window.
