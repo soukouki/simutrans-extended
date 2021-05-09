@@ -52,6 +52,9 @@ private:
 	static sort_mode_t sortby;
 	static bool filter_goods;
 
+	// 0:normal 1:produced by 2:consumed by
+	static uint8 display_mode;
+
 	char speed[6];
 	char distance_txt[6];
 	char comfort_txt[6];
@@ -62,6 +65,7 @@ private:
 
 	gui_combobox_t sortedby;
 	button_t sort_order;
+	button_t mode_switcher[3];
 
 	// replace button list with numberinput components for faster navigation
 	// @author: HeinBloed, April 2012
