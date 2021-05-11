@@ -195,7 +195,7 @@ void gui_halt_waiting_summary_t::draw(scr_coord offset)
 	scr_coord_val xoff = D_H_SPACE;
 	bool got_one = false;
 	for (uint8 i = 0; i < goods_manager_t::get_max_catg_index(); i++) {
-		bool already_show_icon=false; 
+		bool already_show_icon=false;
 		for (uint8 j = 0; j < goods_manager_t::get_count(); j++) {
 			const goods_desc_t *wtyp = goods_manager_t::get_info(j);
 			if (wtyp->get_catg_index()!=i) {
