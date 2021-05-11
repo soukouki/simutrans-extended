@@ -185,6 +185,49 @@ void gui_halt_handled_goods_images_t::draw(scr_coord offset)
 }
 
 
+gui_halt_goods_demand_t::gui_halt_goods_demand_t(halthandle_t h, bool show_products)
+{
+	halt = h;
+	this->show_products = show_products;
+	build_goods_list();
+	set_size(D_LABEL_SIZE);
+}
+
+void gui_halt_goods_demand_t::build_goods_list()
+{
+	goods_list.clear();
+	if (old_fab_count = halt->get_fab_list().get_count()) {
+		FOR(const slist_tpl<fabrik_t*>, const fab, halt->get_fab_list()) {
+			FOR(array_tpl<ware_production_t>, const& i, show_products ? fab->get_output() : fab->get_input()) {
+				goods_desc_t const* const ware = i.get_typ();
+				goods_list.append_unique(ware);
+			}
+		}
+	}
+}
+
+void gui_halt_goods_demand_t::draw(scr_coord offset)
+{
+	offset += pos;
+	scr_coord_val xoff = D_H_SPACE;
+	if (halt->get_fab_list().get_count() != old_fab_count){
+		build_goods_list();
+	}
+	if (goods_list.get_count() && skinverwaltung_t::input_output) {
+		// show symbol
+		display_color_img(skinverwaltung_t::input_output->get_image_id(show_products ? 1:0), offset.x, offset.y + FIXED_SYMBOL_YOFF, 0, false, false);
+		xoff += 12;
+	}
+	FOR(slist_tpl<goods_desc_t const*>, const good, goods_list) {
+		display_colorbox_with_tooltip(offset.x + xoff, offset.y + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, good->get_color(), NULL);
+		xoff += GOODS_COLOR_BOX_HEIGHT+2;
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, translator::translate(good->get_name()), ALIGN_LEFT, SYSCOL_TEXT, true);
+		xoff += D_H_SPACE;
+	}
+	set_size(scr_size(max(D_LABEL_WIDTH, xoff + D_H_SPACE * 2), D_LABEL_HEIGHT));
+}
+
+
 gui_halt_waiting_summary_t::gui_halt_waiting_summary_t(halthandle_t h)
 {
 	halt = h;

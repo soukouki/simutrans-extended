@@ -58,6 +58,24 @@ public:
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 
+class gui_halt_goods_demand_t : public gui_component_t
+{
+	halthandle_t halt;
+	slist_tpl<const goods_desc_t *> goods_list;
+	bool show_products=true;
+	uint32 old_fab_count=0;
+
+	void build_goods_list();
+
+public:
+	gui_halt_goods_demand_t(halthandle_t h, bool show_products);
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE { return size; }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
 class gui_halt_waiting_summary_t : public gui_container_t
 {
 	halthandle_t halt;
