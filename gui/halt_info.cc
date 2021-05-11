@@ -226,7 +226,7 @@ void gui_halt_waiting_summary_t::draw(scr_coord offset)
 		}
 	}
 	if (!got_one) {
-		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, translator::translate("no goods waiting"), ALIGN_LEFT, SYSCOL_TEXT, true);
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, translator::translate("no goods waiting"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 	}
 
 	set_size(scr_size(xoff + D_H_SPACE * 2, D_LABEL_HEIGHT));
