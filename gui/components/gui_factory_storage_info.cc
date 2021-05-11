@@ -633,7 +633,7 @@ void gui_goods_handled_factory_t::build_factory_list(const goods_desc_t *ware)
 	factory_list.clear();
 	FOR(vector_tpl<fabrik_t*>, const f, world()->get_fab_list()) {
 		if (show_consumer) {
-			// consume(accept) this? 
+			// consume(accept) this?
 			if(f->get_desc()->get_accepts_these_goods(ware)) {
 				factory_list.append_unique(f->get_desc());
 			}
