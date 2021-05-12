@@ -115,7 +115,6 @@ public:
 	PIXVAL text_color;
 
 	bool pressed;
-	scr_coord_val text_offset_x;
 
 	button_t();
 
