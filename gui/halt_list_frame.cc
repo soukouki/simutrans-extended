@@ -26,6 +26,7 @@
 
 static bool passes_filter(haltestelle_t & s); // see below
 static uint8 default_sortmode = 0;
+uint8 halt_list_frame_t::display_mode = 0;
 
 /**
  * Scrolled list of halt_list_stats_ts.
@@ -33,6 +34,7 @@ static uint8 default_sortmode = 0;
  */
 class gui_scrolled_halt_list_t : public gui_scrolled_list_t
 {
+	uint8 mode = halt_list_frame_t::display_mode;
 public:
 	gui_scrolled_halt_list_t() :  gui_scrolled_list_t(gui_scrolled_list_t::windowskin, compare) {}
 
@@ -43,9 +45,15 @@ public:
 			halt_list_stats_t *a = dynamic_cast<halt_list_stats_t*>(*iter);
 
 			a->set_visible( passes_filter(*a->get_halt()) );
+			a->set_mode(mode);
 		}
 
 		gui_scrolled_list_t::sort(0);
+	}
+
+	void set_mode(uint8 m)
+	{
+		mode = m;
 	}
 
 	static bool compare(const gui_component_t *aa, const gui_component_t *bb)
@@ -97,7 +105,35 @@ const char *halt_list_frame_t::sort_text[SORT_MODES] = {
 	"by_potential_mail_users",
 	"by_pax_happy_last_month",
 	"by_mail_delivered_last_month",
+	"by_convoy_arrivals_last_month",
 	"by_region"
+#ifdef DEBUG
+	, "by_surrounding_population"
+	, "by_surrounding_mail_demand"
+	, "by_surrounding_visitor_demand"
+	, "by_surrounding_jobs"
+#endif
+};
+
+
+const char *halt_list_frame_t::display_mode_text[halt_list_stats_t::HALTLIST_MODES] = {
+	"hl_waiting_detail",
+	"hl_facility",
+	"Serve lines",
+	"hl_location",
+	"hl_waiting_pax",
+	"hl_waiting_mail",
+	"hl_waiting_goods",
+	"hl_pax_evaluation",
+	"hl_mail_evaluation",
+	"hl_goods_needed",
+	"hl_products"
+#ifdef DEBUG
+	, "coverage_population"
+	, "coverage_mail_demands"
+	, "coverage_visitor_demands"
+	, "coverage_jobs"
+#endif
 };
 
 
@@ -146,6 +182,9 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 			break;
 		case by_tiles:
 			order = halt1->get_tiles().get_count() - halt2->get_tiles().get_count();
+			if (order == 0) {
+				order = halt1->calc_maintenance()-halt2->calc_maintenance();
+			}
 			break;
 		case by_capacity:
 		{
@@ -172,10 +211,21 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 			order = (int)(halt1->get_finance_history(1, HALT_MAIL_DELIVERED) + halt1->get_finance_history(1, HALT_MAIL_NOROUTE) - halt2->get_finance_history(1, HALT_MAIL_DELIVERED) - halt2->get_finance_history(1, HALT_MAIL_NOROUTE));
 			break;
 		case by_pax_happy_last_month:
-			order = (int)(halt1->get_finance_history(1, HALT_HAPPY) - halt2->get_finance_history(1, HALT_HAPPY));
+		{
+			const int happy_a = halt1->get_pax_enabled() ? halt1->get_finance_history(1, HALT_HAPPY) : -1;
+			const int happy_b = halt2->get_pax_enabled() ? halt2->get_finance_history(1, HALT_HAPPY) : -1;
+			order = (int)(happy_a - happy_b);
 			break;
+		}
 		case by_mail_delivered_last_month:
-			order = (int)(halt1->get_finance_history(1, HALT_MAIL_DELIVERED) - halt2->get_finance_history(1, HALT_MAIL_DELIVERED));
+		{
+			const int delivered_a = halt1->get_mail_enabled() ? halt1->get_finance_history(1, HALT_MAIL_DELIVERED) : -1;
+			const int delivered_b = halt2->get_mail_enabled() ? halt2->get_finance_history(1, HALT_MAIL_DELIVERED) : -1;
+			order = (int)(delivered_a - delivered_b);
+			break;
+		}
+		case by_convoy_arrivals_last_month:
+			order = (int)(halt1->get_finance_history(1, HALT_CONVOIS_ARRIVED) - halt2->get_finance_history(1, HALT_CONVOIS_ARRIVED));
 			break;
 		case by_region:
 			order = welt->get_region(halt1->get_basis_pos()) - welt->get_region(halt2->get_basis_pos());
@@ -188,6 +238,36 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 				}
 			}
 			break;
+#ifdef DEBUG
+		case by_surrounding_population:
+		{
+			const int a = halt1->get_pax_enabled() ? halt1->get_around_visitor_demand() : -1;
+			const int b = halt2->get_pax_enabled() ? halt2->get_around_visitor_demand() : -1;
+			order = (int)(a - b);
+			break;
+		}
+		case by_surrounding_mail_demand:
+		{
+			const int a = halt1->get_mail_enabled() ? halt1->get_around_mail_demand() : -1;
+			const int b = halt2->get_mail_enabled() ? halt2->get_around_mail_demand() : -1;
+			order = (int)(a - b);
+			break;
+		}
+		case by_surrounding_visitor_demand:
+		{
+			const int a = halt1->get_pax_enabled() ? halt1->get_around_visitor_demand() : -1;
+			const int b = halt2->get_pax_enabled() ? halt2->get_around_visitor_demand() : -1;
+			order = (int)(a - b);
+			break;
+		}
+		case by_surrounding_jobs:
+		{
+			const int a = halt1->get_pax_enabled() ? halt1->get_around_job_demand() : -1;
+			const int b = halt2->get_pax_enabled() ? halt2->get_around_job_demand() : -1;
+			order = (int)(a - b);
+			break;
+		}
+#endif
 	}
 	/**
 	 * use name as an additional sort, to make sort more stable.
@@ -382,7 +462,6 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 		btn_show_mutual_use.add_listener(this);
 		add_component(&btn_show_mutual_use);
 
-		// sort ascend/descend button
 		add_table(3,1);
 		{
 			for (uint8 i = 0; i < SORT_MODES; i++) {
@@ -409,6 +488,15 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 		filter_details.set_size(D_BUTTON_SIZE);
 		filter_details.add_listener(this);
 		add_component(&filter_details);
+
+		for (uint8 i = 0; i < halt_list_stats_t::HALTLIST_MODES; i++  ){
+			cb_display_mode.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(display_mode_text[i]), SYSCOL_TEXT);
+		}
+		cb_display_mode.set_selection(display_mode);
+		cb_display_mode.set_width_fixed(true);
+		cb_display_mode.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
+		cb_display_mode.add_listener(this);
+		add_component(&cb_display_mode);
 	}
 	end_table();
 
@@ -417,7 +505,6 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 
 	fill_list();
 
-	set_resizemode(diagonal_resize);
 	set_resizemode(diagonal_resize);
 	reset_min_windowsize();
 }
@@ -437,6 +524,15 @@ halt_list_frame_t::~halt_list_frame_t()
 void halt_list_frame_t::fill_list()
 {
 	last_world_stops = haltestelle_t::get_alle_haltestellen().get_count(); // count of stations
+	if (halt_list_stats_t::name_width==0) {
+		// set name width
+		FOR(vector_tpl<halthandle_t>, const halt, haltestelle_t::get_alle_haltestellen()) {
+			const scr_coord_val temp_w = proportional_string_width(halt->get_name());
+			if (temp_w > halt_list_stats_t::name_width) {
+				halt_list_stats_t::name_width = temp_w;
+			}
+		}
+	}
 
 	scrolly->clear_elements();
 	FOR(vector_tpl<halthandle_t>, const halt, haltestelle_t::get_alle_haltestellen()) {
@@ -493,6 +589,17 @@ bool halt_list_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* 
 		set_reverse(!get_reverse());
 		sort_list();
 		sort_order.pressed = sortreverse;
+	}
+	else if (comp == &cb_display_mode) {
+		int tmp = cb_display_mode.get_selection();
+		if (tmp < 0 || tmp >= cb_display_mode.count_elements())
+		{
+			tmp = 0;
+		}
+		cb_display_mode.set_selection(tmp);
+		scrolly->set_mode(tmp);
+		display_mode = tmp;
+		sort_list();
 	}
 	else if (comp == &filter_details) {
 		if (filter_frame) {

@@ -20,16 +20,28 @@
 class gui_halt_type_images_t;
 
 
+class gui_capped_arrow_t : public gui_component_t
+{
+public:
+	gui_capped_arrow_t() {};
+
+	void draw(scr_coord offset) OVERRIDE;
+	scr_size get_min_size() const OVERRIDE { return scr_size(5,5); }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
 /**
- * Helper class to show small three freight category waiting indicator
+ * Helper class to show a panel whose contents are switched according to the mode
  */
-class gui_mini_halt_waiting_indicator_t : public gui_container_t
+class gui_halt_stats_t : public gui_aligned_container_t
 {
 	halthandle_t halt;
+	cbuffer_t buf;
 public:
-	gui_mini_halt_waiting_indicator_t(halthandle_t h);
+	uint8 display_mode = 0;
+	gui_halt_stats_t(halthandle_t h);
 
-	void draw(scr_coord offset);
+	void draw(scr_coord offset) OVERRIDE;
 };
 
 
@@ -39,12 +51,35 @@ private:
 	halthandle_t halt;
 
 public:
-	gui_label_buf_t label_name, label_cargo;
+	enum stats_mode_t {
+		hl_waiting_detail,
+		hl_facility,
+		hl_serve_lines,
+		hl_location,
+		hl_waiting_pax,
+		hl_waiting_mail,
+		hl_waiting_goods,
+		hl_pax_evaluation,
+		hl_mail_evaluation,
+		hl_goods_needed,
+		hl_products,
+#ifdef DEBUG
+		coverage_output_pax,
+		coverage_output_mail,
+		coverage_visitor_demands,
+		coverage_job_demands,
+#endif
+		HALTLIST_MODES
+	};
+
+	gui_label_buf_t label_name;
 	gui_image_t img_enabled[3];
 	gui_halt_type_images_t *img_types;
-	gui_colorbox_t indicator;
+	gui_halt_stats_t *swichable_info;
+	gui_colorbox_t indicator[3];
 
-public:
+	static uint16 name_width;
+
 	halt_list_stats_t(halthandle_t halt_);
 
 	bool infowin_event(event_t const*) OVERRIDE;
@@ -53,6 +88,8 @@ public:
 	 * Draw the component
 	 */
 	void draw(scr_coord offset) OVERRIDE;
+
+	void set_mode(uint8 mode) { swichable_info->display_mode = mode; };
 
 	void update_label();
 
