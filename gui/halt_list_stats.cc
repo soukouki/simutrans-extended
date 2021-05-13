@@ -160,7 +160,6 @@ void gui_halt_stats_t::draw(scr_coord offset)
 			lb->update();
 
 			new_component<gui_label_t>("- ");
-			
 
 			stadt_t* c = world()->get_city(halt->get_basis_pos());
 			if (c) {
