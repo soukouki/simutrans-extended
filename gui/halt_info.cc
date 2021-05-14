@@ -221,7 +221,7 @@ void gui_halt_goods_demand_t::draw(scr_coord offset)
 	FOR(slist_tpl<goods_desc_t const*>, const good, goods_list) {
 		display_colorbox_with_tooltip(offset.x + xoff, offset.y + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, good->get_color(), NULL);
 		xoff += GOODS_COLOR_BOX_HEIGHT+2;
-		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, translator::translate(good->get_name()), ALIGN_LEFT, SYSCOL_TEXT, true);
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, translator::translate(good->get_name()), ALIGN_LEFT, halt->gibt_ab(good) ? SYSCOL_TEXT : SYSCOL_TEXT_WEAK, true);
 		xoff += D_H_SPACE;
 	}
 	set_size(scr_size(max(D_LABEL_WIDTH, xoff + D_H_SPACE * 2), D_LABEL_HEIGHT));
