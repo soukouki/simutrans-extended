@@ -418,7 +418,7 @@ int simu_main(int argc, char** argv)
 
 	sint16 disp_width = 0;
 	sint16 disp_height = 0;
-	sint16 fullscreen = false;
+	bool fullscreen = false;
 
 	uint32 quit_month = 0x7FFFFFFFu;
 
@@ -718,6 +718,7 @@ int simu_main(int argc, char** argv)
 			// we do not allow to change the global font name
 			std::string old_fontname = env_t::fontname;
 			std::string old_soundfont_filename = env_t::soundfont_filename;
+
 			printf("parse_simuconf() at config/simuconf.tab: ");
 			env_t::default_settings.parse_simuconf( simuconf, disp_width, disp_height, fullscreen, env_t::objfilename );
 			simuconf.close();
