@@ -711,7 +711,6 @@ int simu_main(int argc, char** argv)
 			env_t::server_announce = 0;
 		}
 	}
-
 	// continue parsing
 	dr_chdir( env_t::data_dir );
 	if(  found_simuconf  ) {
@@ -747,7 +746,7 @@ int simu_main(int argc, char** argv)
 	if(  const char *fn = gimme_arg(argc, argv, "-objects", 1)  ) {
 		env_t::objfilename = fn;
 		// append slash / replace trailing backslash if necessary
-		uint16 len = env_t::objfilename.length();
+		size_t len = env_t::objfilename.length();
 		if (len > 0) {
 			if (env_t::objfilename[len-1]=='\\') {
 				env_t::objfilename.erase(len-1);
@@ -1031,11 +1030,10 @@ int simu_main(int argc, char** argv)
 	// now find the pak specific tab file ...
 	obj_conf = env_t::objfilename + path_to_simuconf;
 	if(  simuconf.open(obj_conf.c_str())  ) {
-		sint16 idummy;
-		string dummy;
 		env_t::default_settings.set_way_height_clearance( 0 );
+
 		DBG_DEBUG("karte_t::distribute_groundobjs_cities()","parse_simuconf() at %s: ", obj_conf.c_str());
-		env_t::default_settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+		env_t::default_settings.parse_simuconf( simuconf );
 		env_t::default_settings.parse_colours( simuconf );
 		pak_diagonal_multiplier = env_t::default_settings.get_pak_diagonal_multiplier();
 		pak_height_conversion_factor = env_t::pak_height_conversion_factor;
@@ -1049,10 +1047,9 @@ int simu_main(int argc, char** argv)
 	// and parse again the user settings
 	obj_conf = string(env_t::user_dir) + "simuconf.tab";
 	if (simuconf.open(obj_conf.c_str())) {
-		sint16 idummy;
-		string dummy;
+
 		dbg->message("simu_main()", "parse_simuconf() at %s: ", obj_conf.c_str());
-		env_t::default_settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+		env_t::default_settings.parse_simuconf( simuconf );
 		env_t::default_settings.parse_colours( simuconf );
 		simuconf.close();
 	}
@@ -1070,11 +1067,10 @@ int simu_main(int argc, char** argv)
 	// parse ~/simutrans/pakxyz/config.tab"
 	if(  env_t::default_settings.get_with_private_paks()  ) {
 		obj_conf = string(env_t::user_dir) + "addons/" + env_t::objfilename + "config/simuconf.tab";
-		sint16 idummy;
-		string dummy;
+
 		if (simuconf.open(obj_conf.c_str())) {
 			dbg->message("simu_main()","parse_simuconf() at %s: ", obj_conf.c_str());
-			env_t::default_settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+			env_t::default_settings.parse_simuconf( simuconf );
 			env_t::default_settings.parse_colours( simuconf );
 			simuconf.close();
 		}
@@ -1082,7 +1078,7 @@ int simu_main(int argc, char** argv)
 		obj_conf = string(env_t::user_dir) + "simuconf.tab";
 		if (simuconf.open(obj_conf.c_str())) {
 			dbg->message("simu_main()","parse_simuconf() at %s: ", obj_conf.c_str());
-			env_t::default_settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+			env_t::default_settings.parse_simuconf( simuconf );
 			env_t::default_settings.parse_colours( simuconf );
 			simuconf.close();
 		}
