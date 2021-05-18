@@ -130,7 +130,7 @@ public:
 	/**
 	 * Removes an arbitrary building.
 	 * It will also take care of factories and foundations.
-	 * @param sp the player wanting to remove the building.
+	 * @param player the player wanting to remove the building.
 	 */
 	static void remove(player_t *player, const gebaeude_t *gb, bool map_generation);
 
