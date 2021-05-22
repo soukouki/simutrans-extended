@@ -879,7 +879,6 @@ void color_gui_t::rdwr(loadsave_t *f)
 	tabs.rdwr(f);
 	scrolly_gui.rdwr(f);
 	scrolly_map.rdwr(f);
-	scrolly_transparency.rdwr(f);
 	scrolly_station.rdwr(f);
 	scrolly_traffic.rdwr(f);
 }
