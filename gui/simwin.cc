@@ -64,6 +64,7 @@
 #endif
 #include "scenario_info.h"
 #include "depotlist_frame.h"
+#include "halt_list_frame.h"
 #include "display_settings.h"
 
 #include "../simversion.h"
@@ -608,6 +609,7 @@ void rdwr_all_win(loadsave_t *file)
 					//case magic_convoi_list:    w = new convoi_frame_t(); break;
 					//case magic_depotlist:      w = new depotlist_frame_t(); break;
 					//case magic_vehiclelist:    w = new vehiclelist_frame_t(); break;
+					case magic_halt_list:      w = new halt_list_frame_t(); break;
 					case magic_color_gui_t:    w = new color_gui_t(); break;
 
 					default:
