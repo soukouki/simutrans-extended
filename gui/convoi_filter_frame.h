@@ -30,7 +30,7 @@ public:
 		name_filter        = 1 << 1,
 		typ_filter         = 1 << 2,
 		ware_filter        = 1 << 3,
-		spezial_filter     = 1 << 4,
+		special_filter     = 1 << 4,
 
 		lkws_filter        = 1 << 5,
 		zuege_filter       = 1 << 6,
