@@ -48,6 +48,7 @@
 #include "halt_detail.h"
 #include "halt_info.h"
 #include "convoi_detail_t.h"
+#include "convoi_frame.h"
 #include "convoi_info_t.h"
 #include "schedule_gui.h"
 #include "line_management_gui.h"
@@ -607,8 +608,7 @@ void rdwr_all_win(loadsave_t *file)
 #endif
 					case magic_scenario_info:  w = new scenario_info_t(); break;
 					//case magic_depot:          w = new depot_frame_t(); break;
-					//case magic_convoi_list:    w = new convoi_frame_t(); break;
-					//case magic_depotlist:      w = new depotlist_frame_t(); break;
+					case magic_convoi_list:    w = new convoi_frame_t(); break;
 					//case magic_vehiclelist:    w = new vehiclelist_frame_t(); break;
 					case magic_halt_list:      w = new halt_list_frame_t(); break;
 					case magic_citylist_frame_t: w = new citylist_frame_t(); break;

@@ -49,7 +49,7 @@ convoi_filter_frame_t::filter_flag_t convoi_filter_frame_t::filter_buttons_types
 	maglev_filter,
 	narrowgauge_filter,
 	tram_filter,
-	spezial_filter,
+	special_filter,
 	noroute_filter,
 	stucked_filter,
 	noincome_filter,
