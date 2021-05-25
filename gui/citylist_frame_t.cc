@@ -158,7 +158,7 @@ citylist_frame_t::citylist_frame_t() :
 
 			// sort ascend/descend switching button
 			sorteddir.init(button_t::sortarrow_state, "");
-			sorteddir.set_tooltip(translator::translate("hl_btn_sorteddir"));
+			sorteddir.set_tooltip(translator::translate("hl_btn_sort_order"));
 			sorteddir.add_listener(this);
 			sorteddir.pressed = citylist_stats_t::sortreverse;
 			list.add_component(&sorteddir);
