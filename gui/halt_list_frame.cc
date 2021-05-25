@@ -77,7 +77,7 @@ bool halt_list_frame_t::sortreverse = false;
 /**
  * Default filter: no Oil rigs!
  */
-uint8 halt_list_frame_t::filter_flags = 0;
+uint32 halt_list_frame_t::filter_flags = 0;
 
 char halt_list_frame_t::name_filter_value[64] = "";
 
@@ -512,7 +512,7 @@ void halt_list_frame_t::rdwr(loadsave_t* file)
 	file->rdwr_str(name_filter_value, lengthof(name_filter_value));
 	file->rdwr_byte(sort_mode);
 	file->rdwr_bool(sortreverse);
-	file->rdwr_byte(filter_flags);
+	file->rdwr_long(filter_flags);
 	if (file->is_saving()) {
 		uint8 good_nr = waren_filter_ab.get_count();
 		file->rdwr_byte(good_nr);
