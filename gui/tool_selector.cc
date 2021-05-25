@@ -296,7 +296,6 @@ void tool_selector_t::draw(scr_coord pos, scr_size sz)
 			tool_icon_height = (display_get_height() - win_get_statusbar_height() + env_t::iconsize.h - 1) / env_t::iconsize.h;
 			set_windowsize(scr_size(env_t::iconsize.w, display_get_height() - win_get_statusbar_height()));
 
-			
 			if ( display_get_height() >= tools.get_count() * env_t::iconsize.h  ) {
 				tool_icon_disp_start = 0;
 				offset.y = 0;
