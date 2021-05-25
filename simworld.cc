@@ -410,12 +410,6 @@ void karte_t::perlin_hoehe_loop( sint16 x_min, sint16 x_max, sint16 y_min, sint1
 }
 
 
-/**
- * Height one point in the map with "perlin noise"
- *
- * @param frequency in 0..1.0 roughness, the higher the rougher
- * @param amplitude in 0..160.0 top height of mountains, may not exceed 160.0!!!
- */
 sint32 karte_t::perlin_hoehe(settings_t const* const sets, koord k, koord const size, sint32 map_size_max)
 {
 	// replace the fixed values with your settings. Amplitude is the top highness of the mountains,
@@ -6139,12 +6133,16 @@ void karte_t::refresh_private_car_routes() {
 }
 
 void karte_t::clear_private_car_routes() {
+	weg_t::private_car_route_map::route_map_lock();
 	for(auto & w : weg_t::get_alle_wege()) {
 		for(auto & l : w->private_car_routes[weg_t::get_private_car_routes_currently_writing_element()]) {
-			l.clear();
-			l.resize(0);
+			l.pre_reset();
 		}
 	}
+	weg_t::private_car_route_map::reset(weg_t::get_private_car_routes_currently_writing_element());
+
+	weg_t::private_car_route_map::route_map_unlock();
+
 }
 
 void karte_t::step_time_interval_signals()
@@ -9414,7 +9412,7 @@ void karte_t::load(loadsave_t *file)
 			dr_chdir( env_t::data_dir );
 			if(simuconf.open("config/simuconf.tab")) {
 				printf("parse_simuconf() in program dir (%s) for override of save file: ", "config/simuconf.tab");
-				settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+				settings.parse_simuconf( simuconf );
 				simuconf.close();
 			}
 			dr_chdir( env_t::user_dir );
@@ -9424,7 +9422,7 @@ void karte_t::load(loadsave_t *file)
 			std::string pak_simuconf = env_t::objfilename + "config/simuconf.tab";
 			if(simuconf.open(pak_simuconf.c_str())) {
 				printf("parse_simuconf() in pak dir (%s) for override of save file: ", pak_simuconf.c_str() );
-				settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+				settings.parse_simuconf( simuconf );
 				simuconf.close();
 			}
 			dr_chdir( env_t::user_dir );
@@ -9434,7 +9432,7 @@ void karte_t::load(loadsave_t *file)
 			std::string userdir_simuconf = "simuconf.tab";
 			if(simuconf.open("simuconf.tab")) {
 				printf("parse_simuconf() in user dir (%s) for override of save file: ", userdir_simuconf.c_str() );
-				settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+				settings.parse_simuconf( simuconf );
 				simuconf.close();
 			}
 		}

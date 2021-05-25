@@ -2620,7 +2620,7 @@ static void display_img_nc(scr_coord_val h, const scr_coord_val xp, const scr_co
 
 
 // only used for GUI
-void display_img_aligned( const image_id n, scr_rect area, int align, const int dirty)
+void display_img_aligned( const image_id n, scr_rect area, int align, const bool dirty)
 {
 	if(  n < anz_images  ) {
 		scr_coord_val x,y;
@@ -2653,7 +2653,7 @@ void display_img_aligned( const image_id n, scr_rect area, int align, const int 
 /**
  * Draw image with vertical clipping (quickly) and horizontal (slowly)
  */
-void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr_raw, const int /*daynight*/, const int dirty  CLIP_NUM_DEF)
+void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr_raw, const bool /*daynight*/, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  ) {
 		// only use player images if needed
@@ -3025,7 +3025,7 @@ static void display_color_img_wc_daytime(const PIXVAL* sp, scr_coord_val x, scr_
 /**
  * Draw Image, replaced player color
  */
-void display_color_img(const image_id n, scr_coord_val xp, scr_coord_val yp, sint8 player_nr_raw, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_color_img(const image_id n, scr_coord_val xp, scr_coord_val yp, sint8 player_nr_raw, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  ) {
 		// do we have to use a player nr?
@@ -3103,7 +3103,7 @@ void display_color_img_with_tooltip(const image_id n, scr_coord_val xp, scr_coor
 /**
  * draw unscaled images, replaces base color
  */
-void display_base_img(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_base_img(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  base_tile_raster_width==tile_raster_width  ) {
 		// same size => use standard routine
@@ -3785,7 +3785,7 @@ static void display_img_alpha_wc(scr_coord_val h, const scr_coord_val xp, const 
 /**
  * draws the transparent outline of an image
  */
-void display_rezoomed_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char /*player_nr*/, const FLAGGED_PIXVAL color_index, const int /*daynight*/, const int dirty  CLIP_NUM_DEF)
+void display_rezoomed_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char /*player_nr*/, const FLAGGED_PIXVAL color_index, const bool /*daynight*/, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  ) {
 		// need to go to nightmode and or rezoomed?
@@ -3866,7 +3866,7 @@ void display_rezoomed_img_blend(const image_id n, scr_coord_val xp, scr_coord_va
 }
 
 
-void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const signed char /*player_nr*/, const FLAGGED_PIXVAL color_index, const int /*daynight*/, const int dirty  CLIP_NUM_DEF)
+void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const sint8 /*player_nr*/, const FLAGGED_PIXVAL color_index, const bool /*daynight*/, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  &&  alpha_n < anz_images  ) {
 		// need to go to nightmode and or rezoomed?
@@ -3956,7 +3956,7 @@ void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const 
 
 
 // For blending or outlining unzoomed image. Adapted from display_base_img() and display_unzoomed_img_blend()
-void display_base_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char player_nr, const FLAGGED_PIXVAL color_index, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_base_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char player_nr, const FLAGGED_PIXVAL color_index, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  base_tile_raster_width == tile_raster_width  ) {
 		// same size => use standard routine
@@ -4035,7 +4035,7 @@ void display_base_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp
 }
 
 
-void display_base_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const signed char player_nr, const FLAGGED_PIXVAL color_index, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_base_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr, const FLAGGED_PIXVAL color_index, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  base_tile_raster_width == tile_raster_width  ) {
 		// same size => use standard routine
@@ -4550,7 +4550,7 @@ utf32 get_next_char_with_metrics(const char* &text, unsigned char &byte_length, 
 	}
 	else {
 		text += len;
-		byte_length = len;
+		byte_length = (uint8)len;
 		pixel_width = default_font.get_glyph_advance(char_code);
 	}
 	return char_code;
@@ -4625,7 +4625,7 @@ utf32 get_prev_char_with_metrics(const char* &text, const char *const text_start
 
 	size_t len = 0;
 	char_code = utf8_decoder_t::decode((utf8 const *)text, len);
-	byte_length = len;
+	byte_length = (uint8)len;
 	pixel_width = default_font.get_glyph_advance(char_code);
 
 	return char_code;
@@ -4928,7 +4928,7 @@ scr_coord_val display_proportional_ellipsis_rgb( scr_rect r, const char *text, i
 		default: ;
 	}
 	if (shadowed) {
-		display_text_proportional_len_clip_rgb( r.x, r.y, text, ALIGN_LEFT | DT_CLIP, shadow_color, dirty, -1  CLIP_NUM_DEFAULT);
+		display_text_proportional_len_clip_rgb( r.x+1, r.y+1, text, ALIGN_LEFT | DT_CLIP, shadow_color, dirty, -1  CLIP_NUM_DEFAULT);
 	}
 	return display_text_proportional_len_clip_rgb( r.x, r.y, text, ALIGN_LEFT | DT_CLIP, color, dirty, -1  CLIP_NUM_DEFAULT);
 }
