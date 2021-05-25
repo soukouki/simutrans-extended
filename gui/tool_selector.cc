@@ -278,7 +278,7 @@ void tool_selector_t::draw(scr_coord pos, scr_size sz)
 			scr_coord_val wx = (tools.get_count() - tool_icon_disp_start + 1) * env_t::iconsize.w + offset.x;
 			if (wx < display_get_width()) {
 				tool_icon_disp_start = tool_icon_disp_end < tool_icon_width ? 0 : tool_icon_disp_end - tool_icon_width;
-				offset.x = display_get_width() - (tools.get_count() - tool_icon_disp_start) * env_t::iconsize.w;
+				offset.x = tool_icon_disp_start;
 			}
 			has_prev_next = tools.get_count() * env_t::iconsize.w > sz.w;
 		}
