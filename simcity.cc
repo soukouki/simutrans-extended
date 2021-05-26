@@ -6027,8 +6027,8 @@ int private_car_destination_finder_t::get_cost(const grund_t* gr, sint32 max_spe
 	}
 
 	//one way roads tend to be faster
-	if(ribi_t::is_single(w->get_ribi_maske())){
-		speed += speed / 2;
+	if(ribi_t::is_twoway(w->get_ribi_maske())){
+		speed -= speed / 4;
 	}
 
 	if(ribi_t::is_threeway(w->get_ribi_unmasked())){
