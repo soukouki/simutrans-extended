@@ -68,6 +68,7 @@
 #include "depotlist_frame.h"
 #include "halt_list_frame.h"
 #include "display_settings.h"
+#include "optionen.h"
 
 #include "../simversion.h"
 
@@ -614,6 +615,7 @@ void rdwr_all_win(loadsave_t *file)
 					case magic_halt_list:      w = new halt_list_frame_t(); break;
 					case magic_citylist_frame_t: w = new citylist_frame_t(); break;
 					case magic_color_gui_t:    w = new color_gui_t(); break;
+					case magic_optionen_gui_t: w = new optionen_gui_t(); break;
 
 					default:
 						if(  id>=magic_finances_t  &&  id<magic_finances_t+MAX_PLAYER_COUNT  ) {
