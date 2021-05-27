@@ -598,7 +598,7 @@ void env_t::rdwr(loadsave_t *file)
 	}
 	if( file->is_version_ex_atleast(14, 42) ) {
 		file->rdwr_short(env_t::menupos);
-		env_t::menupos & 3;
+		env_t::menupos &= 3;
 	}
 
 	// server settings are not saved, since they are server specific
