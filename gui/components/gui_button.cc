@@ -59,8 +59,7 @@ void button_t::init(enum type type_par, const char *text_par, scr_coord pos_par,
 	b_no_translate = ( type_par==posbutton );
 
 	set_typ(type_par);
-
-set_text(text_par);
+	set_text(text_par);
 	set_pos(pos_par);
 	if(  size_par != scr_size::invalid  ) {
 		set_size(size_par);
@@ -293,10 +292,6 @@ bool button_t::infowin_event(const event_t *ev)
 	// update the button pressed state only when mouse positions are within boundary or when it is mouse release
 	if(  (type & STATE_BIT) == 0  &&  cxy_within_boundary  &&  (  mxy_within_boundary  ||  IS_LEFTRELEASE(ev)  )  ) {
 		pressed = (ev->button_state==1);
-		if (type == sortarrow) {
-			tooltip = pressed ? "cl_btn_sort_desc" : "cl_btn_sort_asc";
-			translated_tooltip = translator::translate(tooltip);
-		}
 	}
 
 	// make sure that the button will take effect only when the mouse positions are within the component's boundary
