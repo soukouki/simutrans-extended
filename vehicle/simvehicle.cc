@@ -7125,7 +7125,7 @@ sint32 rail_vehicle_t::block_reserver(route_t *route, uint16 start_index, uint16
 		bool no_reverse = schedule->entries[schedule_index].reverse == 0;
 		schedule->increment_index(&schedule_index, &rev);
 		koord3d cur_pos = route->back();
-		uint16 next_next_signal;
+		uint16 next_next_signal = INVALID_INDEX;
 		bool route_success;
 		sint32 token_block_blocks = 0;
 		if(no_reverse || one_train_staff_onward_reservation)
