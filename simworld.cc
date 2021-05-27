@@ -4914,7 +4914,7 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 
 		// just for progress
 		if(  delta_t > 10000  ) {
-			dbg->error( "karte_t::sync_step()", "delta_t too large: %li", delta_t );
+			dbg->error( "karte_t::sync_step()", "delta_t (%u) too large, limiting to 10000", delta_t );
 			delta_t = 10000;
 		}
 		ticks += delta_t;
@@ -5651,7 +5651,7 @@ void karte_t::step()
 
 		// needs plausibility check?!?
 		if(delta_t>10000  || delta_t<0) {
-			dbg->error( "karte_t::step()", "delta_t (%li) out of bounds!", delta_t );
+			dbg->error( "karte_t::step()", "delta_t (%u) out of bounds!", delta_t );
 			last_step_ticks = ticks;
 			next_step_time = time+10;
 			return;
@@ -11513,7 +11513,7 @@ void karte_t::announce_server(int status)
 #	define REVISION 0
 #endif
 		// Simple revision used for matching (integer)
-		//buf.printf( "&rev=%d", atol( QUOTEME(REVISION) ) );
+		//buf.printf( "&rev=%d", (int)atol( QUOTEME(REVISION) ));
 		buf.printf("&rev=%d", strtol(QUOTEME(REVISION), NULL, 16));
 		// Complex version string used for display
 		//buf.printf( "&ver=Simutrans %s (#%s) built %s", QUOTEME(VERSION_NUMBER), QUOTEME(REVISION), QUOTEME(VERSION_DATE) );
