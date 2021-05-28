@@ -41,6 +41,7 @@ private:
 
 public:
 	button_t toolbar_pos[4];
+	button_t reselect_closes_tool;
 
 	gui_settings_t();
 	virtual void draw( scr_coord offset ) OVERRIDE;
