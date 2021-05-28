@@ -871,7 +871,6 @@ gebaeude_t *hausbauer_t::build_station_extension_depot(player_t *player, koord3d
 				break;
 			default:
 				dbg->fatal("hausbauer_t::build_station_extension_depot()","waytpe %i has no depots!", desc->get_extra() );
-				break;
 		}
 	}
 	else if(desc->is_signalbox())
