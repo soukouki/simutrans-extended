@@ -240,8 +240,6 @@ void *karte_t::world_xy_loop_thread(void *ptr)
 			return NULL;
 		}
 	}
-
-	return ptr;
 }
 #endif
 
@@ -292,7 +290,6 @@ void karte_t::world_xy_loop(xy_loop_func function, uint8 flags)
 		for(  int t = 0;  t < env_t::num_threads - 1;  t++  ) {
 			if(  pthread_create( &thread[t], &attr, world_xy_loop_thread, (void *)&world_thread_param[t] )  ) {
 				dbg->fatal( "karte_t::world_xy_loop()", "cannot multithread, error at thread #%i", t+1 );
-				return;
 			}
 		}
 		spawned_world_threads = true;

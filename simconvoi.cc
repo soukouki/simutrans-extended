@@ -1350,7 +1350,6 @@ sync_result convoi_t::sync_step(uint32 delta_t)
 
 		default:
 			dbg->fatal("convoi_t::sync_step()", "Wrong state %d!\n", state);
-			break;
 	}
 
 	// Debug sums:
