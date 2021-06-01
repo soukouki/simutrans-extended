@@ -793,7 +793,6 @@ bool stadt_t::cityrules_init(const std::string &objfilename)
 	if (!cityconf.open((user_dir+"cityrules.tab").c_str())) {
 		if (!cityconf.open((objfilename+"config/cityrules.tab").c_str())) {
 			dbg->fatal("stadt_t::init()", "Can't read cityrules.tab" );
-			return false;
 		}
 	}
 
@@ -6005,10 +6004,10 @@ int private_car_destination_finder_t::get_cost(const grund_t* gr, sint32 max_spe
 	sint32 speed = min(max_speed, max_tile_speed);
 
 #ifndef FORBID_CONGESTION_EFFECTS
-	const uint32 congestion_percentage = w->get_congestion_percentage();
+	const sint32 congestion_percentage = w->get_congestion_percentage();
 	if (congestion_percentage)
 	{
-		speed -= (speed * congestion_percentage) / 200;
+		speed = speed * 100 / (100 + congestion_percentage);
 		speed = max(4, speed);
 	}
 #endif
