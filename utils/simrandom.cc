@@ -441,8 +441,8 @@ double perlin_noise_2D(const double x, const double y, const double p, const sin
 	static const double frequency_1[8] = {0.25, 0.5,  1,  2,  4,  8, 16, 32};
 	static const double amplitude_1[8] = {-0.5, 0,  1,  2,  2,  3,  4,  7};
 
-	static const double frequency_2[16] = {0.0625, 0.125, 0.25, 0.5, 0.75,  1, 1.5,  2, 3, 4, 6, 8, 12, 16, 24, 32};
-	static const double amplitude_2[16] = {-0.5, -0.75, 0, 0.5, 1, 1.5, 2, 2.25, 2.5, 2.75, 3, 3.5, 4, 5, 7, 9};
+	static const double frequency_2[16] = {0.0625, 0.125, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32};
+	static const double amplitude_2[16] = {-0.5, -0.75, 0, 0.5, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 5, 7, 9};
 
 	// When enabled, this gives an extremely smooth world
 	//static const double frequency_3[24] = {0.002, 0.0625, 0.125, 0.25, 0.5, 1, 1.25, 1.5, 1.75, 2.5, 3, 3.5, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32};
