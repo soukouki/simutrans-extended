@@ -9579,8 +9579,11 @@ bool tool_change_traffic_light_t::init( player_t *player )
 				else if(  ns == 2  ) {
 					rs->set_ticks_offset( (uint8)ticks );
 				}
+				else if(  ns == 4  ) {
+					rs->set_ticks_yellow_ns( (uint8)ticks );
+				}
 				else if(  ns == 3  ) {
-					rs->set_ticks_yellow( (uint8)ticks );
+					rs->set_ticks_yellow_ow( (uint8)ticks );
 				}
 				// update the window
 				if(  rs->get_desc()->is_traffic_light()  ) {
