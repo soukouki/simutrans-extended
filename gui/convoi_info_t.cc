@@ -21,7 +21,6 @@
 #include "../dataobj/translator.h"
 #include "../dataobj/environment.h"
 #include "../dataobj/loadsave.h"
-#include "times_history.h"
 #include "../simconvoi.h"
 #include "../simline.h"
 
@@ -116,6 +115,8 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv) :
 	view(scr_size(max(64, get_base_tile_raster_width()), max(56, (get_base_tile_raster_width() * 7) / 8))),
 	loading_bar(cnv),
 	scroll_freight(&container_freight, true, true),
+	cont_times_history(linehandle_t(), cnv),
+	scroll_times_history(&cont_times_history, true),
 	next_halt_number(-1)
 {
 	if (cnv.is_bound()) {
@@ -130,6 +131,7 @@ void convoi_info_t::init(convoihandle_t cnv)
 	this->max_convoi_speed = speed_to_kmh(cnv->get_min_top_speed()*4);
 	gui_frame_t::set_name(cnv->get_name());
 	gui_frame_t::set_owner(cnv->get_owner());
+	cont_times_history.set_convoy(cnv);
 
 	set_table_layout(1,0);
 
@@ -237,23 +239,18 @@ void convoi_info_t::init(convoihandle_t cnv)
 		details_button.add_listener(this);
 		add_component(&details_button);
 
-		times_history_button.init(button_t::roundbox | button_t::flexible, "times_history");
-		times_history_button.set_tooltip("view_journey_times_history_of_this_convoy");
-		times_history_button.add_listener(this);
-		add_component(&times_history_button);
-
-		new_component<gui_empty_t>();
+		reverse_button.init(button_t::square_state, "reverse route");
+		reverse_button.add_listener(this);
+		reverse_button.set_tooltip("When this is set, the vehicle will visit stops in reverse order.");
+		reverse_button.pressed = cnv->get_reverse_schedule();
+		add_component(&reverse_button);
 
 		no_load_button.init(button_t::square_state, "no load");
 		no_load_button.set_tooltip("No goods are loaded onto this convoi.");
 		no_load_button.add_listener(this);
 		add_component(&no_load_button);
 
-		reverse_button.init(button_t::square_state, "reverse route");
-		reverse_button.add_listener(this);
-		reverse_button.set_tooltip("When this is set, the vehicle will visit stops in reverse order.");
-		reverse_button.pressed = cnv->get_reverse_schedule();
-		add_component(&reverse_button);
+		new_component_span<gui_empty_t>(2);
 	}
 	end_table();
 
@@ -303,6 +300,8 @@ void convoi_info_t::init(convoihandle_t cnv)
 		button_to_chart.append(b, &chart, curve);
 	}
 	container_stats.end_table();
+
+	switch_mode.add_tab(&scroll_times_history, translator::translate("times_history"));
 
 	cnv->set_sortby(env_t::default_sortmode);
 
@@ -658,7 +657,6 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 		reverse_button.set_text(cnv->get_schedule()->is_mirrored() ? "Return trip" : "reverse route");
 		reverse_button.set_tooltip(cnv->get_schedule()->is_mirrored() ? "during the return trip of the mirror schedule" : "When this is set, the vehicle will visit stops in reverse order.");
 		reverse_button.enable();
-		times_history_button.enable();
 	}
 	else {
 		if (line_bound) {
@@ -671,7 +669,6 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 		no_load_button.disable();
 		replace_button.disable();
 		reverse_button.disable();
-		times_history_button.disable();
 	}
 
 /*
@@ -824,6 +821,10 @@ void convoi_info_t::set_tab_opened()
 		case 1: // chart
 			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + container_stats.get_size().h)));
 			break;
+		case 2: // times history
+			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cont_times_history.get_size().h)));
+			break;
+
 	}
 }
 
@@ -892,11 +893,6 @@ bool convoi_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 
 		if(  comp == &replace_button  )	{
 			create_win(20, 20, new replace_frame_t(cnv, get_name()), w_info, magic_replace + cnv.get_id() );
-			return true;
-		}
-
-		if(  comp == &times_history_button  ) {
-			create_win(20, 20, new times_history_t(linehandle_t(), cnv), w_info, magic_convoi_time_history + cnv.get_id() );
 			return true;
 		}
 
