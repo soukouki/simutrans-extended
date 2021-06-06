@@ -14,7 +14,7 @@ trafficlight_info_t::trafficlight_info_t(roadsign_t* s) :
 	obj_infowin_t(s),
 	roadsign(s)
 {
-	add_table(3,0);
+	add_table(4,0);
 	ns.set_limits( 1, 255 );
 	ns.set_value( s->get_ticks_ns() );
 	ns.wrap_mode( false );
@@ -26,6 +26,12 @@ trafficlight_info_t::trafficlight_info_t(roadsign_t* s) :
 	ow.wrap_mode( false );
 	ow.add_listener( this );
 	add_component( &ow );
+
+	ow.set_limits( 1, 255 );
+	ow.set_value( s->get_ticks_yellow() );
+	ow.wrap_mode( false );
+	ow.add_listener( this );
+	add_component( &yellow );
 
 	offset.set_limits( 0, 255 );
 	offset.set_value( s->get_ticks_offset() );
@@ -70,6 +76,11 @@ bool trafficlight_info_t::action_triggered( gui_action_creator_t *comp, value_t 
 		tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT]->set_default_param( param );
 		welt->set_tool( tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT], welt->get_active_player() );
 	}
+ 	else if(comp == &yellow) {
+		sprintf( param, "%s,3,%i", roadsign->get_pos().get_str(), (int)v.i );
+		tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT]->set_default_param( param );
+		welt->set_tool( tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT], welt->get_active_player() );
+	}
 	return true;
 }
 
@@ -80,4 +91,5 @@ void trafficlight_info_t::update_data()
 	ns.set_value( roadsign->get_ticks_ns() );
 	ow.set_value( roadsign->get_ticks_ow() );
 	offset.set_value( roadsign->get_ticks_offset() );
+	yellow.set_value( roadsign->get_ticks_yellow() );
 }

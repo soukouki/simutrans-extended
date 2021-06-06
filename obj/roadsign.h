@@ -39,6 +39,7 @@ protected:
 	bool preview:1;
 	uint8 ticks_ns;
 	uint8 ticks_ow;
+	uint8 ticks_yellow;
 	uint8 ticks_offset;
 
 	sint8 after_yoffset, after_xoffset;
@@ -134,16 +135,24 @@ public:
 	void set_ticks_ns(uint8 ns) {
 		ticks_ns = ns;
 		// To prevent overflow in ticks_offset when rotating
-		if (ticks_ow > 256-ticks_ns) {
-			ticks_ow = 256-ticks_ns;
+		if (ticks_ow > 256-ticks_ns - ticks_yellow*2 ) {
+			ticks_ow = 256-ticks_ns-ticks_yellow*2;
 		}
 	}
 	uint8 get_ticks_ow() const { return ticks_ow; }
 	void set_ticks_ow(uint8 ow) {
 		ticks_ow = ow;
 		// To prevent overflow in ticks_offset when rotating
-		if (ticks_ns > 256-ticks_ow) {
-			ticks_ns = 256-ticks_ow;
+		if (ticks_ns > 256-ticks_ow - ticks_yellow*2 ) {
+			ticks_ns = 256-ticks_ow-ticks_yellow*2;
+		}
+	}
+	uint8 get_ticks_yellow() const { return ticks_yellow; }
+	void set_ticks_yellow(uint8 yellow) {
+		ticks_yellow = yellow;
+		// To prevent overflow in ticks_offset when rotating
+		if (ticks_yellow*2 > 256-ticks_ns - ticks_ow) {
+		  ticks_yellow = (256-ticks_ns-ticks_ow)/2;
 		}
 	}
 	uint8 get_ticks_offset() const { return ticks_offset; }

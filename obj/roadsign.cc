@@ -120,6 +120,7 @@ roadsign_t::roadsign_t(player_t *player, koord3d pos, ribi_t::ribi dir, const ro
 	state = 0;
 	ticks_ns = ticks_ow = 16;
 	ticks_offset = 0;
+	ticks_yellow = 2;
 	lane_affinity = 4;
 	set_owner( player );
 	if(  desc->is_private_way()  ) {
@@ -633,13 +634,36 @@ sync_result roadsign_t::sync_step(uint32 /*delta_t*/)
 	}
 	else {
 		// change every ~32s
-		// Must not overflow if ticks_ns+ticks_ow=256
-		uint32 ticks = ((welt->get_ticks()>>10)+ticks_offset) % ((uint32)ticks_ns+(uint32)ticks_ow);
+		// Must not overflow if ticks_ns+ticks_ow+ticks_yellow*2=256
+		uint32 ticks = ((welt->get_ticks()>>10)+ticks_offset) % ((uint32)ticks_ns+(uint32)ticks_ow+(uint32)ticks_yellow*2);
 
-		uint8 new_state = (ticks >= ticks_ns);
+		uint8 new_state=0;
+		//traffic light transition: e-w dir -> yellow -> n-s dir -> yellow -> ...
+		if( ticks <= ticks_ow ){
+		  new_state=0;
+		}else if( ticks <= ticks_ow+ticks_yellow ){
+		  new_state=2;
+		}else if( ticks <= tics_ow+ticks_yellow+ticks_ns ){
+		  new_state=1;
+		}else{
+		  new_state=2;
+		}
+		
 		if(state!=new_state) {
 			state = new_state;
-			dir = (new_state==0) ? ribi_t::northsouth : ribi_t::eastwest;
+			switch(new_state){
+			case 0:
+			  dir=ribi_t::northsouth;
+			  break;
+			case 1:
+			  dir=ribi_t::eastwest;
+			  break;
+			case 2:
+			  dir=ribi_t::none;
+			  break;
+			default:
+			  dir=ribi_t::eastwest;
+			}
 			calc_image();
 		}
 	}
