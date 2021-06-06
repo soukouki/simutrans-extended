@@ -2005,7 +2005,6 @@
     <ClCompile Include="gui\simwin.cc" />
     <ClCompile Include="gui\themeselector.cc" />
     <ClCompile Include="gui\times_history_container.cc" />
-    <ClCompile Include="gui\times_history_entry.cc" />
     <ClCompile Include="gui\vehicle_class_manager.cc" />
     <ClCompile Include="network\checksum.cc" />
     <ClCompile Include="network\memory_rw.cc" />
@@ -2593,7 +2592,6 @@
     <ClInclude Include="gui\simwin.h" />
     <ClInclude Include="gui\themeselector.h" />
     <ClInclude Include="gui\times_history_container.h" />
-    <ClInclude Include="gui\times_history_entry.h" />
     <ClInclude Include="gui\vehicle_class_manager.h" />
     <ClInclude Include="io\classify_file.h" />
     <ClInclude Include="io\rdwr\bzip2_file_rdwr_stream.h" />

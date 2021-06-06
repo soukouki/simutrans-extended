@@ -12,7 +12,10 @@
 #include "components/gui_label.h"
 #include "times_history_entry.h"
 
+#include "../simworld.h"
 #include "../linehandle_t.h"
+#include "../dataobj/schedule.h"
+
 
 class gui_times_history_t : public gui_aligned_container_t
 {
