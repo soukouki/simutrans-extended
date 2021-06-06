@@ -8,7 +8,6 @@
 
 #include "messagebox.h"
 #include "schedule_list.h"
-#include "times_history.h"
 #include "line_management_gui.h"
 #include "components/gui_convoiinfo.h"
 #include "line_item.h"
@@ -313,12 +312,6 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	bt_line_class_manager.add_listener(this);
 	add_component(&bt_line_class_manager);
 
-	bt_times_history.init(button_t::roundbox, "times_history", scr_coord(LINE_NAME_COLUMN_WIDTH + D_BUTTON_WIDTH, offset_y), D_BUTTON_SIZE);
-	bt_times_history.set_tooltip("view_journey_times_history_of_this_line");
-	bt_times_history.set_visible(true);
-	bt_times_history.add_listener(this);
-	add_component(&bt_times_history);
-
 	bt_withdraw_line.init(button_t::roundbox_state, "Withdraw All", scr_coord(LINE_NAME_COLUMN_WIDTH + D_BUTTON_WIDTH * 2, offset_y), D_BUTTON_SIZE);
 	bt_withdraw_line.set_tooltip("Convoi is sold when all wagons are empty.");
 	bt_withdraw_line.set_visible(false);
@@ -497,11 +490,6 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 	{
 		create_win(20, 20, new line_class_manager_t(line), w_info, magic_line_class_manager + line.get_id());
 		return true;
-        }
-	else if (comp == &bt_times_history) {
-		if(line.is_bound()) {
-			create_win( new times_history_t(line, convoihandle_t()), w_info, (ptrdiff_t)line.get_rep() + 1 );
-		}
 	}
 	else if (comp == &sortedby) {
 		int tmp = sortedby.get_selection();
@@ -1072,7 +1060,6 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 	line = new_line;
 	bt_withdraw_line.set_visible( line.is_bound() );
 	bt_line_class_manager.set_visible(line.is_bound());
-	bt_times_history.set_visible( line.is_bound() );
 
 	reset_line_name();
 }

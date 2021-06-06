@@ -75,7 +75,6 @@ private:
 	button_t go_home_button;
 	button_t no_load_button;
 	button_t replace_button;
-	button_t times_history_button;
 	int statistics_height;
 
 	button_t details_button;
