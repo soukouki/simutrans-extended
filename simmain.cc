@@ -1335,11 +1335,8 @@ int simu_main(int argc, char** argv)
 		dbg->message("simu_main()","Reading midi data ...");
 		char pak_dir[PATH_MAX];
 		sprintf( pak_dir, "%s%s", env_t::data_dir, env_t::objfilename.c_str() );
-		if(  midi_init( pak_dir )  ||  midi_init( env_t::user_dir )  ||  midi_init( env_t::data_dir )  ) {
-			midi_set_mute( false );
-		}
-		else {
-			midi_set_mute( true );
+		if(  !midi_init( pak_dir )  &&  !midi_init( env_t::user_dir )  &&  !midi_init( env_t::data_dir )  ) {
+			midi_set_mute(true);
 			dbg->message("simu_main()","Midi disabled ...");
 		}
 		if(gimme_arg(argc, argv, "-nomidi", 0)) {
