@@ -10,7 +10,6 @@
 #include "components/gui_component.h"
 #include "gui_frame.h"
 #include "components/gui_label.h"
-#include "times_history_entry.h"
 
 #include "../simworld.h"
 #include "../linehandle_t.h"
