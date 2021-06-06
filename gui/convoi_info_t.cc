@@ -116,6 +116,8 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv) :
 	view(scr_size(max(64, get_base_tile_raster_width()), max(56, (get_base_tile_raster_width() * 7) / 8))),
 	loading_bar(cnv),
 	scroll_freight(&container_freight, true, true),
+	cont_times_history(linehandle_t(), cnv),
+	scroll_times_history(&cont_times_history, true),
 	next_halt_number(-1)
 {
 	if (cnv.is_bound()) {
@@ -130,6 +132,7 @@ void convoi_info_t::init(convoihandle_t cnv)
 	this->max_convoi_speed = speed_to_kmh(cnv->get_min_top_speed()*4);
 	gui_frame_t::set_name(cnv->get_name());
 	gui_frame_t::set_owner(cnv->get_owner());
+	cont_times_history.set_convoy(cnv);
 
 	set_table_layout(1,0);
 
@@ -303,6 +306,8 @@ void convoi_info_t::init(convoihandle_t cnv)
 		button_to_chart.append(b, &chart, curve);
 	}
 	container_stats.end_table();
+
+	switch_mode.add_tab(&scroll_times_history, translator::translate("times_history"));
 
 	cnv->set_sortby(env_t::default_sortmode);
 

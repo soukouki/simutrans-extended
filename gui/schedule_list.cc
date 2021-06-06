@@ -152,6 +152,7 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	player(player_),
 	scrolly_convois(&cont),
 	scrolly_haltestellen(&cont_haltestellen),
+	scroll_times_history(&cont_times_history, true),
 	scl(gui_scrolled_list_t::listskin, line_scrollitem_t::compare),
 	lbl_filter("Line Filter"),
 	convoy_infos(),
@@ -376,6 +377,10 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	}
 	info_tabs.add_tab(&cont_charts, translator::translate("Chart"));
 	info_tabs.set_active_tab_index(selected_convoy_tab);
+
+	cont_times_history.set_table_layout(1,0);
+
+	info_tabs.add_tab(&scroll_times_history, translator::translate("times_history"));
 
 	// recover last selected line
 	int index = 0;
@@ -844,6 +849,7 @@ void schedule_list_gui_t::set_windowsize(scr_size size)
 
 	info_tabs.set_size(scr_size(rest_width+2, get_windowsize().h - LINESPACE*2 - D_BUTTON_HEIGHT*5 - D_MARGIN_TOP - D_TITLEBAR_HEIGHT));
 	scrolly_convois.set_size(scr_size(info_tabs.get_size().w+1, info_tabs.get_size().h - scrolly_convois.get_pos().y-D_H_SPACE-1));
+	scroll_times_history.set_size(scr_size(info_tabs.get_size().w+1, info_tabs.get_size().h - scroll_times_history.get_pos().y - D_H_SPACE-1 + D_TAB_HEADER_HEIGHT));
 	chart.set_size(scr_size(rest_width-68-D_MARGIN_RIGHT, SCL_HEIGHT-14-(button_rows*(D_BUTTON_HEIGHT+D_H_SPACE))));
 	inp_name.set_size(scr_size(rest_width - 31, D_EDIT_HEIGHT));
 	filled_bar.set_size(scr_size(rest_width/2-24-D_MARGIN_RIGHT, 4));
@@ -895,7 +901,13 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_haltestellen.set_visible(true);
 		inp_name.set_visible(true);
 		filled_bar.set_visible(true);
-
+		cont_times_history.set_visible(true);
+		cont_times_history.remove_all();
+		cont_times_history.new_component<gui_times_history_t>(new_line, convoihandle_t(), false);
+		if (!new_line->get_schedule()->is_mirrored()) {
+			cont_times_history.new_component<gui_times_history_t>(new_line, convoihandle_t(), true);
+		}
+		resize(scr_size(0,0));
 		// fill container with info of line's convoys
 		// we do it here, since this list needs only to be
 		// refreshed when the user selects a new line
@@ -1039,6 +1051,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_haltestellen.set_visible(false);
 		inp_name.set_visible(false);
 		filled_bar.set_visible(false);
+		cont_times_history.set_visible(false);
 		scl.set_selection(-1);
 		bt_delete_line.disable();
 		bt_edit_line.disable();
