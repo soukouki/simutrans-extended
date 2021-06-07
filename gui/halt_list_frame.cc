@@ -538,7 +538,7 @@ void halt_list_frame_t::fill_list()
 	scrolly->clear_elements();
 	FOR(vector_tpl<halthandle_t>, const halt, haltestelle_t::get_alle_haltestellen()) {
 		if(  halt->get_owner() == m_player || (show_mutual_stops && halt->has_available_network(m_player))  ) {
-			scrolly->new_component<halt_list_stats_t>(halt) ;
+			scrolly->new_component<halt_list_stats_t>(halt, show_mutual_stops ? m_player->get_player_nr() : (uint8)-1);
 		}
 	}
 	sort_list();

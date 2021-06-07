@@ -394,9 +394,10 @@ bool halt_list_stats_t::infowin_event(const event_t *ev)
 }
 
 
-halt_list_stats_t::halt_list_stats_t(halthandle_t h)
+halt_list_stats_t::halt_list_stats_t(halthandle_t h, uint8 player_nr_)
 {
 	halt = h;
+	player_nr = player_nr_;
 	set_table_layout(2,3);
 	set_spacing(scr_size(D_H_SPACE, 0));
 
@@ -435,6 +436,9 @@ halt_list_stats_t::halt_list_stats_t(halthandle_t h)
 		label_name.set_fixed_width(name_width);
 		add_component(&label_name);
 		label_name.buf().append(halt->get_name());
+		if (player_nr != (uint8)-1 && player_nr != halt->get_owner()->get_player_nr()) {
+			label_name.set_color(color_idx_to_rgb(halt->get_owner()->get_player_color1()+env_t::gui_player_color_dark));
+		}
 		label_name.update();
 
 		swichable_info = new_component<gui_halt_stats_t>(halt);

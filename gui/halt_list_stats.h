@@ -49,6 +49,7 @@ class halt_list_stats_t : public gui_aligned_container_t, public gui_scrolled_li
 {
 private:
 	halthandle_t halt;
+	uint8 player_nr; // for color display of other player halts
 
 public:
 	enum stats_mode_t {
@@ -80,7 +81,7 @@ public:
 
 	static uint16 name_width;
 
-	halt_list_stats_t(halthandle_t halt_);
+	halt_list_stats_t(halthandle_t halt_, uint8 player_nr = (uint8)-1);
 
 	bool infowin_event(event_t const*) OVERRIDE;
 
