@@ -1249,6 +1249,7 @@ void player_t::set_selected_signalbox(signalbox_t* sb)
 sint64 player_t::calc_takeover_cost() const
 {
 	sint64 cost = 0;
+	cost += welt->get_settings().get_starting_money(welt->get_last_year());
 	const bool do_not_adopt_liabilities = check_solvency() == player_t::in_liquidation;
 	if (!do_not_adopt_liabilities || finance->get_account_balance() > 0) {
 		cost -= finance->get_account_balance();
