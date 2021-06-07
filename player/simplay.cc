@@ -345,7 +345,7 @@ void player_t::step()
 {
 	/*
 	NOTE: This would need updating to the new FOR iterators to work now.
-	// die haltestellen mEsen die Fahrpläne rgelmaessig pruefen
+	// die haltestellen mï¿½Esen die Fahrplï¿½ne rgelmaessig pruefen
 	uint8 i = (uint8)(welt->get_steps()+player_nr);
 	//slist_iterator_tpl <nearby_halt_t> iter( halt_list );
 	//while(iter.next()) {
@@ -1250,18 +1250,14 @@ sint64 player_t::calc_takeover_cost() const
 {
 	sint64 cost = 0;
 	const bool do_not_adopt_liabilities = check_solvency() == player_t::in_liquidation;
-	if (!do_not_adopt_liabilities)
-	{
-		if (finance->get_account_balance() < 0)
-		{
-			cost -= finance->get_account_balance();
-		}
-
-		// TODO: Add any liability for longer term loans here whenever longer term loans come to be implemented.
+	if (!do_not_adopt_liabilities || finance->get_account_balance() > 0) {
+		cost -= finance->get_account_balance();
 	}
+	// TODO: Add any liability for longer term loans here whenever longer term loans come to be implemented.
+
 
 	// TODO: Consider a more sophisticated system here; but where can we get the data for this?
-	cost -= finance->get_netwealth();
+	cost += finance->get_financial_assets();
 	return cost;
 }
 
@@ -1283,8 +1279,8 @@ const char* player_t::can_take_over(player_t* target_player)
 void player_t::take_over(player_t* target_player)
 {
 	// Pay for the takeover
-	finance->book_account(target_player->calc_takeover_cost());
-
+	finance->book_account(-target_player->calc_takeover_cost());
+/*
 	if (check_solvency() != player_t::in_liquidation)
 	{
 		// Take the player's account balance, whether negative or not.
@@ -1292,7 +1288,7 @@ void player_t::take_over(player_t* target_player)
 
 		// TODO: Add any liability for longer term loans here whenever longer term loans come to be implemented.
 	}
-
+*/
 	// Transfer maintenance costs
 	for (uint32 i = 0; i < transport_type::TT_MAX; i++)
 	{
