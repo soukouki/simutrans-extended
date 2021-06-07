@@ -639,11 +639,11 @@ sync_result roadsign_t::sync_step(uint32 /*delta_t*/)
 
 		uint8 new_state=0;
 		//traffic light transition: e-w dir -> yellow e-w -> n-s dir -> yellow n-s -> ...
-		if( ticks <= ticks_ow ){
+		if( ticks < ticks_ow ){
 		  new_state=0;
-		}else if( ticks <= ticks_ow+ticks_yellow_ow ){
+		}else if( ticks < ticks_ow+ticks_yellow_ow ){
 		  new_state=2;
-		}else if( ticks <= ticks_ow+ticks_yellow_ow+ticks_ns ){
+		}else if( ticks < ticks_ow+ticks_yellow_ow+ticks_ns ){
 		  new_state=1;
 		}else{
 		  new_state=3;
