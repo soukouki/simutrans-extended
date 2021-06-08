@@ -2319,7 +2319,7 @@ sint64 way_builder_t::calc_costs()
 		}
 		else if(!gr)
 		{
-			// No ground -building a new elevated way. Do not add the land value as it is still possible to build underneath an elevated way.
+			// No ground - building a new elevated way. Do not add the land value as it is still possible to build underneath an elevated way.
 			costs += (welt->get_settings().get_forge_cost(desc->get_waytype()) + desc->get_value());
 		}
 		else
@@ -2646,9 +2646,14 @@ void way_builder_t::build_road()
 					{
 						if (str->get_owner() != player_builder)
 						{
-							// If taking ownership of a way, must buy the underlying land.
 							str->set_owner(player_builder);
-							cost += welt->get_land_value(gr->get_pos());
+							// If taking ownership of a way, must buy the underlying land,
+							// except in cases of public rights of way, in which the underlying land
+							// is assumed to be owned by third parties subject to the way.
+							if (!str->is_public_right_of_way())
+							{
+								cost += welt->get_land_value(gr->get_pos());
+							}
 						}
 						// Set maintenance costs here
 						// including corrections for diagonals.

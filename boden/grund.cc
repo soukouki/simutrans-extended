@@ -1961,7 +1961,10 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 				// already own this land.
 
 				// get_land_value returns a *negative* value.
-				cost += welt->get_land_value(pos);
+				if (!weg->is_public_right_of_way())
+				{
+					cost += welt->get_land_value(pos);
+				}
 			}
 
 			// add

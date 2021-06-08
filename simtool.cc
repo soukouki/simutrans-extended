@@ -851,13 +851,16 @@ DBG_MESSAGE("tool_remover()", "removing way");
 		const sint64 land_refund_cost = welt->get_land_value(w->get_pos()); // Refund the land value to the player who owned the way, as by bulldozing, the player is selling the land.
 		player_t* const owner = w->get_owner(); // We must take this here, as the owner is deleted in the next line.
 		sint64 cost_sum = gr->weg_entfernen(w->get_waytype(), true);
-		if(player == owner)
+		if (!w->is_public_right_of_way()) // Land costs are not used for public rights of way.
 		{
-			cost_sum += land_refund_cost;
-		}
-		else
-		{
-			player_t::book_construction_costs(owner, -land_refund_cost, k, wt);
+			if (player == owner)
+			{
+				cost_sum += land_refund_cost;
+			}
+			else
+			{
+				player_t::book_construction_costs(owner, -land_refund_cost, k, wt);
+			}
 		}
 		player_t::book_construction_costs(player, -cost_sum, k, wt);
 	}
