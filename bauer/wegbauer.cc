@@ -2289,10 +2289,10 @@ sint64 way_builder_t::calc_costs() {
 			single_cost += forge_cost;
 
 			const obj_t* obj = gr->obj_bei(0);
-			if(!upgrading && (obj == NULL || obj->get_owner() != player_builder))
+			if(!upgrading && (obj == NULL || obj->get_owner() == NULL))
 			{
-				// Only add the cost of the land if the player does not
-				// already own this land.
+				// Only add the cost of the land if this land is not already owned
+				// by either this player or some other player.
 
 				// get_land_value returns a *negative* value.
 				single_cost -= welt->get_land_value(gr->get_pos());
