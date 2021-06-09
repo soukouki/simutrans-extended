@@ -2183,8 +2183,7 @@ void way_builder_t::build_tunnel_and_bridges()
 /*
  * returns the amount needed to built this way
  */
-sint64 way_builder_t::calc_costs()
-{
+sint64 way_builder_t::calc_costs() {
 	if(desc->is_mothballed())
 	{
 		// It is free to mothball a way. No other calculations are needed, as mothballed types
@@ -2228,7 +2227,8 @@ sint64 way_builder_t::calc_costs()
 		sint64 replace_cost = 0;
 		bool upgrading = false;
 
-		const grund_t* gr = welt->lookup(route[i] + offset);
+		const koord3d pos = route[i] + offset;
+		const grund_t* gr = welt->lookup(pos);
 		if( gr ) {
 			if( bautyp&tunnel_flag ) {
 				const tunnel_t *tunnel = gr->find<tunnel_t>();
@@ -2256,13 +2256,12 @@ sint64 way_builder_t::calc_costs()
 			}
 
 			sint64 forge_cost = upgrading ? 0 : welt->get_settings().get_forge_cost(desc->get_waytype());
-			const koord3d pos = gr->get_pos();
 
 			if(!upgrading && !(bautyp & tunnel_flag) && !(bautyp & elevated_flag) && route.get_count() > 1)
 			{
 				for(int n = 0; n < 8; n ++)
 				{
-					const koord kn = pos.get_2d().neighbours[n] + pos.get_2d();
+					const koord kn = koord::neighbours[n] + pos.get_2d();
 					if(!welt->is_within_grid_limits(kn))
 					{
 						continue;
