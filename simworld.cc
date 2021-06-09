@@ -11066,7 +11066,12 @@ void karte_t::process_network_commands(sint32 *ms_difference)
 			const sint32 time_to_next = (sint32)next_step_time - (sint32)timems; // +'ve - still waiting for next,  -'ve - lagging
 			const sint64 frame_timediff = ((sint64)server_sync_step - sync_steps - settings.get_server_frames_ahead() - env_t::additional_client_frames_behind) * fix_ratio_frame_time; // +'ve - server is ahead,  -'ve - client is ahead
 			const sint64 timediff = time_to_next + frame_timediff;
-			dbg->warning("NWC_CHECK", "time difference to server %lli", frame_timediff );
+
+			if(frame_timediff <= -1000 || frame_timediff >= 1000) {
+				dbg->warning("NWC_CHECK", "time difference to server %lli", frame_timediff );
+			} else {
+				dbg->message("NWC_CHECK", "time difference to server %lli", frame_timediff );
+			}
 
 			if(  frame_timediff < (0 - (sint64)settings.get_server_frames_ahead() - (sint64)env_t::additional_client_frames_behind) * (sint64)fix_ratio_frame_time / 2  ) {
 				// running way ahead - more than half margin, simply set next_step_time ahead to where it should be
