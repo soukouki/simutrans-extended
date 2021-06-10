@@ -2550,7 +2550,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 				{
 					// Check whether the immediately adjacent tile is an intersection.
 					const weg_t* this_way = to->get_weg(wt);
-					if (this_way->is_junction())
+					if (to->is_water() || this_way->is_junction())
 					{
 						intersections.append_unique(to);
 						break;
