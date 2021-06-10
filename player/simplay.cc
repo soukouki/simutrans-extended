@@ -1249,9 +1249,17 @@ void player_t::set_selected_signalbox(signalbox_t* sb)
 sint64 player_t::calc_takeover_cost() const
 {
 	sint64 cost = 0;
-	cost += welt->get_settings().get_starting_money(welt->get_last_year());
-	const bool do_not_adopt_liabilities = check_solvency() == player_t::in_liquidation;
-	if (!do_not_adopt_liabilities || finance->get_account_balance() > 0) {
+
+	const bool adopt_liabilities = check_solvency() != player_t::in_liquidation;
+	if(adopt_liabilities){
+		// Refund the free starting capital on company takeover.
+		// This represents a situation in which the starting capital is a non-interest-bearing available to each company only exactly once.
+		// Do not add this cost when the company is in liquidation as discussed in the forums, although this re-enables a free-money-generator exploit.
+		// TODO: Reconsider this whenever a more sophisticated loan system is implemented.
+		cost += welt->get_settings().get_starting_money(welt->get_last_year());
+	}
+
+	if (adopt_liabilities || finance->get_account_balance() > 0) {
 		cost -= finance->get_account_balance();
 	}
 	// TODO: Add any liability for longer term loans here whenever longer term loans come to be implemented.
