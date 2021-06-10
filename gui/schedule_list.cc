@@ -116,8 +116,8 @@ enum sort_modes_t { SORT_BY_NAME=0, SORT_BY_ID, SORT_BY_PROFIT, SORT_BY_TRANSPOR
 static uint8 current_sort_mode = 0;
 
 #define LINE_NAME_COLUMN_WIDTH ((D_BUTTON_WIDTH*3)+11+4)
-#define SCL_HEIGHT (15*LINESPACE)
-#define L_DEFAULT_WINDOW_HEIGHT 305
+#define SCL_HEIGHT (min(L_DEFAULT_WINDOW_HEIGHT/2+D_TAB_HEADER_HEIGHT,(15*LINESPACE)))
+#define L_DEFAULT_WINDOW_HEIGHT max(305, 24*LINESPACE)
 
 /// selected convoy tab
 static uint8 selected_convoy_tab = 0;
