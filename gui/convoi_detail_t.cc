@@ -25,7 +25,6 @@
 #include "../utils/simstring.h"
 #include "../utils/cbuffer_t.h"
 
-#include "../obj/roadsign.h"
 #include "simwin.h"
 #include "vehicle_class_manager.h"
 
