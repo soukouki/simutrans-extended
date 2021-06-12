@@ -38,17 +38,17 @@ trafficlight_info_t::trafficlight_info_t(roadsign_t* s) :
 
 	add_table(2,1);
 	{
-	  yellow_ns.set_limits( 1, 255 );
-	  yellow_ns.set_value( s->get_ticks_yellow_ns() );
-	  yellow_ns.wrap_mode( false );
-	  yellow_ns.add_listener( this );
-	  add_component( &yellow_ns );
+	  amber_ns.set_limits( 1, 255 );
+	  amber_ns.set_value( s->get_ticks_amber_ns() );
+	  amber_ns.wrap_mode( false );
+	  amber_ns.add_listener( this );
+	  add_component( &amber_ns );
 	  
-	  yellow_ow.set_limits( 1, 255 );
-	  yellow_ow.set_value( s->get_ticks_yellow_ow() );
-	  yellow_ow.wrap_mode( false );
-	  yellow_ow.add_listener( this );
-	  add_component( &yellow_ow );
+	  amber_ow.set_limits( 1, 255 );
+	  amber_ow.set_value( s->get_ticks_amber_ow() );
+	  amber_ow.wrap_mode( false );
+	  amber_ow.add_listener( this );
+	  add_component( &amber_ow );
 	}
 	end_table();
 
@@ -87,12 +87,12 @@ bool trafficlight_info_t::action_triggered( gui_action_creator_t *comp, value_t 
 		tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT]->set_default_param( param );
 		welt->set_tool( tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT], welt->get_active_player() );
 	}
- 	else if(comp == &yellow_ns) {
+ 	else if(comp == &amber_ns) {
 		sprintf( param, "%s,4,%i", roadsign->get_pos().get_str(), (int)v.i );
 		tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT]->set_default_param( param );
 		welt->set_tool( tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT], welt->get_active_player() );
 	}
- 	else if(comp == &yellow_ow) {
+ 	else if(comp == &amber_ow) {
 		sprintf( param, "%s,3,%i", roadsign->get_pos().get_str(), (int)v.i );
 		tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT]->set_default_param( param );
 		welt->set_tool( tool_t::simple_tool[TOOL_CHANGE_TRAFFIC_LIGHT], welt->get_active_player() );
@@ -107,6 +107,6 @@ void trafficlight_info_t::update_data()
 	ns.set_value( roadsign->get_ticks_ns() );
 	ow.set_value( roadsign->get_ticks_ow() );
 	offset.set_value( roadsign->get_ticks_offset() );
-	yellow_ns.set_value( roadsign->get_ticks_yellow_ns() );
-	yellow_ow.set_value( roadsign->get_ticks_yellow_ow() );
+	amber_ns.set_value( roadsign->get_ticks_amber_ns() );
+	amber_ow.set_value( roadsign->get_ticks_amber_ow() );
 }
