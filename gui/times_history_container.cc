@@ -327,9 +327,27 @@ void gui_times_history_t::build_table()
 				new_component_span<gui_empty_t>(6);
 			}
 		}
+
+		if (convoy.is_bound()) {
+			new_component_span<gui_empty_t>(9);
+
+			new_component_span<gui_empty_t>(4);
+			new_component_span<gui_label_t>(translator::translate("Avg trip time"), SYSCOL_TEXT, gui_label_t::right, 3);
+
+			sint64 average_round_trip_time = convoy->get_average_round_trip_time();
+			gui_label_buf_t *avg_triptime_label = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
+			if (average_round_trip_time) {
+				char as_clock[32];
+				world()->sprintf_ticks(as_clock, sizeof(as_clock), average_round_trip_time);
+				avg_triptime_label->buf().printf(": %s", as_clock);
+			}
+			avg_triptime_label->update();
+			new_component<gui_empty_t>();
+		}
 	}
 	end_table();
 	new_component<gui_margin_t>(0, D_V_SPACE);
+
 
 	if (line.is_bound()) {
 		update_time = world()->get_ticks();
