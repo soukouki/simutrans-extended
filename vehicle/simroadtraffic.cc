@@ -674,7 +674,7 @@ bool private_car_t::can_enter_tile(grund_t *gr)
 
 	if(player != NULL && player->get_player_nr() != 1 && !player->allows_access_to(1))
 	{
-		// Private cas should have the same restrictions as to the roads on which to travel
+		// Private cars should have the same restrictions as to the roads on which to travel
 		// as players' vehicles.
 		time_to_life = 0;
 		return false;
