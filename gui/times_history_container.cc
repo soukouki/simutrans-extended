@@ -154,6 +154,7 @@ void gui_times_history_t::build_table()
 	sint32 cnv_route_index;
 	sint32 cnv_route_index_left;
 	PIXVAL convoy_state_col = COL_SAFETY;
+	uint16 min_range; // in km
 	bool found_location = false;
 	if (convoy.is_bound()) {
 		cnv_route_index = convoy->front()->get_route_index();
@@ -162,6 +163,10 @@ void gui_times_history_t::build_table()
 		if (convoy->has_obsolete_vehicles()) {
 			convoy_state_col = COL_OBSOLETE;
 		}
+		min_range = convoy->get_min_range();
+	}
+	else {
+		min_range = line->get_min_range();
 	}
 
 	add_table(8 + convoy.is_bound(),0)->set_spacing(scr_size(D_H_SPACE, 0));
@@ -252,16 +257,20 @@ void gui_times_history_t::build_table()
 
 			// row2
 			if (i < schedule_indices->get_count() - 1) {
-				uint32 distance_to_next_stop = shortest_distance(entry.pos.get_2d(), entries[next_entry_index].pos.get_2d()) * world()->get_settings().get_meters_per_tile();
-				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+				const uint32 distance_to_next_stop = shortest_distance(entry.pos.get_2d(), entries[next_entry_index].pos.get_2d()) * world()->get_settings().get_meters_per_tile();
+				const bool exceed_range = min_range && (distance_to_next_stop > min_range*1000);
+				gui_label_buf_t *lb = new_component<gui_label_buf_t>(exceed_range ? COL_DANGER : SYSCOL_TEXT, gui_label_t::right);
 				lb->buf().printf("%4.1f%s", (double)(distance_to_next_stop / 1000.0), "km");
+				if (exceed_range) {
+					lb->set_tooltip(translator::translate("out of range"));
+				}
 				lb->set_fixed_width(L_TIME_6_DIGITS_WIDTH);
 				lb->update();
 
 				if (mirrored && i >= (schedule_indices->get_count()/2)) {
 					line_col_idx = player->get_player_color2();
 				}
-				new_component<gui_colored_route_bar_t>(line_col_idx, base_line_style);
+				new_component<gui_colored_route_bar_t>(line_col_idx, base_line_style)->set_alert_level(exceed_range*3);
 
 
 				if (convoy.is_bound()) {
@@ -281,7 +290,7 @@ void gui_times_history_t::build_table()
 				if (retrieved_value) { history = *retrieved_value; }
 
 				for (uint8 j = 0; j < TIMES_HISTORY_SIZE; j++) {
-					uint32 time = history.get_entry(j);
+					const uint32 time = history.get_entry(j);
 					lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
 					if (time != 0) {
 						char time_as_clock[32];
