@@ -193,6 +193,7 @@ enum {
 	TOOLBAR_TOOL = 0x8000u
 };
 
+
 class tool_t {
 public:
 	image_id icon;
@@ -206,6 +207,10 @@ protected:
 	const char *default_param;
 public:
 	uint16 get_id() const { return id; }
+
+	const char *get_name() const { return id_to_string(id); }
+
+	static const char *id_to_string(uint16 id);
 
 	static tool_t *dummy;
 
