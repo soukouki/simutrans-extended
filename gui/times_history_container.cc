@@ -232,9 +232,23 @@ void gui_times_history_t::build_table()
 				found_location = (in_this_section || stopped_here);
 			}
 
-			button_t *b = new_component<button_t>();
-			b->set_typ(button_t::posbutton_automatic);
-			b->set_targetpos(entry.pos.get_2d());
+			add_table(2,1)->set_spacing(scr_size(0,0));
+			{
+				add_table(2,1)->set_alignment(ALIGN_LEFT);
+				{
+					button_t *b = new_component<button_t>();
+					b->set_typ(button_t::posbutton_automatic);
+					b->set_targetpos(entry.pos.get_2d());
+					new_component<gui_margin_t>(max(0,L_TIME_6_DIGITS_WIDTH-D_POS_BUTTON_WIDTH-D_FIXED_SYMBOL_WIDTH*2));
+				}
+				end_table();
+				add_table(2,1)->set_alignment(ALIGN_RIGHT); {
+					new_component<gui_image_t>()->set_image(entry.wait_for_time && skinverwaltung_t::waiting_time ? skinverwaltung_t::waiting_time->get_image_id(0) : IMG_EMPTY, true);
+					new_component<gui_image_t>()->set_image(entry.minimum_loading>0 ? skinverwaltung_t::goods->get_image_id(0) : IMG_EMPTY, true);
+				}
+				end_table();
+			}
+			end_table();
 
 			uint8 line_col_idx = (!mirrored && reversed) ? player->get_player_color2() : player->get_player_color1();
 			new_component<gui_schedule_entry_number_t>(entry_index, halt.is_bound() ? halt->get_owner()->get_player_color1() : line_col_idx,
