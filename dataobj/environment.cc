@@ -595,7 +595,7 @@ void env_t::rdwr(loadsave_t *file)
 			soundfont_filename = str ? str.c_str() : "";
 		}
 	}
-	if( file->is_version_ex_atleast(14, 40) ) {
+	if( file->is_version_ex_atleast(14,41) ) {
 		file->rdwr_byte(gui_titlebar_player_color_background_brightness);
 		file->rdwr_short(env_t::menupos);
 		env_t::menupos &= 3;
