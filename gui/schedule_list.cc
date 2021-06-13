@@ -1035,6 +1035,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		// thus the need to hide everything
 		line_convoys.clear();
 		cont.remove_all();
+		cont_times_history.remove_all();
 		scrolly_convois.set_visible(false);
 		scrolly_haltestellen.set_visible(false);
 		inp_name.set_visible(false);
