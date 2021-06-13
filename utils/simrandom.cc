@@ -482,7 +482,7 @@ double perlin_noise_2D(const double x, const double y, const double p, const sin
 										(y * frequency) / 64.0) * amplitude;
 		}
 	}
-	/*else 
+	/*else
 	{
 		for (i = 0; i < 23; i++)
 		{
