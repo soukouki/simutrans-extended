@@ -251,7 +251,11 @@ void gui_times_history_t::build_table()
 				}
 			}
 
-			new_component<gui_label_t>(halt.is_bound() ? halt->get_name() : "Wegpunkt");
+			add_table(2,1); {
+				new_component<gui_label_t>(halt.is_bound() ? halt->get_name() : "Wegpunkt");
+				new_component<gui_label_t>(entry.reverse==1 ? "[<<]" : NULL, SYSCOL_TEXT_STRONG);
+			}
+			end_table();
 
 			new_component_span<gui_empty_t>(5);
 
