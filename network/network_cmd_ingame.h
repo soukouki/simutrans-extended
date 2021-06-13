@@ -33,7 +33,6 @@ public:
 	nwc_gameinfo_t() : network_command_t(NWC_GAMEINFO) { len = 0; }
 	bool execute(karte_t *) OVERRIDE;
 	void rdwr() OVERRIDE;
-	const char* get_name() OVERRIDE { return "nwc_gameinfo_t";}
 	uint32 client_id;
 	uint32 len;
 };
@@ -52,7 +51,7 @@ public:
 
 	bool execute(karte_t *) OVERRIDE;
 	void rdwr() OVERRIDE;
-	const char* get_name() OVERRIDE { return "nwc_nick_t";}
+
 	plainstring nickname;
 
 	enum {
@@ -87,7 +86,7 @@ public:
 
 	bool execute (karte_t *) OVERRIDE;
 	void rdwr () OVERRIDE;
-	const char* get_name() OVERRIDE { return "nwc_chat_t";}
+
 	void add_message (karte_t*) const;
 
 	plainstring message;            // Message text
@@ -116,7 +115,7 @@ public:
 
 	bool execute(karte_t *) OVERRIDE;
 	void rdwr() OVERRIDE;
-	const char* get_name() OVERRIDE { return "nwc_join_t";}
+
 	uint32 client_id;
 	uint8 answer;
 
@@ -149,7 +148,7 @@ public:
 
 	bool execute(karte_t *) OVERRIDE;
 	void rdwr() OVERRIDE;
-	const char* get_name() OVERRIDE { return "nwc_ready_t";}
+
 	uint32 sync_step;
 	uint32 map_counter;
 	checklist_t checklist;
@@ -171,7 +170,7 @@ public:
 	nwc_game_t(uint32 len_=0) : network_command_t(NWC_GAME), len(len_) {}
 
 	void rdwr() OVERRIDE;
-	const char* get_name() OVERRIDE { return "nwc_game_t";}
+
 	uint32 len;
 };
 
@@ -184,9 +183,10 @@ public:
 	network_world_command_t(uint16 /*id*/, uint32 /*sync_step*/, uint32 /*map_counter*/);
 
 	void rdwr() OVERRIDE;
-	const char* get_name() OVERRIDE { return "network_world_command_t";}
+
 	// put it to the command queue
 	bool execute(karte_t *) OVERRIDE;
+
 	// apply it to the world
 	virtual void do_command(karte_t*) {}
 	uint32 get_sync_step() const { return sync_step; }
@@ -218,7 +218,7 @@ public:
 
 	void rdwr() OVERRIDE;
 	void do_command(karte_t*) OVERRIDE;
-	const char* get_name() OVERRIDE { return "nwc_sync_t"; }
+
 	uint32 get_new_map_counter() const { return new_map_counter; }
 private:
 	uint32 client_id; // this client shall receive the game
@@ -281,7 +281,7 @@ public:
 	nwc_check_t(uint32 sync_steps, uint32 map_counter, const checklist_t &server_checklist_, uint32 server_sync_step_) : network_world_command_t(NWC_CHECK, sync_steps, map_counter), server_checklist(server_checklist_), server_sync_step(server_sync_step_) {}
 	void rdwr() OVERRIDE;
 	void do_command(karte_t*) OVERRIDE { }
-	const char* get_name() OVERRIDE { return "nwc_check_t"; }
+
 	checklist_t server_checklist;
 	uint32 server_sync_step;
 	// no action required -> can be ignored if too old
@@ -334,7 +334,6 @@ public:
 	void do_command(karte_t*) OVERRIDE;
 	// do some special checks
 	network_broadcast_world_command_t* clone(karte_t *) OVERRIDE;
-	const char* get_name() OVERRIDE { return "nwc_chg_player_t"; }
 
 	uint8 cmd;
 	uint8 player_nr;
@@ -389,7 +388,6 @@ public:
 
 	// really executes it, here exec should be true
 	void do_command(karte_t*) OVERRIDE;
-	const char* get_name() OVERRIDE { return "nwc_tool_t"; }
 
 	void init_tool();
 private:
@@ -426,7 +424,6 @@ public:
 	nwc_step_t(uint32 sync_steps, uint32 map_counter) : network_world_command_t(NWC_STEP, sync_steps, map_counter) {}
 
 	bool execute(karte_t *) OVERRIDE { return true;}
-	const char* get_name() OVERRIDE { return "nwc_step_t"; }
 };
 
 #endif
