@@ -365,12 +365,12 @@ void checklist_t::rdwr(memory_rw_t *buffer)
 
 int checklist_t::print(char *buffer, const char *entity) const
 {
-	return sprintf(buffer, "%s=[ss=%u st=%u nfc=%u rand=%u halt=%u line=%u cnvy=%u\n\tssr=%u,%u,%u,%u,%u,%u,%u,%u\n\tstr=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n\texr=%u,%u,%u,%u,%u,%u,%u,%u\n\tsums=%u,%u,%u,%u,%u,%u,%u,%u]\n",
+	return sprintf(buffer, "%s=[ss=%u st=%u nfc=%u rand=%u halt=%u line=%u cnvy=%u\n\tssr=%u,%u,%u,%u,%u,%u,%u,%u\n\tstr=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n\texr=%u,%u,%u,%u,%u,%u,%u,%u\n\tsums=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u]\n",
 		entity, ss, st, nfc, random_seed, halt_entry, line_entry, convoy_entry,
 		rand[0], rand[1], rand[2], rand[3], rand[4], rand[5], rand[6], rand[7],
 		rand[8], rand[9], rand[10], rand[11], rand[12], rand[13], rand[14], rand[15], rand[16], rand[17], rand[18], rand[19], rand[20], rand[21], rand[22], rand[23],
 		rand[24], rand[25], rand[26], rand[27], rand[28], rand[29], rand[30], rand[31],
-		debug_sum[0], debug_sum[1], debug_sum[2], debug_sum[3], debug_sum[4], debug_sum[5], debug_sum[6], debug_sum[7]
+		debug_sum[0], debug_sum[1], debug_sum[2], debug_sum[3], debug_sum[4], debug_sum[5], debug_sum[6], debug_sum[7], debug_sum[8], debug_sum[9]
 	);
 }
 
@@ -4916,6 +4916,8 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 	debug_sums[5] = 0; // Passengers/mail generated this step
 	debug_sums[6] = 0; // Transferring cargoes before passenger generation
 	debug_sums[7] = 0; // Transferring cargoes after passenger generation
+	debug_sums[8] = 0; // Sync objects before sync list step
+	debug_sums[9] = 0; // Sync objects after sync list step
 
 	set_random_mode( SYNC_STEP_RANDOM );
 	haltestelle_t::pedestrian_limit = 0;
@@ -4948,7 +4950,9 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 
 		clear_random_mode( INTERACTIVE_RANDOM );
 
+		debug_sums[8] = sync.list.get_count();
 		sync.sync_step( delta_t );
+		debug_sums[9] = sync.list.get_count();
 
 		rands[4] = get_random_seed();
 

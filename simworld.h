@@ -61,7 +61,7 @@ class memory_rw_t;
 class viewport_t;
 
 #define CHK_RANDS 32
-#define CHK_DEBUG_SUMS 8
+#define CHK_DEBUG_SUMS 10
 
 #ifdef MULTI_THREAD
 //#define FORBID_MULTI_THREAD_PASSENGER_GENERATION_IN_NETWORK_MODE
