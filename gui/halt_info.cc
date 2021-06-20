@@ -235,9 +235,10 @@ void gui_halt_capacity_bar_t::draw(scr_coord offset)
 
 #define L_WAITING_CELL_WIDTH (proportional_string_width(" 0000000"))
 #define L_CAPACITY_CELL_WIDTH (proportional_string_width("000000"))
-gui_halt_waiting_indicator_t::gui_halt_waiting_indicator_t(halthandle_t h)
+gui_halt_waiting_indicator_t::gui_halt_waiting_indicator_t(halthandle_t h, bool yesno)
 {
 	halt = h;
+	show_transfer_time = yesno;
 	init();
 }
 
@@ -247,7 +248,7 @@ void gui_halt_waiting_indicator_t::init()
 	if(!halt.is_bound()) {
 		return;
 	}
-	set_table_layout(10, 0);
+	set_table_layout(6+show_transfer_time*4, 0);
 	set_alignment(ALIGN_LEFT | ALIGN_CENTER_V);
 	set_margin(scr_size(D_H_SPACE, 0), scr_size(D_H_SPACE, 0));
 	set_spacing(scr_size(D_H_SPACE, 1));
@@ -293,15 +294,19 @@ void gui_halt_waiting_indicator_t::init()
 			add_component(&lb_capacity[i]);
 			new_component<gui_margin_t>(D_H_SPACE);
 
-			new_component<gui_label_t>(i==2 ? "Transfer time: " : "Transshipment time: ");
-			lb_transfer_time[i].set_fixed_width(L_WAITING_CELL_WIDTH);
-			add_component(&lb_transfer_time[i]);
+			if (show_transfer_time) {
+				new_component<gui_margin_t>(D_H_SPACE);
 
-			img_alert.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2) : IMG_EMPTY, true);
-			img_alert.set_rigid(true);
-			img_alert.set_tooltip("No service");
-			img_alert.set_visible(false);
-			add_component(&img_alert);
+				new_component<gui_label_t>(i==2 ? "Transfer time: " : "Transshipment time: ");
+				lb_transfer_time[i].set_fixed_width(L_WAITING_CELL_WIDTH);
+				add_component(&lb_transfer_time[i]);
+
+				img_alert.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2) : IMG_EMPTY, true);
+				img_alert.set_rigid(true);
+				img_alert.set_tooltip("No service");
+				img_alert.set_visible(false);
+				add_component(&img_alert);
+			}
 			new_component<gui_fill_t>();
 		}
 	}

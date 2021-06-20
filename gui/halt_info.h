@@ -71,11 +71,15 @@ class gui_halt_waiting_indicator_t : public gui_aligned_container_t
 	gui_label_buf_t lb_capacity[3];
 	gui_label_buf_t lb_transfer_time[3];
 
+	bool show_transfer_time;
+
 	void init();
 public:
-	gui_halt_waiting_indicator_t(halthandle_t h);
+	gui_halt_waiting_indicator_t(halthandle_t h, bool show_transfer_time = true);
 
 	void update();
+
+	void set_halt(halthandle_t h) { halt = h; init(); }
 
 	void draw(scr_coord offset) OVERRIDE;
 };
