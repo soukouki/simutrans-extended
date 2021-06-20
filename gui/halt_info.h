@@ -170,6 +170,7 @@ public:
 	 * Set window size and adjust component sizes and/or positions accordingly
 	 */
 	virtual void set_windowsize(scr_size size) OVERRIDE;
+	bool has_min_sizer() const OVERRIDE { return true; }
 
 	koord3d get_weltpos(bool) OVERRIDE;
 
