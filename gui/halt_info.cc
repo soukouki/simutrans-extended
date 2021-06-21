@@ -248,7 +248,7 @@ void gui_halt_waiting_indicator_t::init()
 	if(!halt.is_bound()) {
 		return;
 	}
-	set_table_layout(6+show_transfer_time*4, 0);
+	set_table_layout(7+show_transfer_time*3, 0);
 	set_alignment(ALIGN_LEFT | ALIGN_CENTER_V);
 	set_margin(scr_size(D_H_SPACE, 0), scr_size(D_H_SPACE, 0));
 	set_spacing(scr_size(D_H_SPACE, 1));
@@ -292,7 +292,6 @@ void gui_halt_waiting_indicator_t::init()
 			lb_capacity[i].set_align(gui_label_t::right);
 			lb_capacity[i].set_fixed_width(L_CAPACITY_CELL_WIDTH);
 			add_component(&lb_capacity[i]);
-			new_component<gui_margin_t>(D_H_SPACE);
 
 			if (show_transfer_time) {
 				new_component<gui_margin_t>(D_H_SPACE);
@@ -300,13 +299,13 @@ void gui_halt_waiting_indicator_t::init()
 				new_component<gui_label_t>(i==2 ? "Transfer time: " : "Transshipment time: ");
 				lb_transfer_time[i].set_fixed_width(L_WAITING_CELL_WIDTH);
 				add_component(&lb_transfer_time[i]);
-
-				img_alert.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2) : IMG_EMPTY, true);
-				img_alert.set_rigid(true);
-				img_alert.set_tooltip("No service");
-				img_alert.set_visible(false);
-				add_component(&img_alert);
 			}
+			img_alert.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2) : IMG_EMPTY, true);
+			img_alert.set_rigid(true);
+			img_alert.set_tooltip("No service");
+			img_alert.set_visible(false);
+			add_component(&img_alert);
+
 			new_component<gui_fill_t>();
 		}
 	}
