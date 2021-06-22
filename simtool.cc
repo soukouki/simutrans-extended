@@ -6957,16 +6957,17 @@ const char *tool_build_depot_t::work( player_t *player, koord3d pos )
  * the parameter string is a follow:
  * 1#theater
  * first letter: ignore climates
- * second letter: rotation (0,1,2,3,#=random)
+ * second letter: ignore regions
+ * third letter: rotation (0,1,2,3,#=random)
  * finally building name
  */
 bool tool_build_house_t::init( player_t * )
 {
 	if (is_local_execution() && !strempty(default_param)) {
-		const char *c = default_param+2;
+		const char *c = default_param+3;
 		const building_tile_desc_t *tile = hausbauer_t::find_tile(c,0);
 		if(tile!=NULL) {
-			int rotation = (default_param[1]-'0') % tile->get_desc()->get_all_layouts();
+			int rotation = (default_param[2]-'0') % tile->get_desc()->get_all_layouts();
 			cursor_area = tile->get_desc()->get_size(rotation);
 		}
 	}
@@ -6993,7 +6994,7 @@ const char *tool_build_house_t::work( player_t *player, koord3d pos )
 	// Parsing parameter (if there)
 	const building_desc_t *desc = NULL;
 	if (!strempty(default_param)) {
-		const char *c = default_param+2;
+		const char *c = default_param+3;
 		const building_tile_desc_t *tile = hausbauer_t::find_tile(c,0);
 		if(tile) {
 			desc = tile->get_desc();
@@ -7007,10 +7008,10 @@ const char *tool_build_house_t::work( player_t *player, koord3d pos )
 		return "";
 	}
 	int rotation;
-	if(  !default_param || default_param[1]=='#'  ) {
+	if(  !default_param || default_param[2]=='#'  ) {
 		rotation = simrand(desc->get_all_layouts(), "const char *tool_build_house_t::work");
 	}
-	else if(  default_param[1]=='A'  ) {
+	else if(  default_param[2]=='A'  ) {
 		if(  desc->get_type()!=building_desc_t::attraction_land  &&  desc->get_type()!=building_desc_t::attraction_city  ) {
 			// auto rotation only valid for city buildings
 			int streetdir = 0;
@@ -7033,17 +7034,17 @@ const char *tool_build_house_t::work( player_t *player, koord3d pos )
 		}
 	}
 	else {
-		rotation = (default_param[1]-'0') % desc->get_all_layouts();
+		rotation = (default_param[2]-'0') % desc->get_all_layouts();
 	}
 
 	koord size = desc->get_size(rotation);
 
 	// process ignore climates switch
 	climate_bits cl = (default_param  &&  default_param[0]=='1') ? ALL_CLIMATES : desc->get_allowed_climate_bits();
-	uint16 regions_allowed = desc->get_allowed_region_bits();
+	uint16 regions_allowed = (default_param  &&  default_param[1] == '1') ? 65535 : desc->get_allowed_region_bits();
 
 	bool hat_platz = welt->square_is_free( k, desc->get_x(rotation), desc->get_y(rotation), NULL, cl, regions_allowed);
-	if(!hat_platz  &&  size.y!=size.x  &&  desc->get_all_layouts()>1  &&  (default_param==NULL  ||  default_param[1]=='#'  ||  default_param[1]=='A')) {
+	if(!hat_platz  &&  size.y!=size.x  &&  desc->get_all_layouts()>1  &&  (default_param==NULL  ||  default_param[2]=='#'  ||  default_param[2]=='A')) {
 		// try other rotation too ...
 		rotation = (rotation+1) % desc->get_all_layouts();
 		hat_platz = welt->square_is_free( k, desc->get_x(rotation), desc->get_y(rotation), NULL, cl, regions_allowed );
@@ -7075,7 +7076,7 @@ const char *tool_build_house_t::work( player_t *player, koord3d pos )
 bool tool_build_land_chain_t::init( player_t * )
 {
 	if (is_local_execution() && !strempty(default_param)) {
-		const char *c = default_param+2;
+		const char *c = default_param+3;
 		while(*c  &&  *c++!=',') { /* do nothing */ }
 		const factory_desc_t *fab = factory_builder_t::get_desc(c);
 		if(fab==NULL) {
