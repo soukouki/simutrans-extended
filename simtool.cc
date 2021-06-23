@@ -383,7 +383,7 @@ const char *tool_query_t::work( player_t *player, koord3d pos )
 					}
 				}
 
-				for (size_t n = gr->get_top(); n-- != 0;) {
+				for (uint8 n = gr->get_top(); n-- != 0;) {
 					obj_t *obj = gr->obj_bei(n);
 					if(  obj && obj->get_typ()!=obj_t::wayobj && obj->get_typ()!=obj_t::pillar && obj->get_typ()!=obj_t::label  ) {
 						DBG_MESSAGE("tool_query_t()", "index %u", (unsigned)n);
@@ -5143,7 +5143,6 @@ DBG_MESSAGE("tool_station_aux()", "building %s on square %d,%d for waytype %x", 
 	else {
 		// something wrong with station number of layouts
 		dbg->fatal( "tool_build_station_t::tool_station_aux", "%s has wrong number of layouts (must be 2,4,8,16!)", desc->get_name() );
-		return p_error;
 	}
 
 	if(  desc->get_all_layouts() == 8  ||  desc->get_all_layouts() == 16  ) {
@@ -8470,6 +8469,24 @@ bool tool_show_underground_t::init( player_t * )
 	return needs_click;
 }
 
+
+bool tool_show_underground_t::exit( player_t* )
+{
+	if(  grund_t::underground_mode != grund_t::ugm_none  ) {
+
+		// reset no normal view on deselect
+		grund_t::underground_mode = grund_t::ugm_none;
+
+		// renew toolbar
+		tool_t::update_toolbars();
+
+		// recalc all images on map
+		welt->update_underground();
+	}
+	return false;
+}
+
+
 const char *tool_show_underground_t::work( player_t *player, koord3d pos)
 {
 	koord3d zpos = welt->get_zeiger()->get_pos();
@@ -9235,7 +9252,7 @@ bool tool_change_depot_t::init( player_t *player )
 {
 	char tool=0;
 	koord pos2d;
-	sint16 z;
+	sint8 z;
 	uint16 convoi_id;
 	uint16 livery_scheme_index;
 
@@ -9244,7 +9261,7 @@ bool tool_change_depot_t::init( player_t *player )
 	while(  *p  &&  *p<=' '  ) {
 		p++;
 	}
-	sscanf( p, "%c,%hi,%hi,%hi,%hi,%hi", &tool, &pos2d.x, &pos2d.y, &z, &convoi_id, &livery_scheme_index );
+	sscanf( p, "%c,%hi,%hi,%hhi,%hi,%hi", &tool, &pos2d.x, &pos2d.y, &z, &convoi_id, &livery_scheme_index );
 
 	koord3d pos(pos2d, z);
 
@@ -9568,8 +9585,9 @@ bool tool_change_player_t::init( player_t *player_in)
 bool tool_change_traffic_light_t::init( player_t *player )
 {
 	koord pos2d;
-	sint16 z, ns, ticks;
-	if(  5!=sscanf( default_param, "%hi,%hi,%hi,%hi,%hi", &pos2d.x, &pos2d.y, &z, &ns, &ticks )  ) {
+	sint8 z;
+	sint16 ns, ticks;
+	if(  5!=sscanf( default_param, "%hi,%hi,%hhi,%hi,%hi", &pos2d.x, &pos2d.y, &z, &ns, &ticks )  ) {
 		return false;
 	}
 	koord3d pos(pos2d, z);
@@ -9684,7 +9702,8 @@ bool tool_rename_t::init(player_t *player)
 		case 'm':
 		case 'f': {
 			koord pos2d;
-			if(  3!=sscanf( p, "%hi,%hi,%hi", &pos2d.x, &pos2d.y, &id )  ) {
+			sint8 z;
+			if(  3!=sscanf( p, "%hi,%hi,%hhi", &pos2d.x, &pos2d.y, &z )  ) {
 				dbg->error( "tool_rename_t::init", "no position given for marker/factory! (%s)", default_param );
 				return false;
 			}
@@ -9694,7 +9713,7 @@ bool tool_rename_t::init(player_t *player)
 			}
 			while(  *p>0  &&  *p++!=','  ) {
 			}
-			pos = koord3d(pos2d, id);
+			pos = koord3d(pos2d, z);
 			id = 0;
 			break;
 		}
@@ -9793,7 +9812,7 @@ bool tool_rename_t::init(player_t *player)
 
 bool tool_recolour_t::init(player_t *)
 {
-	uint16 id = 0;
+	uint8 id = 0;
 
 	// skip the rest of the command
 	const char *p = default_param;
@@ -9934,12 +9953,11 @@ bool tool_access_t::init(player_t *)
 			}
 		}
 
+		convoihandle_t cnv_x;
 		entries_to_remove.clear();
-		const uint32 convoy_count = welt->convoys().get_count();
-		convoihandle_t cnv;
-		for(uint32 i = 0; i < convoy_count; i ++)
+		for(auto & cnv : welt->convoys())
 		{
-			cnv = welt->convoys()[i];
+			cnv_x = cnv;
 			if(!cnv.is_bound() || cnv->get_line().is_bound() || cnv->get_owner() != receiving_player)
 			{
 				// We dealt above with lines.
@@ -10003,9 +10021,9 @@ bool tool_access_t::init(player_t *)
 		world()->await_path_explorer();
 #endif
 		path_explorer_t::refresh_all_categories(false);
-		if (cnv.is_bound())
+		if (cnv_x.is_bound())
 		{
-			cnv->clear_departures();
+			cnv_x->clear_departures();
 		}
 	}
 
