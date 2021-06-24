@@ -942,7 +942,7 @@ void halt_info_t::update_cont_departure()
 			// header
 			cont_departure.new_component<gui_empty_t>();
 			cont_departure.new_component_span<gui_label_t>("Convoy", 2);
-			cont_departure.new_component<gui_label_t>(show_departures ? "To" : "From"); // TODO: translate
+			cont_departure.new_component<gui_label_t>(show_departures ? "db_convoy_to" : "db_convoy_from");
 
 			cont_departure.new_component<gui_divider_t>()->init(scr_coord(0, 0), proportional_string_width("--:--:--"));
 			cont_departure.new_component_span<gui_divider_t>(2);
