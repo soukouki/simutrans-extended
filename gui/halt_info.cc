@@ -865,6 +865,25 @@ void halt_info_t::update_components()
 }
 
 
+void halt_info_t::set_tab_opened()
+{
+	scr_coord_val margin_above_tab = switch_mode.get_pos().y + D_TAB_HEADER_HEIGHT + D_MARGINS_Y + D_V_SPACE;
+	switch (switch_mode.get_active_tab_index())
+	{
+		case 0:
+		default:
+			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + container_freight.get_size().h)));
+			break;
+		case 1: // departure board
+			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cont_tab_departure.get_size().h)));
+			break;
+		case 2: // chart
+			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + container_chart.get_size().h)));
+			break;
+	}
+}
+
+
 void halt_info_t::update_cont_departure()
 {
 	cont_departure.remove_all();
@@ -969,6 +988,11 @@ void halt_info_t::draw(scr_coord pos, scr_size size)
  */
 bool halt_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 {
+	if (comp == &switch_mode  &&  get_windowsize().h == get_min_windowsize().h) {
+		set_tab_opened();
+		return true;
+	}
+
 	if (comp == &detail_button) {
 		create_win( new halt_detail_t(halt), w_info, magic_halt_detail + halt.get_id() );
 	}

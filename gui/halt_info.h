@@ -152,6 +152,8 @@ private:
 
 	void update_components();
 
+	void set_tab_opened();
+
 	void init(halthandle_t halt);
 
 public:
