@@ -1049,6 +1049,8 @@ void halt_info_t::rdwr(loadsave_t *file)
 		halt_pos = halt->get_basis_pos3d();
 	}
 	halt_pos.rdwr( file );
+	file->rdwr_bool( show_departures );
+
 	if(  file->is_loading()  ) {
 		halt = world()->lookup( halt_pos )->get_halt();
 		if (halt.is_bound()) {
