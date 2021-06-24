@@ -1003,8 +1003,7 @@ bool halt_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 			sort_mode = 0;
 		}
 		env_t::default_sortmode = (sort_mode_t)((int)(sort_mode) % (int)SORT_MODES);
-		halt->set_sortby(env_t::default_sortmode);
-		//halt->set_sortby(sort_mode >= by_line ? env_t::default_sortmode+2 : env_t::default_sortmode);
+		halt->set_sortby(sort_mode >= by_line ? env_t::default_sortmode+2 : env_t::default_sortmode);
 	}
 	else if(  comp == &input  ) {
 		if(  strcmp(halt->get_name(),edit_name)  ) {
