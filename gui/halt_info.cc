@@ -609,8 +609,8 @@ void halt_info_t::init(halthandle_t halt)
 	cont_tab_departure.set_table_layout(1,0);
 	cont_tab_departure.set_margin(scr_size(0,D_V_SPACE), scr_size(0,0));
 	cont_tab_departure.set_spacing(scr_size(0,1));
-	cont_departure.set_table_layout(1,0);
-	cont_departure.set_margin(scr_size(D_H_SPACE, D_MARGIN_TOP), scr_size(D_H_SPACE, D_MARGIN_BOTTOM));
+	cont_departure.set_table_layout(2,0);
+	cont_departure.set_margin(scr_size(D_H_SPACE, 0), scr_size(D_H_SPACE, 0));
 	cont_tab_departure.add_table(4,1)->set_spacing(scr_size(0,0));
 	{
 		cont_tab_departure.new_component<gui_margin_t>(D_MARGIN_LEFT);
@@ -927,6 +927,7 @@ void halt_info_t::update_cont_departure()
 	}
 
 	// now we build the table ...
+	cont_departure.new_component_span<gui_margin_t>(0,D_MARGIN_TOP, 2);
 	if (db_halts.get_count() > 0) {
 		cont_departure.add_table(4,0);
 		{
@@ -948,12 +949,13 @@ void halt_info_t::update_cont_departure()
 				lb->update();
 
 				const bool is_bus = (hi.cnv->front()->get_waytype() == road_wt && hi.cnv->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS));
-				cont_departure.new_component<gui_image_t>()->set_image(is_bus ? skinverwaltung_t::bushaltsymbol->get_image_id(0) : hi.cnv->get_schedule()->get_schedule_type_symbol(), true);
+				cont_departure.new_component<gui_image_t>(is_bus ? skinverwaltung_t::bushaltsymbol->get_image_id(0) : hi.cnv->get_schedule()->get_schedule_type_symbol(), 0, ALIGN_NONE, true);
 				cont_departure.new_component<gui_label_t>(hi.cnv->get_name(), color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
 				cont_departure.new_component<gui_label_t>(hi.halt.is_bound() ? hi.halt->get_name() : "Unknown");
 			}
 		}
 		cont_departure.end_table();
+		cont_departure.new_component<gui_fill_t>();
 	}
 	else {
 		cont_departure.add_table(2,1);
@@ -962,7 +964,9 @@ void halt_info_t::update_cont_departure()
 			cont_departure.new_component<gui_label_t>("no convois", SYSCOL_TEXT_INACTIVE);
 		}
 		cont_departure.end_table();
+		cont_departure.new_component<gui_fill_t>();
 	}
+	cont_departure.new_component_span<gui_margin_t>(0, D_MARGIN_BOTTOM,2);
 
 	cont_departure.set_size(cont_departure.get_size());
 	cont_tab_departure.set_size(scr_size(switch_mode.get_size().w, switch_mode.get_size().h-D_TAB_HEADER_HEIGHT));
