@@ -608,7 +608,7 @@ void halt_info_t::init(halthandle_t halt)
 	// departure board
 	cont_tab_departure.set_table_layout(1,0);
 	cont_tab_departure.set_margin(scr_size(0,D_V_SPACE), scr_size(0,0));
-	cont_tab_departure.set_spacing(scr_size(0,1));
+	cont_tab_departure.set_spacing(scr_size(0,0));
 	cont_departure.set_table_layout(2,0);
 	cont_departure.set_margin(scr_size(D_H_SPACE, 0), scr_size(D_H_SPACE, 0));
 	cont_tab_departure.add_table(4,1)->set_spacing(scr_size(0,0));
@@ -862,11 +862,19 @@ void halt_info_t::update_components()
 
 	set_min_windowsize(scr_size(max(D_DEFAULT_WIDTH, get_min_windowsize().w), D_TITLEBAR_HEIGHT + switch_mode.get_pos().y + D_TAB_HEADER_HEIGHT));
 	resize(scr_coord(0,0));
+
+	switch_mode.set_size(scr_size(switch_mode.get_size().w, max(0, get_windowsize().h - switch_mode.get_pos().y - D_TITLEBAR_HEIGHT)));
+
+	if (switch_mode.get_aktives_tab() == &cont_tab_departure) {
+		scrolly_departure_board.set_size(scr_size(switch_mode.get_size().w, max(0, cont_tab_departure.get_size().h - scrolly_departure_board.get_pos().y)));
+		cont_tab_departure.set_size(scr_size(switch_mode.get_size().w, max(0,switch_mode.get_size().h-D_TAB_HEADER_HEIGHT)));
+	}
 }
 
 
 void halt_info_t::set_tab_opened()
 {
+	resize(scr_coord(0, 0));
 	scr_coord_val margin_above_tab = switch_mode.get_pos().y + D_TAB_HEADER_HEIGHT + D_MARGINS_Y + D_V_SPACE;
 	switch (switch_mode.get_active_tab_index())
 	{
@@ -875,7 +883,7 @@ void halt_info_t::set_tab_opened()
 			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + container_freight.get_size().h)));
 			break;
 		case 1: // departure board
-			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cont_tab_departure.get_size().h)));
+			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cont_departure.get_size().h + scrolly_departure_board.get_pos().y - D_V_SPACE)));
 			break;
 		case 2: // chart
 			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + container_chart.get_size().h)));
@@ -927,7 +935,7 @@ void halt_info_t::update_cont_departure()
 	}
 
 	// now we build the table ...
-	cont_departure.new_component_span<gui_margin_t>(0,D_MARGIN_TOP, 2);
+	cont_departure.new_component_span<gui_margin_t>(0,D_V_SPACE, 2);
 	if (db_halts.get_count() > 0) {
 		cont_departure.add_table(4,0);
 		{
@@ -969,8 +977,6 @@ void halt_info_t::update_cont_departure()
 	cont_departure.new_component_span<gui_margin_t>(0, D_MARGIN_BOTTOM,2);
 
 	cont_departure.set_size(cont_departure.get_size());
-	cont_tab_departure.set_size(scr_size(switch_mode.get_size().w, switch_mode.get_size().h-D_TAB_HEADER_HEIGHT));
-	scrolly_departure_board.set_size(scr_size(switch_mode.get_size().w, max(0, get_windowsize().h - D_TITLEBAR_HEIGHT- D_TAB_HEADER_HEIGHT - switch_mode.get_pos().y - scrolly_departure_board.get_pos().y)));
 }
 
 void halt_info_t::draw(scr_coord pos, scr_size size)
