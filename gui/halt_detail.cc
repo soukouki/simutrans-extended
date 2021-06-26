@@ -83,7 +83,7 @@ void halt_detail_t::init()
 	show_freight_info = false;
 
 	lb_nearby_factory.init("Fabrikanschluss"/* (en)Connected industries */, scr_coord(D_MARGIN_LEFT, 0),
-		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark),
+		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_player_color_dark),
 		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_titlebar_player_color_background_brightness), 1);
 
 	// fill buffer with halt detail
@@ -117,7 +117,7 @@ void halt_detail_t::init()
 	}
 	cont_route.end_table();
 	lb_serve_catg.init("lb_served_goods_and_classes", scr_coord(0, 0),
-		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark),
+		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_player_color_dark),
 		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_titlebar_player_color_background_brightness), 1);
 	cont_route.add_component(&lb_serve_catg);
 
@@ -237,7 +237,7 @@ void halt_detail_t::init()
 	cont_route.end_table(); // button table end
 
 	lb_routes.init("Direkt erreichbare Haltestellen", scr_coord(0, 0),
-		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark),
+		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_player_color_dark),
 		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_titlebar_player_color_background_brightness), 1);
 	cont_route.add_component(&lb_routes);
 	cont_route.add_component(&scrolly_route);
@@ -841,7 +841,7 @@ void halt_detail_pas_t::draw(scr_coord offset)
 		if (halt->get_pax_enabled()) {
 			top += LINESPACE;
 			display_heading_rgb(offset.x, offset.y + top, D_DEFAULT_WIDTH - D_MARGINS_X, D_HEADING_HEIGHT,
-				color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark),
+				color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_player_color_dark),
 				color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_titlebar_player_color_background_brightness),
 				translator::translate("Around passenger demands"), true, 1);
 			top += D_HEADING_HEIGHT + D_V_SPACE*2;
@@ -914,7 +914,7 @@ void halt_detail_pas_t::draw(scr_coord offset)
 		if ((halt->get_pax_enabled() && arround_population) || halt->get_mail_enabled()) {
 			top += LINESPACE;
 			display_heading_rgb(offset.x, offset.y + top, D_DEFAULT_WIDTH - D_MARGINS_X, D_HEADING_HEIGHT,
-				color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark),
+				color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_player_color_dark),
 				color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_titlebar_player_color_background_brightness),
 				translator::translate("Transportation status around this stop"), true, 1);
 			top += D_HEADING_HEIGHT + D_V_SPACE * 2;
@@ -1410,7 +1410,7 @@ void gui_halt_service_info_t::update_connections(halthandle_t h)
 
 	// add lines that serve this stop
 	new_component<gui_heading_t>("Lines serving this stop",
-		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark),
+		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_player_color_dark),
 		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_titlebar_player_color_background_brightness), 1);
 	add_table(6,0)->set_spacing(scr_size(D_H_SPACE, 2));
 	if (halt->registered_lines.empty()) {
@@ -1489,7 +1489,7 @@ void gui_halt_service_info_t::update_connections(halthandle_t h)
 	// add lineless convoys which serve this stop
 	new_component<gui_margin_t>(0, D_V_SPACE);
 	new_component<gui_heading_t>("Lineless convoys serving this stop",
-		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark),
+		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_player_color_dark),
 		color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_titlebar_player_color_background_brightness), 1);
 	add_table(6, 0)->set_spacing(scr_size(D_H_SPACE, 2));
 	if (halt->registered_convoys.empty()) {
