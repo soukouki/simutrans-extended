@@ -745,7 +745,7 @@ void halt_info_t::update_components()
 						}
 					}
 					else {
-						lb_pax_storage.buf().printf(": %i", pax_sum);
+						lb_pax_storage.buf().printf(": %4i", pax_sum);
 
 						cont_pax_ev_detail.remove_all();
 						gui_label_buf_t *lb = cont_pax_ev_detail.new_component<gui_label_buf_t>();
@@ -808,7 +808,7 @@ void halt_info_t::update_components()
 						lb_mail_storage.buf().printf(translator::translate("%d delivered, %d no route"), halt->haltestelle_t::get_mail_delivered(), halt->haltestelle_t::get_mail_no_route());
 					}
 					else {
-						lb_mail_storage.buf().printf(": %i", mail_sum);
+						lb_mail_storage.buf().printf(": %4i", mail_sum);
 						cont_mail_ev_detail.remove_all();
 						cont_mail_ev_detail.new_component<gui_label_t>("(");
 						if (japanese_order) cont_mail_ev_detail.new_component<gui_image_t>(skinverwaltung_t::mail_evaluation_icons->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(translator::translate(cost_tooltip[5]));
