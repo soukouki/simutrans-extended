@@ -926,7 +926,12 @@ void halt_info_t::update_cont_departure()
 		}
 
 		halthandle_t target_halt = show_departures ? cnv->get_schedule()->get_next_halt(cnv->get_owner(), halt) : haltestelle_t::get_halt(cnv->front()->last_stop_pos, cnv->get_owner());
-		delta_t = iter.value - cur_ticks;
+		if( cnv->is_wait_infinite() ) {
+			delta_t = SINT32_MAX_VALUE;
+		}
+		else {
+			delta_t = iter.value - cur_ticks;
+		}
 
 		halt_info_t::dest_info_t dest(target_halt, max(delta_t, 0l), cnv);
 
@@ -952,9 +957,14 @@ void halt_info_t::update_cont_departure()
 
 			FOR(vector_tpl<halt_info_t::dest_info_t>, hi, db_halts) {
 				gui_label_buf_t *lb = cont_departure.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
-				char timebuf[32];
-				world()->sprintf_ticks(timebuf, sizeof(timebuf), hi.delta_ticks);
-				lb->buf().append(timebuf);
+				if (hi.delta_ticks == SINT32_MAX_VALUE) {
+					lb->buf().append(translator::translate("Unknown"));
+				}
+				else {
+					char timebuf[32];
+					world()->sprintf_ticks(timebuf, sizeof(timebuf), hi.delta_ticks);
+					lb->buf().printf("%s", timebuf);
+				}
 				lb->set_fixed_width(proportional_string_width("--:--:--"));
 				lb->update();
 
