@@ -481,6 +481,8 @@ void halt_info_t::init(halthandle_t halt)
 				// indicator for enabled freight type
 				img_enable[0].set_image(skinverwaltung_t::passengers->get_image_id(0), true);
 				img_enable[1].set_image(skinverwaltung_t::mail->get_image_id(0), true);
+				img_enable[0].set_rigid(true);
+				img_enable[1].set_rigid(true);
 				evaluation_pax.set_width(0);
 				evaluation_mail.set_width(0);
 				evaluation_pax.set_rigid(true);
