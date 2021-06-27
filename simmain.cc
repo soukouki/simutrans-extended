@@ -941,7 +941,7 @@ int simu_main(int argc, char** argv)
 		env_t::default_settings.parse_colours( simuconf);
 		simuconf.close();
 	}
-
+#if COLOUR_DEPTH > 0
 	// prepare skins first
 	bool themes_ok = false;
 	if(  const char *themestr = gimme_arg(argc, argv, "-theme", 1)  ) {
@@ -974,6 +974,7 @@ int simu_main(int argc, char** argv)
 	if(  !themes_ok  ) {
 		dbg->fatal( "simu_main()", "No GUI themes found! Please re-install!" );
 	}
+#endif
 	dr_chdir( env_t::data_dir );
 
 	// The loading screen needs to be initialized
@@ -1213,7 +1214,7 @@ int simu_main(int argc, char** argv)
 
 	dbg->message("simu_main()","Reading private car ownership configuration ...");
 	karte_t::privatecar_init(env_t::objfilename);
-
+#if COLOUR_DEPTH > 0
 	// reread theme
 	dr_chdir( env_t::user_dir );
 	dr_chdir( "themes" );
@@ -1223,6 +1224,7 @@ int simu_main(int argc, char** argv)
 		dr_chdir( "themes" );
 		themes_ok = gui_theme_t::themes_init( env_t::default_theme, true, false );
 	}
+#endif 
 	dr_chdir( env_t::data_dir );
 
 	if(  translator::get_language()==-1  ) {
