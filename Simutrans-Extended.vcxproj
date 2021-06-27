@@ -644,7 +644,7 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (single threaded new)|Win32'">$(ProjectName)-Debug</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (graphical server)|Win32'">$(ProjectName)-Debug</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (non-graphical server)|Win32'">$(ProjectName)-debug-no-graphics</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)-Debug-command-line-server</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)-Debug</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (command line server)|x64'">$(ProjectName)-Debug</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Optimised debug|x64'">$(ProjectName)-Debug-optimised</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (no randomness)|x64'">$(ProjectName)-Debug</TargetName>
