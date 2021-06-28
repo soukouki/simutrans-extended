@@ -74,6 +74,20 @@ const translator::lang_info* translator::get_langs()
 }
 
 
+#ifdef need_dump_hashtable
+// diagnosis
+static void dump_hashtable(stringhashtable_tpl<const char*>* tbl)
+{
+	printf("keys\n====\n");
+	tbl->dump_stats();
+	printf("entries\n=======\n");
+	FOR(stringhashtable_tpl<char const*>, const& i, *tbl) {
+		printf("%s\n", i.object);
+	}
+	fflush(NULL);
+}
+#endif
+
 /* first two file functions needed in connection with utf */
 
 /**
@@ -126,12 +140,7 @@ static char *recode(const char *src, bool translate_from_utf, bool translate_to_
 
 	do {
 		if (*src =='\\') {
-			if (*(src + 1) == 0) {
-				// backslash at end of line -> corrupted
-				break;
-			}
-
-			src += 2;
+			src +=2;
 			*dst++ = c = '\n';
 		}
 		else {
@@ -647,7 +656,7 @@ bool translator::load(const string &path_to_pakset)
 			load_language_file(file);
 			fclose(file);
 			single_instance.lang_count++;
-			if (single_instance.lang_count == (int)lengthof(langs)) {
+			if (single_instance.lang_count == lengthof(langs)) {
 				if (++i != end) {
 					// some languages were not loaded, let the user know what happened
 					dbg->warning("translator::load()", "some languages were not loaded, limit reached");
@@ -699,6 +708,12 @@ bool translator::load(const string &path_to_pakset)
 		}
 		dr_chdir( env_t::data_dir );
 	}
+
+#if DEBUG>=4
+#ifdef need_dump_hashtable
+	dump_hashtable(&compatibility);
+#endif
+#endif
 
 	// use english if available
 	current_langinfo = get_lang_by_iso("en");

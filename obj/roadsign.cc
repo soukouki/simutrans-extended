@@ -167,7 +167,7 @@ roadsign_t::~roadsign_t()
 				}
 			}
 			else {
-				dbg->error("roadsign_t::~roadsign_t()","roadsign_t %p was deleted but ground has no way of type %d!", this, desc->get_wtyp() );
+				dbg->error("roadsign_t::~roadsign_t()","roadsign_t %p was deleted but ground has no way of type %d!", desc->get_wtyp() );
 			}
 		}
 	}
@@ -648,7 +648,7 @@ sync_result roadsign_t::sync_step(uint32 /*delta_t*/)
 		}else{
 		  new_state=3;
 		}
-
+		
 		if(state!=new_state) {
 			state = new_state;
 			switch(new_state){
