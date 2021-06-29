@@ -788,7 +788,7 @@ void convoi_detail_t::rdwr(loadsave_t *file)
 	file->rdwr_long( xoff );
 	file->rdwr_long( yoff );
 	uint8 selected_tab = tabs.get_active_tab_index();
-	if (file->is_version_ex_atleast(14,40)) {
+	if( file->is_version_ex_atleast(14,41) ) {
 		file->rdwr_byte(selected_tab);
 	}
 

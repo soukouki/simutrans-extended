@@ -471,7 +471,7 @@ void depotlist_frame_t::rdwr(loadsave_t *file)
 	file->rdwr_bool(sort_order.pressed);
 	uint8 s = depotlist_stats_t::sort_mode;
 	file->rdwr_byte(s);
-	if (file->is_version_ex_atleast(14, 40)) {
+	if( file->is_version_ex_atleast(14,41) ) {
 		file->rdwr_byte(player_nr);
 		size.rdwr(file);
 	}
