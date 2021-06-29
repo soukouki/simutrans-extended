@@ -450,7 +450,8 @@ void convoi_frame_t::rdwr(loadsave_t *file)
 
 	if (file->is_loading()) {
 		sortby = (sort_mode_t)default_sortmode;
-		sort_order.pressed = sortreverse;
+		sort_asc.pressed  = sortreverse;
+		sort_desc.pressed = !sortreverse;
 		filter_on.pressed = filter_is_on;
 		sortedby.set_selection(default_sortmode);
 		display_mode.set_text(gui_convoy_formation_t::cnvlist_mode_button_texts[cl_display_mode]);

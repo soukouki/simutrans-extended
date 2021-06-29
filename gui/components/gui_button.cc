@@ -45,7 +45,7 @@ button_t::button_t() :
 	translated_tooltip = tooltip = NULL;
 	background_color = color_idx_to_rgb(COL_WHITE);
 	b_enabled = true;
-	image = IMG_EMPTY;
+	img = IMG_EMPTY;
 
 	// By default a box button
 	init(box,"");
@@ -188,7 +188,7 @@ scr_size button_t::get_min_size() const
 		}
 
 		case imagebox: {
-			KOORD_VAL x = 0, y = 0, w = 0, h = 0;
+			scr_coord_val x = 0, y = 0, w = 0, h = 0;
 			display_get_image_offset(img, &x, &y, &w, &h);
 			scr_size size(gui_theme_t::gui_pos_button_size);
 			size.w = max(size.w, w+2);
@@ -362,9 +362,9 @@ void button_t::draw(scr_coord offset)
 					if (pressed) { area_text.y++; }
 					display_proportional_ellipsis_rgb( area_text, translated_text, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, text_color, true );
 				}
-				else if(image) {
+				else if(img) {
 					const scr_rect img_area = pressed ? scr_rect(area.x, area.y+1, area.w, area.h) : area;
-					display_img_aligned(image, img_area, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true);
+					display_img_aligned(img, img_area, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true);
 				}
 				if(  win_get_focus()==this  ) {
 					draw_focus_rect( area );
