@@ -289,7 +289,7 @@ void tool_selector_t::draw(scr_coord pos, scr_size sz)
 			// only single column for title bar
 			tool_icon_height = (display_get_height() - win_get_statusbar_height() + env_t::iconsize.h - 1) / env_t::iconsize.h;
 			set_windowsize(scr_size(env_t::iconsize.w, display_get_height() - win_get_statusbar_height()));
-			
+
 			scr_coord_val hx = (tools.get_count() - tool_icon_disp_start + 1) * env_t::iconsize.h + offset.y;
 			if (hx < display_get_height()) {
 				tool_icon_disp_end = tools.get_count();
