@@ -326,7 +326,6 @@ static bool never_quit() { return false; }
 static bool no_language() { return translator::get_language()!=-1; }
 #if COLOUR_DEPTH != 0
 static bool empty_objfilename() { return !env_t::objfilename.empty(); }
-static bool finish_install() { return pakinstaller_t::finish_install; }
 #endif
 
 static bool wait_for_key()
