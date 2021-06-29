@@ -26,6 +26,7 @@ PIXVAL gui_theme_t::gui_color_text_highlight;
 PIXVAL gui_theme_t::gui_color_text_shadow;
 PIXVAL gui_theme_t::gui_color_text_title;
 PIXVAL gui_theme_t::gui_color_text_strong;
+PIXVAL gui_theme_t::gui_color_text_weak;
 PIXVAL gui_theme_t::gui_color_text_inactive;
 PIXVAL gui_theme_t::gui_color_text_placeholder;
 PIXVAL gui_theme_t::gui_color_text_minus;
@@ -144,6 +145,7 @@ void gui_theme_t::init_gui_defaults()
 	gui_color_text_shadow                  = color_idx_to_rgb(COL_BLACK);
 	gui_color_text_title                   = color_idx_to_rgb(207);
 	gui_color_text_strong                  = color_idx_to_rgb(COL_RED);
+	gui_color_text_weak                    = color_idx_to_rgb(MN_GREY0);
 	gui_color_text_inactive                = color_idx_to_rgb(COL_GREY4);
 	gui_color_text_placeholder             = color_idx_to_rgb(COL_GREY5);
 	gui_color_text_minus                   = color_idx_to_rgb(COL_RED);
@@ -508,6 +510,7 @@ bool gui_theme_t::themes_init(const char *file_name, bool init_fonts, bool init_
 	gui_theme_t::gui_color_text_shadow                  = (PIXVAL)contents.get_color("gui_color_text_shadow", SYSCOL_TEXT_SHADOW);
 	gui_theme_t::gui_color_text_title                   = (PIXVAL)contents.get_color("gui_color_text_title", SYSCOL_TEXT_TITLE);
 	gui_theme_t::gui_color_text_strong                  = (PIXVAL)contents.get_color("gui_color_text_strong", SYSCOL_TEXT_STRONG);
+	gui_theme_t::gui_color_text_weak                    = (PIXVAL)contents.get_color("gui_color_text_weak", SYSCOL_TEXT_WEAK);
 	gui_theme_t::gui_color_text_inactive                = (PIXVAL)contents.get_color("gui_color_text_inactive", SYSCOL_TEXT_INACTIVE);
 	gui_theme_t::gui_color_text_placeholder             = (PIXVAL)contents.get_color("gui_color_text_placeholder", SYSCOL_TEXT_PLACEHOLDER);
 	gui_theme_t::gui_color_text_minus                   = (PIXVAL)contents.get_color("gui_color_text_minus", MONEY_MINUS);
