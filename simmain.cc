@@ -970,6 +970,7 @@ int simu_main(int argc, char** argv)
 		}
 	}
 	// specified themes not found => try default themes
+#if COLOUR_DEPTH != 0
 	if(  !themes_ok  ) {
 		dr_chdir( env_t::data_dir );
 		dr_chdir( "themes" );
@@ -983,7 +984,6 @@ int simu_main(int argc, char** argv)
 	// The loading screen needs to be initialized
 	display_show_pointer(1);
 
-#if COLOUR_DEPTH != 0
 	// if no object files given, we ask the user
 	if(  env_t::objfilename.empty()  ) {
 		ask_objfilename();
@@ -1232,6 +1232,7 @@ int simu_main(int argc, char** argv)
 	dbg->message("simu_main()","Reading private car ownership configuration ...");
 	karte_t::privatecar_init(env_t::objfilename);
 
+#if COLOUR_DEPTH != 0
 	// reread theme
 	dr_chdir( env_t::user_dir );
 	dr_chdir( "themes" );
@@ -1241,6 +1242,7 @@ int simu_main(int argc, char** argv)
 		dr_chdir( "themes" );
 		themes_ok = gui_theme_t::themes_init( env_t::default_theme, true, false );
 	}
+#endif
 	dr_chdir( env_t::data_dir );
 
 	if(  translator::get_language()==-1  ) {
