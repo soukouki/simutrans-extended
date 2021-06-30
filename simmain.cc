@@ -748,7 +748,7 @@ int simu_main(int argc, char** argv)
 
 	sint16 disp_width = 0;
 	sint16 disp_height = 0;
-	sint16 fullscreen = false;
+	bool fullscreen = false;
 
 	// continue parsing
 	dr_chdir( env_t::data_dir );
