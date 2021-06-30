@@ -753,6 +753,10 @@ void convoi_detail_t::rdwr(loadsave_t *file)
 	size.rdwr( file );
 	file->rdwr_long( xoff );
 	file->rdwr_long( yoff );
+	if( file->is_version_ex_atleast(14,41) ) {
+		uint8 dummy=0;
+		file->rdwr_byte(dummy);
+	}
 
 	if(  file->is_loading()  ) {
 		// convoy vanished
@@ -867,7 +871,7 @@ void gui_vehicleinfo_t::draw(scr_coord offset)
 			else {
 				buf.append(car_number);
 			}
-			display_proportional_clip_rgb(pos.x + offset.x + D_MARGIN_LEFT, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2) , true);
+			display_proportional_clip_rgb(pos.x + offset.x + D_MARGIN_LEFT, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 			buf.clear();
 
 			// upgradable symbol
@@ -1094,7 +1098,7 @@ void gui_convoy_payload_info_t::draw(scr_coord offset)
 			else {
 				buf.append(car_number);
 			}
-			display_proportional_clip_rgb(pos.x + offset.x + 1, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2), true);
+			display_proportional_clip_rgb(pos.x + offset.x + 1, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 			buf.clear();
 
 			// vehicle color bar
@@ -1430,7 +1434,7 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 			else {
 				buf.append(car_number);
 			}
-			display_proportional_clip_rgb(pos.x + offset.x + 1, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2) , true);
+			display_proportional_clip_rgb(pos.x + offset.x + 1, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 			buf.clear();
 
 			// vehicle color bar

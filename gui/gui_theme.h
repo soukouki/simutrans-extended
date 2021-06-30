@@ -213,6 +213,7 @@ public:
 	static PIXVAL gui_color_text_title;                   //@< Color to draw title text (banner, h1 and a tags)
 	static PIXVAL gui_color_text_shadow;                  //@< Color to draw text shadow
 	static PIXVAL gui_color_text_strong;                  //@< Color to draw strong text (strong tags)
+	static PIXVAL gui_color_text_weak;                    //@< Set a text color that is weaker than normal text because there is no text thickness. ex) Gray for standard black text
 	static PIXVAL gui_color_text_inactive;                //@< Color to make it a little less noticeable than regular text
 	static PIXVAL gui_color_text_placeholder;             //@< Color for displaying inconspicuous characters in the input field
 	static PIXVAL gui_color_text_minus;                   //@< Color to draw negative values
