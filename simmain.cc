@@ -317,8 +317,10 @@ void modal_dialogue( gui_frame_t *gui, ptrdiff_t magic, karte_t *welt, bool (*qu
 
 // some routines for the modal display
 static bool never_quit() { return false; }
-static bool empty_objfilename() { return !env_t::objfilename.empty(); }
 static bool no_language() { return translator::get_language()!=-1; }
+#if COLOUR_DEPTH != 0
+static bool empty_objfilename() { return !env_t::objfilename.empty(); }
+#endif
 
 static bool wait_for_key()
 {
@@ -336,6 +338,7 @@ static bool wait_for_key()
 }
 
 
+#if COLOUR_DEPTH != 0
 /**
  * Show pak selector
  */
@@ -361,7 +364,7 @@ static void ask_objfilename()
 		delete sel;
 	}
 }
-
+#endif
 
 
 /**
@@ -965,6 +968,7 @@ int simu_main(int argc, char** argv)
 		}
 	}
 	// specified themes not found => try default themes
+#if COLOUR_DEPTH != 0
 	if(  !themes_ok  ) {
 		dr_chdir( env_t::data_dir );
 		dr_chdir( "themes" );
@@ -981,6 +985,7 @@ int simu_main(int argc, char** argv)
 	// if no object files given, we ask the user
 	if(  env_t::objfilename.empty()  ) {
 		ask_objfilename();
+
 		if(  env_t::quit_simutrans  ) {
 			simgraph_exit();
 			return EXIT_SUCCESS;
@@ -1008,6 +1013,18 @@ int simu_main(int argc, char** argv)
 		}
 	}
 	printf("Pak found: %s\n", env_t::objfilename.c_str());
+#else
+	// headless server
+	if(  env_t::objfilename.empty()  ) {
+		dr_fatal_notify(
+			"*** No pak set found ***\n"
+			"\n"
+			"Please install a pak set and select it using the '-objects'\n"
+			"command line parameter or the 'pak_file_path' simuconf.tab entry.");
+		simgraph_exit();
+		return EXIT_FAILURE;
+	}
+#endif
 
 	// check for valid pak path
 	{
@@ -1209,6 +1226,7 @@ int simu_main(int argc, char** argv)
 	dbg->message("simu_main()","Reading private car ownership configuration ...");
 	karte_t::privatecar_init(env_t::objfilename);
 
+#if COLOUR_DEPTH != 0
 	// reread theme
 	dr_chdir( env_t::user_dir );
 	dr_chdir( "themes" );
@@ -1218,6 +1236,8 @@ int simu_main(int argc, char** argv)
 		dr_chdir( "themes" );
 		themes_ok = gui_theme_t::themes_init( env_t::default_theme, true, false );
 	}
+#endif
+
 	dr_chdir( env_t::data_dir );
 
 	if(  translator::get_language()==-1  ) {
