@@ -1137,8 +1137,8 @@ int simu_main(int argc, char** argv)
 #ifdef MULTI_THREAD
 	// set number of threads
 	if(  const char *ref_str = args.gimme_arg("-threads", 1)  ) {
-		uint8 want_threads = atoi(ref_str);
-		env_t::num_threads = clamp( want_threads, 1, MAX_THREADS);
+		int want_threads = atoi(ref_str);
+		env_t::num_threads = clamp( want_threads, 1, MAX_THREADS );
 		dbg->message("simu_main()","Requested %d threads.", env_t::num_threads );
 	}
 #else
@@ -1272,8 +1272,7 @@ int simu_main(int argc, char** argv)
 		}
 	}
 
-	if (gimme_arg(argc, argv, "-run-background-tasks", 0))
-	{
+	if(  args.has_arg("-run-background-tasks")  ) {
 		env_t::server_runs_background_tasks_when_paused = true;
 	}
 
