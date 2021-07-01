@@ -84,7 +84,7 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 }
 
 
-gui_schedule_entry_number_t::gui_schedule_entry_number_t(uint number_, uint8 p_col, uint8 style_, scr_size size_)
+gui_schedule_entry_number_t::gui_schedule_entry_number_t(uint8 number_, uint8 p_col, uint8 style_, scr_size size_)
 {
 	number = number_ + 1;
 	style = style_;
@@ -136,7 +136,7 @@ void gui_schedule_entry_number_t::draw(scr_coord offset)
 			text_colval = color_idx_to_rgb(COL_WHITE);
 			break;
 	}
-	if (style != number_style::waypoint) {
+	if (style != number_style::waypoint && number>0) {
 		lb_number.buf().printf("%u", number);
 		lb_number.set_color(text_colval);
 	}
