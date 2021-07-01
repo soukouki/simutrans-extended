@@ -26,6 +26,7 @@ Release of 123.0 (r10137 on 30-Dec-2021):
 	CHG: search dialoges now consistent design, text search, preserved during saveload
 	ADD: menubar can be now top bottom left or right
 	ADD: reselect a tool will close it (new default, set by reselect_closes_tool in menuconf.tab)
+	FIX: Grid height not restored when removing building on a raised tile
 	CHG: window rollup also with double click
 
 
