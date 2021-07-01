@@ -121,6 +121,15 @@ void gui_times_history_t::build_table()
 	}
 	remove_all();
 
+	slist_tpl<uint8> *schedule_indices = new slist_tpl<uint8>();
+	slist_tpl<departure_point_t *> *time_keys = new slist_tpl<departure_point_t *>();
+
+	construct_data(schedule_indices, time_keys);
+
+	if (!schedule_indices->get_count()) {
+		return;
+	}
+
 	const scr_coord_val heading_pading_x= D_HEADING_HEIGHT*2;
 	if (mirrored) {
 		new_component<gui_heading_t>("bidirectional_order",
@@ -137,16 +146,7 @@ void gui_times_history_t::build_table()
 
 	new_component<gui_margin_t>(0, D_V_SPACE);
 
-	slist_tpl<uint8> *schedule_indices = new slist_tpl<uint8>();
-	slist_tpl<departure_point_t *> *time_keys = new slist_tpl<departure_point_t *>();
-
-	construct_data(schedule_indices, time_keys);
-
 	const uint8 base_line_style = mirrored ? gui_colored_route_bar_t::line_style::doubled : gui_colored_route_bar_t::line_style::solid;
-
-	if (!schedule_indices->get_count()) {
-		return;
-	}
 
 	const minivec_tpl<schedule_entry_t>& entries = schedule->entries;
 
