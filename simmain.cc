@@ -1007,6 +1007,7 @@ int simu_main(int argc, char** argv)
 	printf("Pak found: %s\n", env_t::objfilename.c_str());
 #else
 	// headless server
+	dr_chdir( env_t::data_dir );
 	if(  env_t::objfilename.empty()  ) {
 		dr_fatal_notify(
 			"*** No pak set found ***\n"
