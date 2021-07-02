@@ -61,6 +61,11 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 			display_fillbox_wh_clip_rgb(offset.x + D_ENTRY_NO_WIDTH-4-offset_x-border_width, offset.y, border_width, LINESPACE, base_colval, true);
 			break;
 		}
+		case line_style::downward:
+			for (uint8 i = 0; i < width; i++) {
+				display_vline_wh_clip_rgb(offset.x+offset_x+i, offset.y, LINESPACE-abs(width/2-i), base_colval, true);
+			}
+			break;
 		case line_style::dashed:
 			for (uint8 h=1; h+2 < LINESPACE; h+=4) {
 				display_fillbox_wh_clip_rgb(offset.x + offset_x+1, offset.y + h, width-2, 2, base_colval, true);

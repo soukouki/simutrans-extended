@@ -24,6 +24,7 @@ public:
 		thin,
 		doubled,
 		dashed,
+		downward,
 		reversed, // display reverse symbol
 		none
 	};
