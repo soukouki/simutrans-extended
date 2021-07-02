@@ -611,8 +611,7 @@ int simu_main(int argc, char** argv)
 	char path_to_simuconf[24];
 	// was  config/simuconf.tab
 	sprintf(path_to_simuconf, "config%csimuconf.tab", PATH_SEPARATOR[0]);
-	if(simuconf.open(path_to_simuconf))
-	{
+	if(simuconf.open(path_to_simuconf)) {
 		found_simuconf = true;
 	}
 	else
