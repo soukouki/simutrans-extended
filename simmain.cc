@@ -1615,12 +1615,15 @@ int simu_main(int argc, char** argv)
 
 	intr_disable();
 
-	// save setting ...
-	dr_chdir( env_t::user_dir );
-	if(  file.wr_open(xml_filename,loadsave_t::xml,0,"settings only/",SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR)==loadsave_t::FILE_STATUS_OK   ) {
-		env_t::rdwr(&file);
-		env_t::default_settings.rdwr(&file);
-		file.close();
+	// save settings
+	{
+		dr_chdir( env_t::user_dir );
+		loadsave_t settings_file;
+		if(  settings_file.wr_open(xml_filename,loadsave_t::xml,0,"settings only/",SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR) == loadsave_t::FILE_STATUS_OK   ) {
+			env_t::rdwr(&settings_file);
+			env_t::default_settings.rdwr(&settings_file);
+			settings_file.close();
+		}
 	}
 
 	destroy_all_win( true );
