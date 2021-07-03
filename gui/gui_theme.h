@@ -314,6 +314,7 @@ public:
 	static image_id pos_button_img[3];
 
 	static bool gui_drop_shadows;
+	static bool pressed_button_sinks;
 
 
 public:

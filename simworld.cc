@@ -2612,7 +2612,7 @@ void karte_t::create_beaches(  int xoff, int yoff  )
 			if(  gr->is_water()  &&  gr->get_hoehe()==groundwater  &&  gr->kann_alle_obj_entfernen(NULL)==NULL) {
 				koord k( ix, iy );
 				uint8 neighbour_water = 0;
-				bool water[8];
+				bool water[8] = {};
 				// check whether nearby tiles are water
 				for(  int i = 0;  i < 8;  i++  ) {
 					grund_t *gr2 = lookup_kartenboden( k + koord::neighbours[i] );
@@ -11431,11 +11431,6 @@ bool karte_t::interactive(uint32 quit_month)
 							network_send_all(nwcstep, true);
 						}
 					}
-#if DEBUG>4
-					if(  env_t::networkmode  &&  (sync_steps & 7)==0  &&  env_t::verbose_debug>4  ) {
-						dbg->message("karte_t::interactive", "time=%lu sync=%d"/*  rand=%d"*/, dr_time(), sync_steps/*, LRAND(sync_steps)*/);
-					}
-#endif
 
 					// no clients -> pause game
 					if (  env_t::networkmode  &&  env_t::pause_server_no_clients  &&  socket_list_t::get_playing_clients() == 0  &&  !nwc_join_t::is_pending()  ) {

@@ -2332,7 +2332,6 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 			else {
 				startingmoneyperyear[ k ].interpol = false;
 			}
-			//			printf("smpy[%d] year=%d money=%lld\n",k,startingmoneyperyear[k].year,startingmoneyperyear[k].money);
 			j++;
 		}
 		else {
@@ -2382,8 +2381,8 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	bits_per_month = contents.get_int( "bits_per_month", bits_per_month );
 	calc_job_replenishment_ticks();
 	use_timeline = contents.get_int( "use_timeline", use_timeline );
-	starting_year = contents.get_int( "starting_year", starting_year );
-	starting_month = contents.get_int( "starting_month", starting_month + 1 ) - 1;
+	starting_year = clamp(contents.get_int( "starting_year", starting_year ), 0, 0x7FFF);
+	starting_month = clamp(contents.get_int( "starting_month", starting_month + 1 ) - 1, 0, 11);
 
 	env_t::height_conv_mode = (env_t::height_conversion_mode)::clamp<int>(contents.get_int("new_height_map_conversion", (int)env_t::height_conv_mode ), 0, env_t::NUM_HEIGHT_CONV_MODES-1);
 
@@ -3059,8 +3058,6 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	if(  *contents.get("soundfont_filename")  ) {
 		env_t::soundfont_filename = ltrim(contents.get("soundfont_filename"));
 	}
-
-	printf("Reading simuconf.tab successful!\n" );
 }
 
 // colour stuff can only be parsed when the graphic system has already started

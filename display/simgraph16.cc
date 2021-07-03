@@ -2088,7 +2088,7 @@ void register_image(image_t *image_in)
 
 	/* valid image? */
 	if(  image_in->len == 0  ||  image_in->h == 0  ) {
-		fprintf(stderr, "Warning: ignoring image %d because of missing data\n", anz_images);
+		dbg->warning("register_image()", "Ignoring image %d because of missing data", anz_images);
 		image_in->imageid = IMG_EMPTY;
 		return;
 	}
@@ -2554,7 +2554,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			// player colour images are rezoomed/recoloured in display_color_img
 			sp = images[n].data[use_player];
 			if(  sp == NULL  ) {
-				printf("CImg[%i] %u failed!\n", use_player, n);
+				dbg->warning("display_img_aux", "CImg[%i] %u failed!", use_player, n);
 				return;
 			}
 		}
@@ -2568,7 +2568,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			}
 			sp = images[n].data[0];
 			if(  sp == NULL  ) {
-				printf("Img %u failed!\n", n);
+				dbg->warning("display_img_aux", "Img %u failed!", n);
 				return;
 			}
 		}
@@ -4914,9 +4914,8 @@ int display_multiline_text_rgb(scr_coord_val x, scr_coord_val y, const char *buf
 			if(  px_len>max_px_len  ) {
 				max_px_len = px_len;
 			}
-			buf = next + 1;
 			y += LINESPACE;
-		} while (next != NULL);
+		} while (buf = (next ? next+1 : NULL), buf != NULL);
 	}
 	return max_px_len;
 }
@@ -5349,7 +5348,7 @@ void display_show_load_pointer(int loading)
 /**
  * Initialises the graphics module
  */
-void simgraph_init(scr_size window_size, bool full_screen)
+bool simgraph_init(scr_size window_size, bool full_screen)
 {
 	disp_actual_width = window_size.w;
 	disp_height = window_size.h;
@@ -5370,18 +5369,17 @@ void simgraph_init(scr_size window_size, bool full_screen)
 
 	// get real width from os-dependent routines
 	disp_width = dr_os_open(window_size.w, window_size.h, full_screen);
-	if(  disp_width>0  ) {
-		textur = dr_textur_init();
-
-		// init, load, and check fonts
-		if(  !display_load_font(env_t::fontname.c_str())  &&  !display_load_font(FONT_PATH_X "prop.fnt") ) {
-			dr_fatal_notify( "No fonts found!" );
-			exit(-1);
-		}
-	}
-	else {
+	if(  disp_width<=0  ) {
 		dr_fatal_notify( "Cannot open window!" );
-		exit(-1);
+		return false;
+	}
+
+	textur = dr_textur_init();
+
+	// init, load, and check fonts
+	if(  !display_load_font(env_t::fontname.c_str())  &&  !display_load_font(FONT_PATH_X "prop.fnt") ) {
+		dr_fatal_notify("No fonts found!");
+		return false;
 	}
 
 	// allocate dirty tile flags
@@ -5455,8 +5453,7 @@ void simgraph_init(scr_size window_size, bool full_screen)
 		}
 	}
 
-	printf("Init done.\n");
-	fflush(NULL);
+	return true;
 }
 
 

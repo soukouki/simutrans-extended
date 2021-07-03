@@ -338,7 +338,7 @@ public:
 	char const* get_tooltip(player_t const*) const OVERRIDE{ return translator::translate("cl_title"); }
 	bool is_selected() const OVERRIDE{ return win_get_magic(magic_convoi_list + welt->get_active_player_nr()); }
 	bool init(player_t* player) OVERRIDE{
-		create_win(new convoi_frame_t(player), w_info, magic_convoi_list + player->get_player_nr());
+		create_win(new convoi_frame_t(), w_info, magic_convoi_list + player->get_player_nr());
 		return false;
 	}
 	bool exit(player_t* const player) OVERRIDE{ destroy_win(magic_convoi_list + player->get_player_nr()); return false; }
