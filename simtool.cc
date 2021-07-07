@@ -330,7 +330,7 @@ const char *tool_query_t::work( player_t *player, koord3d pos )
 
 		if(  env_t::single_info  ) {
 
-			uint32 old_count = win_get_open_count();
+			int old_count = win_get_open_count();
 
 			if(  is_ctrl_pressed()  ) {
 				// reverse order
@@ -850,14 +850,29 @@ DBG_MESSAGE("tool_remover()", "removing way");
 		wt = w->get_desc()->get_finance_waytype();
 		const sint64 land_refund_cost = welt->get_land_value(w->get_pos()); // Refund the land value to the player who owned the way, as by bulldozing, the player is selling the land.
 		player_t* const owner = w->get_owner(); // We must take this here, as the owner is deleted in the next line.
+		const bool public_right_of_way = w->is_public_right_of_way(); // We must capture this before deleting the way object.
+		const bool is_main_way = gr->get_weg_nr(0) == w;
+		const bool are_other_ways = gr->get_weg_nr(1);
 		sint64 cost_sum = gr->weg_entfernen(w->get_waytype(), true);
-		if(player == owner)
+		if (!public_right_of_way && is_main_way) // Land costs are not used for public rights of way; also, do not refund the land value when deleting a crossing over another player's way.
 		{
-			cost_sum += land_refund_cost;
-		}
-		else
-		{
-			player_t::book_construction_costs(owner, -land_refund_cost, k, wt);
+			if (player == owner)
+			{
+				cost_sum += land_refund_cost;
+				if (are_other_ways)
+				{
+					// If we are deleting a crossing over another player's way
+					// and the deleting player paid to buy the land, then the land
+					// value must be debited from the other player's way to avoid
+					// that other player being able to get a refund of the value of
+					// land for which that player had never paid.
+					player_t::book_construction_costs(gr->get_weg_nr(0)->get_owner(), -land_refund_cost, k, wt);
+				}
+			}
+			else
+			{
+				player_t::book_construction_costs(owner, -land_refund_cost, k, wt);
+			}
 		}
 		player_t::book_construction_costs(player, -cost_sum, k, wt);
 	}
@@ -3930,6 +3945,12 @@ const char *tool_wayremover_t::do_work( player_t *player, const koord3d &start, 
 				if(  wt!=powerline_wt  ) {
 					if(!gr->get_flag(grund_t::is_kartenboden)  &&  (gr->get_typ()==grund_t::tunnelboden  ||  gr->get_typ()==grund_t::monorailboden)  &&  gr->get_weg_nr(0)->get_waytype()==wt) {
 						can_delete &= gr->remove_everything_from_way(player,wt,rem);
+						if (gr->get_typ() == grund_t::tunnelboden  &&  !gr->hat_wege()  ) {
+							// tunnel portal has been removed
+							grund_t* gr_new = new boden_t(gr->get_pos(), gr->get_grund_hang());
+							welt->access(gr->get_pos().get_2d())->kartenboden_setzen(gr_new);
+							gr = gr_new;
+						}
 						if(can_delete  &&  gr->get_weg(wt)==NULL) {
 							if(gr->get_weg_nr(0)!=0) {
 								gr->remove_everything_from_way(player,gr->get_weg_nr(0)->get_waytype(),ribi_t::none);
@@ -9585,6 +9606,12 @@ bool tool_change_traffic_light_t::init( player_t *player )
 				else if(  ns == 2  ) {
 					rs->set_ticks_offset( (uint8)ticks );
 				}
+				else if(  ns == 4  ) {
+					rs->set_ticks_amber_ns( (uint8)ticks );
+				}
+				else if(  ns == 3  ) {
+					rs->set_ticks_amber_ow( (uint8)ticks );
+				}
 				// update the window
 				if(  rs->get_desc()->is_traffic_light()  ) {
 					trafficlight_info_t* trafficlight_win = (trafficlight_info_t*)win_get_magic((ptrdiff_t)rs);
@@ -9934,12 +9961,11 @@ bool tool_access_t::init(player_t *)
 			}
 		}
 
+		convoihandle_t cnv_x;
 		entries_to_remove.clear();
-		const uint32 convoy_count = welt->convoys().get_count();
-		convoihandle_t cnv;
-		for(uint32 i = 0; i < convoy_count; i ++)
+		for(auto & cnv : welt->convoys())
 		{
-			cnv = welt->convoys()[i];
+			cnv_x = cnv;
 			if(!cnv.is_bound() || cnv->get_line().is_bound() || cnv->get_owner() != receiving_player)
 			{
 				// We dealt above with lines.
@@ -10003,9 +10029,9 @@ bool tool_access_t::init(player_t *)
 		world()->await_path_explorer();
 #endif
 		path_explorer_t::refresh_all_categories(false);
-		if (cnv.is_bound())
+		if (cnv_x.is_bound())
 		{
-			cnv->clear_departures();
+			cnv_x->clear_departures();
 		}
 	}
 

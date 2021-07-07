@@ -485,41 +485,45 @@ bool route_t::find_route(karte_t *welt, const koord3d start, test_driver_t *tdri
 
 				koord3d previous = koord3d::invalid;
 				weg_t* w;
-				while (fresh_destination && tmp != NULL)
-				{
-					private_car_route_step_counter++;
-					w = tmp->gr->get_weg(road_wt);
-
-					if (w)
+				if(fresh_destination && tmp != NULL){
+					weg_t::private_car_backtrace_begin();
+					while (fresh_destination && tmp != NULL)
 					{
-						// The route is added here in a different array index to the set of routes
-						// that are currently being read.
+						private_car_route_step_counter++;
+						w = tmp->gr->get_weg(road_wt);
 
-						// Also, the route is iterated here *backwards*.
-
-						if (industry_destination_pos != koord::invalid)
+						if (w)
 						{
-							w->add_private_car_route(industry_destination_pos, previous);
+							// The route is added here in a different array index to the set of routes
+							// that are currently being read.
+
+							// Also, the route is iterated here *backwards*.
+
+							if (industry_destination_pos != koord::invalid)
+							{
+								w->private_car_backtrace_add(industry_destination_pos, previous);
+							}
+
+							if (attraction_destination_pos != koord::invalid)
+							{
+								w->private_car_backtrace_add(attraction_destination_pos, previous);
+							}
+
+							if (city_destination_pos != koord::invalid)
+							{
+								w->private_car_backtrace_add(city_destination_pos, previous);
+							}
+							w->private_car_backtrace_inc(previous);
 						}
 
-						if (attraction_destination_pos != koord::invalid)
-						{
-							w->add_private_car_route(attraction_destination_pos, previous);
-						}
+						// Old route storage - we probably no longer need this.
+						//route.store_at(tmp->count, tmp->gr->get_pos());
 
-						if (city_destination_pos != koord::invalid)
-						{
-							w->add_private_car_route(city_destination_pos, previous);
-						}
+						previous = tmp->gr->get_pos();
+						tmp = tmp->parent;
 					}
-
-					// Old route storage - we probably no longer need this.
-					//route.store_at(tmp->count, tmp->gr->get_pos());
-
-					previous = tmp->gr->get_pos();
-					tmp = tmp->parent;
+					weg_t::private_car_backtrace_end();
 				}
-
 #ifdef MULTI_THREAD
 				uint32 max_steps;
 				if (env_t::server && welt->is_paused())
@@ -773,7 +777,7 @@ route_t::route_result_t route_t::intern_calc_route(karte_t *welt, const koord3d 
 	 * Reference:
 	 *  Harabor D. and Grastien A. 2011. Online Graph Pruning for Pathfinding on Grid Maps.
 	 *  In Proceedings of the 25th National Conference on Artificial Intelligence (AAAI), San Francisco, USA.
-	 *  http://users.cecs.anu.edu.au/~dharabor/data/papers/harabor-grastien-aaai11.pdf
+	 *  https://users.cecs.anu.edu.au/~dharabor/data/papers/harabor-grastien-aaai11.pdf
 	 */
 
 	const bool use_jps     = tdriver->get_waytype()==water_wt;

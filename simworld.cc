@@ -365,12 +365,12 @@ void checklist_t::rdwr(memory_rw_t *buffer)
 
 int checklist_t::print(char *buffer, const char *entity) const
 {
-	return sprintf(buffer, "%s=[ss=%u st=%u nfc=%u rand=%u halt=%u line=%u cnvy=%u\n\tssr=%u,%u,%u,%u,%u,%u,%u,%u\n\tstr=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n\texr=%u,%u,%u,%u,%u,%u,%u,%u\n\tsums=%u,%u,%u,%u,%u,%u,%u,%u]\n",
+	return sprintf(buffer, "%s=[ss=%u st=%u nfc=%u rand=%u halt=%u line=%u cnvy=%u\n\tssr=%u,%u,%u,%u,%u,%u,%u,%u\n\tstr=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n\texr=%u,%u,%u,%u,%u,%u,%u,%u\n\tsums=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u]\n",
 		entity, ss, st, nfc, random_seed, halt_entry, line_entry, convoy_entry,
 		rand[0], rand[1], rand[2], rand[3], rand[4], rand[5], rand[6], rand[7],
 		rand[8], rand[9], rand[10], rand[11], rand[12], rand[13], rand[14], rand[15], rand[16], rand[17], rand[18], rand[19], rand[20], rand[21], rand[22], rand[23],
 		rand[24], rand[25], rand[26], rand[27], rand[28], rand[29], rand[30], rand[31],
-		debug_sum[0], debug_sum[1], debug_sum[2], debug_sum[3], debug_sum[4], debug_sum[5], debug_sum[6], debug_sum[7]
+		debug_sum[0], debug_sum[1], debug_sum[2], debug_sum[3], debug_sum[4], debug_sum[5], debug_sum[6], debug_sum[7], debug_sum[8], debug_sum[9]
 	);
 }
 
@@ -4916,6 +4916,8 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 	debug_sums[5] = 0; // Passengers/mail generated this step
 	debug_sums[6] = 0; // Transferring cargoes before passenger generation
 	debug_sums[7] = 0; // Transferring cargoes after passenger generation
+	debug_sums[8] = 0; // Sync objects before sync list step
+	debug_sums[9] = 0; // Sync objects after sync list step
 
 	set_random_mode( SYNC_STEP_RANDOM );
 	haltestelle_t::pedestrian_limit = 0;
@@ -4948,7 +4950,9 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 
 		clear_random_mode( INTERACTIVE_RANDOM );
 
+		debug_sums[8] = sync.list.get_count();
 		sync.sync_step( delta_t );
+		debug_sums[9] = sync.list.get_count();
 
 		rands[4] = get_random_seed();
 
@@ -6145,12 +6149,16 @@ void karte_t::refresh_private_car_routes() {
 }
 
 void karte_t::clear_private_car_routes() {
+	weg_t::private_car_route_map::route_map_lock();
 	for(auto & w : weg_t::get_alle_wege()) {
 		for(auto & l : w->private_car_routes[weg_t::get_private_car_routes_currently_writing_element()]) {
-			l.clear();
-			l.resize(0);
+			l.pre_reset();
 		}
 	}
+	weg_t::private_car_route_map::reset(weg_t::get_private_car_routes_currently_writing_element());
+
+	weg_t::private_car_route_map::route_map_unlock();
+
 }
 
 void karte_t::step_time_interval_signals()
@@ -8933,7 +8941,7 @@ DBG_MESSAGE("karte_t::save(loadsave_t *file)", "motd filename %s", env_t::server
 
 		for (auto city : cities_awaiting_private_car_route_check)
 		{
-			koord location = city->get_center();
+			koord location = city->get_pos();
 			location.rdwr(file);
 		}
 
@@ -11062,7 +11070,12 @@ void karte_t::process_network_commands(sint32 *ms_difference)
 			const sint32 time_to_next = (sint32)next_step_time - (sint32)timems; // +'ve - still waiting for next,  -'ve - lagging
 			const sint64 frame_timediff = ((sint64)server_sync_step - sync_steps - settings.get_server_frames_ahead() - env_t::additional_client_frames_behind) * fix_ratio_frame_time; // +'ve - server is ahead,  -'ve - client is ahead
 			const sint64 timediff = time_to_next + frame_timediff;
-			dbg->warning("NWC_CHECK", "time difference to server %lli", frame_timediff );
+
+			if(frame_timediff <= -1000 || frame_timediff >= 1000) {
+				dbg->warning("NWC_CHECK", "time difference to server %lli", frame_timediff );
+			} else {
+				dbg->message("NWC_CHECK", "time difference to server %lli", frame_timediff );
+			}
 
 			if(  frame_timediff < (0 - (sint64)settings.get_server_frames_ahead() - (sint64)env_t::additional_client_frames_behind) * (sint64)fix_ratio_frame_time / 2  ) {
 				// running way ahead - more than half margin, simply set next_step_time ahead to where it should be
@@ -11418,11 +11431,6 @@ bool karte_t::interactive(uint32 quit_month)
 							network_send_all(nwcstep, true);
 						}
 					}
-#if DEBUG>4
-					if(  env_t::networkmode  &&  (sync_steps & 7)==0  &&  env_t::verbose_debug>4  ) {
-						dbg->message("karte_t::interactive", "time=%lu sync=%d"/*  rand=%d"*/, dr_time(), sync_steps/*, LRAND(sync_steps)*/);
-					}
-#endif
 
 					// no clients -> pause game
 					if (  env_t::networkmode  &&  env_t::pause_server_no_clients  &&  socket_list_t::get_playing_clients() == 0  &&  !nwc_join_t::is_pending()  ) {

@@ -48,6 +48,7 @@
 #include "halt_detail.h"
 #include "halt_info.h"
 #include "convoi_detail_t.h"
+#include "convoi_frame.h"
 #include "convoi_info_t.h"
 #include "schedule_gui.h"
 #include "line_management_gui.h"
@@ -601,6 +602,12 @@ void rdwr_all_win(loadsave_t *file)
 					case magic_soundfont:      w = new loadsoundfont_frame_t(); break;
 #endif
 					case magic_scenario_info:  w = new scenario_info_t(); break;
+					//case magic_depot:          w = new depot_frame_t(); break;
+					case magic_convoi_list:    w = new convoi_frame_t(); break;
+					//case magic_vehiclelist:    w = new vehiclelist_frame_t(); break;
+					//case magic_halt_list:      w = new halt_list_frame_t(); break;
+					//case magic_citylist_frame_t: w = new citylist_frame_t(); break;
+					//case magic_color_gui_t:    w = new color_gui_t(); break;
 
 					default:
 						if(  id>=magic_finances_t  &&  id<magic_finances_t+MAX_PLAYER_COUNT  ) {
@@ -682,23 +689,7 @@ int create_win(int x, int y, gui_frame_t* const gui, wintype const wt, ptrdiff_t
 			y = k->y;
 		}
 	}
-	// make sure window is on screen
-	if(  x < -1  ||  x+gui->get_windowsize().w > display_get_width()  ) {
-		if(gui->get_windowsize().w > display_get_width()) {
-			x = 0;
-		}
-		else {
-			x = clamp(x, 0, display_get_width()-gui->get_windowsize().w);
-		}
-	}
-	if(  y<-1  ||  y + gui->get_windowsize().h>display_get_height()  ) {
-		if (gui->get_windowsize().h > display_get_height()-env_t::iconsize.h) {
-			x = 0;
-		}
-		else {
-			y = clamp(y, env_t::iconsize.h, display_get_width() - gui->get_windowsize().h);
-		}
-	}
+
 	/* if there are too many handles (likely in large games)
 	 * we search for any error/news message at the bottom of the stack and delete it
 	 * => newer information might be more important ...

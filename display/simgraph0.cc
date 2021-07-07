@@ -426,7 +426,7 @@ void display_filled_circle_rgb( scr_coord_val, scr_coord_val, int, const PIXVAL 
 {
 }
 
-void display_right_triangle_rgb(scr_coord_val, scr_coord_val, uint8, const PIXVAL, const bool)
+void display_right_triangle_rgb(scr_coord_val, scr_coord_val, scr_coord_val, const PIXVAL, const bool)
 {
 }
 

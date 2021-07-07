@@ -246,8 +246,6 @@ public:
 	static PIXVAL gui_color_statusbar_divider;            //@< Color to draw statusbar divider
 	static PIXVAL gui_highlight_color;                    //@< Color to draw highlight dividers (tabs)
 	static PIXVAL gui_shadow_color;                       //@< Color to draw shadowed dividers (tabs)
-	static PIXVAL gui_color_indicator_border_top_left;
-	static PIXVAL gui_color_indicator_border_bottom_right;
 	static PIXVAL gui_color_loadingbar_inner;
 	static PIXVAL gui_color_loadingbar_progress;
 	static PIXVAL gui_color_obsolete;                     //@< Color for obsolete convois/server entries
