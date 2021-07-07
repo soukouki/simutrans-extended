@@ -1185,7 +1185,7 @@ bool money_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		return true;
 	}
 	if (  comp == &bt_access_convoylist  ) {
-		create_win( new convoi_frame_t(player), w_info, magic_convoi_list + player->get_player_nr() );
+		create_win( new convoi_frame_t(), w_info, magic_convoi_list + player->get_player_nr() );
 		return true;
 	}
 	if (  comp == &bt_access_signalboxlist) {
