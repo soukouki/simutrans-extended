@@ -467,8 +467,15 @@ void map_frame_t::update_factory_legend()
 		// now sort
 
 		// add corresponding legend entries
+		PIXVAL prev_color = NULL;
+		const char *prev_name = {};
 		FOR(vector_tpl<const factory_desc_t*>, f, factory_types) {
+			if (prev_name && !strcmp(translator::translate(f->get_name()), prev_name) && f->get_color()==prev_color) {
+				continue;
+			}
 			directory_container.new_component<legend_entry_t>(f->get_name(), f->get_color());
+			prev_color = f->get_color();
+			prev_name = translator::translate(f->get_name());
 		}
 	}
 }
