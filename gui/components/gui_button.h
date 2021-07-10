@@ -41,6 +41,7 @@ public:
 		box,
 		roundbox,
 		imagebox,
+		sortarrow,
 		arrowleft,
 		arrowright,
 		arrowup,
@@ -55,6 +56,7 @@ public:
 		box_state        = box        | state,
 		roundbox_state   = roundbox   | state,
 		imagebox_state   = imagebox   | state,
+		sortarrow_state  = sortarrow  | state,
 		arrowright_state = arrowright | state,
 		arrowup_state    = arrowup    | state,
 		arrowdown_state  = arrowdown  | state,
@@ -62,6 +64,7 @@ public:
 		square_automatic    = square_state | automatic,
 		box_state_automatic = box_state    | automatic,
 		imagebox_automatic  = imagebox     | automatic,
+		sortarrow_automatic = sortarrow    | automatic,
 		posbutton_automatic = posbutton    | automatic,
 
 		flexible = 1 << 9
@@ -112,7 +115,6 @@ public:
 	PIXVAL text_color;
 
 	bool pressed;
-	scr_coord_val text_offset_x;
 
 	button_t();
 
