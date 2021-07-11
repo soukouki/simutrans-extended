@@ -753,7 +753,7 @@ void roadsign_t::display_overlay(int xpos, int ypos) const
 		}
 		else {
 			if (desc->is_signal_type() || desc->is_single_way()) {
-				
+
 				// signal, no_entry/one_way sign
 				display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, dir,
 					(desc->get_working_method()==drive_by_sight) ? 254 : desc->is_single_way() ? 255 : state, is_diagonal);
