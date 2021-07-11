@@ -726,6 +726,42 @@ void roadsign_t::display_after(int xpos, int ypos, bool ) const
 }
 
 
+void roadsign_t::display_overlay(int xpos, int ypos) const
+{
+	if (strasse_t::show_masked_ribi) {
+		const waytype_t wt = get_waytype() == tram_wt ? track_wt : get_waytype();
+		if (wt == invalid_wt) { return; }
+		weg_t *weg = welt->lookup(get_pos())->get_weg(wt);
+		const bool is_diagonal= weg->is_diagonal();
+		const uint8 way_ribi = weg->get_ribi_unmasked();
+
+		const int raster_width = get_current_tile_raster_width();
+		xpos += raster_width/2;
+		ypos += raster_width/16 + tile_raster_scale_y(weg->get_yoff(), raster_width); // Must match the height of the way, not the ground
+
+		if (is_bidirectional()) {
+			if (desc->is_signal_type()) {
+				const schiene_t* sch1 = (schiene_t*)weg;
+				ribi_t::ribi reserved_direction = sch1->get_reserved_direction();
+				display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, dir, sch1->is_reserved_directional() ? 255 : state, is_diagonal, reserved_direction);
+			}
+			// TODO: Remove "ribi_arrow" from the intersection.
+			//       Next, pass the opening direction considering the one-way restriction.
+			//if (desc->is_traffic_light()) {
+			//	display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, dir, clear);
+			//}
+		}
+		else {
+			if (desc->is_signal_type() || desc->is_single_way()) {
+				
+				// signal, no_entry/one_way sign
+				display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, dir,
+					(desc->get_working_method()==drive_by_sight) ? 254 : desc->is_single_way() ? 255 : state, is_diagonal);
+			}
+		}
+	}
+}
+
 void roadsign_t::rdwr(loadsave_t *file)
 {
 	xml_tag_t r( file, "roadsign_t" );
