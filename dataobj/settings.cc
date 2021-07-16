@@ -1908,7 +1908,7 @@ void settings_t::rdwr(loadsave_t *file)
 
 
 // read the settings from this file
-void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16& disp_height, sint16 &fullscreen, std::string& objfilename )
+void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16& disp_height, bool &fullscreen, std::string& objfilename )
 {
 	tabfileobj_t contents;
 
@@ -3217,7 +3217,7 @@ sint64 settings_t::get_starting_money(sint16 const year) const
 
 /**
  * returns newest way-desc for road_timeline_t arrays
- * @param road_timeline_t must be an array with at least num_roads elements, no range checks!
+ * @param roads must be an array with at least @p num_roads elements, no range checks!
  */
 static const way_desc_t *get_timeline_road_type( uint16 year, uint16 num_roads, road_timeline_t* roads)
 {
