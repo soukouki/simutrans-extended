@@ -64,7 +64,7 @@ protected:
 	unsigned curr_buff;
 	buf_t buff[2];
 
-	int ident;              // only for XML formatting
+	int indent;              // only for XML formatting
 	file_info_t finfo;
 
 	rdwr_stream_t *stream;
