@@ -2111,7 +2111,7 @@ void register_image(image_t *image_in)
 
 	/* valid image? */
 	if(  image_in->len == 0  ||  image_in->h == 0  ) {
-		fprintf(stderr, "Warning: ignoring image %d because of missing data\n", anz_images);
+		dbg->warning("register_image()", "Ignoring image %d because of missing data", anz_images);
 		image_in->imageid = IMG_EMPTY;
 		return;
 	}
@@ -2670,7 +2670,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			// player colour images are rezoomed/recoloured in display_color_img
 			sp = images[n].data[use_player];
 			if(  sp == NULL  ) {
-				printf("CImg[%i] %u failed!\n", use_player, n);
+				dbg->warning("display_img_aux", "CImg[%i] %u failed!", use_player, n);
 				return;
 			}
 		}
@@ -2684,7 +2684,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			}
 			sp = images[n].data[0];
 			if(  sp == NULL  ) {
-				printf("Img %u failed!\n", n);
+				dbg->warning("display_img_aux", "Img %u failed!", n);
 				return;
 			}
 		}
