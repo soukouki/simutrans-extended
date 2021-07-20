@@ -591,9 +591,8 @@ void env_t::rdwr(loadsave_t *file)
 
 	if( file->is_version_ex_atleast(14, 41) ) {
 		file->rdwr_byte(gui_titlebar_player_color_background_brightness);
-		sint16 dummy_menupos=0;
-		file->rdwr_short(dummy_menupos);
-		bool reselect_closes_tool=false; // dummy
+		file->rdwr_short(env_t::menupos);
+		env_t::menupos &= 3;
 		file->rdwr_bool( reselect_closes_tool );
 	}
 
@@ -603,11 +602,6 @@ void env_t::rdwr(loadsave_t *file)
 		if(  file->is_loading()  ) {
 			soundfont_filename = str ? str.c_str() : "";
 		}
-	}
-	if( file->is_version_ex_atleast(14, 42) ) {
-		file->rdwr_short(env_t::menupos);
-		env_t::menupos &= 3;
-		file->rdwr_bool( reselect_closes_tool );
 	}
 
 	// server settings are not saved, since they are server specific
