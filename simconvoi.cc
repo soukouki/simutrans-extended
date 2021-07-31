@@ -6114,6 +6114,12 @@ station_tile_search_ready: ;
 		}
 	}
 
+	if(withdraw && (loading_level == 0 || goods_catg_index.empty())) {
+		// destroy when empty
+		self_destruct();
+		return;
+	}
+
 	// loading is finished => maybe drive on
 	bool can_go = false;
 
@@ -6125,13 +6131,6 @@ station_tile_search_ready: ;
 	can_go = can_go && state != WAITING_FOR_CLEARANCE && state != WAITING_FOR_CLEARANCE_ONE_MONTH && state != WAITING_FOR_CLEARANCE_TWO_MONTHS;
 	can_go = can_go && now > earliest_departure_time;
 	if(can_go) {
-
-		if(withdraw  &&  (loading_level==0  ||  goods_catg_index.empty())) {
-			// destroy when empty
-			self_destruct();
-			return;
-		}
-
 		// add available capacity after loading(!) to statistics
 		for (unsigned i = 0; i<vehicle_count; i++) {
 			book(get_vehicle(i)->get_cargo_max()-get_vehicle(i)->get_total_cargo(), CONVOI_CAPACITY);
@@ -7194,7 +7193,7 @@ uint16 convoi_t::get_true_tile_length() const
 void convoi_t::set_withdraw(bool new_withdraw)
 {
 	withdraw = new_withdraw;
-	if(  withdraw  &&  (loading_level==0  ||  goods_catg_index.empty())) {
+	if(withdraw && (loading_level == 0 || goods_catg_index.empty())) {
 		// test if convoi in depot and not driving
 		grund_t *gr = welt->lookup( get_pos());
 		if(  gr  &&  gr->get_depot()  &&  state == INITIAL  ) {

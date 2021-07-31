@@ -512,8 +512,8 @@ void setup_logging(const args_t &args)
 #endif
 
 #ifdef SYSLOG
-	bool cli_syslog_enabled = (gimme_arg( argc, argv, "-syslog", 0 ) != NULL);
-	const char* cli_syslog_tag = gimme_arg( argc, argv, "-tag", 1 );
+	bool cli_syslog_enabled = args.gimme_arg("-syslog", 1);
+	const char* cli_syslog_tag = args.gimme_arg("-tag", 1 );
 #else
 	bool cli_syslog_enabled = false;
 	const char* cli_syslog_tag = NULL;
@@ -634,7 +634,6 @@ int simu_main(int argc, char** argv)
 
 		dr_chdir( env_t::data_dir );
 	}
-	printf("Using data directory %s\n", env_t::data_dir);
 
 	// only the specified pak conf should override this!
 	uint16 pak_diagonal_multiplier = env_t::default_settings.get_pak_diagonal_multiplier();
@@ -642,7 +641,6 @@ int simu_main(int argc, char** argv)
 	sint8 pak_height_conversion_factor = env_t::pak_height_conversion_factor;
 
 	// parsing config/simuconf.tab
-	printf("Reading low level config data ...\n");
 	bool found_settings = false;
 	bool found_simuconf = false;
 	bool multiuser = !args.has_arg("-singleuser");
@@ -651,8 +649,7 @@ int simu_main(int argc, char** argv)
 	char path_to_simuconf[24];
 	// was  config/simuconf.tab
 	sprintf(path_to_simuconf, "config%csimuconf.tab", PATH_SEPARATOR[0]);
-	if(simuconf.open(path_to_simuconf))
-	{
+	if(simuconf.open(path_to_simuconf)) {
 		found_simuconf = true;
 	}
 	else
@@ -692,6 +689,7 @@ int simu_main(int argc, char** argv)
 		// save in data directory
 		env_t::user_dir = env_t::data_dir;
 	}
+
 	dr_chdir( env_t::user_dir );
 	dr_mkdir("maps");
 	dr_mkdir(SAVE_PATH);
@@ -758,9 +756,10 @@ int simu_main(int argc, char** argv)
 			std::string old_fontname = env_t::fontname;
 			std::string old_soundfont_filename = env_t::soundfont_filename;
 
-			printf("parse_simuconf() at config/simuconf.tab: ");
+			dbg->message("simu_main()", "Parsing %s%s", env_t::data_dir, path_to_simuconf);
 			env_t::default_settings.parse_simuconf( simuconf, disp_width, disp_height, fullscreen, env_t::objfilename );
 			simuconf.close();
+
 			if(  (old_soundfont_filename.length() > 0)  &&  (strcmp( old_soundfont_filename.c_str(), "Error" ) != 0)  ) {
 				// We had a valid soundfont saved by the user, let's restore it
 				env_t::soundfont_filename = old_soundfont_filename;
@@ -773,7 +772,7 @@ int simu_main(int argc, char** argv)
 	// otherwise it is in ~/simutrans/simuconf.tab
 	string obj_conf = string(env_t::user_dir) + "simuconf.tab";
 	if (simuconf.open(obj_conf.c_str())) {
-		printf("parse_simuconf() in user dir (%s): ", obj_conf.c_str());
+		dbg->message("simu_main()", "Parsing %s", obj_conf.c_str());
 		env_t::default_settings.parse_simuconf( simuconf, disp_width, disp_height, fullscreen, env_t::objfilename );
 	}
 
@@ -951,7 +950,7 @@ int simu_main(int argc, char** argv)
 
 	DBG_MESSAGE("simu_main()", "simgraph_init disp_width=%d, disp_height=%d, fullscreen=%d", disp_width, disp_height, (int)fullscreen);
 	if (!simgraph_init(scr_size(disp_width, disp_height), fullscreen != 0)) {
-		dbg->error("simu_main", "Failed to initialize graphics system.");
+		dbg->error("simu_main()", "Failed to initialize graphics system.");
 		return EXIT_FAILURE;
 	}
 	DBG_MESSAGE("simu_main()", ".. results in disp_width=%d, disp_height=%d", display_get_width(), display_get_height());
@@ -964,11 +963,14 @@ int simu_main(int argc, char** argv)
 	// default simuconf.tab
 	if(  found_simuconf  ) {
 		if(simuconf.open(path_to_simuconf)) {
+			dbg->message("simu_main()", "Loading colours from %sconfig/simuconf.tab", env_t::data_dir);
+
 			// we do not allow to change the global font name also from the pakset ...
 			std::string old_fontname = env_t::fontname;
-			printf("parse_colours() at config/simuconf.tab: ");
+
 			env_t::default_settings.parse_colours( simuconf );
 			simuconf.close();
+
 			env_t::fontname = old_fontname;
 		}
 	}
@@ -977,8 +979,8 @@ int simu_main(int argc, char** argv)
 	// otherwise it is in ~/simutrans/simuconf.tab
 	obj_conf = string(env_t::user_dir) + "simuconf.tab";
 	if (simuconf.open(obj_conf.c_str())) {
-		printf("parse_simuconf() at %s: ", obj_conf.c_str() );
-		env_t::default_settings.parse_colours( simuconf);
+		dbg->message("simu_main()", "Parsing %s", obj_conf.c_str() );
+		env_t::default_settings.parse_colours( simuconf );
 		simuconf.close();
 	}
 
@@ -1053,6 +1055,7 @@ int simu_main(int argc, char** argv)
 	printf("Pak found: %s\n", env_t::objfilename.c_str());
 #else
 	// headless server
+	dr_chdir( env_t::data_dir );
 	if(  env_t::objfilename.empty()  ) {
 		dr_fatal_notify(
 			"*** No pak set found ***\n"
@@ -1093,25 +1096,29 @@ int simu_main(int argc, char** argv)
 	if(  simuconf.open(obj_conf.c_str())  ) {
 		env_t::default_settings.set_way_height_clearance( 0 );
 
-		DBG_DEBUG("karte_t::distribute_groundobjs_cities()","parse_simuconf() at %s: ", obj_conf.c_str());
+		dbg->message("simu_main()", "Parsing %s", obj_conf.c_str());
 		env_t::default_settings.parse_simuconf( simuconf );
 		env_t::default_settings.parse_colours( simuconf );
+
 		pak_diagonal_multiplier = env_t::default_settings.get_pak_diagonal_multiplier();
 		pak_height_conversion_factor = env_t::pak_height_conversion_factor;
 		pak_tile_height = TILE_HEIGHT_STEP;
+
 		if(  env_t::default_settings.get_way_height_clearance() == 0  ) {
 			// ok, set default as conversion factor
 			env_t::default_settings.set_way_height_clearance( pak_height_conversion_factor );
 		}
 		simuconf.close();
 	}
+
 	// and parse again the user settings
 	obj_conf = string(env_t::user_dir) + "simuconf.tab";
 	if (simuconf.open(obj_conf.c_str())) {
 
-		dbg->message("simu_main()", "parse_simuconf() at %s: ", obj_conf.c_str());
+		dbg->message("simu_main()", "Parsing %s", obj_conf.c_str());
 		env_t::default_settings.parse_simuconf( simuconf );
 		env_t::default_settings.parse_colours( simuconf );
+
 		simuconf.close();
 	}
 
@@ -1130,15 +1137,16 @@ int simu_main(int argc, char** argv)
 		obj_conf = string(env_t::user_dir) + "addons/" + env_t::objfilename + "config/simuconf.tab";
 
 		if (simuconf.open(obj_conf.c_str())) {
-			dbg->message("simu_main()","parse_simuconf() at %s: ", obj_conf.c_str());
+			dbg->message("simu_main()", "Parsing %s", obj_conf.c_str());
 			env_t::default_settings.parse_simuconf( simuconf );
 			env_t::default_settings.parse_colours( simuconf );
 			simuconf.close();
 		}
+
 		// and parse user settings again ...
 		obj_conf = string(env_t::user_dir) + "simuconf.tab";
 		if (simuconf.open(obj_conf.c_str())) {
-			dbg->message("simu_main()","parse_simuconf() at %s: ", obj_conf.c_str());
+			dbg->message("simu_main()", "Parsing %s", obj_conf.c_str());
 			env_t::default_settings.parse_simuconf( simuconf );
 			env_t::default_settings.parse_colours( simuconf );
 			simuconf.close();
@@ -1225,6 +1233,7 @@ int simu_main(int argc, char** argv)
 	dbg->message("simu_main()","Reading object data from %s...", env_t::objfilename.c_str());
 	obj_reader_t::load( env_t::objfilename.c_str(), translator::translate("Loading paks ...") );
 	std::string overlaid_warning; // more prominent handling of double objects
+
 	if(  dbg->had_overlaid()  ) {
 		overlaid_warning = translator::translate("<h1>Error</h1><p><strong>");
 		overlaid_warning.append( env_t::objfilename + translator::translate("contains the following doubled objects:</strong><p>") + dbg->get_overlaid() + "<p>" );
@@ -1235,7 +1244,7 @@ int simu_main(int argc, char** argv)
 		// try to read addons from private directory
 		dr_chdir( env_t::user_dir );
 		if(!obj_reader_t::load(("addons/" + env_t::objfilename).c_str(), translator::translate("Loading addon paks ..."))) {
-			fprintf(stderr, "reading addon object data failed (disabling).\n");
+			dbg->warning("simu_main", "Reading addon object data failed (disabling).");
 			env_t::default_settings.set_with_private_paks( false );
 		}
 		dr_chdir( env_t::data_dir );
@@ -1244,6 +1253,7 @@ int simu_main(int argc, char** argv)
 			dbg->clear_overlaid();
 		}
 	}
+
 	obj_reader_t::finish_rd();
 	pakset_info_t::calculate_checksum();
 	pakset_info_t::debug();
@@ -1266,6 +1276,7 @@ int simu_main(int argc, char** argv)
 	// reread theme
 	dr_chdir( env_t::user_dir );
 	dr_chdir( "themes" );
+
 	themes_ok = gui_theme_t::themes_init( env_t::default_theme, true, false );
 	if(  !themes_ok  ) {
 		dr_chdir( env_t::data_dir );
@@ -1636,12 +1647,15 @@ int simu_main(int argc, char** argv)
 
 	intr_disable();
 
-	// save setting ...
-	dr_chdir( env_t::user_dir );
-	if(  file.wr_open(xml_filename,loadsave_t::xml,0,"settings only/",SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR)==loadsave_t::FILE_STATUS_OK   ) {
-		env_t::rdwr(&file);
-		env_t::default_settings.rdwr(&file);
-		file.close();
+	// save settings
+	{
+		dr_chdir( env_t::user_dir );
+		loadsave_t settings_file;
+		if(  settings_file.wr_open(xml_filename,loadsave_t::xml,0,"settings only/",SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR) == loadsave_t::FILE_STATUS_OK   ) {
+			env_t::rdwr(&settings_file);
+			env_t::default_settings.rdwr(&settings_file);
+			settings_file.close();
+		}
 	}
 
 	destroy_all_win( true );

@@ -3964,12 +3964,6 @@ const char *tool_wayremover_t::do_work( player_t *player, const koord3d &start, 
 				if(  wt!=powerline_wt  ) {
 					if(!gr->get_flag(grund_t::is_kartenboden)  &&  (gr->get_typ()==grund_t::tunnelboden  ||  gr->get_typ()==grund_t::monorailboden)  &&  gr->get_weg_nr(0)->get_waytype()==wt) {
 						can_delete &= gr->remove_everything_from_way(player,wt,rem);
-						if (gr->get_typ() == grund_t::tunnelboden  &&  !gr->hat_wege()  ) {
-							// tunnel portal has been removed
-							grund_t* gr_new = new boden_t(gr->get_pos(), gr->get_grund_hang());
-							welt->access(gr->get_pos().get_2d())->kartenboden_setzen(gr_new);
-							gr = gr_new;
-						}
 						if(can_delete  &&  gr->get_weg(wt)==NULL) {
 							if(gr->get_weg_nr(0)!=0) {
 								gr->remove_everything_from_way(player,gr->get_weg_nr(0)->get_waytype(),ribi_t::none);

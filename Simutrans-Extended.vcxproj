@@ -950,7 +950,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>USE_ZSTD;USE_UPNP;USE_FREETYPE;NOMINMAX=1;ZLIB_WINAPI;LITTLE_ENDIAN;USE_C;WIN32_LEAN_AND_MEAN;WINVER=_WIN32_WINNT_WINXP;DEBUG=3;%(PreprocessorDefinitions);COLOUR_DEPTH=0;DEBUG_FREELIST;MULTI_THREAD;REVISION_FROM_FILE;GDI_SOUND;MINIUPNP_STATICLIB;CURL_STATICLIB</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_ZSTD;USE_UPNP;USE_FREETYPE;NOMINMAX=1;ZLIB_WINAPI;LITTLE_ENDIAN;USE_C;WIN32_LEAN_AND_MEAN;WINVER=_WIN32_WINNT_WINXP;DEBUG=3;%(PreprocessorDefinitions);COLOUR_DEPTH=16;DEBUG_FREELIST;MULTI_THREAD;REVISION_FROM_FILE;GDI_SOUND;MINIUPNP_STATICLIB;CURL_STATICLIB</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <StructMemberAlignment>Default</StructMemberAlignment>
