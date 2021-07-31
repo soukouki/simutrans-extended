@@ -287,7 +287,7 @@ void log_t::fatal(const char *who, const char *format, ...)
 
 #if defined MAKEOBJ
 	(void)n;
-	exit(1);
+	exit(EXIT_FAILURE);
 #elif defined NETTOOL
 	// no display available
 	(void)n;

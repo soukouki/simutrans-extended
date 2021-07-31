@@ -116,7 +116,8 @@ enum sort_modes_t { SORT_BY_NAME=0, SORT_BY_ID, SORT_BY_PROFIT, SORT_BY_TRANSPOR
 static uint8 current_sort_mode = 0;
 
 #define LINE_NAME_COLUMN_WIDTH ((D_BUTTON_WIDTH*3)+11+4)
-#define SCL_HEIGHT (15*LINESPACE)
+#define SCL_HEIGHT (min(L_DEFAULT_WINDOW_HEIGHT/2+D_TAB_HEADER_HEIGHT,(15*LINESPACE)))
+#define L_DEFAULT_WINDOW_HEIGHT max(305, 24*LINESPACE)
 
 /// selected convoy tab
 static uint8 selected_convoy_tab = 0;
@@ -401,7 +402,7 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	update_lineinfo( line );
 
 	// resize button
-	set_min_windowsize(scr_size(LINE_NAME_COLUMN_WIDTH + D_BUTTON_WIDTH*3 + D_MARGIN_LEFT*2, 305));
+	set_min_windowsize(scr_size(LINE_NAME_COLUMN_WIDTH + D_BUTTON_WIDTH*3 + D_MARGIN_LEFT*2, L_DEFAULT_WINDOW_HEIGHT));
 	set_resizemode(diagonal_resize);
 	resize(scr_coord(0,0));
 	resize(scr_coord(D_BUTTON_WIDTH, LINESPACE*3+D_V_SPACE)); // suitable for 4 buttons horizontally and 5 convoys vertically
@@ -702,7 +703,7 @@ void schedule_list_gui_t::draw(scr_coord pos, scr_size size)
 #define GOODS_SYMBOL_CELL_WIDTH 14 // TODO: This will be used in common with halt detail in the future
 void schedule_list_gui_t::display(scr_coord pos)
 {
-	int icnv = line->count_convoys();
+	uint32 icnv = line->count_convoys();
 
 	cbuffer_t buf;
 	char ctmp[128];
@@ -722,11 +723,11 @@ void schedule_list_gui_t::display(scr_coord pos)
 
 	sint64 profit = line->get_finance_history(0,LINE_PROFIT);
 
-	for (int i = 0; i<icnv; i++) {
+	for (uint32 i = 0; i<icnv; i++) {
 		convoihandle_t const cnv = line->get_convoy(i);
 		// we do not want to count the capacity of depot convois
 		if (!cnv->in_depot()) {
-			for (unsigned j = 0; j<cnv->get_vehicle_count(); j++) {
+			for (uint8 j = 0; j<cnv->get_vehicle_count(); j++) {
 				capacity += cnv->get_vehicle(j)->get_cargo_max();
 				load += cnv->get_vehicle(j)->get_total_cargo();
 			}
@@ -895,6 +896,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_haltestellen.set_visible(true);
 		inp_name.set_visible(true);
 		filled_bar.set_visible(true);
+		livery_selector.set_visible(true);
 
 		// fill container with info of line's convoys
 		// we do it here, since this list needs only to be
@@ -1037,6 +1039,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		cont.remove_all();
 		scrolly_convois.set_visible(false);
 		scrolly_haltestellen.set_visible(false);
+		livery_selector.set_visible(false);
 		inp_name.set_visible(false);
 		filled_bar.set_visible(false);
 		scl.set_selection(-1);
