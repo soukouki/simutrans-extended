@@ -9,6 +9,7 @@
 #include "../bauer/goods_manager.h"
 #include "../bauer/vehikelbauer.h"
 #include "../obj/crossing.h"
+#include "../obj/roadsign.h"
 #include "../dataobj/schedule.h"
 
 #include "../dataobj/environment.h"
