@@ -56,7 +56,7 @@
 #include "obj/wayobj.h"
 #include "obj/signal.h"
 
-#include "vehicle/simvehicle.h"
+#include "vehicle/vehicle.h"
 #include "vehicle/overtaker.h"
 
 #include "utils/simstring.h"

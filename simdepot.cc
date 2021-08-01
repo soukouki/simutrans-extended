@@ -8,7 +8,7 @@
 #include <string.h>
 
 #include "simconvoi.h"
-#include "vehicle/simvehicle.h"
+#include "vehicle/vehicle.h"
 #include "gui/simwin.h"
 #include "player/simplay.h"
 #include "player/finance.h"
