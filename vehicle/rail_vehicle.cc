@@ -153,7 +153,6 @@ rail_vehicle_t::~rail_vehicle_t()
 }
 
 
-
 void rail_vehicle_t::set_convoi(convoi_t *c)
 {
 	if(c!=cnv) {
@@ -196,11 +195,11 @@ void rail_vehicle_t::set_convoi(convoi_t *c)
 	}
 }
 
+
 // need to reset halt reservation (if there was one)
 route_t::route_result_t rail_vehicle_t::calc_route(koord3d start, koord3d ziel, sint32 max_speed, bool is_tall, route_t* route)
 {
-	if(last && route_index < cnv->get_route()->get_count())
-	{
+	if(leading  &&  route_index<cnv->get_route()->get_count()) {
 		// free all reserved blocks
 		if (cnv->get_allow_clear_reservation() && (working_method == one_train_staff || working_method == token_block))
 		{
@@ -229,7 +228,6 @@ route_t::route_result_t rail_vehicle_t::calc_route(koord3d start, koord3d ziel, 
 	}
 	return r;
 }
-
 
 
 bool rail_vehicle_t::check_next_tile(const grund_t *bd) const
@@ -278,8 +276,7 @@ bool rail_vehicle_t::check_next_tile(const grund_t *bd) const
 	{
 		// we are searching a stop here:
 		// ok, we can go where we already are ...
-		if(bd->get_pos() == get_pos())
-		{
+		if(bd->get_pos()==get_pos()) {
 			return true;
 		}
 		// but we can only use empty blocks ...
@@ -336,9 +333,9 @@ int rail_vehicle_t::get_cost(const grund_t *gr, const sint32 max_speed, koord fr
 		costs = (costs * 5) / 7; // was: costs /= 1.4
 	}
 
-
 	return costs;
 }
+
 
 // this routine is called by find_route, to determined if we reached a destination
 bool rail_vehicle_t::is_target(const grund_t *gr,const grund_t *prev_gr)

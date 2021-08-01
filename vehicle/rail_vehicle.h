@@ -89,7 +89,7 @@ public:
 
 
 /**
- * very similar to normal railroad, so we can implement it here completely ...
+ * very similar to normal railroad, so we can implement it here completely
  * @see vehicle_t
  */
 class monorail_rail_vehicle_t : public rail_vehicle_t
@@ -115,7 +115,7 @@ public:
 
 
 /**
- * very similar to normal railroad, so we can implement it here completely ...
+ * very similar to normal railroad, so we can implement it here completely
  * @see vehicle_t
  */
 class maglev_rail_vehicle_t : public rail_vehicle_t
@@ -163,7 +163,6 @@ public:
 
 	schedule_t * generate_new_schedule() const OVERRIDE;
 };
-
 
 
 #endif

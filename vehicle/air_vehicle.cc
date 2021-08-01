@@ -96,8 +96,7 @@ bool air_vehicle_t:: is_target(const grund_t *gr,const grund_t *)
 
 // for flying things, everywhere is good ...
 // another function only called during route searching
-ribi_t::ribi
-air_vehicle_t::get_ribi(const grund_t *gr) const
+ribi_t::ribi air_vehicle_t::get_ribi(const grund_t *gr) const
 {
 	switch(state) {
 		case taxiing:
@@ -136,7 +135,6 @@ air_vehicle_t::get_ribi(const grund_t *gr) const
 }
 
 
-
 // how expensive to go here (for way search)
 int air_vehicle_t::get_cost(const grund_t *gr, const sint32, koord)
 {
@@ -170,10 +168,8 @@ int air_vehicle_t::get_cost(const grund_t *gr, const sint32, koord)
 }
 
 
-
 // whether the ground is drivable or not depends on the current state of the airplane
-bool
-air_vehicle_t::check_next_tile(const grund_t *bd) const
+bool air_vehicle_t::check_next_tile(const grund_t *bd) const
 {
 	switch (state) {
 		case taxiing:
@@ -369,8 +365,7 @@ route_t::route_result_t air_vehicle_t::calc_route_internal(
 		route.clear();
 		//DBG_MESSAGE("air_vehicle_t::calc_route()","start in air at %i,%i,%i",search_start.x,search_start.y,search_start.z);
 	}
-	else
-	{
+	else {
 		// not found and we are not on the takeoff tile (where the route search will fail too) => we try to calculate a complete route, starting with the way to the runway
 
 		// second: find start runway end
@@ -648,13 +643,11 @@ int air_vehicle_t::block_reserver( uint32 start, uint32 end, bool reserve ) cons
 
 		if(sch1==NULL) {
 			if(reserve) {
-				if(!start_now)
-				{
+				if(!start_now) {
 					// touched down here
 					start = i;
 				}
-				else
-				{
+				else {
 					// most likely left the ground here ...
 					end = i;
 					break;
@@ -702,8 +695,8 @@ int air_vehicle_t::block_reserver( uint32 start, uint32 end, bool reserve ) cons
 	}
 
 	// un-reserve if not successful
-	if(!success  &&  reserve) {
-		for(uint32 i=start;  i<end;  i++  ) {
+	if(  !success  &&  reserve  ) {
+		for(  uint32 i=start;  i<end;  i++  ) {
 			grund_t *gr = welt->lookup(route->at(i));
 			if (gr) {
 				runway_t* sch1 = (runway_t *)gr->get_weg(air_wt);
@@ -717,13 +710,13 @@ int air_vehicle_t::block_reserver( uint32 start, uint32 end, bool reserve ) cons
 }
 
 // handles all the decisions on the ground and in the air
-bool air_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uint8 )
+
+bool air_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uint8)
 {
 	restart_speed = -1;
 
 	assert(cnv->get_state() != convoi_t::ROUTING_1 && cnv->get_state() != convoi_t::ROUTING_2);
 	assert(gr);
-
 	if(gr->get_top()>250) {
 		// too many objects here
 		return false;
@@ -846,7 +839,6 @@ bool air_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uin
 			return true;
 		}
 		state = landing;
-
 		return true;
 		runway_too_short = false;
 	}
@@ -916,7 +908,6 @@ bool air_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uin
 }
 
 
-
 // this must also change the internal modes for the calculation
 void air_vehicle_t::enter_tile(grund_t* gr)
 {
@@ -954,8 +945,7 @@ air_vehicle_t::air_vehicle_t(loadsave_t *file, bool is_leading, bool is_last) :
 			last_desc = NULL;
 		}
 		// try to find a matching vehicle
-		if(desc==NULL)
-		{
+		if(desc==NULL) {
 			const goods_desc_t* gd = NULL;
 			ware_t w;
 			for (uint8 i = 0; i < number_of_classes; i++)
@@ -1005,7 +995,6 @@ air_vehicle_t::air_vehicle_t(koord3d pos, const vehicle_desc_t* desc, player_t* 
 }
 
 
-
 air_vehicle_t::~air_vehicle_t()
 {
 	// mark aircraft (after_image) dirty, since we have no "real" image
@@ -1015,7 +1004,6 @@ air_vehicle_t::~air_vehicle_t()
 	mark_image_dirty( image, yoff);
 	mark_image_dirty( image, 0 );
 }
-
 
 
 void air_vehicle_t::set_convoi(convoi_t *c)
@@ -1076,9 +1064,7 @@ void air_vehicle_t::set_convoi(convoi_t *c)
 }
 
 
-
-
-schedule_t * air_vehicle_t::generate_new_schedule() const
+schedule_t *air_vehicle_t::generate_new_schedule() const
 {
 	return new airplane_schedule_();
 }
@@ -1221,7 +1207,7 @@ void air_vehicle_t::hop(grund_t* gr)
 				flying_height = (flying_height-TILE_HEIGHT_STEP);
 			}
 
-			if (route_index >= touchdown ) {
+			if (route_index >= touchdown)  {
 				// come down, now!
 				target_height = h_next;
 
@@ -1298,17 +1284,16 @@ void air_vehicle_t::display_after(int xpos_org, int ypos_org, bool is_global) co
 		}
 
 		sint8 hoff = get_hoff();
-		ypos += tile_raster_scale_y(get_yoff() - current_flughohe - hoff - 2, raster_width);
+		ypos += tile_raster_scale_y(get_yoff()-current_flughohe-hoff-2, raster_width);
 		xpos += tile_raster_scale_x(get_xoff(), raster_width);
 		get_screen_offset( xpos, ypos, raster_width );
 
 		display_swap_clip_wh(CLIP_NUM_VAR);
-
 		// will be dirty
 		// the aircraft!!!
 		display_color( image, xpos, ypos, get_player_nr(), true, true/*get_flag(obj_t::dirty)*/  CLIP_NUM_PAR);
 #ifndef MULTI_THREAD
-		vehicle_t::display_after(xpos_org, ypos_org - tile_raster_scale_y(current_flughohe - hoff - 2, raster_width), is_global);
+		vehicle_t::display_after( xpos_org, ypos_org - tile_raster_scale_y( current_flughohe - hoff - 2, raster_width ), is_global );
 #endif
 		display_swap_clip_wh(CLIP_NUM_VAR);
 	}
@@ -1331,7 +1316,7 @@ void air_vehicle_t::display_overlay(int xpos_org, int ypos_org) const
 			current_flughohe -= (steps*TILE_HEIGHT_STEP) >> 8;
 		}
 
-		vehicle_t::display_overlay(xpos_org, ypos_org - tile_raster_scale_y(current_flughohe - get_hoff() - 2, raster_width));
+		vehicle_t::display_overlay( xpos_org, ypos_org - tile_raster_scale_y( current_flughohe - get_hoff() - 2, raster_width ) );
 	}
 #endif
 	else if(  is_on_ground()  ) {
@@ -1345,10 +1330,10 @@ void air_vehicle_t::display_overlay(int xpos_org, int ypos_org) const
 }
 
 
-const char *air_vehicle_t:: is_deletable(const player_t *player)
+const char *air_vehicle_t::is_deletable(const player_t *player)
 {
 	if (is_on_ground()) {
-		return vehicle_t:: is_deletable(player);
+		return vehicle_t::is_deletable(player);
 	}
 	return NULL;
 }

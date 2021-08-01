@@ -17,7 +17,6 @@
 class citycar_desc_t;
 class karte_t;
 
-
 /**
  * Base class for traffic participants with random movement
  *

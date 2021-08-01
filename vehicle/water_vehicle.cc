@@ -77,6 +77,7 @@ water_vehicle_t::water_vehicle_t(loadsave_t *file, bool is_leading, bool is_last
 	fix_class_accommodations();
 }
 
+
 void water_vehicle_t::enter_tile(grund_t* gr)
 {
 	vehicle_t::enter_tile(gr);
@@ -89,6 +90,7 @@ void water_vehicle_t::enter_tile(grund_t* gr)
 		}
 	}
 }
+
 
 bool water_vehicle_t::check_next_tile(const grund_t *bd) const
 {
@@ -214,7 +216,7 @@ bool water_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, u
 		if (w && w->is_crossing()) {
 			// ok, here is a draw/turn-bridge ...
 			crossing_t* cr = gr->find<crossing_t>();
-			if (!cr->request_crossing(this)) {
+			if(!cr->request_crossing(this)) {
 				restart_speed = 0;
 				return false;
 			}
@@ -276,3 +278,4 @@ schedule_t * water_vehicle_t::generate_new_schedule() const
 {
 	return new ship_schedule_t();
 }
+

@@ -122,6 +122,7 @@ road_vehicle_t::road_vehicle_t(loadsave_t *file, bool is_leading, bool is_last) 
 	reset_measurements();
 }
 
+
 void road_vehicle_t::rotate90()
 {
 	vehicle_t::rotate90();
@@ -146,7 +147,7 @@ route_t::route_result_t road_vehicle_t::calc_route(koord3d start, koord3d ziel, 
 	if(leading   &&  previous_direction!=ribi_t::none  &&  cnv  &&  target_halt.is_bound() ) {
 		// now reserve our choice (beware: might be longer than one tile!)
 		for(  uint32 length=0;  length<cnv->get_tile_length()  &&  length+1<cnv->get_route()->get_count();  length++  ) {
-			target_halt->unreserve_position(welt->lookup( cnv->get_route()->at( cnv->get_route()->get_count()-length-1) ), cnv->self );
+			target_halt->unreserve_position( welt->lookup( cnv->get_route()->at( cnv->get_route()->get_count()-length-1) ), cnv->self );
 		}
 	}
 	target_halt = halthandle_t(); // no block reserved
@@ -159,7 +160,6 @@ route_t::route_result_t road_vehicle_t::calc_route(koord3d start, koord3d ziel, 
 	}
 	return r;
 }
-
 
 
 bool road_vehicle_t::check_next_tile(const grund_t *bd) const
@@ -246,7 +246,6 @@ int road_vehicle_t::get_cost(const grund_t *gr, const sint32 max_speed, koord fr
 		// Diagonals are a *shorter* distance.
 		costs = (costs * 5) / 7; // was: costs /= 1.4
 	}
-
 	return costs;
 }
 
@@ -286,7 +285,6 @@ bool road_vehicle_t:: is_target(const grund_t *gr, const grund_t *prev_gr)
 	}
 	return false;
 }
-
 
 
 // to make smaller steps than the tile granularity, we have to use this trick
@@ -379,7 +377,6 @@ bool road_vehicle_t::choose_route(sint32 &restart_speed, ribi_t::ribi start_dire
 }
 
 
-
 bool road_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uint8 second_check_count)
 {
 	// check for traffic lights (only relevant for the first car in a convoi)
@@ -422,7 +419,7 @@ bool road_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, ui
 
 		// first: check roadsigns
 		const roadsign_t *rs = NULL;
-		if (str->has_sign()) {
+		if(  str->has_sign()  ) {
 			rs = gr->find<roadsign_t>();
 
 			if (rs && (!route_index_beyond_end_of_route)) {
@@ -440,13 +437,13 @@ bool road_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, ui
 					// route position after road sign
 					const koord3d pos_next_next = r.at(route_index + 1u);
 					// since at the corner, our direction may be diagonal, we make it straight
-					direction90 = ribi_type(pos_next, pos_next_next);
+					direction90 = ribi_type( pos_next, pos_next_next );
 
-					if (rs->is_free_route(direction90) && !target_halt.is_bound()) {
-						if (second_check_count) {
+					if(  rs->is_free_route(direction90)  &&  !target_halt.is_bound()  ) {
+						if(  second_check_count  ) {
 							return false;
 						}
-						if (!choose_route(restart_speed, direction90, route_index)) {
+						if(  !choose_route( restart_speed, direction90, route_index )  ) {
 							return false;
 						}
 					}
@@ -1160,7 +1157,6 @@ schedule_t * road_vehicle_t::generate_new_schedule() const
 {
 	return new truck_schedule_t();
 }
-
 
 
 void road_vehicle_t::set_convoi(convoi_t *c)

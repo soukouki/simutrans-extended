@@ -29,8 +29,7 @@ public:
 	};
 
 private:
-
-	// only used for  is_target() (do not need saving)
+	// only used for is_target() (do not need saving)
 	ribi_t::ribi approach_dir;
 
 	// Used to re-run the routing algorithm without
@@ -162,8 +161,8 @@ public:
 
 	// Used for running cost calculations
 	bool is_using_full_power() const { return state != circling && state != taxiing; }
+	const char *is_deletable(const player_t *player) OVERRIDE;
 
-	const char * is_deletable(const player_t *player) OVERRIDE;
 
 	virtual bool is_flying() const OVERRIDE { return !is_on_ground(); }
 
@@ -174,6 +173,5 @@ public:
 	virtual sint32 get_takeoff_route_index() const OVERRIDE { return (sint32) takeoff; }
 	virtual sint32 get_touchdown_route_index() const OVERRIDE { return (sint32) touchdown; }
 };
-
 
 #endif
