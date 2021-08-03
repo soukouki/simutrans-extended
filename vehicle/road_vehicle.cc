@@ -12,19 +12,6 @@
 #include "../boden/wege/strasse.h"
 #include "../dataobj/schedule.h"
 #include "../dataobj/translator.h"
-
-#include <limits.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <algorithm>
-
-#include "../boden/grund.h"
-#include "../boden/wege/runway.h"
-#include "../boden/wege/kanal.h"
-#include "../boden/wege/schiene.h"
-#include "../boden/wege/monorail.h"
 #include "../descriptor/citycar_desc.h"
 #include "../obj/crossing.h"
 #include "../obj/roadsign.h"
@@ -34,6 +21,8 @@
 #include "../simconvoi.h"
 #include "../simhalt.h"
 #include "../simmesg.h"
+
+#include "../utils/cbuffer_t.h"
 
 
 uint32 road_vehicle_t::get_max_speed() { return cnv->get_min_top_speed(); }
