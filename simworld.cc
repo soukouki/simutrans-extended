@@ -171,12 +171,6 @@ vector_tpl<nearby_halt_t> karte_t::start_halts;
 vector_tpl<halthandle_t> karte_t::destination_list;
 #endif
 
-// advance 201 ms per sync_step in fast forward mode
-#define MAGIC_STEP (201)
-
-// frame per second for fast forward
-#define FF_PPS (10)
-
 
 static uint32 last_clients = -1;
 static uint8 last_active_player_nr = 0;
@@ -246,8 +240,6 @@ void *karte_t::world_xy_loop_thread(void *ptr)
 			return NULL;
 		}
 	}
-
-	return ptr;
 }
 #endif
 
@@ -298,7 +290,6 @@ void karte_t::world_xy_loop(xy_loop_func function, uint8 flags)
 		for(  int t = 0;  t < env_t::num_threads - 1;  t++  ) {
 			if(  pthread_create( &thread[t], &attr, world_xy_loop_thread, (void *)&world_thread_param[t] )  ) {
 				dbg->fatal( "karte_t::world_xy_loop()", "cannot multithread, error at thread #%i", t+1 );
-				return;
 			}
 		}
 		spawned_world_threads = true;
@@ -416,12 +407,6 @@ void karte_t::perlin_hoehe_loop( sint16 x_min, sint16 x_max, sint16 y_min, sint1
 }
 
 
-/**
- * Height one point in the map with "perlin noise"
- *
- * @param frequency in 0..1.0 roughness, the higher the rougher
- * @param amplitude in 0..160.0 top height of mountains, may not exceed 160.0!!!
- */
 sint32 karte_t::perlin_hoehe(settings_t const* const sets, koord k, koord const size, sint32 map_size_max)
 {
 	// replace the fixed values with your settings. Amplitude is the top highness of the mountains,
@@ -4926,7 +4911,7 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 
 		// just for progress
 		if(  delta_t > 10000  ) {
-			dbg->error( "karte_t::sync_step()", "delta_t too large: %li", delta_t );
+			dbg->error( "karte_t::sync_step()", "delta_t (%u) too large, limiting to 10000", delta_t );
 			delta_t = 10000;
 		}
 		ticks += delta_t;
@@ -5548,12 +5533,18 @@ void karte_t::recalc_average_speed(bool skip_messages)
 		}
 		else {
 			DBG_MESSAGE("karte_t::new_month()","Month %d has started", last_month);
-			city_road = way_builder_t::weg_search(road_wt, 50, get_timeline_year_month(), type_flat);
+			city_road = way_builder_t::weg_search(road_wt, settings.get_town_road_speed_limit(), get_timeline_year_month(), type_flat);
 		}
 	}
 	else {
 		// defaults
-		city_road = way_builder_t::weg_search(road_wt, 50, get_timeline_year_month(), 5, type_flat, 25000000);
+		if (way_desc_t const* city_road_test = settings.get_city_road_type(0)) {
+			city_road = city_road_test;
+		}
+		else {
+			DBG_MESSAGE("karte_t::new_month()", "No optimal city road was found with timeline setting is off");
+			city_road = way_builder_t::weg_search(road_wt, settings.get_town_road_speed_limit(), 0, 5, type_flat, 0);
+		}
 	}
 }
 
@@ -5663,7 +5654,7 @@ void karte_t::step()
 
 		// needs plausibility check?!?
 		if(delta_t>10000  || delta_t<0) {
-			dbg->error( "karte_t::step()", "delta_t (%li) out of bounds!", delta_t );
+			dbg->error( "karte_t::step()", "delta_t (%u) out of bounds!", delta_t );
 			last_step_ticks = ticks;
 			next_step_time = time+10;
 			return;
@@ -9428,7 +9419,7 @@ void karte_t::load(loadsave_t *file)
 			dr_chdir( env_t::data_dir );
 			if(simuconf.open("config/simuconf.tab")) {
 				printf("parse_simuconf() in program dir (%s) for override of save file: ", "config/simuconf.tab");
-				settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+				settings.parse_simuconf( simuconf );
 				simuconf.close();
 			}
 			dr_chdir( env_t::user_dir );
@@ -9438,7 +9429,7 @@ void karte_t::load(loadsave_t *file)
 			std::string pak_simuconf = env_t::objfilename + "config/simuconf.tab";
 			if(simuconf.open(pak_simuconf.c_str())) {
 				printf("parse_simuconf() in pak dir (%s) for override of save file: ", pak_simuconf.c_str() );
-				settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+				settings.parse_simuconf( simuconf );
 				simuconf.close();
 			}
 			dr_chdir( env_t::user_dir );
@@ -9448,7 +9439,7 @@ void karte_t::load(loadsave_t *file)
 			std::string userdir_simuconf = "simuconf.tab";
 			if(simuconf.open("simuconf.tab")) {
 				printf("parse_simuconf() in user dir (%s) for override of save file: ", userdir_simuconf.c_str() );
-				settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+				settings.parse_simuconf( simuconf );
 				simuconf.close();
 			}
 		}
@@ -11171,13 +11162,13 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 	// want to execute something in the past?
 	if (nwc->get_sync_step() < sync_steps) {
 		if (!nwc->ignore_old_events()) {
-			dbg->warning("karte_t:::do_network_world_command", "wanted to do_command(%d) in the past", nwc->get_id());
+			dbg->warning("karte_t:::do_network_world_command", "wanted to do_command(%s) in the past", nwc->get_name());
 			network_disconnect();
 		}
 	}
 	// check map counter
 	else if (nwc->get_map_counter() != map_counter) {
-		dbg->warning("karte_t:::do_network_world_command", "wanted to do_command(%d) from another world", nwc->get_id());
+		dbg->warning("karte_t:::do_network_world_command", "wanted to do_command(%s) from another world", nwc->get_name());
 	}
 	// check random counter?
 	else if(  nwc->get_id()==NWC_CHECK  ) {
@@ -11520,7 +11511,7 @@ void karte_t::announce_server(int status)
 #	define REVISION 0
 #endif
 		// Simple revision used for matching (integer)
-		//buf.printf( "&rev=%d", atol( QUOTEME(REVISION) ) );
+		//buf.printf( "&rev=%d", (int)atol( QUOTEME(REVISION) ));
 		buf.printf("&rev=%d", strtol(QUOTEME(REVISION), NULL, 16));
 		// Complex version string used for display
 		//buf.printf( "&ver=Simutrans %s (#%s) built %s", QUOTEME(VERSION_NUMBER), QUOTEME(REVISION), QUOTEME(VERSION_DATE) );

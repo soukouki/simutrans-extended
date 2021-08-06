@@ -23,7 +23,7 @@ class depotlist_frame_t : public gui_frame_t, private action_listener_t
 {
 private:
 	gui_combobox_t sortedby;
-	button_t sort_asc, sort_desc;
+	button_t sort_order;
 	gui_scrolled_list_t scrolly;
 
 	button_t filter_buttons[TT_MAX_VEH];
@@ -36,6 +36,8 @@ private:
 	player_t *player;
 
 public:
+	depotlist_frame_t();
+
 	depotlist_frame_t(player_t *player);
 
 	const char *get_help_filename() const OVERRIDE {return "depotlist.txt"; }
@@ -55,6 +57,10 @@ public:
 	bool has_min_sizer() const OVERRIDE { return true; }
 
 	void map_rotate90( sint16 ) OVERRIDE { fill_list(); }
+
+	void rdwr(loadsave_t *file) OVERRIDE;
+
+	uint32 get_rdwr_id() OVERRIDE { return magic_depotlist; }
 };
 
 

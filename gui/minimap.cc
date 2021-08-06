@@ -197,7 +197,8 @@ void minimap_t::add_to_schedule_cache( convoihandle_t cnv, bool with_waypoints )
 		// conv can consist of only 1 vehicle, which has no cap (eg. locomotive)
 		// and we do not like to divide by zero, do we?
 		if(capacity > 0) {
-			colore_idx = severity_color[MAX_SEVERITY_COLORS-load * MAX_SEVERITY_COLORS / capacity];
+			const uint32 load_idx = clamp(load * MAX_SEVERITY_COLORS / capacity, 0, MAX_SEVERITY_COLORS-1);
+			colore_idx = severity_color[MAX_SEVERITY_COLORS-1 - load_idx];
 		}
 		else {
 			colore_idx = severity_color[MAX_SEVERITY_COLORS-1];
@@ -558,7 +559,7 @@ bool minimap_t::change_zoom_factor(bool magnify)
 		else {
 			// check here for maximum zoom-out, otherwise there will be integer overflows
 			// with large maps as we calculate with sint32 coordinates ...
-			int max_zoom_in = min( ((1<<31) - 1) / (2*world->get_size_max()), 16);
+			const int max_zoom_in = min( INT_MAX / (2*world->get_size_max()), 16);
 			if(  zoom_in < max_zoom_in  ) {
 				zoom_in++;
 				zoomed = true;
@@ -758,7 +759,6 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool s
 						case monorail_wt:
 						default: // all other ways light red ...
 							color = color_idx_to_rgb(135); break;
-							break;
 					}
 				}
 				else {
@@ -2001,10 +2001,10 @@ void minimap_t::draw(scr_coord pos)
 			int name_width = proportional_string_width(name)+8;
 			boxpos.x = clamp( boxpos.x, 0, 0+get_size().w-name_width );
 			boxpos += pos;
-			display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, 10, color_idx_to_rgb(COL_WHITE), name, true);
+			display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, color_idx_to_rgb(10), color_idx_to_rgb(COL_WHITE), name, true);
 		}
 
-		for (int i = 0; i < win_get_open_count(); i++) {
+		for (uint32 i = 0; i < win_get_open_count(); i++) {
 			gui_frame_t *g = win_get_index(i);
 			if(g->get_rdwr_id()== magic_factory_info) {
 				// is a factory info window

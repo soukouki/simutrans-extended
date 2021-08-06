@@ -158,6 +158,7 @@ private:
 	gui_scrollpane_t scrolly_payload_info;
 	gui_scrollpane_t scrolly_maintenance;
 
+	static sint16 tabstate;
 	gui_tab_panel_t switch_chart;
 	gui_tab_panel_t tabs;
 
@@ -188,6 +189,9 @@ private:
 	void update_labels();
 
 	void init(convoihandle_t cnv);
+
+	void set_tab_opened();
+
 public:
 	convoi_detail_t(convoihandle_t cnv = convoihandle_t());
 
@@ -196,6 +200,8 @@ public:
 	const char * get_help_filename() const OVERRIDE {return "convoidetail.txt"; }
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
+
+	bool infowin_event(event_t const*) OVERRIDE;
 
 	/**
 	 * called when convoi was renamed

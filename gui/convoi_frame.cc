@@ -292,20 +292,15 @@ convoi_frame_t::convoi_frame_t() :
 		sortedby.add_listener(this);
 		add_component(&sortedby);
 
-		// sort ascend/descend button
-		add_table(3,1);
+		// sort asc/desc switching button
+		add_table(2,1);
 		{
-			sort_asc.init(button_t::arrowup_state, "");
-			sort_asc.set_tooltip(translator::translate("hl_btn_sort_asc"));
-			sort_asc.add_listener(this);
-			sort_asc.pressed = sortreverse;
-			add_component(&sort_asc);
+			sort_order.init(button_t::sortarrow_state, "");
+			sort_order.set_tooltip(translator::translate("hl_btn_sort_order"));
+			sort_order.add_listener(this);
+			sort_order.pressed = sortreverse;
+			add_component(&sort_order);
 
-			sort_desc.init(button_t::arrowdown_state, "");
-			sort_desc.set_tooltip(translator::translate("hl_btn_sort_desc"));
-			sort_desc.add_listener(this);
-			sort_desc.pressed = !sortreverse;
-			add_component(&sort_desc);
 			new_component<gui_margin_t>(10);
 		}
 		end_table();
@@ -370,11 +365,10 @@ bool convoi_frame_t::action_triggered( gui_action_creator_t *comp, value_t /* */
 		default_sortmode = (uint8)tmp;
 		sort_list();
 	}
-	else if (comp == &sort_asc || comp == &sort_desc) {
+	else if (comp == &sort_order) {
 		set_reverse( !get_reverse() );
 		sort_list();
-		sort_asc.pressed = sortreverse;
-		sort_desc.pressed = !sortreverse;
+		sort_order.pressed = sortreverse;
 	}
 	else if (comp == &display_mode) {
 		cl_display_mode = (cl_display_mode + 1) % gui_convoy_formation_t::CONVOY_OVERVIEW_MODES;
@@ -446,12 +440,9 @@ void convoi_frame_t::rdwr(loadsave_t *file)
 			}
 			waren_filter = &waren_filter_rd;
 		}
-	}
 
-	if (file->is_loading()) {
 		sortby = (sort_mode_t)default_sortmode;
-		sort_asc.pressed  = sortreverse;
-		sort_desc.pressed = !sortreverse;
+		sort_order.pressed = sortreverse;
 		filter_on.pressed = filter_is_on;
 		sortedby.set_selection(default_sortmode);
 		display_mode.set_text(gui_convoy_formation_t::cnvlist_mode_button_texts[cl_display_mode]);
