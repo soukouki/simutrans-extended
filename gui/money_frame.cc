@@ -1173,7 +1173,7 @@ bool money_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		return true;
 	}
 	if (  comp == &bt_access_haltlist  ) {
-		create_win( new halt_list_frame_t(player), w_info, magic_halt_list_t );
+		create_win( new halt_list_frame_t(), w_info, magic_halt_list );
 		return true;
 	}
 	if (  comp == &bt_access_depotlist  ) {

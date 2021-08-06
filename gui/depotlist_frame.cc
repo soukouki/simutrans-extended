@@ -458,13 +458,13 @@ void depotlist_frame_t::rdwr(loadsave_t *file)
 		sortedby.set_selection(s);
 		depotlist_stats_t::sort_mode = s;
 		depotlist_stats_t::reverse = sort_order.pressed;
-		for (int i = 0; i < MAX_DEPOT_TYPES; i++) {
-			filter_buttons[i].pressed = depot_type_filter_bits & (1 << i);
+		for (int i = 1; i < TT_MAX; i++) {
+			filter_buttons[i].pressed = depot_type_filter_bits & (1 << (i-1));
 		}
 		fill_list();
+		filter_buttons[0].pressed = (depot_type_filter_bits == 255);
 		if (file->is_version_ex_atleast(14, 43)) {
 			set_windowsize(size);
 		}
-		all_depot_types.pressed = (depot_type_filter_bits == 255);
 	}
 }

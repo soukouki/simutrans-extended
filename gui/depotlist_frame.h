@@ -57,10 +57,6 @@ public:
 	bool has_min_sizer() const OVERRIDE { return true; }
 
 	void map_rotate90( sint16 ) OVERRIDE { fill_list(); }
-
-	void rdwr(loadsave_t *file) OVERRIDE;
-
-	uint32 get_rdwr_id() OVERRIDE { return magic_depotlist; }
 };
 
 
