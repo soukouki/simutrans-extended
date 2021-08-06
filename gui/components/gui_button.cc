@@ -130,6 +130,7 @@ void button_t::set_typ(enum type t)
 			const uint8 block_height = 2;
 			const uint8 bars_height = uint8((size.h-block_height-4)/4) * block_height*2 + block_height;
 			set_size( scr_size(max(D_BUTTON_HEIGHT, (gui_theme_t::gui_color_button_text_offset.w+4)*2 + 6/*arrow width(5)+margin(1)*/+block_height + (bars_height-2)/2), max(D_BUTTON_HEIGHT, LINESPACE)) );
+			b_no_translate = false;
 			break;
 		}
 
@@ -378,7 +379,7 @@ void button_t::draw(scr_coord offset)
 					display_proportional_ellipsis_rgb( area_text, translated_text, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, text_color, true );
 				}
 				else if(img) {
-					const scr_rect img_area = pressed ? scr_rect(area.x, area.y+1, area.w, area.h) : area;
+					const scr_rect img_area = (pressed && gui_theme_t::pressed_button_sinks) ? scr_rect(area.x, area.y+1, area.w, area.h) : area;
 					display_img_aligned(img, img_area, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true);
 				}
 				if(  win_get_focus()==this  ) {
@@ -414,6 +415,7 @@ void button_t::draw(scr_coord offset)
 					for (uint8 row=0; row*4<bars_height; row++) {
 						display_fillbox_wh_clip_rgb(area_drawing.x + 6/*arrow width(5)+margin(1)*/, area_drawing.y + bars_height - block_height - row*block_height*2, block_height*(row+1), block_height, SYSCOL_BUTTON_TEXT, false);
 					}
+					tooltip = "hl_btn_sort_desc";
 				}
 				else {
 					// asc
@@ -422,6 +424,11 @@ void button_t::draw(scr_coord offset)
 					for (uint8 row=0; row*4<bars_height; row++) {
 						display_fillbox_wh_clip_rgb(area_drawing.x + 6/*arrow width(5)+margin(1)*/, area_drawing.y + row*block_height*2, block_height*(row+1), block_height, SYSCOL_BUTTON_TEXT, false);
 					}
+					tooltip = "hl_btn_sort_asc";
+				}
+
+				if(  getroffen(get_mouse_x() - offset.x, get_mouse_y() - offset.y)  ) {
+					translated_tooltip = translator::translate(tooltip);
 				}
 			}
 			break;

@@ -23,6 +23,11 @@
 #include "../unicode.h"
 #include "../simticker.h"
 #include "../utils/simstring.h"
+//#include "../io/raw_image.h"
+
+#include "../gui/simwin.h"
+#include "../dataobj/environment.h"
+
 #include "simgraph.h"
 #include "../descriptor/vehicle_desc.h"
 #include "../gui/simwin.h"
@@ -2106,7 +2111,7 @@ void register_image(image_t *image_in)
 
 	/* valid image? */
 	if(  image_in->len == 0  ||  image_in->h == 0  ) {
-		fprintf(stderr, "Warning: ignoring image %d because of missing data\n", anz_images);
+		dbg->warning("register_image()", "Ignoring image %d because of missing data", anz_images);
 		image_in->imageid = IMG_EMPTY;
 		return;
 	}
@@ -2620,7 +2625,7 @@ static void display_img_nc(scr_coord_val h, const scr_coord_val xp, const scr_co
 
 
 // only used for GUI
-void display_img_aligned( const image_id n, scr_rect area, int align, const int dirty)
+void display_img_aligned( const image_id n, scr_rect area, int align, const bool dirty)
 {
 	if(  n < anz_images  ) {
 		scr_coord_val x,y;
@@ -2653,7 +2658,7 @@ void display_img_aligned( const image_id n, scr_rect area, int align, const int 
 /**
  * Draw image with vertical clipping (quickly) and horizontal (slowly)
  */
-void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr_raw, const int /*daynight*/, const int dirty  CLIP_NUM_DEF)
+void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr_raw, const bool /*daynight*/, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  ) {
 		// only use player images if needed
@@ -2665,7 +2670,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			// player colour images are rezoomed/recoloured in display_color_img
 			sp = images[n].data[use_player];
 			if(  sp == NULL  ) {
-				printf("CImg[%i] %u failed!\n", use_player, n);
+				dbg->warning("display_img_aux", "CImg[%i] %u failed!", use_player, n);
 				return;
 			}
 		}
@@ -2679,7 +2684,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			}
 			sp = images[n].data[0];
 			if(  sp == NULL  ) {
-				printf("Img %u failed!\n", n);
+				dbg->warning("display_img_aux", "Img %u failed!", n);
 				return;
 			}
 		}
@@ -3025,7 +3030,7 @@ static void display_color_img_wc_daytime(const PIXVAL* sp, scr_coord_val x, scr_
 /**
  * Draw Image, replaced player color
  */
-void display_color_img(const image_id n, scr_coord_val xp, scr_coord_val yp, sint8 player_nr_raw, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_color_img(const image_id n, scr_coord_val xp, scr_coord_val yp, sint8 player_nr_raw, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  ) {
 		// do we have to use a player nr?
@@ -3103,7 +3108,7 @@ void display_color_img_with_tooltip(const image_id n, scr_coord_val xp, scr_coor
 /**
  * draw unscaled images, replaces base color
  */
-void display_base_img(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_base_img(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  base_tile_raster_width==tile_raster_width  ) {
 		// same size => use standard routine
@@ -3785,7 +3790,7 @@ static void display_img_alpha_wc(scr_coord_val h, const scr_coord_val xp, const 
 /**
  * draws the transparent outline of an image
  */
-void display_rezoomed_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char /*player_nr*/, const FLAGGED_PIXVAL color_index, const int /*daynight*/, const int dirty  CLIP_NUM_DEF)
+void display_rezoomed_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char /*player_nr*/, const FLAGGED_PIXVAL color_index, const bool /*daynight*/, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  ) {
 		// need to go to nightmode and or rezoomed?
@@ -3866,7 +3871,7 @@ void display_rezoomed_img_blend(const image_id n, scr_coord_val xp, scr_coord_va
 }
 
 
-void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const signed char /*player_nr*/, const FLAGGED_PIXVAL color_index, const int /*daynight*/, const int dirty  CLIP_NUM_DEF)
+void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const sint8 /*player_nr*/, const FLAGGED_PIXVAL color_index, const bool /*daynight*/, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  &&  alpha_n < anz_images  ) {
 		// need to go to nightmode and or rezoomed?
@@ -3956,7 +3961,7 @@ void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const 
 
 
 // For blending or outlining unzoomed image. Adapted from display_base_img() and display_unzoomed_img_blend()
-void display_base_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char player_nr, const FLAGGED_PIXVAL color_index, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_base_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char player_nr, const FLAGGED_PIXVAL color_index, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  base_tile_raster_width == tile_raster_width  ) {
 		// same size => use standard routine
@@ -4035,7 +4040,7 @@ void display_base_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp
 }
 
 
-void display_base_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const signed char player_nr, const FLAGGED_PIXVAL color_index, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_base_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr, const FLAGGED_PIXVAL color_index, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  base_tile_raster_width == tile_raster_width  ) {
 		// same size => use standard routine
@@ -4266,7 +4271,7 @@ void display_cylinderbar_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coo
 
 void display_colorbox_with_tooltip(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty, const char *text)
 {
-	display_ddd_box_clip_rgb(xp, yp, w, h, SYSCOL_INDICATOR_BORDER1, SYSCOL_INDICATOR_BORDER2);
+	display_ddd_box_clip_rgb(xp, yp, w, h, color_idx_to_rgb(MN_GREY0), color_idx_to_rgb(MN_GREY4));
 	//display_fb_internal(xp+1, yp+1, w-2, h-2, color, dirty, CR.clip_rect.x, CR.clip_rect.xx, CR.clip_rect.y, CR.clip_rect.yy);
 	display_fillbox_wh_clip_rgb(xp + 1, yp + 1, w - 2, h - 2, color, dirty);
 	if (text) {
@@ -4550,7 +4555,7 @@ utf32 get_next_char_with_metrics(const char* &text, unsigned char &byte_length, 
 	}
 	else {
 		text += len;
-		byte_length = len;
+		byte_length = (uint8)len;
 		pixel_width = default_font.get_glyph_advance(char_code);
 	}
 	return char_code;
@@ -4625,7 +4630,7 @@ utf32 get_prev_char_with_metrics(const char* &text, const char *const text_start
 
 	size_t len = 0;
 	char_code = utf8_decoder_t::decode((utf8 const *)text, len);
-	byte_length = len;
+	byte_length = (uint8)len;
 	pixel_width = default_font.get_glyph_advance(char_code);
 
 	return char_code;
@@ -4928,7 +4933,7 @@ scr_coord_val display_proportional_ellipsis_rgb( scr_rect r, const char *text, i
 		default: ;
 	}
 	if (shadowed) {
-		display_text_proportional_len_clip_rgb( r.x, r.y, text, ALIGN_LEFT | DT_CLIP, shadow_color, dirty, -1  CLIP_NUM_DEFAULT);
+		display_text_proportional_len_clip_rgb( r.x+1, r.y+1, text, ALIGN_LEFT | DT_CLIP, shadow_color, dirty, -1  CLIP_NUM_DEFAULT);
 	}
 	return display_text_proportional_len_clip_rgb( r.x, r.y, text, ALIGN_LEFT | DT_CLIP, color, dirty, -1  CLIP_NUM_DEFAULT);
 }
@@ -5083,7 +5088,7 @@ int display_multiline_text_rgb(scr_coord_val x, scr_coord_val y, const char *buf
 				max_px_len = px_len;
 			}
 			y += LINESPACE;
-		} while (buf = (next ? next+1 : NULL), buf != NULL);
+		} while ((void)(buf = (next ? next+1 : NULL)), buf != NULL);
 	}
 	return max_px_len;
 }
@@ -5250,7 +5255,7 @@ void display_filled_circle_rgb( scr_coord_val x0, scr_coord_val  y0, int radius,
 
 // Currently, only right-facing equilateral triangles are supported. Can be expanded if needed to accommodate another direction.
 // The horizontal size is sqrt(3) times the height. - Ranran
-void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const PIXVAL colval, const bool dirty)
+void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val height, const PIXVAL colval, const bool dirty)
 {
 	double sqrt3 = sqrt(3);
 	for (uint16 x0 = 0; x0 <= (uint16)(0.99 + height * (sqrt3)); x0++)
@@ -5352,16 +5357,20 @@ void display_flush_buffer()
 	{
 		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 	};
+
 #ifdef USE_SOFTPOINTER
 	ex_ord_update_mx_my();
+
+	const scr_coord_val ticker_ypos_bottom = display_get_height() - win_get_statusbar_height() - (env_t::menupos == MENU_BOTTOM) * env_t::iconsize.h;
+	const scr_coord_val ticker_ypos_top = ticker_ypos_bottom - TICKER_HEIGHT;
 
 	// use mouse pointer image if available
 	if (softpointer != -1 && standard_pointer >= 0) {
 		display_color_img(standard_pointer, sys_event.mx, sys_event.my, 0, false, true  CLIP_NUM_DEFAULT);
 
 		// if software emulated mouse pointer is over the ticker, redraw it totally at next occurs
-		if (!ticker::empty() && sys_event.my+images[standard_pointer].h >= disp_height-TICKER_YPOS_BOTTOM &&
-		   sys_event.my <= disp_height-TICKER_YPOS_BOTTOM+TICKER_HEIGHT) {
+		if (!ticker::empty() && sys_event.my+images[standard_pointer].h >= ticker_ypos_top &&
+		   sys_event.my <= ticker_ypos_bottom) {
 			ticker::set_redraw_all(true);
 		}
 	}
@@ -5373,8 +5382,7 @@ void display_flush_buffer()
 		display_direct_line_rgb( sys_event.mx, sys_event.my-2, sys_event.mx, sys_event.my+2, color_idx_to_rgb(COL_BLACK) );
 
 		// if crosshair is over the ticker, redraw it totally at next occurs
-		if(!ticker::empty() && sys_event.my+2 >= disp_height-TICKER_YPOS_BOTTOM &&
-		   sys_event.my-2 <= disp_height-TICKER_YPOS_BOTTOM+TICKER_HEIGHT) {
+		if(!ticker::empty() && sys_event.my+2 >= ticker_ypos_top && sys_event.my-2 <= ticker_ypos_bottom) {
 			ticker::set_redraw_all(true);
 		}
 	}
