@@ -483,11 +483,11 @@ void depotlist_frame_t::rdwr(loadsave_t *file)
 		sortedby.set_selection(s);
 		depotlist_stats_t::sort_mode = s;
 		depotlist_stats_t::reverse = sort_order.pressed;
-		for (uint8 i = 0; i < MAX_DEPOT_TYPES; i++) {
+		for (int i = 0; i < MAX_DEPOT_TYPES; i++) {
 			filter_buttons[i].pressed = depot_type_filter_bits & (1 << i);
 		}
 		fill_list();
-		if( file->is_version_ex_atleast(14,41) ) {
+		if (file->is_version_ex_atleast(14, 43)) {
 			set_windowsize(size);
 		}
 		all_depot_types.pressed = (depot_type_filter_bits == 255);

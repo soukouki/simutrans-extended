@@ -2001,7 +2001,7 @@ void minimap_t::draw(scr_coord pos)
 			int name_width = proportional_string_width(name)+8;
 			boxpos.x = clamp( boxpos.x, 0, 0+get_size().w-name_width );
 			boxpos += pos;
-			display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, 10, color_idx_to_rgb(COL_WHITE), name, true);
+			display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, color_idx_to_rgb(10), color_idx_to_rgb(COL_WHITE), name, true);
 		}
 
 		for (uint32 i = 0; i < win_get_open_count(); i++) {
