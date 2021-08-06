@@ -805,7 +805,7 @@ void schedule_list_gui_t::display(scr_coord pos)
 			display_color_img_with_tooltip(skinverwaltung_t::upgradable->get_image_id(1), pos.x + left, pos.y + top + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate(line_alert_helptexts[4]));
 			left += GOODS_SYMBOL_CELL_WIDTH;
 		}
-		else if (!buf.len() && line->get_state() & simline_t::line_has_upgradeable_vehicles) {
+		else if (!buf.len() && line->get_state_color() == COL_PURPLE) {
 			buf.append(translator::translate(line_alert_helptexts[4]));
 		}
 	}
@@ -823,7 +823,7 @@ void schedule_list_gui_t::display(scr_coord pos)
 			display_color_img_with_tooltip(skinverwaltung_t::pax_evaluation_icons->get_image_id(1), pos.x + left, pos.y + top + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate(line_alert_helptexts[3]));
 			left += GOODS_SYMBOL_CELL_WIDTH;
 		}
-		else if (!buf.len() && line->get_state() & simline_t::line_overcrowded) {
+		else if (!buf.len() && line->get_state_color() == COL_DARK_PURPLE) {
 			buf.append(translator::translate(line_alert_helptexts[3]));
 		}
 	}

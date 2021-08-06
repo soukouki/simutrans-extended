@@ -21,13 +21,13 @@ trafficlight_info_t::trafficlight_info_t(roadsign_t* s) :
 	  ns.wrap_mode( false );
 	  ns.add_listener( this );
 	  add_component( &ns );
-	  
+
 	  ow.set_limits( 1, 255 );
 	  ow.set_value( s->get_ticks_ow() );
 	  ow.wrap_mode( false );
 	  ow.add_listener( this );
 	  add_component( &ow );
-	  
+
 	  offset.set_limits( 0, 255 );
 	  offset.set_value( s->get_ticks_offset() );
 	  offset.wrap_mode( false );
@@ -43,7 +43,7 @@ trafficlight_info_t::trafficlight_info_t(roadsign_t* s) :
 	  amber_ns.wrap_mode( false );
 	  amber_ns.add_listener( this );
 	  add_component( &amber_ns );
-	  
+
 	  amber_ow.set_limits( 1, 255 );
 	  amber_ow.set_value( s->get_ticks_amber_ow() );
 	  amber_ow.wrap_mode( false );

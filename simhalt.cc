@@ -1383,21 +1383,27 @@ void haltestelle_t::step()
 								// Refund is approximation: 2x distance at standard rate with no adjustments.
 								const sint64 refund_amount = (tmp.menge * tmp.get_desc()->get_refund(distance_meters) + 2048ll) / 4096ll;
 
-								owner->book_revenue(-refund_amount, get_basis_pos(), ignore_wt, ATV_REVENUE_PASSENGER);
 								// Find the line the pasenger was *trying to go on* -- make it pay the refund
-								linehandle_t account_line = get_preferred_line(tmp.get_zwischenziel(), tmp.get_catg(), tmp.get_class());
+								linehandle_t account_line = get_preferred_line(tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
 								if(account_line.is_bound())
 								{
 									account_line->book(-refund_amount, LINE_PROFIT);
 									account_line->book(-refund_amount, LINE_REFUNDS);
+									account_line->get_owner()->book_revenue(-refund_amount, get_basis_pos(), simline_t::linetype_to_waytype(account_line->get_linetype()), ATV_REVENUE_PASSENGER);
 								}
 								else
 								{
-									convoihandle_t account_convoy = get_preferred_convoy(tmp.get_zwischenziel(), tmp.get_catg(), tmp.get_class());
+									convoihandle_t account_convoy = get_preferred_convoy(tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
 									if(account_convoy.is_bound())
 									{
 										account_convoy->book(-refund_amount, convoi_t::CONVOI_PROFIT);
 										account_convoy->book(-refund_amount, convoi_t::CONVOI_REFUNDS);
+										account_convoy->get_owner()->book_revenue(-refund_amount, get_basis_pos(), account_convoy->front()->get_waytype(), ATV_REVENUE_PASSENGER);
+									}
+									else
+									{
+										// no line or convoy found -> charge the stop owner
+										owner->book_revenue(-refund_amount, get_basis_pos(), ignore_wt, ATV_REVENUE_PASSENGER);
 									}
 								}
 							}

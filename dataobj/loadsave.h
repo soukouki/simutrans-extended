@@ -64,7 +64,7 @@ protected:
 	unsigned curr_buff;
 	buf_t buff[2];
 
-	int ident;              // only for XML formatting
+	int indent;              // only for XML formatting
 	file_info_t finfo;
 
 	rdwr_stream_t *stream;
@@ -77,8 +77,9 @@ protected:
 	/// @sa getc
 	inline int lsgetc();
 
-	size_t write(const void * buf, size_t len);
 	size_t read(void *buf, size_t len);
+	size_t write(const void *buf, size_t len);
+	void write_indent();
 
 	void rdwr_xml_number(sint64 &s, const char *typ);
 

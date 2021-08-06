@@ -5533,12 +5533,18 @@ void karte_t::recalc_average_speed(bool skip_messages)
 		}
 		else {
 			DBG_MESSAGE("karte_t::new_month()","Month %d has started", last_month);
-			city_road = way_builder_t::weg_search(road_wt, 50, get_timeline_year_month(), type_flat);
+			city_road = way_builder_t::weg_search(road_wt, settings.get_town_road_speed_limit(), get_timeline_year_month(), type_flat);
 		}
 	}
 	else {
 		// defaults
-		city_road = way_builder_t::weg_search(road_wt, 50, get_timeline_year_month(), 5, type_flat, 25000000);
+		if (way_desc_t const* city_road_test = settings.get_city_road_type(0)) {
+			city_road = city_road_test;
+		}
+		else {
+			DBG_MESSAGE("karte_t::new_month()", "No optimal city road was found with timeline setting is off");
+			city_road = way_builder_t::weg_search(road_wt, settings.get_town_road_speed_limit(), 0, 5, type_flat, 0);
+		}
 	}
 }
 
@@ -11416,11 +11422,6 @@ bool karte_t::interactive(uint32 quit_month)
 							network_send_all(nwcstep, true);
 						}
 					}
-#if DEBUG>4
-					if(  env_t::networkmode  &&  (sync_steps & 7)==0  &&  env_t::verbose_debug>4  ) {
-						dbg->message("karte_t::interactive", "time=%lu sync=%d"/*  rand=%d"*/, dr_time(), sync_steps/*, LRAND(sync_steps)*/);
-					}
-#endif
 
 					// no clients -> pause game
 					if (  env_t::networkmode  &&  env_t::pause_server_no_clients  &&  socket_list_t::get_playing_clients() == 0  &&  !nwc_join_t::is_pending()  ) {

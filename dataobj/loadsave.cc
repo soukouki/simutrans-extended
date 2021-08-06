@@ -476,7 +476,7 @@ loadsave_t::file_status_t loadsave_t::wr_open( const char *filename_utf8, mode_t
 		char str[4096];
 		int n = sprintf(str, "<?xml version=\"1.0\"?>\n<Simutrans version=\"%s\" pak=\"%s\">\n", savegame_ver.c_str(), pakset_string);
 		write( str, n );
-		ident = 1;
+		indent = 1;
 	}
 
 	finfo.ext_version = int_version(savegame_ver.c_str(), NULL);
@@ -632,6 +632,15 @@ void loadsave_t::flush_buffer(int buf_num)
 #ifdef MULTI_THREAD
 	pthread_mutex_unlock(&loadsave_mutex);
 #endif
+}
+
+
+void loadsave_t::write_indent()
+{
+	static const int max_indent = 64;
+	static const char spaces[max_indent] = "                                                               ";
+
+	write(spaces, min(indent, max_indent) );
 }
 
 
@@ -871,7 +880,7 @@ void loadsave_t::rdwr_bool(bool &i)
 	else {
 		// bool xml
 		if(is_saving()) {
-			write( "                                                                ", min(64,ident) );
+			write_indent();
 			if(  i  ) {
 				write( "<bool>true</bool>\n", sizeof("<bool>true</bool>\n")-1 );
 			}
@@ -907,7 +916,7 @@ void loadsave_t::rdwr_xml_number(sint64 &s, const char *typ)
 {
 	if(is_saving()) {
 		static char nr[256];
-		size_t len = sprintf( nr, "%*s<%s>%.0f</%s>\n", ident, "", typ, (double)s, typ );
+		size_t len = sprintf( nr, "%*s<%s>%.0f</%s>\n", indent, "", typ, (double)s, typ );
 		write( nr, len );
 	}
 	else {
@@ -1024,7 +1033,7 @@ void loadsave_t::rdwr_str(const char *&s)
 	else {
 		// use CDATA tag: <![CDATA[%s]]>
 		if(is_saving()) {
-			write( "                                                                ", min(64,ident) );
+			write_indent();
 			write( "<![CDATA[", 9 );
 			if(s) {
 				write( s, strlen(s) );
@@ -1074,7 +1083,7 @@ void loadsave_t::rdwr_str( char* result_buffer, size_t const size)
 		// use CDATA tag: <![CDATA[%s]]>
 		char *s = result_buffer;
 		if(is_saving()) {
-			write( "                                                                ", min(64,ident) );
+			write_indent();
 			write( "<![CDATA[", 9 );
 			if(s) {
 				write( s, strlen(s) );
@@ -1161,11 +1170,11 @@ void loadsave_t::start_tag(const char *tag)
 {
 	if(  is_xml()  ) {
 		if(is_saving()) {
-			write( "                                                                ", min(64,ident) );
+			write_indent();
 			write( "<", 1 );
 			write( tag, strlen(tag) );
 			write( ">\n", 2 );
-			ident ++;
+			indent ++;
 		}
 		else {
 			char buf[256];
@@ -1185,8 +1194,8 @@ void loadsave_t::end_tag(const char *tag)
 {
 	if(  is_xml()  ) {
 		if(is_saving()) {
-			ident --;
-			write( "                                                                ", min(64,ident) );
+			indent --;
+			write_indent();
 			write( "</", 2 );
 			write( tag, strlen(tag) );
 			write( ">\n", 2 );
