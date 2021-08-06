@@ -614,6 +614,7 @@ void rdwr_all_win(loadsave_t *file)
 					//case magic_depot:          w = new depot_frame_t(); break;
 					case magic_convoi_list:    w = new convoi_frame_t(); break;
 					//case magic_vehiclelist:    w = new vehiclelist_frame_t(); break;
+					//case magic_citylist_frame_t: w = new citylist_frame_t(); break;
 					case magic_halt_list:      w = new halt_list_frame_t(); break;
 					case magic_citylist_frame_t: w = new citylist_frame_t(); break;
 					case magic_curiositylist:  w = new curiositylist_frame_t(); break;

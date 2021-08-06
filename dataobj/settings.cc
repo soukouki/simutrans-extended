@@ -2333,7 +2333,6 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 			else {
 				startingmoneyperyear[ k ].interpol = false;
 			}
-			//			printf("smpy[%d] year=%d money=%lld\n",k,startingmoneyperyear[k].year,startingmoneyperyear[k].money);
 			j++;
 		}
 		else {
@@ -3060,8 +3059,6 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	if(  *contents.get("soundfont_filename")  ) {
 		env_t::soundfont_filename = ltrim(contents.get("soundfont_filename"));
 	}
-
-	printf("Reading simuconf.tab successful!\n" );
 }
 
 // colour stuff can only be parsed when the graphic system has already started
@@ -3157,13 +3154,17 @@ void settings_t::reset_regions(sint32 old_x, sint32 old_y)
 	}
 }
 
-void settings_t::rotate_regions(sint16 y_size)
+void settings_t::rotate_regions()
 {
 	vector_tpl<region_definition_t> temp_regions;
 	FOR(vector_tpl<region_definition_t>, region, regions)
 	{
-		region.top_left.rotate90(y_size);
-		region.bottom_right.rotate90(y_size);
+		const sint16 temp_top_y= region.top_left.y;
+		region.top_left.y = region.bottom_right.y;
+		region.bottom_right.y= temp_top_y;
+
+		region.top_left.rotate90(world()->get_size().y-1);
+		region.bottom_right.rotate90(world()->get_size().y-1);
 		temp_regions.append(region);
 	}
 

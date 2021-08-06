@@ -538,6 +538,8 @@ public:
 		return veh_month[TT_ALL][0][ATV_NON_FINANCIAL_ASSETS] + account_balance;
 	}
 
+	sint64 get_financial_assets() const {return veh_month[TT_ALL][0][ATV_NON_FINANCIAL_ASSETS];}
+
 	sint64 get_scenario_completed() const { return com_month[0][ATC_SCENARIO_COMPLETED]; }
 
 	void set_scenario_completed(sint64 percent) { com_year[0][ATC_SCENARIO_COMPLETED] = com_month[0][ATC_SCENARIO_COMPLETED] = percent; }

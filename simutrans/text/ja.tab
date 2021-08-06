@@ -2247,24 +2247,6 @@ brakes from max. speed in %i m
 %sは新たに%sを%sに建設しました。
 %s has built a new %s near %s.
 %sは新たに%sを%sの付近に建設しました。
-%s\nCost:     %d$\nMaint.: %1.2f$/km, %1.2f$/month\nCapacity: %d (%d)%s %s\nWeight: %dt\nTop speed: %dkm/h\n
-%s\n購入費: %d$\n維持費: 1kmあたり%1.2f$, 1ヶ月あたり%1.2f$\n定員/容量: %d (%d)%s %s\n重量: %dt\n最高速度: %dkm/h\n
-%s\nCost:     %d$\nMaint.: %1.2f$/km, %1.2f$/month\nCapacity: %d%s %s\nWeight: %dt\nTop speed: %dkm/h\n
-%s\n購入費: %d$\n維持費: 1kmあたり%1.2f$, 1ヶ月あたり%1.2f$\n定員/容量: %d%s %s\n重量: %dt\n最高速度: %dkm/h\n
-%s\nCost:     %s\nMaint.: %1.2f$/km, %1.2f$/month\nCapacity: %d (%d)%s %s\nWeight: %dt\nAxle load: %dt\nTop speed: %dkm/h\n\nMax. brake force: %dkN\nRolling resistance: %.1fN\n
-%s\n購入費: %s\n維持費: 1kmあたり%1.2f$, 1ヶ月あたり%1.2f$\n定員/容量: %d (%d)%s %s\n重量: %dt\n軸重: %dt\n最高速度: %dkm/h\n\n最大制動力: %dkN\n転がり抵抗: %.1fN\n
-%s\nCost:     %s\nMaint.: %1.2f$/km, %1.2f$/month\nCapacity: %d (%d)%s %s\nWeight: %dt\nAxle load: %dt\nTop speed: %dkm/h\nMax. brake force: %dkN\nRolling resistance: %.1fN\n
-%s\n購入費: %s\n維持費: 1kmあたり%1.2f$, 1ヶ月あたり%1.2f$\n定員/容量: %d (%d)%s %s\n重量: %dt\n軸重: %dt\n最高速度: %dkm/h\n最大制動力: %dkN\n転がり抵抗: %.1fN\n
-%s\nCost:     %s\nMaint.: %1.2f$/km, %1.2f$/month\nCapacity: %d%s %s\nWeight: %dt\nAxle load: %dt\nTop speed: %dkm/h\n\nMax. brake force: %dkN\nRolling resistance: %.1fN\n
-%s\n購入費: %s\n維持費: 1kmあたり%1.2f$, 1ヶ月あたり%1.2f$\n定員/容量: %d%s %s\n重量: %dt\n軸重: %dt\n最高速度: %dkm/h\n\n最大制動力: %dkN\n転がり抵抗: %.1fN\n
-%s\nCost:     %s\nMaint.: %1.2f$/km, %1.2f$/month\nCapacity: %d%s %s\nWeight: %dt\nAxle load: %dt\nTop speed: %dkm/h\nMax. brake force: %dkN\nRolling resistance: %.1fN\n
-%s\n購入費: %s\n維持費: 1kmあたり%1.2f$, 1ヶ月あたり%1.2f$\n定員/容量: %d%s %s\n重量: %dt\n軸重: %dt\n最高速度: %dkm/h\n最大制動力: %dkN\n転がり抵抗: %.1fN\n
-%s\nCost:     %s\nMaint.: %1.2f$/km, %1.2f$/month\nCapacity: %d%s %s\nWeight: %dt\nTop speed: %dkm/h\nMax. brake force: %dkN\nRolling resistance: %fN\n
-%s\n購入費: %s\n維持費: 1kmあたり%1.2f$, 1ヶ月あたり%1.2f$\n定員/容量: %d%s %s\n重量: %dt\n最高速度: %dkm/h\n最大制動力: %dkN\n転がり抵抗: %fN\n
-%s\nCost: %d$\nMaint.: %1.2f$/km, %1.2f$/month\nPower: %dkW, %dkm/h\nWeight: %dt\n
-%s\n購入費: %d$\n維持費: 1kmあたり%1.2f$, 1ヶ月あたり%1.2f$\n出力: %dkW, %dkm/h\n重量: %dt\n
-%s\nCost: %s\nMaint.: %1.2f$/km, %1.2f$/month\nPower: %dkW, %dkN\nTop Speed: %dkm/h\nWeight: %dt\nAxle load: %dt\nMax. brake force: %dkN\nRolling resistance: %.1fN\n
-%s\n購入費: %s\n維持費: 1kmあたり%1.2f$, 1ヶ月あたり%1.2f$\n出力: %dkW, %dkN\n最高速度: %dkm/h\n重量: %dt\n軸重: %dt\n最大制動力: %dkN\n転がり抵抗: %.1fN\n
 A signalbox cannot be built here.
 ここには信号扱所を建設できません。
 above\nminutes
