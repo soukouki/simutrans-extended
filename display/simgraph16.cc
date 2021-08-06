@@ -2111,7 +2111,7 @@ void register_image(image_t *image_in)
 
 	/* valid image? */
 	if(  image_in->len == 0  ||  image_in->h == 0  ) {
-		fprintf(stderr, "Warning: ignoring image %d because of missing data\n", anz_images);
+		dbg->warning("register_image()", "Ignoring image %d because of missing data", anz_images);
 		image_in->imageid = IMG_EMPTY;
 		return;
 	}
@@ -2670,7 +2670,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			// player colour images are rezoomed/recoloured in display_color_img
 			sp = images[n].data[use_player];
 			if(  sp == NULL  ) {
-				printf("CImg[%i] %u failed!\n", use_player, n);
+				dbg->warning("display_img_aux", "CImg[%i] %u failed!", use_player, n);
 				return;
 			}
 		}
@@ -2684,7 +2684,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			}
 			sp = images[n].data[0];
 			if(  sp == NULL  ) {
-				printf("Img %u failed!\n", n);
+				dbg->warning("display_img_aux", "Img %u failed!", n);
 				return;
 			}
 		}
@@ -4271,7 +4271,7 @@ void display_cylinderbar_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coo
 
 void display_colorbox_with_tooltip(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty, const char *text)
 {
-	display_ddd_box_clip_rgb(xp, yp, w, h, SYSCOL_INDICATOR_BORDER1, SYSCOL_INDICATOR_BORDER2);
+	display_ddd_box_clip_rgb(xp, yp, w, h, color_idx_to_rgb(MN_GREY0), color_idx_to_rgb(MN_GREY4));
 	//display_fb_internal(xp+1, yp+1, w-2, h-2, color, dirty, CR.clip_rect.x, CR.clip_rect.xx, CR.clip_rect.y, CR.clip_rect.yy);
 	display_fillbox_wh_clip_rgb(xp + 1, yp + 1, w - 2, h - 2, color, dirty);
 	if (text) {
@@ -5268,7 +5268,7 @@ void display_filled_circle_rgb( scr_coord_val x0, scr_coord_val  y0, int radius,
 
 // Currently, only right-facing equilateral triangles are supported. Can be expanded if needed to accommodate another direction.
 // The horizontal size is sqrt(3) times the height. - Ranran
-void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const PIXVAL colval, const bool dirty)
+void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val height, const PIXVAL colval, const bool dirty)
 {
 	double sqrt3 = sqrt(3);
 	for (uint16 x0 = 0; x0 <= (uint16)(0.99 + height * (sqrt3)); x0++)

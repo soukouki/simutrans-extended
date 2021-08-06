@@ -817,7 +817,7 @@ public:
 	sint32 get_size_y() const {return size_y;}
 
 	void reset_regions(sint32 old_x, sint32 old_y);
-	void rotate_regions(sint16 y_size);
+	void rotate_regions();
 
 	sint32 get_map_number() const {return map_number;}
 
@@ -884,7 +884,7 @@ public:
 	void rotate90() {
 		rotation = (rotation+1)&3;
 		set_size( size_y, size_x, true);
-		rotate_regions(size_y);
+		rotate_regions();
 	}
 	uint8 get_rotation() const { return rotation; }
 

@@ -850,14 +850,29 @@ DBG_MESSAGE("tool_remover()", "removing way");
 		wt = w->get_desc()->get_finance_waytype();
 		const sint64 land_refund_cost = welt->get_land_value(w->get_pos()); // Refund the land value to the player who owned the way, as by bulldozing, the player is selling the land.
 		player_t* const owner = w->get_owner(); // We must take this here, as the owner is deleted in the next line.
+		const bool public_right_of_way = w->is_public_right_of_way(); // We must capture this before deleting the way object.
+		const bool is_main_way = gr->get_weg_nr(0) == w;
+		const bool are_other_ways = gr->get_weg_nr(1);
 		sint64 cost_sum = gr->weg_entfernen(w->get_waytype(), true);
-		if(player == owner)
+		if (!public_right_of_way && is_main_way) // Land costs are not used for public rights of way; also, do not refund the land value when deleting a crossing over another player's way.
 		{
-			cost_sum += land_refund_cost;
-		}
-		else
-		{
-			player_t::book_construction_costs(owner, -land_refund_cost, k, wt);
+			if (player == owner)
+			{
+				cost_sum += land_refund_cost;
+				if (are_other_ways)
+				{
+					// If we are deleting a crossing over another player's way
+					// and the deleting player paid to buy the land, then the land
+					// value must be debited from the other player's way to avoid
+					// that other player being able to get a refund of the value of
+					// land for which that player had never paid.
+					player_t::book_construction_costs(gr->get_weg_nr(0)->get_owner(), -land_refund_cost, k, wt);
+				}
+			}
+			else
+			{
+				player_t::book_construction_costs(owner, -land_refund_cost, k, wt);
+			}
 		}
 		player_t::book_construction_costs(player, -cost_sum, k, wt);
 	}
@@ -1969,9 +1984,15 @@ const char *tool_buy_house_t::work( player_t *player, koord3d pos)
  */
 bool tool_change_city_size_t::init( player_t * )
 {
-	cursor = atoi(default_param)>0 ? tool_t::general_tool[TOOL_RAISE_LAND]->cursor : tool_t::general_tool[TOOL_LOWER_LAND]->cursor;
+	int delta = 0;
+	if (!default_param || sscanf(default_param, "%d", &delta) != 1) {
+		return false;
+	}
+
+	cursor = delta > 0 ? tool_t::general_tool[TOOL_RAISE_LAND]->cursor : tool_t::general_tool[TOOL_LOWER_LAND]->cursor;
 	return true;
 }
+
 
 const char *tool_change_city_size_t::work( player_t *, koord3d pos )
 {
@@ -2032,8 +2053,16 @@ void tool_set_climate_t::mark_tiles(player_t *, const koord3d &start, const koor
 
 const char *tool_set_climate_t::do_work( player_t *player, const koord3d &start, const koord3d &end )
 {
+	int value = 0;
+	if (!default_param || sscanf(default_param, "%d", &value) != 1) {
+		return "";
+	}
+	else if (value < water_climate || value >= MAX_CLIMATES) {
+		return "";
+	}
+
 	int n = 0; // tiles altered
-	climate cl = (climate) atoi(default_param);
+	climate cl = (climate)value;
 	koord k1, k2;
 	if(  end == koord3d::invalid  ) {
 		k1.x = k2.x = start.x;
@@ -2106,8 +2135,13 @@ const char *tool_set_climate_t::do_work( player_t *player, const koord3d &start,
  */
 bool tool_change_water_height_t::init( player_t *player )
 {
-	cursor = atoi(default_param) > 0 ? tool_t::general_tool[TOOL_RAISE_LAND]->cursor : tool_t::general_tool[TOOL_LOWER_LAND]->cursor;
-	return !env_t::networkmode || player->get_player_nr()==1;
+	int delta = 0;
+	if (!default_param || sscanf(default_param, "%d", &delta) != 1) {
+		return false;
+	}
+
+	cursor = delta > 0 ? tool_t::general_tool[TOOL_RAISE_LAND]->cursor : tool_t::general_tool[TOOL_LOWER_LAND]->cursor;
+	return !env_t::networkmode  ||  player->is_public_service();
 }
 
 
@@ -7092,12 +7126,23 @@ bool tool_build_land_chain_t::init( player_t * )
  * the parameter string is a follow:
  * 1#34,oelfeld
  * first letter: ignore climates
- * second letter: rotation (0,1,2,3,#=random)
+ * second letter: rotation (0,1,2,3,#=random,A=auto)
  * next number is production value
  * finally industry name
  */
+
+/* This is practically the same as tool_build_factory_t::work(...)
+ * other than this calling factory_builder_t::build_link() [which
+ * returns an integer count] and that calling
+ * factory_builder_t::build_factory() which returns a fabrik_t*.
+ * These two routines (methods) should probably be merged, although I
+ * am yet unsure how to combine the parts of the two classes
+ * together. — WL
+ */
 const char *tool_build_land_chain_t::work( player_t *player, koord3d pos )
 {
+	koord k(pos.get_2d());
+
 	const grund_t* gr = welt->lookup_kartenboden(pos.get_2d());
 	if(gr==NULL) {
 		return "";
@@ -7123,7 +7168,25 @@ const char *tool_build_land_chain_t::work( player_t *player, koord3d pos )
 	if(fab==NULL) {
 		return "";
 	}
-	int rotation = (default_param  &&  default_param[1]!='#') ? (default_param[1]-'0') % fab->get_building()->get_all_layouts() : simrand(fab->get_building()->get_all_layouts()-1, "const char *tool_build_land_chain_t::work");
+	int rotation;
+	if(  !default_param || default_param[1]=='#'  ) {
+		rotation = simrand(fab->get_building()->get_all_layouts(), "const char *tool_build_land_chain_t::work");
+	}
+	else if(  default_param[1]=='A'  ) {
+		int streetdir = 0;
+                // Convert 'neighbors' indices to SENW bits
+                static int const neighbours_to_senw[] = { 0x0c, 0x08, 0x09, 0x01, 0x03, 0x02, 0x06, 0x04 };
+		for(  int i = 1;  i < 8;  i+=2  ) {
+			grund_t *gr2 = welt->lookup_kartenboden(k + koord::neighbours[i]);
+			if(  gr2  &&  gr2->get_weg_hang() == gr2->get_grund_hang()  &&  gr2->get_weg(road_wt) != NULL  ) {
+				streetdir |= neighbours_to_senw[i];
+			}
+		}
+		rotation = building_layout[streetdir];
+        }
+	else {
+		rotation = (default_param[1]-'0') % fab->get_building()->get_all_layouts();
+	}
 	koord size = fab->get_building()->get_size(rotation);
 
 	// process ignore climates switch
@@ -7276,6 +7339,8 @@ bool tool_build_factory_t::init( player_t * )
 /* builds an industry next to the cursor (default_param see above) */
 const char *tool_build_factory_t::work( player_t *player, koord3d pos )
 {
+	koord k(pos.get_2d());
+
 	const grund_t* gr = welt->lookup_kartenboden(pos.get_2d());
 	if(gr==NULL) {
 		return "";
@@ -7295,7 +7360,34 @@ const char *tool_build_factory_t::work( player_t *player, koord3d pos )
 	if(fab==NULL) {
 		return "";
 	}
-	int rotation = (default_param  &&  default_param[1]!='#') ? (default_param[1]-'0') % fab->get_building()->get_all_layouts() : simrand(fab->get_building()->get_all_layouts(), "const char *tool_build_factory_t::work");
+	int rotation;
+	if(  !default_param || default_param[1]=='#'  ) {
+		rotation = simrand(fab->get_building()->get_all_layouts(), "const char *tool_build_factory_t::work");
+	}
+	else if(  default_param[1]=='A'  ) {
+		int streetdir = 0;
+                // Convert 'neighbors' indices to SENW bits
+		static int const neighbours_to_senw[] = { 0x0c, 0x08, 0x09, 0x01, 0x03, 0x02, 0x06, 0x04 };
+		for(  int i = 1;  i < 8;  i+=2  ) {
+			grund_t *gr2 = welt->lookup_kartenboden(k + koord::neighbours[i]);
+			if(  gr2  &&  gr2->get_weg_hang() == gr2->get_grund_hang()  &&  gr2->get_weg(road_wt) != NULL  ) {
+				streetdir |= neighbours_to_senw[i];
+			}
+		}
+                if (streetdir == 0) { // No adjacent streets; check diagonally
+                  for(  int i = 0;  i < 8;  i+=2  ) {
+                    grund_t *gr2 = welt->lookup_kartenboden(k + koord::neighbours[i]);
+                    if(  gr2  &&  gr2->get_weg_hang() == gr2->get_grund_hang()  &&  gr2->get_weg(road_wt) != NULL  ) {
+                      streetdir |= neighbours_to_senw[i];
+                    }
+                  }
+                }
+		rotation = building_layout[streetdir];
+        }
+	else {
+		rotation = (default_param[1]-'0') % fab->get_building()->get_all_layouts();
+	}
+
 	koord size = fab->get_building()->get_size(rotation);
 
 	// process ignore climates switch
@@ -8469,6 +8561,24 @@ bool tool_show_underground_t::init( player_t * )
 	return needs_click;
 }
 
+
+bool tool_show_underground_t::exit( player_t* )
+{
+	if(  grund_t::underground_mode != grund_t::ugm_none  ) {
+
+		// reset no normal view on deselect
+		grund_t::underground_mode = grund_t::ugm_none;
+
+		// renew toolbar
+		tool_t::update_toolbars();
+
+		// recalc all images on map
+		welt->update_underground();
+	}
+	return false;
+}
+
+
 const char *tool_show_underground_t::work( player_t *player, koord3d pos)
 {
 	koord3d zpos = welt->get_zeiger()->get_pos();
@@ -9584,6 +9694,12 @@ bool tool_change_traffic_light_t::init( player_t *player )
 				}
 				else if(  ns == 2  ) {
 					rs->set_ticks_offset( (uint8)ticks );
+				}
+				else if(  ns == 4  ) {
+					rs->set_ticks_amber_ns( (uint8)ticks );
+				}
+				else if(  ns == 3  ) {
+					rs->set_ticks_amber_ow( (uint8)ticks );
 				}
 				// update the window
 				if(  rs->get_desc()->is_traffic_light()  ) {
