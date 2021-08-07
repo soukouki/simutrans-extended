@@ -19,7 +19,8 @@ class tunnel_reader_t : public obj_reader_t {
 	static void convert_old_tunnel(tunnel_desc_t *desc);
 
 protected:
-	void register_obj(obj_desc_t*&) OVERRIDE;
+	/// @copydoc obj_reader_t::register_obj
+	void register_obj(obj_desc_t *&desc) OVERRIDE;
 
 public:
 	static tunnel_reader_t*instance() { return &the_instance; }

@@ -22,7 +22,8 @@ public:
 	obj_type get_type() const OVERRIDE { return obj_root; }
 	char const* get_type_name() const OVERRIDE { return "root"; }
 protected:
-	void register_obj(obj_desc_t*&) OVERRIDE;
+	/// @copydoc obj_reader_t::register_obj
+	void register_obj(obj_desc_t *&desc) OVERRIDE;
 };
 
 #endif

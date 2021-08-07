@@ -14,7 +14,8 @@ class bridge_reader_t : public obj_reader_t {
 
 	bridge_reader_t() { register_reader(); }
 protected:
-	void register_obj(obj_desc_t*&) OVERRIDE;
+	/// @copydoc obj_reader_t::register_obj
+	void register_obj(obj_desc_t *&desc) OVERRIDE;
 
 public:
 	static bridge_reader_t*instance() { return &the_instance; }

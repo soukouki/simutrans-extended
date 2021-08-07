@@ -15,7 +15,9 @@ class ground_reader_t : public obj_reader_t {
 
 	ground_reader_t() { register_reader(); }
 protected:
-	void register_obj(obj_desc_t*&) OVERRIDE;
+	/// @copydoc obj_reader_t::register_obj
+	void register_obj(obj_desc_t *&desc) OVERRIDE;
+
 	bool successfully_loaded() const OVERRIDE;
 public:
 	static ground_reader_t*instance() { return &the_instance; }
