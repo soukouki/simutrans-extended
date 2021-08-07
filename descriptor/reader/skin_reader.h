@@ -22,6 +22,7 @@ protected:
 	/// @copydoc obj_reader_t::register_obj
 	void register_obj(obj_desc_t *&desc) OVERRIDE;
 
+	/// @copydoc obj_reader_t::successfully_loaded
 	bool successfully_loaded() const OVERRIDE;
 
 	/// @returns type of skin this reader is able to read

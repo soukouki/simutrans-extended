@@ -21,6 +21,7 @@ protected:
 public:
 	static sound_reader_t*instance() { return &the_instance; }
 
+	/// @copydoc obj_reader_t::read_node
 	obj_desc_t *read_node(FILE *fp, obj_node_info_t &node) OVERRIDE;
 
 	obj_type get_type() const OVERRIDE { return obj_sound; }

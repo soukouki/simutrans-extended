@@ -19,6 +19,7 @@ protected:
 	/// @copydoc obj_reader_t::register_obj
 	void register_obj(obj_desc_t*&) OVERRIDE;
 
+	/// @copydoc obj_reader_t::successfully_loaded
 	bool successfully_loaded() const OVERRIDE;
 
 public:

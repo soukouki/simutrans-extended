@@ -15,10 +15,12 @@ class groundobj_reader_t : public obj_reader_t {
 
 	groundobj_reader_t() { register_reader(); }
 protected:
-	bool successfully_loaded() const OVERRIDE;
-
 	/// @copydoc obj_reader_t::register_obj
 	void register_obj(obj_desc_t*&) OVERRIDE;
+
+	/// @copydoc obj_reader_t::successfully_loaded
+	bool successfully_loaded() const OVERRIDE;
+
 public:
 	static groundobj_reader_t*instance() { return &the_instance; }
 
