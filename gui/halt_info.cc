@@ -397,7 +397,7 @@ void gui_halt_waiting_indicator_t::draw(scr_coord offset)
 			}
 			lb_transfer_time[i].buf().append(transfer_time_as_clock);
 			lb_transfer_time[i].update();
-			lb_transfer_time[i].set_color(is_operating ? SYSCOL_TEXT : color_idx_to_rgb(MN_GREY0));
+			lb_transfer_time[i].set_color(is_operating ? SYSCOL_TEXT : SYSCOL_TEXT_INACTIVE);
 
 			if (!is_operating && skinverwaltung_t::alerts) {
 				img_alert.set_visible(true);
@@ -613,7 +613,7 @@ void halt_info_t::init(halthandle_t halt)
 	cont_tab_departure.set_spacing(scr_size(0,0));
 	cont_departure.set_table_layout(2,0);
 	cont_departure.set_margin(scr_size(D_H_SPACE, 0), scr_size(D_H_SPACE, 0));
-	cont_tab_departure.add_table(4,1)->set_spacing(scr_size(0,0));
+	cont_tab_departure.add_table(6,1)->set_spacing(scr_size(0,0));
 	{
 		cont_tab_departure.new_component<gui_margin_t>(D_MARGIN_LEFT);
 		bt_arrivals.init(button_t::roundbox_state, "Arrivals from\n");
@@ -624,8 +624,20 @@ void halt_info_t::init(halthandle_t halt)
 		bt_departures.set_size(D_BUTTON_SIZE);
 		bt_departures.add_listener(this);
 		cont_tab_departure.add_component(&bt_departures);
-		bt_arrivals.pressed   = !show_departures;
-		bt_departures.pressed =  show_departures;
+		bt_arrivals.pressed   = !(display_mode_bits&SHOW_DEPARTURES);
+		bt_departures.pressed = display_mode_bits & SHOW_DEPARTURES;
+
+		cont_tab_departure.new_component<gui_margin_t>(D_H_SPACE*3);
+
+		db_mode_selector.add_listener(this);
+		db_mode_selector.set_size(D_LABEL_SIZE);
+		db_mode_selector.clear_elements();
+		db_mode_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Line"), SYSCOL_TEXT);
+		db_mode_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Convoy"), SYSCOL_TEXT);
+		db_mode_selector.set_width_fixed(true);
+		db_mode_selector.set_selection( display_mode_bits&SHOW_LINE_NAME ? 0:1 );
+
+		cont_tab_departure.add_component(&db_mode_selector);
 
 		cont_tab_departure.new_component<gui_fill_t>();
 	}
@@ -909,9 +921,9 @@ void halt_info_t::update_cont_departure()
 
 	convoihandle_t cnv;
 	sint32 delta_t;
-	const uint32 max_listings = 12;
+	const uint32 max_listings = 15;
 
-	FOR(arrival_times_map, const& iter, show_departures ? halt->get_estimated_convoy_departure_times() : halt->get_estimated_convoy_arrival_times())
+	FOR(arrival_times_map, const& iter, display_mode_bits&SHOW_DEPARTURES ? halt->get_estimated_convoy_departure_times() : halt->get_estimated_convoy_arrival_times())
 	{
 		cnv.set_id(iter.key);
 		if(!cnv.is_bound())
@@ -925,7 +937,8 @@ void halt_info_t::update_cont_departure()
 			continue;
 		}
 
-		halthandle_t target_halt = show_departures ? cnv->get_schedule()->get_next_halt(cnv->get_owner(), halt) : haltestelle_t::get_halt(cnv->front()->last_stop_pos, cnv->get_owner());
+		halthandle_t target_halt = get_convoy_target_halt(cnv);
+
 		if( cnv->is_wait_infinite() ) {
 			delta_t = SINT32_MAX_VALUE;
 		}
@@ -948,11 +961,13 @@ void halt_info_t::update_cont_departure()
 		{
 			// header
 			cont_departure.new_component<gui_empty_t>();
-			cont_departure.new_component_span<gui_label_t>("Convoy", 2);
-			cont_departure.new_component<gui_label_t>(show_departures ? "db_convoy_to" : "db_convoy_from");
+			cont_departure.new_component<gui_empty_t>();
+			cont_departure.new_component<gui_label_t>(display_mode_bits&SHOW_LINE_NAME ? "Line" : "Convoy");
+			cont_departure.new_component<gui_label_t>(display_mode_bits&SHOW_DEPARTURES ? "db_convoy_to" : "db_convoy_from");
 
 			cont_departure.new_component<gui_divider_t>()->init(scr_coord(0, 0), proportional_string_width("--:--:--"));
-			cont_departure.new_component_span<gui_divider_t>(2);
+			cont_departure.new_component<gui_divider_t>();
+			cont_departure.new_component<gui_divider_t>();
 			cont_departure.new_component<gui_divider_t>();
 
 			FOR(vector_tpl<halt_info_t::dest_info_t>, hi, db_halts) {
@@ -963,14 +978,29 @@ void halt_info_t::update_cont_departure()
 				else {
 					char timebuf[32];
 					world()->sprintf_ticks(timebuf, sizeof(timebuf), hi.delta_ticks);
-					lb->buf().printf("%s", timebuf);
+					lb->buf().append(timebuf);
 				}
 				lb->set_fixed_width(proportional_string_width("--:--:--"));
 				lb->update();
 
 				const bool is_bus = (hi.cnv->front()->get_waytype() == road_wt && hi.cnv->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS));
-				cont_departure.new_component<gui_image_t>(is_bus ? skinverwaltung_t::bushaltsymbol->get_image_id(0) : hi.cnv->get_schedule()->get_schedule_type_symbol(), 0, ALIGN_NONE, true);
-				cont_departure.new_component<gui_label_t>(hi.cnv->get_name(), color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
+				cont_departure.add_table(2,1);
+				{
+					cont_departure.new_component<gui_image_t>(is_bus ? skinverwaltung_t::bushaltsymbol->get_image_id(0) : hi.cnv->get_schedule()->get_schedule_type_symbol(), 0, ALIGN_NONE, true);
+					// convoy ID
+					lb = cont_departure.new_component<gui_label_buf_t>(color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark), gui_label_t::left);
+					lb->buf().printf("(%u)", hi.cnv->self.get_id());
+					lb->update();
+				}
+				cont_departure.end_table();
+
+				if (display_mode_bits&SHOW_LINE_NAME) {
+						cont_departure.new_component<gui_label_t>(hi.cnv->get_line().is_bound() ? hi.cnv->get_line()->get_name() : "-", color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark), gui_label_t::left);
+				}
+				else {
+					cont_departure.new_component<gui_label_t>(hi.cnv->get_internal_name(), color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
+				}
+
 				cont_departure.new_component<gui_label_t>(hi.halt.is_bound() ? hi.halt->get_name() : "Unknown");
 			}
 		}
@@ -989,6 +1019,70 @@ void halt_info_t::update_cont_departure()
 	cont_departure.new_component_span<gui_margin_t>(0, D_MARGIN_BOTTOM,2);
 
 	cont_departure.set_size(cont_departure.get_size());
+}
+
+
+halthandle_t halt_info_t::get_convoy_target_halt(convoihandle_t cnv)
+{
+	halthandle_t temp_halt;
+	if (!cnv.is_bound()) {
+		dbg->warning("halt_info_t::get_convoy_target_halt", "convoy not found");
+		return temp_halt;
+	}
+	const schedule_t *schedule = cnv->get_schedule();
+
+	uint8 entry = cnv->is_reversed() ? schedule->get_count()-1 : 0;
+	halthandle_t origin_halt;
+	bool found_in_forward=false;
+	while (entry>=0 && entry<schedule->get_count()) {
+		const halthandle_t entry_halt = haltestelle_t::get_halt(schedule->entries[entry].pos, cnv->get_owner());
+		if (entry_halt.is_bound()) {
+			if (entry_halt == halt) {
+				if ((cnv->is_reversed() && entry < schedule->get_current_stop()) || (!cnv->is_reversed() && entry > schedule->get_current_stop())) {
+					if (found_in_forward && temp_halt.is_bound()) {
+						return temp_halt;
+					}
+					found_in_forward = true; // OK, next terminal is the destination
+				}
+			}
+			else {
+				if (!origin_halt.is_bound()) origin_halt = entry_halt;
+
+				if (schedule->entries[entry].reverse) {
+					if (found_in_forward) {
+						if (display_mode_bits&SHOW_DEPARTURES) {
+							// destination
+							return entry_halt;
+						}
+						else if (temp_halt.is_bound()) {
+							// origin (nearest terminal)
+							return temp_halt;
+						}
+						else {
+							// origin
+							return origin_halt;
+						}
+					}
+					else {
+						temp_halt = entry_halt; // still candidate
+					}
+				}
+				else if (found_in_forward) {
+					temp_halt = entry_halt; // For the case of going back and forth to this stop many times
+				}
+			}
+		}
+		cnv->is_reversed() ? entry-- : entry++;
+	}
+
+	if (schedule->is_mirrored()) {
+		return display_mode_bits & SHOW_DEPARTURES ? temp_halt : origin_halt;
+	}
+	else {
+		return temp_halt.is_bound() ? temp_halt : origin_halt;
+	}
+
+	return temp_halt;
 }
 
 void halt_info_t::draw(scr_coord pos, scr_size size)
@@ -1040,14 +1134,17 @@ bool halt_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		}
 	}
 	else if (comp == &bt_arrivals) {
-		show_departures = false;
-		bt_arrivals.pressed   = !show_departures;
-		bt_departures.pressed =  show_departures;
+		display_mode_bits &= ~SHOW_DEPARTURES;
+		bt_arrivals.pressed   = !(display_mode_bits&SHOW_DEPARTURES);
+		bt_departures.pressed = display_mode_bits & SHOW_DEPARTURES;
 	}
 	else if (comp == &bt_departures) {
-		show_departures = true;
-		bt_arrivals.pressed   = !show_departures;
-		bt_departures.pressed =  show_departures;
+		display_mode_bits |= SHOW_DEPARTURES;
+		bt_arrivals.pressed   = !(display_mode_bits&SHOW_DEPARTURES);
+		bt_departures.pressed = display_mode_bits&SHOW_DEPARTURES;
+	}
+	else if (comp == &db_mode_selector) {
+		display_mode_bits ^= SHOW_LINE_NAME;
 	}
 
 	return true;
@@ -1071,7 +1168,7 @@ void halt_info_t::rdwr(loadsave_t *file)
 		halt_pos = halt->get_basis_pos3d();
 	}
 	halt_pos.rdwr( file );
-	file->rdwr_bool( show_departures );
+	file->rdwr_byte( display_mode_bits );
 
 	if(  file->is_loading()  ) {
 		halt = world()->lookup( halt_pos )->get_halt();

@@ -97,6 +97,7 @@ private:
 	gui_colorbox_t indicator_color;
 	gui_image_t img_enable[2];
 	gui_halt_type_images_t *img_types;
+	gui_combobox_t db_mode_selector;
 	/**
 	* Buffer for freight info text string.
 	*/
@@ -122,7 +123,12 @@ private:
 	button_t bt_arrivals, bt_departures;
 	gui_aligned_container_t cont_tab_departure, cont_departure;
 	gui_scrollpane_t scrolly_departure_board;
-	bool show_departures=false;
+	//bool show_departures=false;
+	enum {
+		SHOW_DEPARTURES = 1 << 1,
+		SHOW_LINE_NAME  = 1 << 2
+	};
+	uint8 display_mode_bits = 0;
 	void update_cont_departure();
 
 	// other UI definitions
@@ -155,6 +161,10 @@ private:
 	void set_tab_opened();
 
 	void init(halthandle_t halt);
+
+	// for departure board
+	// return a its destination/origin stop
+	halthandle_t get_convoy_target_halt(convoihandle_t cnv);
 
 public:
 	enum sort_mode_t { by_destination = 0, by_via = 1, by_amount_via = 2, by_amount = 3, by_origin = 4, by_origin_sum = 5, by_destination_detil = 6, by_class_detail = 7, by_class_via = 8, by_line = 9, by_line_via = 10, SORT_MODES = 11 };
