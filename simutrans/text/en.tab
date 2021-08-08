@@ -6090,3 +6090,11 @@ Stops potentially within walking distance:
 Stops potentially within walking distance
 ignore regions
 Ignore regions
+gl_normal
+Fare/weight
+gl_prod
+Producers
+gl_con
+Consumers
+Open the fare calculation input field
+Show fare calculation settings
