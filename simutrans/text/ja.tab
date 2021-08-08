@@ -1057,6 +1057,12 @@ gl_btn_sort_catg
 カテゴリー順
 gl_title
 貨物一覧
+gl_normal
+基本情報
+gl_prod
+生産者
+gl_con
+消費者
 go home
 車庫へ
 Goods
@@ -4045,6 +4051,12 @@ One vehicle found
 該当数: 1
 %u vehicles found
 該当数: %u
+Open the fare calculation input field
+運賃計算入力欄を開く
+Show producers
+資材・製品を生産する産業を表示します
+Show consumers
+資材・製品を消費する産業を表示します
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
