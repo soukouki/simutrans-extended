@@ -546,7 +546,7 @@ void convoi_info_t::update_labels()
 	else if (welt->lookup(next_pos) && welt->lookup(next_pos)->get_depot() != NULL) {
 		halt_symbol_style=gui_schedule_entry_number_t::number_style::depot;
 	}
-	next_halt_number.init(schedule->get_current_stop() + 1, halt_col_idx, halt_symbol_style);
+	next_halt_number.init(schedule->get_current_stop(), halt_col_idx, halt_symbol_style);
 
 	// distance
 	sint32 cnv_route_index_left = cnv->get_route()->get_count() - 1 - cnv_route_index;
