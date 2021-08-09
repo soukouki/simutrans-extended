@@ -9,6 +9,7 @@
 #include "replace_frame.h"
 
 #include "../vehicle/air_vehicle.h"
+#include "../vehicle/rail_vehicle.h"
 #include "../simcolor.h"
 #include "../display/viewport.h"
 #include "../simworld.h"
