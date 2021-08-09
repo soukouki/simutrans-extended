@@ -1168,8 +1168,6 @@ void halt_info_t::rdwr(loadsave_t *file)
 		halt_pos = halt->get_basis_pos3d();
 	}
 	halt_pos.rdwr( file );
-	file->rdwr_byte( display_mode_bits );
-
 	if(  file->is_loading()  ) {
 		halt = world()->lookup( halt_pos )->get_halt();
 		if (halt.is_bound()) {
@@ -1188,6 +1186,8 @@ void halt_info_t::rdwr(loadsave_t *file)
 
 	// button-to-chart array
 	button_to_chart.rdwr(file);
+
+	file->rdwr_byte(display_mode_bits);
 
 	if (!halt.is_bound()) {
 		destroy_win( this );
