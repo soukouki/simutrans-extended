@@ -793,7 +793,6 @@ bool stadt_t::cityrules_init(const std::string &objfilename)
 	if (!cityconf.open((user_dir+"cityrules.tab").c_str())) {
 		if (!cityconf.open((objfilename+"config/cityrules.tab").c_str())) {
 			dbg->fatal("stadt_t::init()", "Can't read cityrules.tab" );
-			return false;
 		}
 	}
 
@@ -895,7 +894,7 @@ bool stadt_t::cityrules_init(const std::string &objfilename)
 		}
 
 		// put rule into memory
-		const uint8 offset = (7 - (uint)size) / 2;
+		const uint8 offset = (7 - (uint8)size) / 2;
 		for (uint y = 0; y < size; y++) {
 			for (uint x = 0; x < size; x++) {
 				const char flag = rule[x + y * (size + 1)];
@@ -943,7 +942,7 @@ bool stadt_t::cityrules_init(const std::string &objfilename)
 		}
 
 		// put rule into memory
-		const uint8 offset = (7 - (uint)size) / 2;
+		const uint8 offset = (7 - (uint8)size) / 2;
 		for (uint y = 0; y < size; y++) {
 			for (uint x = 0; x < size; x++) {
 				const char flag = rule[x + y * (size + 1)];
@@ -5984,7 +5983,7 @@ int private_car_destination_finder_t::get_cost(const grund_t* gr, sint32 max_spe
 
 #ifndef FORBID_CONGESTION_EFFECTS
 	const sint32 congestion_percentage = w->get_congestion_percentage();
-	if (congestion_percentage)
+	if (congestion_percentage > 0)
 	{
 		speed = speed * 100 / (100 + congestion_percentage);
 		speed = max(4, speed);

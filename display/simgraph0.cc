@@ -168,15 +168,15 @@ void display_scroll_band(const scr_coord_val, const scr_coord_val, const scr_coo
 {
 }
 
-void display_img_aux(const image_id, scr_coord_val, scr_coord_val, const signed char, const int, const int  CLIP_NUM_DEF_NOUSE)
+void display_img_aux(const image_id, scr_coord_val, scr_coord_val, const sint8, const bool, const bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
-void display_color_img(const image_id, scr_coord_val, scr_coord_val, const signed char, const int, const int  CLIP_NUM_DEF_NOUSE)
+void display_color_img(const image_id, scr_coord_val, scr_coord_val, const sint8, const bool, const bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
-void display_base_img(const image_id, scr_coord_val, scr_coord_val, const signed char, const int, const int  CLIP_NUM_DEF_NOUSE)
+void display_base_img(const image_id, scr_coord_val, scr_coord_val, const sint8, const bool, const bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
@@ -192,19 +192,19 @@ void display_img_stretch_blend( const stretch_map_t &, scr_rect, FLAGGED_PIXVAL)
 {
 }
 
-void display_rezoomed_img_blend(const image_id, scr_coord_val, scr_coord_val, const signed char, const FLAGGED_PIXVAL, const int, const int  CLIP_NUM_DEF_NOUSE)
+void display_rezoomed_img_blend(const image_id, scr_coord_val, scr_coord_val, const sint8, const FLAGGED_PIXVAL, const bool, const bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
-void display_rezoomed_img_alpha(const image_id, const image_id, const unsigned, scr_coord_val, scr_coord_val, const signed char, const FLAGGED_PIXVAL, const int, const int  CLIP_NUM_DEF_NOUSE)
+void display_rezoomed_img_alpha(const image_id, const image_id, const unsigned, scr_coord_val, scr_coord_val, const sint8, const FLAGGED_PIXVAL, const bool, const bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
-void display_base_img_blend(const image_id, scr_coord_val, scr_coord_val, const signed char, const FLAGGED_PIXVAL, const int, const int  CLIP_NUM_DEF_NOUSE)
+void display_base_img_blend(const image_id, scr_coord_val, scr_coord_val, const sint8, const FLAGGED_PIXVAL, const bool, const bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
-void display_base_img_alpha(const image_id, const image_id, const unsigned, scr_coord_val, scr_coord_val, const signed char, const FLAGGED_PIXVAL, const int, int  CLIP_NUM_DEF_NOUSE)
+void display_base_img_alpha(const image_id, const image_id, const unsigned, scr_coord_val, scr_coord_val, const sint8, const FLAGGED_PIXVAL, const bool, bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
@@ -251,6 +251,10 @@ void display_colorbox_with_tooltip(scr_coord_val, scr_coord_val, scr_coord_val, 
 }
 
 void display_veh_form_wh_clip_rgb(scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, bool, uint8, uint8, bool CLIP_NUM_DEF_NOUSE)
+{
+}
+
+void display_convoy_arrow_wh_clip_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
@@ -426,7 +430,7 @@ void display_filled_circle_rgb( scr_coord_val, scr_coord_val, int, const PIXVAL 
 {
 }
 
-void display_right_triangle_rgb(scr_coord_val, scr_coord_val, uint8, const PIXVAL, const bool)
+void display_right_triangle_rgb(scr_coord_val, scr_coord_val, scr_coord_val, const PIXVAL, const bool)
 {
 }
 
@@ -447,7 +451,7 @@ void display_progress(int, int)
 {
 }
 
-void display_img_aligned( const image_id, scr_rect, int, int )
+void display_img_aligned( const image_id, scr_rect, int, bool )
 {
 }
 

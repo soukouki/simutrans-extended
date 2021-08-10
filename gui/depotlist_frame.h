@@ -14,8 +14,7 @@
 #include "components/gui_label.h"
 #include "components/gui_image.h"
 #include "components/gui_combobox.h"
-
-#define MAX_DEPOT_TYPES 8
+#include "../player/finance.h"
 
 class depot_t;
 
@@ -27,8 +26,7 @@ private:
 	button_t sort_order;
 	gui_scrolled_list_t scrolly;
 
-	button_t filter_buttons[MAX_DEPOT_TYPES];
-	button_t all_depot_types;
+	button_t filter_buttons[TT_MAX_VEH];
 
 	uint32 last_depot_count;
 	static uint8 depot_type_filter_bits;
@@ -37,11 +35,9 @@ private:
 
 	player_t *player;
 
-	// Whether the waytype is available in pakset
-	// This is determined by whether the pakset has a vehicle.
-	bool is_available_wt(waytype_t wt) const;
-
 public:
+	depotlist_frame_t();
+
 	depotlist_frame_t(player_t *player);
 
 	const char *get_help_filename() const OVERRIDE {return "depotlist.txt"; }
@@ -53,6 +49,10 @@ public:
 	// yes we can reload
 	uint32 get_rdwr_id() OVERRIDE { return magic_depotlist; }
 	void rdwr(loadsave_t *file) OVERRIDE;
+
+	// Whether the waytype is available in pakset
+	// This is determined by whether the pakset has a vehicle.
+	static bool is_available_wt(waytype_t wt);
 
 	bool has_min_sizer() const OVERRIDE { return true; }
 
@@ -85,8 +85,6 @@ public:
 	void set_size(scr_size size) OVERRIDE;
 
 	static bool compare(const gui_component_t *a, const gui_component_t *b );
-
-	static const image_id get_depot_symbol(waytype_t wt);
 };
 
 #endif

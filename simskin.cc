@@ -195,9 +195,9 @@ bool skinverwaltung_t::successfully_loaded(skintyp_t type)
 {
 	special_obj_tpl<skin_desc_t> const* sd;
 	switch (type) {
-		case menu:    sd = menu_objekte+1;     break;
+		case menu:    return true; // skins will be handled elsewhere
 		case cursor:  sd = cursor_objekte;     break;
-		case symbol:  sd = symbol_objekte+14;   break;
+		case symbol:  sd = symbol_objekte+14;  break;
 		case misc:
 			sd = misc_objekte+3;
 			// for compatibility: use sidewalk as tunneltexture
@@ -250,6 +250,33 @@ const skin_desc_t *skinverwaltung_t::get_extra( const char *str, int len )
 		if (strncmp(str, s->get_name(), len) == 0) {
 			return s;
 		}
+	}
+	return NULL;
+}
+
+const skin_desc_t *skinverwaltung_t::get_waytype_skin(waytype_t wt)
+{
+	switch (wt)
+	{
+		case road_wt:
+			return autohaltsymbol;
+			//return bushaltsymbol;
+		case track_wt:
+			return zughaltsymbol;
+		case water_wt:
+			return schiffshaltsymbol;
+		case monorail_wt:
+			return monorailhaltsymbol;
+		case maglev_wt:
+			return maglevhaltsymbol;
+		case tram_wt:
+			return tramhaltsymbol;
+		case narrowgauge_wt:
+			return narrowgaugehaltsymbol;
+		case air_wt:
+			return airhaltsymbol;
+		default:
+			break;
 	}
 	return NULL;
 }

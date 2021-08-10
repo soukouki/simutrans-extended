@@ -1350,7 +1350,6 @@ sync_result convoi_t::sync_step(uint32 delta_t)
 
 		default:
 			dbg->fatal("convoi_t::sync_step()", "Wrong state %d!\n", state);
-			break;
 	}
 
 	// Debug sums:
@@ -5047,7 +5046,7 @@ void convoi_t::show_info()
 		}
 	}
 	else {
-		if(  env_t::verbose_debug  ) {
+		if(  env_t::verbose_debug >= log_t::LEVEL_ERROR  ) {
 			dump();
 		}
 		create_win( new convoi_info_t(self), w_info, magic_convoi_info+self.get_id() );
@@ -5066,7 +5065,7 @@ void convoi_t::info(cbuffer_t & buf) const
 
 		buf.printf(" %s: %ikW\n", translator::translate("Leistung"), sum_power );
 
-		buf.printf(" %s: %i (%i) t\n", translator::translate("Gewicht"), sum_weight, sum_gesamtweight-sum_weight );
+		buf.printf(" %s: %ld (%ld) t\n", translator::translate("Gewicht"), (long)sum_weight, (long)(sum_gesamtweight - sum_weight));
 
 		buf.printf(" %s: ", translator::translate("Gewinn")  );
 
@@ -5181,9 +5180,8 @@ void convoi_t::get_freight_info(cbuffer_t & buf)
 
 		// apend info on total capacity
 		slist_tpl <ware_t>capacity;
-
-		for (size_t i = 0; i != n; ++i) {
-			if (max_loaded_waren[i] > 0 && i != goods_manager_t::INDEX_NONE) {
+		for (uint16 i = 0; i != n; ++i) {
+			if(max_loaded_waren[i]>0  &&  i!=goods_manager_t::INDEX_NONE) {
 				ware_t ware(goods_manager_t::get_info(i));
 				ware.menge = max_loaded_waren[i];
 				// append to category?
@@ -5230,7 +5228,7 @@ void convoi_t::get_freight_info_by_class(cbuffer_t &)
 
 void convoi_t::open_schedule_window( bool show )
 {
-	DBG_MESSAGE("convoi_t::open_schedule_window()","Id = %ld, State = %d, Lock = %d",self.get_id(), state, wait_lock);
+	DBG_MESSAGE("convoi_t::open_schedule_window()","Id = %hu, State = %d, Lock = %d", self.get_id(), (int)state, wait_lock);
 
 	// manipulation of schedule not allowed while:
 	// - just starting
@@ -5773,12 +5771,11 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
  */
 void convoi_t::hat_gehalten(halthandle_t halt)
 {
-
-	grund_t *gr = welt->lookup(front()->get_pos());
+	grund_t *gr=welt->lookup(front()->get_pos());
 
 	// now find out station length
 	uint16 vehicles_loading=0;
-	if(  gr->is_water()  ) {
+	if(  gr->is_water()  ||  gr->hat_weg(water_wt)  ) {
 		// harbour has any size
 		vehicles_loading = vehicle_count;
 	}
@@ -6117,6 +6114,12 @@ station_tile_search_ready: ;
 		}
 	}
 
+	if(withdraw && (loading_level == 0 || goods_catg_index.empty())) {
+		// destroy when empty
+		self_destruct();
+		return;
+	}
+
 	// loading is finished => maybe drive on
 	bool can_go = false;
 
@@ -6128,13 +6131,6 @@ station_tile_search_ready: ;
 	can_go = can_go && state != WAITING_FOR_CLEARANCE && state != WAITING_FOR_CLEARANCE_ONE_MONTH && state != WAITING_FOR_CLEARANCE_TWO_MONTHS;
 	can_go = can_go && now > earliest_departure_time;
 	if(can_go) {
-
-		if(withdraw  &&  (loading_level==0  ||  goods_catg_index.empty())) {
-			// destroy when empty
-			self_destruct();
-			return;
-		}
-
 		// add available capacity after loading(!) to statistics
 		for (unsigned i = 0; i<vehicle_count; i++) {
 			book(get_vehicle(i)->get_cargo_max()-get_vehicle(i)->get_total_cargo(), CONVOI_CAPACITY);
@@ -7197,7 +7193,7 @@ uint16 convoi_t::get_true_tile_length() const
 void convoi_t::set_withdraw(bool new_withdraw)
 {
 	withdraw = new_withdraw;
-	if(  withdraw  &&  (loading_level==0  ||  goods_catg_index.empty())) {
+	if(withdraw && (loading_level == 0 || goods_catg_index.empty())) {
 		// test if convoi in depot and not driving
 		grund_t *gr = welt->lookup( get_pos());
 		if(  gr  &&  gr->get_depot()  &&  state == INITIAL  ) {

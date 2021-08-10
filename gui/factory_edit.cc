@@ -208,8 +208,8 @@ void factory_edit_frame_t::fill_list()
 	scl.set_selection(-1);
 	FOR(vector_tpl<factory_desc_t const*>, const i, factory_list) {
 		PIXVAL const color =
-			i->is_consumer_only() ? color_idx_to_rgb(COL_DARK_BLUE + env_t::gui_player_color_dark) :
-			i->is_producer_only() ? color_idx_to_rgb(40 + env_t::gui_player_color_dark)            :
+			i->is_consumer_only() ? color_idx_to_rgb(COL_BLUE)       :
+			i->is_producer_only() ? color_idx_to_rgb(COL_DARK_GREEN) :
 			SYSCOL_TEXT;
 		char const* const name = get_sortedby()==gui_sorting_item_t::BY_NAME_OBJECT ?  i->get_name() : translator::translate(i->get_name());
 		scl.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(name, color);
@@ -378,16 +378,17 @@ void factory_edit_frame_t::change_item_info(sint32 entry)
 			// reset combobox
 			cb_rotation.clear_elements();
 			cb_rotation.new_component<gui_rotation_item_t>(gui_rotation_item_t::random);
+			cb_rotation.new_component<gui_rotation_item_t>(gui_rotation_item_t::automatic);
 			for(uint8 i = 0; i<desc->get_all_layouts(); i++) {
 				cb_rotation.new_component<gui_rotation_item_t>(i);
 			}
 
 			// orientation (255=random)
 			if(desc->get_all_layouts()>1) {
-				cb_rotation.set_selection(0);
+				cb_rotation.set_selection(1);
 			}
 			else {
-				cb_rotation.set_selection(1);
+				cb_rotation.set_selection(2);
 			}
 
 			// now for the tool
@@ -396,12 +397,12 @@ void factory_edit_frame_t::change_item_info(sint32 entry)
 
 		const building_desc_t *desc = fac_desc->get_building();
 		uint8 rotation = get_rotation();
-		uint8 rot = (rotation==255) ? 0 : rotation;
+		uint8 rot = (rotation >= 254) ? 0 : rotation;
 		building_image.init(desc, rot);
 
 		// the tools will be always updated, even though the data up there might be still current
 		param_str.clear();
-		param_str.printf("%i%c%i,%s", bt_climates.pressed, rotation==255 ? '#' : '0'+rotation, production, fac_desc->get_name() );
+		param_str.printf("%i%i%c%i,%s", bt_climates.pressed, bt_ignore_regions.pressed, rotation>253 ? (rotation==254 ? 'A' : '#') : '0'+rotation, production, fac_desc->get_name() );
 		if(bt_land_chain.pressed) {
 			land_chain_tool.set_default_param(param_str);
 			welt->set_tool( &land_chain_tool, player );
