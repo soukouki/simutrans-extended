@@ -731,8 +731,6 @@ CityLimit
 市域
 cl_title
 乗り物一覧
-cl_txt_sort
-並び替え:
 Clear block reservation
 線路占有解除ツール
 clf_chk_aircrafts
@@ -855,6 +853,10 @@ Customers live in:
 顧客居住地:
 DAY_SYMBOL
 日
+db_convoy_to
+次の停車駅
+db_convoy_from
+前の停車駅
 deactivated in online mode
 ネットゲームでは使用できません
 Dec.
@@ -4159,3 +4161,5 @@ Power: %4d kW\n
 #今年の移動成功率(旅行):
 #left
 #所要
+#cl_txt_sort
+#並び替え:
