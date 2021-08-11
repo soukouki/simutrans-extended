@@ -7,44 +7,44 @@
 
 # assumes makeobj is in ../build/default/makeobj-extended
 
-cd ../aero
+cd aero
 rm -rf *.pak
 ../build/default/makeobj-extended pak aerotheme.pak skins_aero.dat
 mv *.pak ../../simutrans/themes
 cp *.tab ../../simutrans/themes
 
-cd ../flat
+cd flat
 rm -rf *.pak
 .../build/default/makeobj-extended pak flat.pak flat-skin.dat
 mv *.pak ../../simutrans/themes
 cp *.tab ../../simutrans/themes
 
-cd ../standard
+cd standard
 rm -rf *.pak
 ../build/default/makeobj-extended pak classic.pak standard.dat
 mv *.pak ../../simutrans/themes
 cp *.tab ../../simutrans/themes
 
-cd ../highcontrast
+cd highcontrast
 rm -rf *.pak
 ../build/default/makeobj-extended pak highcontrast.pak theme.dat
 mv *.pak ../../simutrans/themes
 cp *.tab ../../simutrans/themes
 
-cd ../highcontrast-large
+cd highcontrast-large
 rm -rf *.pak
 ../build/default/makeobj-extended pak highcontrast-large.pak theme.dat
 mv *.pak ../../simutrans/themes
 cp *.tab ../../simutrans/themes
 
-cd ../modern
+cd modern
 rm -rf *.pak
 ../build/default/makeobj-extended pak modern.pak standard.dat
 ../build/default/makeobj-extended pak modern-large.pak standard-large.dat
 mv *.pak ../../simutrans/themes
 cp *.tab ../../simutrans/themes
 
-cd ../newstandard
+cd newstandard
 rm -rf *.pak
 ../build/default/makeobj-extended pak newstandard.pak newstandard.dat
 ../build/default/makeobj-extended pak newstandard-large.pak newstandard-large.dat
