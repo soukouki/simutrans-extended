@@ -230,6 +230,7 @@ add_executable(simutrans-extended
 	gui/components/gui_map_preview.cc
 	gui/components/gui_numberinput.cc
 	gui/components/gui_obj_view_t.cc
+	gui/components/gui_schedule_item.cc
 	gui/components/gui_scrollbar.cc
 	gui/components/gui_scrolled_list.cc
 	gui/components/gui_scrollpane.cc
@@ -314,9 +315,7 @@ add_executable(simutrans-extended
 	gui/sprachen.cc
 	gui/station_building_select.cc
 	gui/themeselector.cc
-	gui/times_history.cc
 	gui/times_history_container.cc
-	gui/times_history_entry.cc
 	gui/tool_selector.cc
 	gui/trafficlight_info.cc
 	gui/vehiclelist_frame.cc
@@ -449,9 +448,13 @@ add_executable(simutrans-extended
 	utils/simstring.cc
 	utils/simthread.cc
 	vehicle/movingobj.cc
-	vehicle/simpeople.cc
+	vehicle/pedestrian.cc
 	vehicle/simroadtraffic.cc
-	vehicle/simvehicle.cc
+	vehicle/vehicle.cc
+	vehicle/air_vehicle.cc
+	vehicle/rail_vehicle.cc
+	vehicle/road_vehicle.cc
+	vehicle/water_vehicle.cc
 )
 
 if (WIN32)
