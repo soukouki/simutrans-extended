@@ -3221,7 +3221,7 @@ void vehicle_t::display_after(int xpos, int ypos, bool is_global) const
 			linehandle_t lh = cnv->get_line();
 			if (env_t::show_cnv_nameplates & 4 ) {
 				// convoy ID
-				sprintf(nameplate_text, "%i", cnv->self.get_id());
+				sprintf(nameplate_text, "%u", cnv->self.get_id());
 			}
 			else if (lh.is_bound()) {
 				// line name
@@ -3233,13 +3233,21 @@ void vehicle_t::display_after(int xpos, int ypos, bool is_global) const
 			}
 			const PIXVAL col_val = color_idx_to_rgb(lh.is_bound() ? cnv->get_owner()->get_player_color1()+3 : cnv->get_owner()->get_player_color1()+1);
 
-			const int width = proportional_string_width(nameplate_text) + 7;
+			const int width = proportional_string_width(nameplate_text)+7;
 			if (ypos > LINESPACE + 32 && ypos + LINESPACE < display_get_clip_wh().yy) {
 				const scr_coord_val yoff = LOADINGBAR_HEIGHT + WAITINGBAR_HEIGHT + LINESPACE/2 + 2;
 				if (env_t::show_cnv_nameplates & 4) {
-					display_veh_form_wh_clip_rgb(xpos,                     ypos-yoff-LINESPACE/2-1, width/2+LINESPACE/2, LINESPACE+4, col_val, true, false, vehicle_desc_t::can_be_head, HAS_POWER | BIDIRECTIONAL);
-					display_veh_form_wh_clip_rgb(xpos+width/2+LINESPACE/2, ypos-yoff-LINESPACE/2-1, width/2+LINESPACE/2, LINESPACE+4, col_val, true, true,  vehicle_desc_t::can_be_head|vehicle_desc_t::can_be_tail, HAS_POWER | BIDIRECTIONAL);
-					display_text_proportional_len_clip_rgb(xpos+LINESPACE/2+3, ypos-yoff-LINESPACE/2+1, nameplate_text, ALIGN_LEFT | DT_CLIP, color_idx_to_rgb(COL_WHITE), true, -1);
+					const int bar_height     = LINEASCENT+4;
+					const int bar_width_half = (width+bar_height)/4*2+2;
+					scr_coord_val idplate_yoff = ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT - bar_height;
+					display_veh_form_wh_clip_rgb(xpos,                  idplate_yoff,     bar_width_half+1, bar_height,   color_idx_to_rgb(COL_WHITE), true, false, vehicle_desc_t::can_be_head, HAS_POWER | BIDIRECTIONAL);
+					display_veh_form_wh_clip_rgb(xpos+1,                idplate_yoff+1,   bar_width_half,   bar_height-2, col_val, true, false, vehicle_desc_t::can_be_head, HAS_POWER | BIDIRECTIONAL);
+					display_veh_form_wh_clip_rgb(xpos+1+bar_width_half, idplate_yoff,     bar_width_half+1, bar_height,   color_idx_to_rgb(COL_WHITE), true, true,  vehicle_desc_t::can_be_head|vehicle_desc_t::can_be_tail, HAS_POWER | BIDIRECTIONAL);
+					display_veh_form_wh_clip_rgb(xpos+1+bar_width_half, idplate_yoff+1,   bar_width_half,   bar_height-2, col_val, true, true,  vehicle_desc_t::can_be_head|vehicle_desc_t::can_be_tail, HAS_POWER | BIDIRECTIONAL);
+					if (LINESPACE-LINEASCENT>4) {
+						idplate_yoff -= (LINESPACE-LINEASCENT-4);
+					}
+					display_proportional_clip_rgb(xpos+(bar_width_half*2-width+7+2)/2, idplate_yoff+1, nameplate_text, ALIGN_LEFT, color_idx_to_rgb(COL_WHITE), true);
 				}
 				else {
 					display_ddd_proportional_clip(xpos, ypos-yoff, width, 0, col_val, color_idx_to_rgb(COL_WHITE), nameplate_text, true);
