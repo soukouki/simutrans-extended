@@ -988,9 +988,9 @@ void halt_info_t::update_cont_departure()
 				{
 					cont_departure.new_component<gui_image_t>(is_bus ? skinverwaltung_t::bushaltsymbol->get_image_id(0) : hi.cnv->get_schedule()->get_schedule_type_symbol(), 0, ALIGN_NONE, true);
 					// convoy ID
-					lb = cont_departure.new_component<gui_label_buf_t>(color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark), gui_label_t::left);
-					lb->buf().printf("(%u)", hi.cnv->self.get_id());
-					lb->update();
+					char buf[128];
+					sprintf(buf, "%u", hi.cnv->self.get_id());
+					cont_departure.new_component<gui_vehicle_number_t>(buf, color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1()+3) );
 				}
 				cont_departure.end_table();
 
@@ -998,7 +998,7 @@ void halt_info_t::update_cont_departure()
 						cont_departure.new_component<gui_label_t>(hi.cnv->get_line().is_bound() ? hi.cnv->get_line()->get_name() : "-", color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark), gui_label_t::left);
 				}
 				else {
-					cont_departure.new_component<gui_label_t>(hi.cnv->get_internal_name(), color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
+					cont_departure.new_component<gui_label_t>(hi.cnv->get_internal_name(), hi.cnv->get_overcrowded() ? color_idx_to_rgb(COL_OVERCROWD) : SYSCOL_TEXT );
 				}
 
 				cont_departure.new_component<gui_label_t>(hi.halt.is_bound() ? hi.halt->get_name() : "Unknown");
