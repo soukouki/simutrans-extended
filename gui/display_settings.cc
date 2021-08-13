@@ -550,17 +550,19 @@ label_settings_t::label_settings_t()
 
 		new_component<gui_empty_t>();
 		new_component<gui_empty_t>();
-		add_table(3,1)->set_spacing(scr_size(0,0));
+		add_table(4,1)->set_spacing(scr_size(0,0));
 		{
-			new_component<gui_margin_t>(D_ARROW_LEFT_WIDTH+D_H_SPACE);
-			bt_convoy_id_plate[0].init(button_t::roundbox_state, "name_plate");
-			bt_convoy_id_plate[1].init(button_t::roundbox_state, "Convoy ID");
+			new_component<gui_margin_t>( D_ARROW_LEFT_WIDTH+D_H_SPACE );
+			// UI TODO: radio button is better
+			bt_convoy_id_plate[0].init(button_t::roundbox_left_state  | button_t::flexible, "name_plate");
+			bt_convoy_id_plate[1].init(button_t::roundbox_right_state | button_t::flexible, "Convoy ID");
 			bt_convoy_id_plate[0].set_tooltip("help_text_btn_line_name_plate");
 			bt_convoy_id_plate[1].set_tooltip("Shows the convoy unique ID");
 			bt_convoy_id_plate[0].add_listener(this);
 			bt_convoy_id_plate[1].add_listener(this);
 			add_component(&bt_convoy_id_plate[0]);
 			add_component(&bt_convoy_id_plate[1]);
+			new_component<gui_margin_t>( D_ARROW_LEFT_WIDTH+D_H_SPACE );
 		}
 		end_table();
 

@@ -616,11 +616,11 @@ void halt_info_t::init(halthandle_t halt)
 	cont_tab_departure.add_table(6,1)->set_spacing(scr_size(0,0));
 	{
 		cont_tab_departure.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		bt_arrivals.init(button_t::roundbox_state, "Arrivals from\n");
+		bt_arrivals.init(button_t::roundbox_left_state, "Arrivals from\n");
 		bt_arrivals.set_size(D_BUTTON_SIZE);
 		bt_arrivals.add_listener(this);
 		cont_tab_departure.add_component(&bt_arrivals);
-		bt_departures.init(button_t::roundbox_state,"Departures to\n");
+		bt_departures.init(button_t::roundbox_right_state,"Departures to\n");
 		bt_departures.set_size(D_BUTTON_SIZE);
 		bt_departures.add_listener(this);
 		cont_tab_departure.add_component(&bt_departures);
