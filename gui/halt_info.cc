@@ -613,7 +613,7 @@ void halt_info_t::init(halthandle_t halt)
 	cont_tab_departure.set_spacing(scr_size(0,0));
 	cont_departure.set_table_layout(2,0);
 	cont_departure.set_margin(scr_size(D_H_SPACE, 0), scr_size(D_H_SPACE, 0));
-	cont_tab_departure.add_table(6,1)->set_spacing(scr_size(0,0));
+	cont_tab_departure.add_table(10,1)->set_spacing(scr_size(0,0));
 	{
 		cont_tab_departure.new_component<gui_margin_t>(D_MARGIN_LEFT);
 		bt_arrivals.init(button_t::roundbox_left_state, "Arrivals from\n");
@@ -638,6 +638,20 @@ void halt_info_t::init(halthandle_t halt)
 		db_mode_selector.set_selection( display_mode_bits&SHOW_LINE_NAME ? 0:1 );
 
 		cont_tab_departure.add_component(&db_mode_selector);
+
+		cont_tab_departure.new_component<gui_margin_t>(D_H_SPACE*3);
+
+		bt_db_filter[0].init( button_t::roundbox_left_state,   NULL );
+		bt_db_filter[1].init( button_t::roundbox_middle_state, NULL );
+		bt_db_filter[2].init( button_t::roundbox_right_state,  NULL );
+		bt_db_filter[0].set_image(skinverwaltung_t::passengers->get_image_id(0));
+		bt_db_filter[1].set_image(skinverwaltung_t::mail->get_image_id(0));
+		bt_db_filter[2].set_image(skinverwaltung_t::goods->get_image_id(0));
+		for( uint8 i=0; i<3; i++ ) {
+			bt_db_filter[i].add_listener(this);
+			bt_db_filter[i].pressed = db_filter_bits & (1<<i);
+			cont_tab_departure.add_component(&bt_db_filter[i]);
+		}
 
 		cont_tab_departure.new_component<gui_fill_t>();
 	}
@@ -937,6 +951,28 @@ void halt_info_t::update_cont_departure()
 			continue;
 		}
 
+		// goods filtering
+		if (db_filter_bits != DB_SHOW_ALL) {
+			bool found = false;
+			if ( db_filter_bits&DB_SHOW_PAX && cnv->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS)) {
+				found=true;
+			}
+			if (!found && db_filter_bits&DB_SHOW_MAIL && cnv->get_goods_catg_index().is_contained(goods_manager_t::INDEX_MAIL)) {
+				found = true;
+			}
+			if (!found && db_filter_bits&DB_SHOW_GOODS) {
+				for (uint8 catg_index=goods_manager_t::INDEX_NONE+1; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
+					if( cnv->get_goods_catg_index().is_contained(catg_index) ) {
+						found = true;
+						break;
+					}
+				}
+			}
+			if (!found) {
+				continue;
+			}
+		}
+
 		halthandle_t target_halt = get_convoy_target_halt(cnv);
 
 		if( cnv->is_wait_infinite() ) {
@@ -998,7 +1034,8 @@ void halt_info_t::update_cont_departure()
 						cont_departure.new_component<gui_label_t>(hi.cnv->get_line().is_bound() ? hi.cnv->get_line()->get_name() : "-", color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark), gui_label_t::left);
 				}
 				else {
-					cont_departure.new_component<gui_label_t>(hi.cnv->get_internal_name(), hi.cnv->get_overcrowded() ? color_idx_to_rgb(COL_OVERCROWD) : SYSCOL_TEXT );
+					const PIXVAL textcol = hi.cnv->get_no_load() ? SYSCOL_TEXT_INACTIVE : hi.cnv->has_obsolete_vehicles() ? COL_OBSOLETE : hi.cnv->get_overcrowded() ? color_idx_to_rgb(COL_OVERCROWD) : SYSCOL_TEXT;
+					cont_departure.new_component<gui_label_t>(hi.cnv->get_internal_name(), textcol);
 				}
 
 				cont_departure.new_component<gui_label_t>(hi.halt.is_bound() ? hi.halt->get_name() : "Unknown");
@@ -1011,7 +1048,7 @@ void halt_info_t::update_cont_departure()
 		cont_departure.add_table(2,1);
 		{
 			cont_departure.new_component<gui_margin_t>(D_MARGINS_X);
-			cont_departure.new_component<gui_label_t>("no convois", SYSCOL_TEXT_INACTIVE);
+			cont_departure.new_component<gui_label_t>(db_filter_bits == 0 ? "Invalid filter" : "no convois", SYSCOL_TEXT_INACTIVE);
 		}
 		cont_departure.end_table();
 		cont_departure.new_component<gui_fill_t>();
@@ -1145,6 +1182,18 @@ bool halt_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 	}
 	else if (comp == &db_mode_selector) {
 		display_mode_bits ^= SHOW_LINE_NAME;
+	}
+	else if (comp == &bt_db_filter[0]) {
+		db_filter_bits ^= DB_SHOW_PAX;
+		bt_db_filter[0].pressed = db_filter_bits & DB_SHOW_PAX;
+	}
+	else if (comp == &bt_db_filter[1]) {
+		db_filter_bits ^= DB_SHOW_MAIL;
+		bt_db_filter[1].pressed = db_filter_bits & DB_SHOW_MAIL;
+	}
+	else if (comp == &bt_db_filter[2]) {
+		db_filter_bits ^= DB_SHOW_GOODS;
+		bt_db_filter[2].pressed = db_filter_bits & DB_SHOW_GOODS;
 	}
 
 	return true;
