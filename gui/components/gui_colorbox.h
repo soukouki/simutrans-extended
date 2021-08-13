@@ -10,6 +10,10 @@
 #include "gui_component.h"
 #include "../../simcolor.h"
 
+// for gui_vehicle_number_t
+#include "../../descriptor/vehicle_desc.h"
+#include "../../utils/cbuffer_t.h"
+
 /**
  * Draws a simple colored box.
  */
@@ -64,6 +68,7 @@ public:
  */
 class gui_vehicle_bar_t : public gui_component_t
 {
+protected:
 	PIXVAL color;
 
 	uint8 flags_left;
@@ -86,6 +91,32 @@ public:
 
 	scr_size get_min_size() const OVERRIDE { return size; };
 	scr_size get_max_size() const OVERRIDE { return size; };
+};
+
+
+class gui_vehicle_number_t : public gui_vehicle_bar_t
+{
+	bool show_frame;
+	cbuffer_t buf;
+
+	void init();
+
+public:
+	gui_vehicle_number_t(const char* text_=NULL, PIXVAL bgcol = COL_SAFETY, PIXVAL textcol = color_idx_to_rgb(COL_WHITE), bool show_frame_ = true) :
+		gui_vehicle_bar_t(bgcol) {
+		show_frame = show_frame_;
+		set_flags(vehicle_desc_t::can_be_head, vehicle_desc_t::can_be_head|vehicle_desc_t::can_be_tail, HAS_POWER | BIDIRECTIONAL);
+		set_text(text_);
+	}
+
+	void set_text(const char* text_) {
+		if (text_) {
+			buf.clear();
+			buf.append(text_);
+		}
+		init();
+	}
+	void draw(scr_coord offset) OVERRIDE;
 };
 
 #endif
