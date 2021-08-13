@@ -462,7 +462,7 @@ void halt_info_t::init(halthandle_t halt)
 				add_component(&indicator_color);
 
 				// company name
-				new_component<gui_label_t>(halt->get_owner()->get_name(), color_idx_to_rgb(halt->get_owner()->get_player_color1()), gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+				new_component<gui_label_t>(halt->get_owner()->get_name(), color_idx_to_rgb(halt->get_owner()->get_player_color1()+env_t::gui_player_color_bright), gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
 
 				img_types = new_component<gui_halt_type_images_t>(halt);
 			}
