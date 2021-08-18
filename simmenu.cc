@@ -525,8 +525,8 @@ bool tool_t::read_menu(const std::string &menuconf_path)
 		const skin_desc_t *icons;
 		const skin_desc_t *cursor;
 		bool with_sound;
-
 	};
+
 	tool_class_info_t info[] = {
 		{ "general_tool", GENERAL_TOOL_STANDARD_COUNT, GENERAL_TOOL_COUNT, general_tool, skinverwaltung_t::tool_icons_general, skinverwaltung_t::cursor_general, true },
 		{ "simple_tool",  SIMPLE_TOOL_STANDARD_COUNT, SIMPLE_TOOL_COUNT,  simple_tool,  skinverwaltung_t::tool_icons_simple,  NULL, false},
@@ -534,7 +534,7 @@ bool tool_t::read_menu(const std::string &menuconf_path)
 	};
 
 	// first init all tools
-	DBG_MESSAGE( "tool_t::init_menu()", "Reading general menu" );
+	DBG_MESSAGE( "tool_t::read_menu()", "Reading general menu" );
 	for(  uint16 t=0; t<3; t++) {
 		for(  uint16 i=0;  i<info[t].count;  i++  ) {
 			if(  i>=info[t].standard_count  &&  i<0x80  ) {
@@ -564,6 +564,11 @@ bool tool_t::read_menu(const std::string &menuconf_path)
 						dbg->warning( "tool_t::read_menu()", "deprecated tool number used in %s; menuconf.tab will need updating", id);
 					}
 				}
+			}
+
+			if (!tool) {
+				dbg->warning("tool_t::read_menu", "Ignoring deprecated %s[%i] (%s)", info[t].type, i, tool_t::id_to_string((1<<(t+12)) | i));
+				continue;
 			}
 
 			while(*str==' ') {
@@ -631,7 +636,7 @@ bool tool_t::read_menu(const std::string &menuconf_path)
 					str++;
 				}
 				if(*str>=' ') {
-					tool->command_key = str_to_key(str,&(tool->command_flags));
+					tool->command_key = str_to_key(str, &tool->command_flags);
 					char_to_tool.append(tool);
 				}
 			}
