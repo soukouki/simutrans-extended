@@ -1993,7 +1993,6 @@
     <ClCompile Include="gui\obj_info.cc" />
     <ClCompile Include="gui\privatesign_info.cc" />
     <ClCompile Include="gui\scenario_info.cc" />
-    <ClCompile Include="gui\schiene_info.cc" />
     <ClCompile Include="gui\server_frame.cc" />
     <ClCompile Include="gui\signal_info.cc" />
     <ClCompile Include="gui\simwin.cc" />
@@ -2522,6 +2521,7 @@
     <ClCompile Include="music\w32_midi.cc" />
     <ClCompile Include="descriptor\goods_desc.cc" />
     <ClCompile Include="boden\wasser.cc" />
+    <ClCompile Include="gui\way_info.cc" />
     <ClCompile Include="descriptor\reader\way_obj_reader.cc" />
     <ClCompile Include="descriptor\reader\way_reader.cc" />
     <ClCompile Include="boden\wege\weg.cc" />
@@ -2580,7 +2580,6 @@
     <ClInclude Include="gui\obj_info.h" />
     <ClInclude Include="gui\privatesign_info.h" />
     <ClInclude Include="gui\scenario_info.h" />
-    <ClInclude Include="gui\schiene_info.h" />
     <ClInclude Include="gui\server_frame.h" />
     <ClInclude Include="gui\signal_info.h" />
     <ClInclude Include="gui\simwin.h" />
@@ -2955,6 +2954,7 @@
     <ClInclude Include="bauer\goods_manager.h" />
     <ClInclude Include="boden\wasser.h" />
     <ClInclude Include="dataobj\way_constraints.h" />
+    <ClInclude Include="gui\way_info.h" />
     <ClInclude Include="descriptor\way_obj_desc.h" />
     <ClInclude Include="descriptor\reader\way_obj_reader.h" />
     <ClInclude Include="descriptor\writer\way_obj_writer.h" />

@@ -332,11 +332,6 @@ public:
 	void rdwr(loadsave_t *file) OVERRIDE;
 
 	/**
-	* Info-text for this way
-	*/
-	void info(cbuffer_t & buf) const OVERRIDE;
-
-	/**
 	 * @return NULL if OK, otherwise an error message
 	 */
 	const char *is_deletable(const player_t *player) OVERRIDE;

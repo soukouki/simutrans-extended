@@ -297,7 +297,6 @@ add_executable(simutrans-extended
 	gui/scenario_info.cc
 	gui/schedule_gui.cc
 	gui/schedule_list.cc
-	gui/schiene_info.cc
 	gui/server_frame.cc
 	gui/settings_frame.cc
 	gui/settings_stats.cc
@@ -316,6 +315,7 @@ add_executable(simutrans-extended
 	gui/trafficlight_info.cc
 	gui/vehiclelist_frame.cc
 	gui/vehicle_class_manager.cc
+	gui/way_info.cc
 	gui/welt.cc
 	network/checksum.cc
 	network/memory_rw.cc
