@@ -14,6 +14,8 @@
 #include "../display/viewport.h"
 #include "../player/simplay.h"
 #include "../utils/simstring.h"
+#include "../boden/grund.h"
+#include "../boden/wege/weg.h"
 #include "../boden/wege/schiene.h"
 #include "../boden/wege/strasse.h"
 
@@ -26,6 +28,7 @@
 #include "../descriptor/roadsign_desc.h"
 #include "../descriptor/tunnel_desc.h"
 #include "../descriptor/way_desc.h"
+#include "../vehicle/rail_vehicle.h"
 
 
 gui_way_detail_info_t::gui_way_detail_info_t(weg_t *way)
@@ -1049,56 +1052,61 @@ void way_info_t::update_way_info()
 		weg_t *road = way1->get_waytype() == road_wt ? way1 : way2;
 		uint32 cities_count = 0;
 		uint32 buildings_count = 0;
-		typedef koordhashtable_tpl<koord, uint8, N_BAGS_SMALL> private_car_route_map;
-		FOR(private_car_route_map, const& route, road->private_car_routes[road->get_private_car_routes_currently_writing_element()])
-		{
-			const grund_t* gr_temp = welt->lookup_kartenboden(route.key);
-			const gebaeude_t* building = gr_temp ? gr_temp->get_building() : NULL;
-			if (building)
-			{
-				buildings_count++;
-#ifdef DEBUG
-				cont_road_routes.new_component<gui_margin_t>(10);
-				cont_road_routes.new_component<gui_label_t>(translator::translate(building->get_individual_name()));
-				gui_label_buf_t *lb = cont_road_routes.new_component<gui_label_buf_t>();
-				if (building->get_stadt() != NULL) {
-					lb->buf().append(building->get_stadt()->get_name());
-				}
-				if (!welt->get_settings().regions.empty()) {
-					lb->buf().printf(" (%s)", translator::translate(welt->get_region_name(building->get_pos().get_2d()).c_str()));
-				}
-				lb->update();
-#endif
-			}
-
-			const stadt_t* dest_city = welt->get_city(route.key);
-			if (dest_city && route.key == dest_city->get_townhall_road())
-			{
-				cities_count++;
-				button_t *b = cont_road_routes.new_component<button_t>();
-				b->set_typ(button_t::posbutton_automatic);
-				b->set_targetpos(dest_city->get_pos());
-
-				gui_label_buf_t *lb_city = cont_road_routes.new_component<gui_label_buf_t>();
-				lb_city->buf().append(dest_city->get_name());
-				if (!welt->get_settings().regions.empty()) {
-					lb_city->buf().printf(" (%s)", translator::translate(welt->get_region_name(dest_city->get_pos()).c_str()));
-				}
-				lb_city->update();
-
-				// distance
-				const uint32 distance = shortest_distance(gr->get_pos().get_2d(), dest_city->get_pos()) * welt->get_settings().get_meters_per_tile();
-				lb_city = cont_road_routes.new_component<gui_label_buf_t>();
-				if (distance < 1000) {
-					lb_city->buf().printf("%um", distance);
-				}
-				else if (distance < 20000) {
-					lb_city->buf().printf("%.1fkm", (double)distance / 1000.0);
+		for(uint8 i=0;i<5;i++) {
+			for(uint32 j=0;j<road->private_car_routes[road->private_car_routes_currently_reading_element][i].get_count();j++){
+				const koord dest = road->private_car_routes[road->private_car_routes_currently_reading_element][i][j];
+				const grund_t* gr_temp = welt->lookup_kartenboden(dest);
+				const gebaeude_t* building = gr_temp ? gr_temp->get_building() : NULL;
+				if (building)
+				{
+					buildings_count++;
+	#ifdef DEBUG
+					cont_road_routes.new_component<gui_margin_t>(10);
+					cont_road_routes.new_component<gui_label_t>(translator::translate(building->get_individual_name()));
+					gui_label_buf_t *lb = cont_road_routes.new_component<gui_label_buf_t>();
+					if (building->get_stadt() != NULL) {
+						lb->buf().append(building->get_stadt()->get_name());
+					}
+					if (!welt->get_settings().regions.empty()) {
+						lb->buf().printf(" (%s)", translator::translate(welt->get_region_name(building->get_pos().get_2d()).c_str()));
+					}
+					lb->update();
+	#endif
 				}
 				else {
-					lb_city->buf().printf("%ukm", distance / 1000);
+					dbg->message("way_info_t::update_way_info()", "Building that is a destination of a road route not found");
 				}
-				lb_city->update();
+
+				const stadt_t* dest_city = welt->get_city(dest);
+				if (dest_city && dest == dest_city->get_townhall_road())
+				{
+					cities_count++;
+					button_t *b = cont_road_routes.new_component<button_t>();
+					b->set_typ(button_t::posbutton_automatic);
+					b->set_targetpos(dest_city->get_pos());
+
+					gui_label_buf_t *lb_city = cont_road_routes.new_component<gui_label_buf_t>();
+					lb_city->buf().append(dest_city->get_name());
+					if (!welt->get_settings().regions.empty()) {
+						lb_city->buf().printf(" (%s)", translator::translate(welt->get_region_name(dest_city->get_pos()).c_str()));
+					}
+					lb_city->update();
+
+					// distance
+					const uint32 distance = shortest_distance(gr->get_pos().get_2d(), dest_city->get_pos()) * welt->get_settings().get_meters_per_tile();
+					lb_city = cont_road_routes.new_component<gui_label_buf_t>();
+					if (distance < 1000) {
+						lb_city->buf().printf("%um", distance);
+					}
+					else if (distance < 20000) {
+						lb_city->buf().printf("%.1fkm", (double)distance / 1000.0);
+					}
+					else {
+						lb_city->buf().printf("%ukm", distance / 1000);
+					}
+					lb_city->update();
+				}
+
 			}
 		}
 

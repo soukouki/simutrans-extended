@@ -19,14 +19,13 @@
  */
 class gui_colorbox_t : public gui_component_t
 {
-	PIXVAL color;
-
 	scr_coord_val height = D_INDICATOR_HEIGHT;
 	scr_coord_val width = D_INDICATOR_WIDTH;
 	bool size_fixed = false;
 	bool show_frame = true;
 
 	scr_size max_size;
+
 protected:
 	PIXVAL color;
 	const char * tooltip;
@@ -64,6 +63,7 @@ public:
 	}
 };
 
+
 /**
  * Draws a simple right triangle arrow.
  */
@@ -85,7 +85,6 @@ public:
 };
 
 
-
 /**
  * Draws a colored bar to represent the role and status of the vehicle
  */
@@ -102,6 +101,10 @@ public:
 	gui_vehicle_bar_t(PIXVAL = COL_DANGER, scr_size size=scr_size(VEHICLE_BAR_HEIGHT*4, VEHICLE_BAR_HEIGHT));
 
 	void init(PIXVAL color_par, scr_size size=scr_size(VEHICLE_BAR_HEIGHT*4, VEHICLE_BAR_HEIGHT)) {
+		set_color(color_par);
+		set_size(size);
+	}
+
 	void set_flags(uint8 flags_left_, uint8 flags_right_, uint8 interactivity_);
 
 	void draw(scr_coord offset) OVERRIDE;
