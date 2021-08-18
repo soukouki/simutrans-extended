@@ -84,7 +84,6 @@ public:
 };
 
 
-
 gui_settings_t::gui_settings_t()
 {
 	set_table_layout( 1, 0 );
@@ -101,10 +100,39 @@ gui_settings_t::gui_settings_t()
 	buttons[ IDBTN_CHANGE_FONT ].init( button_t::roundbox_state | button_t::flexible, "Select display font" );
 	add_component( buttons + IDBTN_CHANGE_FONT );
 
+	// position of menu
+	add_table(5,1)->set_spacing(scr_size(0,0));
+	{
+		new_component<gui_label_t>("Toolbar position:");
+		new_component<gui_margin_t>(D_H_SPACE);
+		static char const* const positions[] = { "Left", "Top", "Right", "Bottom" };
+		for (uint8 i=0; i<4; i++) {
+			toolbar_pos[i].pressed = (env_t::menupos == i);
+			toolbar_pos[i].init( button_t::roundbox_state, positions[i], scr_coord(0,0), scr_size(D_BUTTON_WIDTH*0.8, D_BUTTON_HEIGHT) );
+		}
+
+		add_component( &toolbar_pos[MENU_LEFT] );
+		add_table(1,2);
+		{
+			add_component( &toolbar_pos[MENU_TOP] );
+			add_component( &toolbar_pos[MENU_BOTTOM] );
+		}
+		end_table();
+		add_component( &toolbar_pos[MENU_RIGHT] );
+	}
+	end_table();
+
+	reselect_closes_tool.init( button_t::square_state, "Reselect closes tools" );
+	reselect_closes_tool.pressed = env_t::reselect_closes_tool;
+	add_component( &reselect_closes_tool, 2 );
+
+	new_component<gui_divider_t>();
+
 	// add controls to info container
-	add_table(2,4);
+	add_table(2,0);
 	{
 		set_alignment(ALIGN_LEFT);
+
 		// Frame time label
 		new_component<gui_label_t>("Frame time:");
 		frame_time_value_label.buf().printf(" 9999 ms");
@@ -168,6 +196,26 @@ gui_settings_t::gui_settings_t()
 		status_label.set_color(SYSCOL_TEXT_TITLE);
 		status_label.update();
 		add_component(&status_label);
+
+		// Private cars hereafter
+
+		new_component<gui_label_t>("Private car routes reading index:");
+		reading_index_label.buf().printf("-");
+		reading_index_label.set_color(SYSCOL_TEXT_TITLE);
+		reading_index_label.update();
+		add_component(&reading_index_label);
+
+		new_component<gui_label_t>("Cities awaiting private car route check:");
+		cities_awaiting_private_car_route_check_label.buf().printf("-");
+		cities_awaiting_private_car_route_check_label.set_color(SYSCOL_TEXT_TITLE);
+		cities_awaiting_private_car_route_check_label.update();
+		add_component(&cities_awaiting_private_car_route_check_label);
+
+		new_component<gui_label_t>("Cities to process this step for private car routes:");
+		cities_to_process_label.buf().printf("-");
+		cities_to_process_label.set_color(SYSCOL_TEXT_TITLE);
+		cities_to_process_label.update();
+		add_component(&cities_to_process_label);
 	}
 	end_table();
 }
@@ -229,6 +277,15 @@ void gui_settings_t::draw(scr_coord offset)
 
 	reroute_goods_label.buf().printf("%lu", path_explorer_t::get_limit_reroute_goods());
 	reroute_goods_label.update();
+
+	reading_index_label.buf().printf("%lu", weg_t::private_car_routes_currently_reading_element);
+	reading_index_label.update();
+
+	cities_awaiting_private_car_route_check_label.buf().printf("%lu", world()->get_cities_awaiting_private_car_route_check_count());
+	cities_awaiting_private_car_route_check_label.update();
+
+	cities_to_process_label.buf().printf("%i", world()->get_cities_to_process());
+	cities_to_process_label.update();
 
 	// All components are updated, now draw them...
 	gui_aligned_container_t::draw(offset);
@@ -383,7 +440,7 @@ bool map_settings_t::action_triggered( gui_action_creator_t *comp, value_t v )
 	}
 	// Hide building
 	if( &hide_buildings == comp ) {
-		env_t::hide_buildings = v.i;
+		env_t::hide_buildings = (uint8)v.i;
 		world()->set_dirty();
 	}
 	return true;
@@ -491,6 +548,24 @@ label_settings_t::label_settings_t()
 		add_component(&convoy_nameplate);
 		convoy_nameplate.add_listener(this);
 
+		new_component<gui_empty_t>();
+		new_component<gui_empty_t>();
+		add_table(4,1)->set_spacing(scr_size(0,0));
+		{
+			new_component<gui_margin_t>( D_ARROW_LEFT_WIDTH+D_H_SPACE );
+			// UI TODO: radio button is better
+			bt_convoy_id_plate[0].init(button_t::roundbox_left_state  | button_t::flexible, "name_plate");
+			bt_convoy_id_plate[1].init(button_t::roundbox_right_state | button_t::flexible, "Convoy ID");
+			bt_convoy_id_plate[0].set_tooltip("help_text_btn_line_name_plate");
+			bt_convoy_id_plate[1].set_tooltip("Shows the convoy unique ID");
+			bt_convoy_id_plate[0].add_listener(this);
+			bt_convoy_id_plate[1].add_listener(this);
+			add_component(&bt_convoy_id_plate[0]);
+			add_component(&bt_convoy_id_plate[1]);
+			new_component<gui_margin_t>( D_ARROW_LEFT_WIDTH+D_H_SPACE );
+		}
+		end_table();
+
 		// Convoy loading bar
 		new_component<gui_margin_t>(LINESPACE/2);
 		new_component<gui_label_t>("Loading bar")->set_tooltip(translator::translate("A loading rate bar is displayed above the convoy."));
@@ -534,18 +609,27 @@ bool label_settings_t::action_triggered(gui_action_creator_t *comp, value_t v)
 {
 	// Convoy tooltip
 	if (&convoy_tooltip == comp) {
-		env_t::show_vehicle_states = v.i;
+		env_t::show_vehicle_states = (uint8)v.i;
 	}
 	// Convoy nameplate
 	if (&convoy_nameplate == comp) {
 		env_t::show_cnv_nameplates = v.i;
+		if (bt_convoy_id_plate[1].pressed) {
+			env_t::show_cnv_nameplates |= 4;
+		}
+	}
+	else if (&bt_convoy_id_plate[0] == comp) {
+		env_t::show_cnv_nameplates &= ~4;
+	}
+	else if (&bt_convoy_id_plate[1] == comp) {
+		env_t::show_cnv_nameplates |= 4;
 	}
 	// Convoy loading bar
 	if (&convoy_loadingbar == comp) {
 		env_t::show_cnv_loadingbar = v.i;
 	}
 	if (&money_booking == comp) {
-		env_t::show_money_message = v.i;
+		env_t::show_money_message = (sint8)v.i;
 	}
 	// freight waiting bar detail level
 	if (&freight_waiting_bar == comp) {
@@ -556,7 +640,9 @@ bool label_settings_t::action_triggered(gui_action_creator_t *comp, value_t v)
 
 void label_settings_t::draw(scr_coord offset)
 {
-	convoy_nameplate.set_selection(env_t::show_cnv_nameplates);
+	convoy_nameplate.set_selection(env_t::show_cnv_nameplates % 4);
+	bt_convoy_id_plate[1].pressed = env_t::show_cnv_nameplates & 4;
+	bt_convoy_id_plate[0].pressed = !(env_t::show_cnv_nameplates & 4);
 	convoy_loadingbar.set_selection(env_t::show_cnv_loadingbar);
 	convoy_tooltip.set_selection(env_t::show_vehicle_states);
 	freight_waiting_bar.set_selection(env_t::freight_waiting_bar_level);
@@ -626,7 +712,7 @@ bool traffic_settings_t::action_triggered( gui_action_creator_t *comp, value_t v
 	}
 
 	if( &follow_mode == comp ) {
-		env_t::follow_convoi_underground = v.i;
+		env_t::follow_convoi_underground = (uint8)v.i;
 	}
 	return true;
 }
@@ -656,6 +742,10 @@ color_gui_t::color_gui_t() :
 	for( int i = 0; i < COLORS_MAX_BUTTONS; i++ ) {
 		buttons[ i ].add_listener( this );
 	}
+	for( uint8 i = 0; i < 4; i++ ) {
+		gui_settings.toolbar_pos[i].add_listener(this);
+	}
+	gui_settings.reselect_closes_tool.add_listener(this);
 
 	set_resizemode(diagonal_resize);
 	set_min_windowsize( scr_size(D_DEFAULT_WIDTH, max(get_min_windowsize().h, traffic_settings.get_size().h)) );
@@ -664,8 +754,36 @@ color_gui_t::color_gui_t() :
 	resize( scr_coord( 0, 0 ) );
 }
 
-bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t)
+bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t )
 {
+	bool reflesh_toolbar_pos_btn = false;
+	for(  uint8 i=0; i<4; i++  ) {
+		if(  comp == &gui_settings.toolbar_pos[i]  ) {
+			env_t::menupos = i;
+			reflesh_toolbar_pos_btn = true;
+
+			welt->set_dirty();
+			// move all windows
+			event_t* ev = new event_t();
+			ev->ev_class = EVENT_SYSTEM;
+			ev->ev_code = SYSTEM_RELOAD_WINDOWS;
+			queue_event(ev);
+			break;
+		}
+	}
+	if( reflesh_toolbar_pos_btn ) {
+		for(  uint8 i=0; i<4; i++  ) {
+			gui_settings.toolbar_pos[i].pressed = (env_t::menupos == i);
+		}
+		return true;
+	}
+
+	if(  comp == &gui_settings.reselect_closes_tool  ) {
+		env_t::reselect_closes_tool = !env_t::reselect_closes_tool;
+		gui_settings.reselect_closes_tool.pressed = env_t::reselect_closes_tool;
+		return true;
+	}
+
 	int i;
 	for(  i=0;  i<COLORS_MAX_BUTTONS  &&  comp!=buttons+i;  i++  ) { }
 
@@ -813,4 +931,14 @@ void color_gui_t::draw(scr_coord pos, scr_size size)
 
 	// All components are updated, now draw them...
 	gui_frame_t::draw(pos, size);
+}
+
+
+void color_gui_t::rdwr(loadsave_t *f)
+{
+	tabs.rdwr(f);
+	scrolly_gui.rdwr(f);
+	scrolly_map.rdwr(f);
+	scrolly_station.rdwr(f);
+	scrolly_traffic.rdwr(f);
 }

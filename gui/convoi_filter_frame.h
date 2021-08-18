@@ -26,11 +26,12 @@ class convoi_filter_frame_t : public gui_frame_t , private action_listener_t
 public:
 
 	enum filter_flag_t {
-		any_filter     =1,
-		name_filter    =2,
-		typ_filter     =4,
-		ware_filter    =8,
-		spezial_filter =16,
+		any_filter         = 1 << 0,
+		name_filter        = 1 << 1,
+		typ_filter         = 1 << 2,
+		ware_filter        = 1 << 3,
+		special_filter     = 1 << 4,
+
 		lkws_filter        = 1 << 5,
 		zuege_filter       = 1 << 6,
 		schiffe_filter     = 1 << 7,
@@ -46,10 +47,14 @@ public:
 		narrowgauge_filter = 1 << 17,
 		tram_filter        = 1 << 18,
 		obsolete_filter    = 1 << 19,
+
 		// number of first special filter
 		sub_filter         = lkws_filter
 	};
-	enum { FILTER_BUTTONS=19 };
+
+	enum {
+		FILTER_BUTTONS = 19
+	};
 
 
 private:
@@ -110,7 +115,7 @@ private:
 	button_t ware_keine;
 	button_t ware_invers;
 
-	gui_aligned_container_t  ware_cont;
+	gui_aligned_container_t ware_cont;
 	gui_scrollpane_t ware_scrolly;
 
 public:
@@ -120,6 +125,8 @@ public:
 	 * Constructor. Generates all necessary Subcomponents.
 	 */
 	convoi_filter_frame_t(player_t *player, convoi_frame_t *parent);
+
+	void init(uint32 filter_flags, const slist_tpl<const goods_desc_t*>* wares);
 
 	/**
 	 * Does this window need a min size button in the title bar?

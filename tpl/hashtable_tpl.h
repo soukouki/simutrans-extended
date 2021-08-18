@@ -25,8 +25,8 @@ class hashtable_tpl
 protected:
 	struct node_t {
 	public:
-		key_t	  key;
-		value_t	value;
+		key_t   key;
+		value_t value;
 
 		int operator == (const node_t &x) const { return key == x.key; }
 	};
@@ -390,19 +390,6 @@ public:
 		}
 		dbg->fatal( "hashtable_tpl::remove_first()", "Hashtable already empty!" );
 		return value_t();
-	}
-
-	void dump_stats()
-	{
-		for(STHT_BAG_COUNTER_T i = 0; i < n_bags; i++) {
-			printf("Bag %d contains %ud elements\n", i, bags[i].get_count());
-
-			FORT(slist_tpl<node_t>, const& node, bags[i]) {
-				printf(" ");
-				hash_t::dump(node.key);
-				printf("\n");
-			}
-		}
 	}
 
 	uint32 get_count() const

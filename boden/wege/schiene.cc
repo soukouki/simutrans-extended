@@ -9,7 +9,6 @@
 #include "../../simconvoi.h"
 #include "../../simworld.h"
 #include "../../utils/simstring.h"
-#include "../../vehicle/simvehicle.h"
 
 #include "../../obj/signal.h"
 
@@ -22,6 +21,7 @@
 #include "../../bauer/wegbauer.h"
 
 #include "schiene.h"
+#include "../../vehicle/rail_vehicle.h"
 
 
 const way_desc_t *schiene_t::default_schiene=NULL;
@@ -165,12 +165,12 @@ void schiene_t::rdwr(loadsave_t *file)
 
 	weg_t::rdwr(file);
 
-	if(file->get_version_int()<99008) {
+	if(file->is_version_less(99, 8)) {
 		sint32 blocknr=-1;
 		file->rdwr_long(blocknr);
 	}
 
-	if(file->get_version_int()<89000) {
+	if(file->is_version_less(89, 0)) {
 		uint8 dummy;
 		file->rdwr_byte(dummy);
 		set_electrify(dummy);

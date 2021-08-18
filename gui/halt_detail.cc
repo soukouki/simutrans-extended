@@ -100,19 +100,20 @@ void halt_detail_t::init()
 
 	// route tab components
 	cont_route.set_table_layout(1,0);
-	cont_route.add_table(3, 1);
+	cont_route.add_table(4,1)->set_spacing(scr_size(0,0));
 	{
 		cont_route.set_margin(scr_size(D_H_SPACE, D_V_SPACE), scr_size(0, 0));
 
-		bt_by_station.init(button_t::roundbox_state, "hd_btn_by_station", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
-		bt_by_category.init(button_t::roundbox_state, "hd_btn_by_category", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+		bt_by_station.init(button_t::roundbox_left_state, "hd_btn_by_station", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+		bt_by_category.init(button_t::roundbox_right_state, "hd_btn_by_category", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
 		bt_by_station.add_listener(this);
 		bt_by_category.add_listener(this);
 		bt_by_station.pressed = false;
 		bt_by_category.pressed = true;
+		cont_route.new_component<gui_fill_t>();
 		cont_route.add_component(&bt_by_station);
 		cont_route.add_component(&bt_by_category);
-		cont_route.new_component<gui_fill_t>();
+		cont_route.new_component<gui_margin_t>(D_MARGIN_RIGHT);
 	}
 	cont_route.end_table();
 	lb_serve_catg.init("lb_served_goods_and_classes", scr_coord(0, 0),
@@ -141,13 +142,12 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				char *class_name = new char[32]();
-				if (class_name != nullptr)
-				{
-					sprintf(class_name, "p_class[%u]", c);
-					pass_class_name_untranslated[c] = class_name;
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_PAS, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				if (classes>1) {
+					if (c == 0) { cb->set_typ(button_t::roundbox_left_state);  }
+					else if(c == classes-1) { cb->set_typ(button_t::roundbox_right_state); }
+					else { cb->set_typ(button_t::roundbox_middle_state); }
 				}
-				cb->init(button_t::roundbox_state, class_name, scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				cb->disable();
 				cb->add_listener(this);
 				cont_route.add_component(cb);
@@ -177,13 +177,12 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				char *class_name = new char[32]();
-				if (class_name != nullptr)
-				{
-					sprintf(class_name, "m_class[%u]", c);
-					mail_class_name_untranslated[c] = class_name;
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_MAIL, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				if (classes > 1) {
+					if (c == 0) { cb->set_typ(button_t::roundbox_left_state); }
+					else if (c == classes - 1) { cb->set_typ(button_t::roundbox_right_state); }
+					else { cb->set_typ(button_t::roundbox_middle_state); }
 				}
-				cb->init(button_t::roundbox_state, class_name, scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				cb->disable();
 				cb->add_listener(this);
 				cont_route.add_component(cb);
@@ -291,7 +290,6 @@ bool halt_detail_t::is_weltpos()
 // update all buffers
 void halt_detail_t::update_components()
 {
-	line_number.draw(scr_coord(0,0));
 	waiting_bar->update();
 	bool reset_tab = false;
 	int old_tab = tabs.get_active_tab_index();
@@ -633,6 +631,10 @@ void halt_detail_t::rdwr(loadsave_t *file)
 	}
 	halt_pos.rdwr( file );
 	size.rdwr( file );
+	uint8 selected_tab = tabs.get_active_tab_index();
+	if( file->is_version_ex_atleast(14,41) ) {
+		file->rdwr_byte( selected_tab );
+	}
 	if(  file->is_loading()  ) {
 		halt = welt->lookup( halt_pos )->get_halt();
 		// now we can open the window ...
@@ -640,6 +642,7 @@ void halt_detail_t::rdwr(loadsave_t *file)
 		halt_detail_t *w = new halt_detail_t(halt);
 		create_win(pos.x, pos.y, w, w_info, magic_halt_detail + halt.get_id());
 		w->set_windowsize( size );
+		w->tabs.set_active_tab_index(selected_tab);
 		destroy_win( this );
 	}
 }
@@ -655,7 +658,7 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 	if (good_category != goods_manager_t::mail && good_category != goods_manager_t::passengers) {
 		return; // this table is for pax and mail
 	}
-	KOORD_VAL y = offset.y;
+	scr_coord_val y = offset.y;
 
 	uint base_capacity = halt->get_capacity(good_category->get_catg_index()) ? max(halt->get_capacity(good_category->get_catg_index()), 10) : 10; // Note that capacity may have 0 even if pax_enabled
 	uint transferring_sum = 0;
@@ -1302,7 +1305,7 @@ void gui_halt_nearby_factory_info_t::draw(scr_coord offset)
 				display_colorbox_with_tooltip(offset.x + xoff + GOODS_SYMBOL_CELL_WIDTH, offset.y + yoff + LINESPACE * output_cnt + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, ware->get_color(), NULL);
 				// goods name
 				PIXVAL text_color;
-				display_proportional_clip_rgb(offset.x + xoff + GOODS_SYMBOL_CELL_WIDTH * 2 - 2, offset.y + yoff + LINESPACE * output_cnt, translator::translate(ware->get_name()), ALIGN_LEFT, text_color = active_product.is_contained(ware) ? SYSCOL_TEXT : MN_GREY0, true);
+				display_proportional_clip_rgb(offset.x + xoff + GOODS_SYMBOL_CELL_WIDTH * 2 - 2, offset.y + yoff + LINESPACE * output_cnt, translator::translate(ware->get_name()), ALIGN_LEFT, text_color = active_product.is_contained(ware) ? SYSCOL_TEXT : SYSCOL_TEXT_WEAK, true);
 				output_cnt++;
 			}
 		}
@@ -1736,46 +1739,35 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 				catg_xoff += D_BUTTON_WIDTH;
 				buf.clear();
 				char travelling_time_as_clock[32];
-				welt->sprintf_time_tenths(travelling_time_as_clock, sizeof(travelling_time_as_clock), cnx->journey_time);
-				if (is_walking) {
-					if (skinverwaltung_t::on_foot) {
-						buf.printf("%5s", travelling_time_as_clock);
-						display_color_img_with_tooltip(skinverwaltung_t::on_foot->get_image_id(0), offset.x + xoff + catg_xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate("Walking time"));
-						catg_xoff += GOODS_SYMBOL_CELL_WIDTH;
-					}
-					else {
-						buf.printf(translator::translate("%s mins. walking"), travelling_time_as_clock);
-						buf.append(", ");
-					}
-				}
-				else {
-					if (skinverwaltung_t::travel_time) {
-						buf.printf("%5s", travelling_time_as_clock);
-						display_color_img(skinverwaltung_t::travel_time->get_image_id(0), offset.x + xoff + catg_xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false);
-						catg_xoff += GOODS_SYMBOL_CELL_WIDTH;
-					}
-					else {
-						buf.printf(translator::translate("%s mins. travelling"), travelling_time_as_clock);
-						buf.append(", ");
-					}
+				const uint32 journey_time = cnx->journey_time;
+				welt->sprintf_time_tenths(travelling_time_as_clock, sizeof(travelling_time_as_clock), journey_time);
+
+				if(const skin_desc_t* icon = is_walking ? skinverwaltung_t::on_foot : skinverwaltung_t::travel_time) {
+					buf.printf("%5s", travelling_time_as_clock);
+					display_color_img_with_tooltip(icon->get_image_id(0),offset.x + xoff + catg_xoff,offset.y + yoff + FIXED_SYMBOL_YOFF,0, false, false,translator::translate(is_walking ? "Walking time" : "Travel time and travel speed"));
+					catg_xoff += GOODS_SYMBOL_CELL_WIDTH;
+				} else {
+					buf.printf(translator::translate(is_walking ? "%s mins. walking" : "%s mins. travelling"), travelling_time_as_clock);
+					buf.append(", ");
 				}
 				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-				// [avarage speed]
+
+				// [average speed]
 				buf.clear();
-				sint64 average_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time);
-				buf.printf(" (%2ukm/h) ", average_speed);
-				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
+				buf.printf(" (%2ukm/h) ", journey_time ? kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time) : 0);
+				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 
 				// [waiting time]
 				buf.clear();
 				if (!is_walking) {
 					if (skinverwaltung_t::waiting_time) {
-						display_color_img(skinverwaltung_t::waiting_time->get_image_id(0), offset.x + xoff + catg_xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false);
+						display_color_img_with_tooltip(skinverwaltung_t::waiting_time->get_image_id(0), offset.x + xoff + catg_xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate("Route average waiting time and speed evaluation"));
 						catg_xoff += GOODS_SYMBOL_CELL_WIDTH;
 					}
-					if (cnx->waiting_time > 0) {
+					const uint32 waiting_time = cnx->waiting_time;
+					if (waiting_time > 0) {
 						char waiting_time_as_clock[32];
-						welt->sprintf_time_tenths(waiting_time_as_clock, sizeof(waiting_time_as_clock), cnx->waiting_time);
+						welt->sprintf_time_tenths(waiting_time_as_clock, sizeof(waiting_time_as_clock), waiting_time);
 						if (!skinverwaltung_t::waiting_time) {
 							buf.printf(translator::translate("%s mins. waiting"), waiting_time_as_clock);
 						}
@@ -1793,11 +1785,10 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 					}
 					catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
 
-					// [avarage schedule speed]
+					// [average schedule speed]
 					buf.clear();
-					sint64 schedule_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time + cnx->waiting_time);
-					buf.printf(" (%2ukm/h) ", schedule_speed);
-					catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
+					buf.printf(" (%2ukm/h) ", journey_time+waiting_time ? kmh_from_meters_and_tenths((int)(km_to_halt * 1000), journey_time + waiting_time) : 0);
+					catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 					max_x = max(max_x, catg_xoff);
 				}
 #ifdef DEBUG
@@ -1916,7 +1907,7 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 		buf.clear();
 		sint64 average_speed = kmh_from_meters_and_tenths((int)(km_to_halt*1000), cnx->journey_time);
 		buf.printf(" (%2ukm/h)", average_speed);
-		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 #endif
 
 		xoff += D_H_SPACE*2;
@@ -1951,7 +1942,7 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 			buf.clear();
 			sint64 schedule_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time + cnx->waiting_time);
 			buf.printf(" (%2ukm/h) ", schedule_speed);
-			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
+			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 #endif
 
 #ifdef DEBUG

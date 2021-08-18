@@ -76,6 +76,10 @@ if (ZSTD_FOUND)
 	option(SIMUTRANS_USE_ZSTD "Enable support for zstd save file compression (larger save files than bzip2, but faster)" ON)
 endif (ZSTD_FOUND)
 
+if (FluidSynth_FOUND)
+	option(SIMUTRANS_USE_FLUIDSYNTH_MIDI "Enable FluidSynth for MIDI playback" ON)
+endif (FluidSynth_FOUND)
+
 option(SIMUTRANS_ENABLE_PROFILING "Enable profiling code" OFF)
 option(SIMUTRANS_USE_SYSLOG "Enable logging to syslog" OFF)
 option(SIMUTRANS_ENABLE_IPV6 "Enable connections using IPv6 in addition to IPv4" ON)
@@ -226,6 +230,7 @@ add_executable(simutrans-extended
 	gui/components/gui_map_preview.cc
 	gui/components/gui_numberinput.cc
 	gui/components/gui_obj_view_t.cc
+	gui/components/gui_schedule_item.cc
 	gui/components/gui_scrollbar.cc
 	gui/components/gui_scrolled_list.cc
 	gui/components/gui_scrollpane.cc
@@ -256,6 +261,7 @@ add_executable(simutrans-extended
 	gui/goods_frame_t.cc
 	gui/goods_stats_t.cc
 	gui/ground_info.cc
+	gui/groundobj_edit.cc
 	gui/gui_frame.cc
 	gui/gui_theme.cc
 	gui/halt_detail.cc
@@ -308,15 +314,18 @@ add_executable(simutrans-extended
 	gui/sprachen.cc
 	gui/station_building_select.cc
 	gui/themeselector.cc
-	gui/times_history.cc
 	gui/times_history_container.cc
-	gui/times_history_entry.cc
 	gui/tool_selector.cc
 	gui/trafficlight_info.cc
 	gui/vehiclelist_frame.cc
 	gui/vehicle_class_manager.cc
 	gui/way_info.cc
 	gui/welt.cc
+	io/rdwr/bzip2_file_rdwr_stream.cc
+	io/rdwr/raw_file_rdwr_stream.cc
+	io/rdwr/rdwr_stream.cc
+	io/rdwr/zlib_file_rdwr_stream.cc
+	io/classify_file.cc
 	network/checksum.cc
 	network/memory_rw.cc
 	network/network_address.cc
@@ -341,6 +350,7 @@ add_executable(simutrans-extended
 	obj/pillar.cc
 	obj/roadsign.cc
 	obj/signal.cc
+	obj/simobj.cc
 	obj/tunnel.cc
 	obj/wayobj.cc
 	obj/wolke.cc
@@ -396,7 +406,6 @@ add_executable(simutrans-extended
 	simmem.cc
 	simmenu.cc
 	simmesg.cc
-	simobj.cc
 	simplan.cc
 	simsignalbox.cc
 	simskin.cc
@@ -439,9 +448,13 @@ add_executable(simutrans-extended
 	utils/simstring.cc
 	utils/simthread.cc
 	vehicle/movingobj.cc
-	vehicle/simpeople.cc
+	vehicle/pedestrian.cc
 	vehicle/simroadtraffic.cc
-	vehicle/simvehicle.cc
+	vehicle/vehicle.cc
+	vehicle/air_vehicle.cc
+	vehicle/rail_vehicle.cc
+	vehicle/road_vehicle.cc
+	vehicle/water_vehicle.cc
 )
 
 if (WIN32)
@@ -467,7 +480,7 @@ endif (WIN32)
 
 
 if (SIMUTRANS_BACKEND STREQUAL "sdl2")
-	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_s2.cc sound/sdl2_sound.cc ${BACKUP_MUSIC})
+	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_s2.cc sound/sdl2_sound.cc)
 	target_link_libraries(simutrans-extended PRIVATE SDL2::Core)
 	target_compile_definitions(simutrans-extended PRIVATE COLOUR_DEPTH=16)
 
@@ -485,7 +498,7 @@ elseif (SIMUTRANS_BACKEND STREQUAL "mixer_sdl2")
 	endif ()
 
 elseif (SIMUTRANS_BACKEND STREQUAL "gdi")
-	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_w.cc sys/simsys_w32_png.cc ${BACKUP_SOUND} ${BACKUP_MUSIC})
+	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_w.cc sys/simsys_w32_png.cc ${BACKUP_SOUND} )
 	target_link_libraries(simutrans-extended PRIVATE imm32)
 	target_compile_definitions(simutrans-extended PRIVATE COLOUR_DEPTH=16)
 
@@ -523,10 +536,21 @@ if (SIMUTRANS_USE_UPNP)
 endif (SIMUTRANS_USE_UPNP)
 
 if (SIMUTRANS_USE_ZSTD)
+	target_sources(simutrans-extended PRIVATE io/rdwr/zstd_file_rdwr_stream.cc)
 	target_compile_definitions(simutrans-extended PRIVATE USE_ZSTD=1)
 	target_link_libraries(simutrans-extended PRIVATE ZSTD::ZSTD)
 endif (SIMUTRANS_USE_ZSTD)
 
+# only consider FluidSynth for SDL2 and GDI backends
+if ((SIMUTRANS_BACKEND STREQUAL "sdl2") OR (SIMUTRANS_BACKEND STREQUAL "gdi"))
+	if (SIMUTRANS_USE_FLUIDSYNTH_MIDI)
+		target_sources(simutrans-extended PRIVATE music/fluidsynth.cc gui/loadsoundfont_frame.cc)
+		target_compile_definitions(simutrans-extended PRIVATE USE_FLUIDSYNTH_MIDI=1)
+		target_link_libraries(simutrans-extended PRIVATE FluidSynth::FluidSynth)
+	else ()
+		target_sources( simutrans-extended PRIVATE ${BACKUP_MUSIC} )
+	endif (SIMUTRANS_USE_FLUIDSYNTH_MIDI)
+endif ((SIMUTRANS_BACKEND STREQUAL "sdl2") OR (SIMUTRANS_BACKEND STREQUAL "gdi"))
 
 #
 # compile options

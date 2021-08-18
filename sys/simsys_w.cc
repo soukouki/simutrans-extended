@@ -174,7 +174,7 @@ int dr_os_open(int const w, int const h, bool fullscreen)
 			if(  COLOUR_DEPTH<32  ) {
 				settings.dmBitsPerPel = 32;
 			}
-			printf( "dr_os_open()::Could not reduce color depth to 16 Bit in fullscreen." );
+			dbg->warning("dr_os_open(w32)", "Could not reduce color depth to 16 Bit in fullscreen." );
 		}
 		if(  ChangeDisplaySettings(&settings, CDS_TEST)!=DISP_CHANGE_SUCCESSFUL  ) {
 			ChangeDisplaySettings( NULL, 0 );
@@ -635,7 +635,7 @@ LRESULT WINAPI WindowProc(HWND this_hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			sint16 code = lParam >> 16;
 			if(  code >= 0x47  &&  code <= 0x52  &&  code != 0x4A  &&  code != 0x4e  ) {
-				if(  env_t::numpad_always_moves_map  ||  (GetKeyState( VK_NUMLOCK ) & 1) == 0  ) { // numlock off?
+				if(  (GetKeyState( VK_NUMLOCK ) & 1) == 0  ||  (env_t::numpad_always_moves_map  &&  !win_is_textinput())  ) { // numlock off?
 					switch( code ) {
 						case 0x47: code = SIM_KEY_UPLEFT; break;
 						case 0x48: code = SIM_KEY_UP; break;
@@ -686,8 +686,8 @@ LRESULT WINAPI WindowProc(HWND this_hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		{
 			sint16 code = lParam >> 16;
 			if(  code >= 0x47  &&  code <= 0x52  &&  code != 0x4A  &&  code != 0x4e  ) {
-				if(  env_t::numpad_always_moves_map  ||  (GetKeyState( VK_NUMLOCK ) & 1) == 0  ) { // numlock off?
-					// we handled numpad keys already above ...
+				if(  (GetKeyState( VK_NUMLOCK ) & 1) == 0  ||  (env_t::numpad_always_moves_map  &&  !win_is_textinput())  ) { // numlock off?
+					// we handled this numpad keys already above ...
 					sys_event.type = SIM_NOEVENT;
 					sys_event.code = 0;
 					break;
@@ -900,8 +900,10 @@ LRESULT WINAPI WindowProc(HWND this_hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	if(  update_mouse  ) {
 		sys_event.key_mod = ModifierKeys();
 		sys_event.mb = last_mb = (wParam&3);
-		sys_event.mx      = (LOWORD(lParam) * 32)/x_scale;
-		sys_event.my      = (HIWORD(lParam) * 32)/y_scale;
+		sint16 x = LOWORD(lParam);
+		sys_event.mx      = (x * 32l)/x_scale;
+		sint16 y = HIWORD(lParam);
+		sys_event.my      = (y * 32l)/y_scale;
 	}
 
 

@@ -109,7 +109,7 @@ public:
 	void set_show_detail(bool yesno) { show_detail = yesno; } // Currently not in use
 
 	void draw(scr_coord offset);
-	void display_loading_bar(KOORD_VAL xp, KOORD_VAL yp, KOORD_VAL w, KOORD_VAL h, PIXVAL color, uint16 loading, uint16 capacity, uint16 overcrowd_capacity);
+	void display_loading_bar(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, uint16 loading, uint16 capacity, uint16 overcrowd_capacity);
 };
 
 // content of maintenance info tab
@@ -158,6 +158,7 @@ private:
 	gui_scrollpane_t scrolly_payload_info;
 	gui_scrollpane_t scrolly_maintenance;
 
+	static sint16 tabstate;
 	gui_tab_panel_t switch_chart;
 	gui_tab_panel_t tabs;
 
@@ -170,9 +171,9 @@ private:
 
 	gui_combobox_t overview_selctor;
 	gui_label_buf_t
-		lb_vehicle_count, lb_working_method, // for main frame
-		lb_loading_time, lb_catering_level,  // for payload tab
-		lb_odometer, lb_value;               // for maintenance tab
+		lb_vehicle_count,                   // for main frame
+		lb_loading_time, lb_catering_level, // for payload tab
+		lb_odometer, lb_value;              // for maintenance tab
 	gui_acceleration_label_t      *lb_acceleration;
 	gui_acceleration_time_label_t *lb_acc_time;
 	gui_acceleration_dist_label_t *lb_acc_distance;
@@ -188,6 +189,9 @@ private:
 	void update_labels();
 
 	void init(convoihandle_t cnv);
+
+	void set_tab_opened();
+
 public:
 	convoi_detail_t(convoihandle_t cnv = convoihandle_t());
 
@@ -196,6 +200,8 @@ public:
 	const char * get_help_filename() const OVERRIDE {return "convoidetail.txt"; }
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
+
+	bool infowin_event(event_t const*) OVERRIDE;
 
 	/**
 	 * called when convoi was renamed

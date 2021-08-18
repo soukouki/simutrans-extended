@@ -7,7 +7,7 @@
 #define OBJ_ROADSIGN_H
 
 
-#include "../simobj.h"
+#include "simobj.h"
 #include "../simtypes.h"
 #include "../descriptor/roadsign_desc.h"
 #include "../ifc/sync_steppable.h"
@@ -26,7 +26,11 @@ protected:
 	image_id image;
 	image_id foreground_image;
 
-	enum { SHOW_FONT=1, SHOW_BACK=2, SWITCH_AUTOMATIC=16 };
+	enum {
+		SHOW_FONT        = 1,
+		SHOW_BACK        = 2,
+		SWITCH_AUTOMATIC = 16
+	};
 
 	uint8 state:4;	// counter for steps ...
 	uint8 dir:4;
@@ -35,6 +39,7 @@ protected:
 	bool preview:1;
 	uint8 ticks_ns;
 	uint8 ticks_ow;
+        uint8 ticks_amber_ns, ticks_amber_ow;
 	uint8 ticks_offset;
 
 	sint8 after_yoffset, after_xoffset;
@@ -49,18 +54,17 @@ protected:
 
 public:
 	// Max. 16 (15 incl. 0)
-	enum signal_aspects
-	{
-		danger = 0,
-		clear = 1,
-		caution = 2,
-		preliminary_caution = 3,
-		advance_caution = 4,
-		clear_no_choose = 5,
-		caution_no_choose = 6,
+	enum signal_aspects {
+		danger                        = 0,
+		clear                         = 1,
+		caution                       = 2,
+		preliminary_caution           = 3,
+		advance_caution               = 4,
+		clear_no_choose               = 5,
+		caution_no_choose             = 6,
 		preliminary_caution_no_choose = 7,
-		advance_caution_no_choose = 8,
-		call_on = 9
+		advance_caution_no_choose     = 8,
+		call_on                       = 9
 	};
 
 	/**
@@ -131,16 +135,32 @@ public:
 	void set_ticks_ns(uint8 ns) {
 		ticks_ns = ns;
 		// To prevent overflow in ticks_offset when rotating
-		if (ticks_ow > 256-ticks_ns) {
-			ticks_ow = 256-ticks_ns;
+		if (ticks_ow > 256-ticks_ns - ticks_amber_ns - ticks_amber_ow ) {
+			ticks_ow = 256-ticks_ns-ticks_amber_ns-ticks_amber_ow;
 		}
 	}
 	uint8 get_ticks_ow() const { return ticks_ow; }
 	void set_ticks_ow(uint8 ow) {
 		ticks_ow = ow;
 		// To prevent overflow in ticks_offset when rotating
-		if (ticks_ns > 256-ticks_ow) {
-			ticks_ns = 256-ticks_ow;
+		if (ticks_ns > 256-ticks_ow - ticks_amber_ns-ticks_amber_ow ) {
+			ticks_ns = 256-ticks_ow-ticks_amber_ns-ticks_amber_ow;
+		}
+	}
+	uint8 get_ticks_amber_ns() const { return ticks_amber_ns; }
+	void set_ticks_amber_ns(uint8 amber) {
+		ticks_amber_ns = amber;
+		// To prevent overflow in ticks_offset when rotating
+		if (ticks_amber_ns > 256-ticks_ns - ticks_ow - ticks_amber_ow) {
+		  ticks_amber_ns = 256-ticks_ns-ticks_ow-ticks_amber_ow;
+		}
+	}
+	uint8 get_ticks_amber_ow() const { return ticks_amber_ow; }
+	void set_ticks_amber_ow(uint8 amber) {
+		ticks_amber_ow = amber;
+		// To prevent overflow in ticks_offset when rotating
+		if (ticks_amber_ow > 256-ticks_ns - ticks_ow - ticks_amber_ns) {
+		  ticks_amber_ow = 256-ticks_ns-ticks_ow-ticks_amber_ns;
 		}
 	}
 	uint8 get_ticks_offset() const { return ticks_offset; }

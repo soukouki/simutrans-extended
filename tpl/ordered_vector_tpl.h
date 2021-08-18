@@ -105,7 +105,7 @@ template<class T, class inttype> class ordered_vector_tpl
 		 * Insert only if elem isn't yet contained.
 		 * Returns false if elem already contained.
 		 */
-		bool insert_unique(T elem, inttype i = 1)
+		bool insert_unique(T elem, inttype i = 0)
 		{
 			if(  count == size  ) {
 				if(  i == 0  ) {
@@ -153,7 +153,8 @@ template<class T, class inttype> class ordered_vector_tpl
 			T* old_data = data;
 			inttype old_count = count;
 
-			data = new T[ count + vT.count ];
+			size = count + vT.count;
+			data = new T[ size ];
 			count = 0;
 
 			inttype i,j;
@@ -183,6 +184,7 @@ template<class T, class inttype> class ordered_vector_tpl
 				data[ count++ ] = vT.data[j];
 				j++;
 			}
+			delete [] old_data;
 		};
 
 		void set_diff(const ordered_vector_tpl<T, inttype> vT)

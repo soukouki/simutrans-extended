@@ -26,7 +26,7 @@
 #include "../dataobj/environment.h"
 
 #include "../player/simplay.h"
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/vehicle.h"
 
 #include "../tpl/vector_tpl.h"
 
@@ -651,7 +651,6 @@ bool schedule_gui_t::infowin_event(const event_t *ev)
 bool schedule_gui_t::action_triggered( gui_action_creator_t *comp, value_t p)
 {
 DBG_MESSAGE("schedule_gui_t::action_triggered()","comp=%p combo=%p",comp,&line_selector);
-
 	if(comp == &bt_add) {
 		mode = adding;
 		bt_add.pressed = true;
@@ -936,7 +935,7 @@ void schedule_gui_t::rdwr(loadsave_t *file)
 	size.rdwr( file );
 
 	// convoy data
-	if (file->get_version_int() <=112002) {
+	if(  file->is_version_less(112, 3)  ) {
 		// dummy data
 		uint8 player_nr = 0;
 		koord3d cnv_pos( koord3d::invalid);

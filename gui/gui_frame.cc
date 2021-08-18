@@ -17,36 +17,7 @@
 #include "../descriptor/skin_desc.h"
 #include "../simskin.h"
 
-floating_cursor_t::floating_cursor_t(const scr_coord& initial,	scr_coord_val min_left,	scr_coord_val max_right)
-	: cursor(initial)
-	, left(min_left)
-	, right(max_right)
-	, row_height(0)
-{}
-
-void floating_cursor_t::new_line()
-{
-	cursor.x = left;
-	cursor.y += row_height + D_V_SPACE;
-	row_height = 0;
-}
-
-scr_coord floating_cursor_t::next_pos(const scr_size& size)
-{
-	if (cursor.x + size.w > right)
-	{
-		new_line();
-	}
-	scr_coord curr = cursor;
-	cursor.x += size.w + D_H_SPACE;
-	if (row_height < size.h)
-		row_height = size.h;
-	return curr;
-}
-
-
 karte_ptr_t gui_frame_t::welt;
-
 
 // Insert the container
 gui_frame_t::gui_frame_t(char const* const name, player_t const* const player)
@@ -123,7 +94,7 @@ void gui_frame_t::reset_min_windowsize()
  */
 FLAGGED_PIXVAL gui_frame_t::get_titlecolor() const
 {
-	return owner ? PLAYER_FLAG|color_idx_to_rgb(owner->get_player_color1()+env_t::gui_player_color_dark) : env_t::default_window_title_color;
+	return owner ? PLAYER_FLAG|color_idx_to_rgb(owner->get_player_color1()+env_t::gui_titlebar_player_color_background_brightness) : env_t::default_window_title_color;
 }
 
 
@@ -157,7 +128,7 @@ bool gui_frame_t::infowin_event(const event_t *ev)
 		gui_aligned_container_t::clear_dirty();
 	}
 	event_t ev2 = *ev;
-	translate_event(&ev2, 0, -has_title()*D_TITLEBAR_HEIGHT);
+	translate_event(&ev2, 0, -(int)has_title()*D_TITLEBAR_HEIGHT);
 	return gui_aligned_container_t::infowin_event(&ev2);
 }
 

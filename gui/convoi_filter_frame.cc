@@ -49,7 +49,7 @@ convoi_filter_frame_t::filter_flag_t convoi_filter_frame_t::filter_buttons_types
 	maglev_filter,
 	narrowgauge_filter,
 	tram_filter,
-	spezial_filter,
+	special_filter,
 	noroute_filter,
 	stucked_filter,
 	noincome_filter,
@@ -172,6 +172,26 @@ convoi_filter_frame_t::convoi_filter_frame_t(player_t *player, convoi_frame_t *m
 }
 
 
+void convoi_filter_frame_t::init(uint32 filter_flags, const slist_tpl<const goods_desc_t*>* wares)
+{
+	for (int i = 0; i < FILTER_BUTTONS; i++) {
+		set_filter(filter_buttons_types[i], filter_flags & filter_buttons_types[i]);
+		filter_buttons[i].pressed = get_filter(filter_buttons_types[i]);
+	}
+	if (&active_ware != wares) {
+		active_ware.clear();
+		if (wares) {
+			FOR(slist_tpl<ware_item_t*>, wi, all_ware) {
+				wi->pressed = wares->is_contained(wi->ware);
+				if (wi->pressed) {
+					active_ware.append(wi->ware);
+				}
+			}
+		}
+	}
+}
+
+
 /**
  * This method is called if an action is triggered
  */
@@ -219,7 +239,8 @@ void convoi_filter_frame_t::sort_list()
 	active_ware.clear();
 	FOR( slist_tpl<ware_item_t *>, wi, all_ware ) {
 		if(  wi->pressed  ) {
-/*			uint8 catg = wi->ware->get_catg();
+/*
+			uint8 catg = wi->ware->get_catg();
 			if(  catg  ) {
 				// now all goods of this category
 				for(  int i=1;  i<goods_manager_t::get_max_catg_index();  i++   ) {
@@ -231,7 +252,8 @@ void convoi_filter_frame_t::sort_list()
 			else {
 				active_ware.append( wi->ware );
 			}
-*/			active_ware.append( wi->ware );
+*/
+			active_ware.append( wi->ware );
 		}
 	}
 	main_frame->sort_list( filter_flags&name_filter ? name_filter_text : NULL, filter_flags, &active_ware );

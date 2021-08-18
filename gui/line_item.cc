@@ -54,10 +54,10 @@ bool line_scrollitem_t::compare(const gui_component_t *aa, const gui_component_t
 
 	if(  sort_mode != SORT_BY_NAME  ) {
 		switch(  sort_mode  ) {
-			case SORT_BY_NAME:	// default
+			case SORT_BY_NAME: // default
 				break;
 			case SORT_BY_ID:
-				return (a->get_line().get_id(),b->get_line().get_id())<0;
+				return (a->get_line().get_id() - b->get_line().get_id())<0;
 			case SORT_BY_PROFIT:
 				return (a->get_line()->get_finance_history(1,LINE_PROFIT) - b->get_line()->get_finance_history(1,LINE_PROFIT))<0;
 			case SORT_BY_TRANSPORTED:

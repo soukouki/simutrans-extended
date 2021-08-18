@@ -12,7 +12,7 @@
 #include "halthandle_t.h"
 #include "simware.h"
 
-#include "simobj.h"
+#include "obj/simobj.h"
 #include "display/simgraph.h"
 #include "simtypes.h"
 #include "simconst.h"
@@ -91,9 +91,27 @@ struct lines_loaded_t
 class haltestelle_t
 {
 public:
-	enum station_flags { NOT_ENABLED=0, PAX=1, POST=2, WARE=4, CROWDED=8 };
+	enum station_flags {
+		NOT_ENABLED = 0,
+		PAX         = 1 << 0,
+		POST        = 1 << 1,
+		WARE        = 1 << 2,
+		CROWDED     = 1 << 3,
+	};
 
-	enum stationtyp {invalid=0, loadingbay=1, railstation = 2, dock = 4, busstop = 8, airstop = 16, monorailstop = 32, tramstop = 64, maglevstop=128, narrowgaugestop=256 }; //could be combined with or!
+	// can be combined with or!
+	enum stationtyp {
+		invalid         = 0,
+		loadingbay      = 1 << 0,
+		railstation     = 1 << 1,
+		dock            = 1 << 2,
+		busstop         = 1 << 3,
+		airstop         = 1 << 4,
+		monorailstop    = 1 << 5,
+		tramstop        = 1 << 6,
+		maglevstop      = 1 << 7,
+		narrowgaugestop = 1 << 8
+	};
 
 private:
 	/// List of all halts in the game.
@@ -126,9 +144,9 @@ private:
 	 */
 	void init_financial_history();
 
-	PIXVAL status_color, last_status_color;
+	PIXVAL status_color, last_status_color, status_color_freight;
 	sint16 last_bar_count;
-	vector_tpl<KOORD_VAL> last_bar_height; // caches the last height of the station bar for each good type drawn in display_status(). used for dirty tile management
+	vector_tpl<scr_coord_val> last_bar_height; // caches the last height of the station bar for each good type drawn in display_status(). used for dirty tile management
 	uint32 capacity[3]; // passenger, mail, goods
 	uint8 overcrowded[256/8]; ///< bit field for each goods type (max 256)
 
@@ -298,7 +316,7 @@ public:
 	};
 	bool do_alternative_seats_calculation; //for optimisations purpose
 
-	const slist_tpl<tile_t> &get_tiles() const { return tiles; };
+	const slist_tpl<tile_t> &get_tiles() const { return tiles; }
 
 	bool is_within_walking_distance_of(halthandle_t halt) const;
 
@@ -536,11 +554,12 @@ public:
 	 * Calculates a status color for status bars
 	 */
 	PIXVAL get_status_farbe() const { return status_color; }
+	PIXVAL get_status_color(uint8 typ) const;
 
 	/**
 	 * Draws some nice colored bars giving some status information
 	 */
-	void display_status(KOORD_VAL xpos, KOORD_VAL ypos);
+	void display_status(sint16 xpos, sint16 ypos);
 
 	/**
 	 * "Surrounding searches, achievable factories and builds the
@@ -673,6 +692,8 @@ public:
 	// true, if this station is overcrowded for this category
 	bool is_overcrowded( const uint8 idx ) const { return (overcrowded[idx/8] & (1<<(idx%8)))!=0; }
 
+	sint64 get_overcrowded_proporion(uint8 typ) const;
+
 	/// @returns total amount of the good waiting at this halt.
 	uint32 get_ware_summe(const goods_desc_t *warentyp) const;
 	uint32 get_ware_summe(const goods_desc_t *warentyp, uint8 g_class, bool chk_only_commuter = false) const;
@@ -701,9 +722,7 @@ public:
 	 * Fetches goods from this halt
 	 * @param load Output parameter. Goods will be put into this list, the vehicle has to load them.
 	 * @param good_category Specifies the kind of good (or compatible goods) we are requesting to fetch from this stop.
-	 * @param amount How many units of the cargo we can fetch.
-	 * @param schedule Schedule of the vehicle requesting the fetch.
-	 * @param player Company that's requesting the fetch.
+	 * @param requested_amount How many units of the cargo we can fetch.
 	 */
 	bool fetch_goods( slist_tpl<ware_t> &load, const goods_desc_t *good_category, sint32 requested_amount, const schedule_t *schedule, const player_t *player, convoi_t* cnv, bool overcrowd, const uint8 g_class, const bool use_lower_classes, bool& other_classes_available, const bool mixed_load_prohibition, uint8 goods_restriction);
 
@@ -742,14 +761,12 @@ public:
 	uint8 get_empty_lane(const grund_t *gr, convoihandle_t cnv) const;
 
 	/**
-	 * @param buf the buffer to fill
-	 * @return Goods description text (buf)
+	 * @param[out] buf Goods description text
 	 */
 	void get_freight_info(cbuffer_t & buf);
 
 	/**
-	 * @param buf the buffer to fill
-	 * @return short list of the waiting goods (i.e. 110 Wood, 15 Coal)
+	 * @param[out] buf short list of the waiting goods (i.e. 110 Wood, 15 Coal)
 	 */
 	void get_short_freight_info(cbuffer_t & buf) const;
 
@@ -874,21 +891,6 @@ public:
 	uint32 get_around_mail_demand() const;
 	uint32 get_around_mail_generated() const;
 	uint32 get_around_mail_delivery_succeeded() const;
-
-	// @author: jamespetts
-	// Returns the percentage of unhappy people
-	// out of the total of happy and unhappy people.
-	uint16 get_unhappy_percentage(uint8 month) const
-	{
-		sint64 happy_count = financial_history[month][HALT_HAPPY];
-		sint64 unhappy_count = financial_history[month][HALT_UNHAPPY];
-		if (happy_count > 0) {
- 			return (uint16) (unhappy_count * 100 / (happy_count + unhappy_count) );
-		}
-		else {
-			return 0;
-		}
-	}
 
 	// Getting and setting average waiting times in minutes
 	// @author: jamespetts

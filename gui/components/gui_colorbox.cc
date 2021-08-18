@@ -47,7 +47,7 @@ void gui_colorbox_t::draw(scr_coord offset)
 		display_colorbox_with_tooltip(offset.x, offset.y, width, height, color, true, tooltip);
 	}
 	else {
-		display_fillbox_wh_rgb(offset.x, offset.y, width, height, color, true);
+		display_fillbox_wh_clip_rgb(offset.x, offset.y, width, height, color, true);
 	}
 }
 
@@ -65,4 +65,44 @@ void gui_right_pointer_t::draw(scr_coord offset)
 {
 	offset += pos;
 	display_right_pointer_rgb(offset.x, offset.y, height, color, true);
+}
+
+
+gui_vehicle_bar_t::gui_vehicle_bar_t(PIXVAL c, scr_size size)
+{
+	color = c;
+	set_size(size);
+}
+
+void gui_vehicle_bar_t::set_flags(uint8 flags_left_, uint8 flags_right_, uint8 interactivity_)
+{
+	flags_left = flags_left_;
+	flags_right=flags_right_;
+	interactivity=interactivity_;
+}
+
+void gui_vehicle_bar_t::draw(scr_coord offset)
+{
+	offset += pos;
+	display_veh_form_wh_clip_rgb(offset.x,          offset.y, (size.w+1)/2, size.h, color, true, false, flags_left,  interactivity);
+	display_veh_form_wh_clip_rgb(offset.x+size.w/2, offset.y, (size.w+1)/2, size.h, color, true, true,  flags_right, interactivity);
+}
+
+
+void gui_vehicle_number_t::init()
+{
+	const int bar_width_half = (proportional_string_width(buf)+7+LINEASCENT+4)/4*2+2;
+	set_size(scr_size(max(bar_width_half*2, 42), LINEASCENT+4));
+}
+
+void gui_vehicle_number_t::draw(scr_coord offset)
+{
+	offset += pos;
+	if (show_frame) {
+		display_veh_form_wh_clip_rgb(offset.x,          offset.y, size.w/2, size.h, color_idx_to_rgb(COL_WHITE), false, false, flags_left, interactivity);
+		display_veh_form_wh_clip_rgb(offset.x+size.w/2, offset.y, size.w/2, size.h, color_idx_to_rgb(COL_WHITE), false, true,  flags_right, interactivity);
+	}
+	display_veh_form_wh_clip_rgb(offset.x+1,        offset.y+1, size.w/2-1, size.h-2, color, false, false, flags_left, interactivity);
+	display_veh_form_wh_clip_rgb(offset.x+size.w/2, offset.y+1, size.w/2-1, size.h-2, color, false, true,  flags_right, interactivity);
+	display_proportional_clip_rgb(offset.x+(size.w - proportional_string_width(buf))/2, offset.y+2, buf, ALIGN_LEFT, color_idx_to_rgb(COL_WHITE), false);
 }

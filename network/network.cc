@@ -128,12 +128,12 @@ SOCKET network_open_address(char const* cp, char const*& err)
 	server_name.sin_family = AF_INET;
 #if USE_WINSOCK
 	bool ok = true;
-	server_name.sin_addr.s_addr = inet_addr(cp);	// for windows we must first try to resolve the number
-	if ((int)server_name.sin_addr.s_addr == -1) {// Bad address
+	server_name.sin_addr.s_addr = inet_addr(cp); // for windows we must first try to resolve the number
+	if((int)server_name.sin_addr.s_addr==-1) { // Bad address
 		ok = false;
 		struct hostent *theHost;
-		theHost = gethostbyname(cp);	// ... before resolving a name ...
-		if (theHost) {
+		theHost = gethostbyname( cp ); // ... before resolving a name ...
+		if(theHost) {
 			server_name.sin_addr = *(struct in_addr *)theHost->h_addr_list[0];
 			ok = true;
 		}
@@ -452,7 +452,7 @@ bool network_init_server(int port)
 		dbg->fatal("network_init_server()", "Unable to add any server sockets!");
 	}
 	else {
-		printf("Server started, added %d server sockets\n", socket_list_t::get_server_sockets());
+		dbg->message("network_init_server", "Server started, added %d server sockets", socket_list_t::get_server_sockets());
 	}
 
 #endif
@@ -552,7 +552,7 @@ network_command_t* network_check_activity(karte_t *, int timeout)
 			network_command_t *nwc = socket_list_t::get_client(client_id).receive_nwc();
 			if (nwc) {
 				received_command_queue.append(nwc);
-				dbg->warning("network_check_activity()", "received cmd id=%d %s from socket[%d]", nwc->get_id(), nwc->get_name(), sender);
+				dbg->message( "network_check_activity()", "received cmd %s (id %d) from socket[%d]", nwc->get_name(), nwc->get_id(), sender );
 			}
 			// errors are caught and treated in socket_info_t::receive_nwc
 		}
@@ -699,8 +699,8 @@ bool network_send_data(SOCKET dest, const char *buf, const uint16 size, uint16 &
 				tv.tv_sec = timeout_ms / 1000;
 				tv.tv_usec = (timeout_ms % 1000) * 1000ul;
 				// can we write?
-				if (select(FD_SETSIZE, NULL, &fds, NULL, &tv) != 1) {
-					dbg->warning("network_send_data", "could not write to [%s]", dest);
+				if(  select( FD_SETSIZE, NULL, &fds, NULL, &tv )!=1  ) {
+					dbg->warning("network_send_data", "could not write to socket [%d]", dest);
 					return false;
 				}
 			}
@@ -821,7 +821,7 @@ void network_core_shutdown()
 	network_active = false;
 #ifndef NETTOOL
 	env_t::networkmode = false;
-	network_server_port = 0;	// this also sets ent_t::server to zero
+	network_server_port = 0; // this also sets env_t::server to zero
 #endif
 }
 
@@ -895,7 +895,7 @@ extern "C" {
 
 bool prepare_for_server( char *externalIPAddress, char *externalAltIPAddress, int port )
 {
-	char lanaddr[64] = "unset";	/* my ip address on the LAN */
+	char lanaddr[64] = "unset"; /* my ip address on the LAN */
 	int error = 0;
 	const char *rootdescurl = 0;
 	const char *multicastif = 0;
@@ -988,7 +988,7 @@ void remove_port_forwarding( int port )
 		return;
 	}
 
-	char lanaddr[64] = "unset";	/* my ip address on the LAN */
+	char lanaddr[64] = "unset"; /* my ip address on the LAN */
 	char externalIPAddress[64];
 	int error = 0;
 	const char *rootdescurl = 0;

@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #include "../simworld.h"
-#include "../simobj.h"
+#include "simobj.h"
 #include "../player/simplay.h"
 #include "../boden/grund.h"
 #include "../display/simimg.h"
@@ -123,8 +123,7 @@ void tunnel_t::calc_image()
 			}
 		}
 	}
-	else
-	{
+	else {
 		set_image( IMG_EMPTY );
 		set_after_image( IMG_EMPTY );
 	}
@@ -139,7 +138,7 @@ void tunnel_t::rdwr(loadsave_t *file)
 {
 	xml_tag_t t( file, "tunnel_t" );
 	obj_t::rdwr(file);
-	if(  file->get_version_int() >= 99001 ) {
+	if(  file->is_version_atleast(99, 1) ) {
 		char  buf[256];
 		if(  file->is_loading()  ) {
 			file->rdwr_str(buf, lengthof(buf));
@@ -185,7 +184,7 @@ void tunnel_t::finish_rd()
 		}
 	}
 
-	if (player) {
+	if(player) {
 		// change maintenance
 		weg_t *weg = gr->get_weg(desc->get_waytype());
 		if(weg) {

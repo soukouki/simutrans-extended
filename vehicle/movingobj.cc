@@ -8,7 +8,7 @@
 
 #include "../simdebug.h"
 #include "../simworld.h"
-#include "../simobj.h"
+#include "../obj/simobj.h"
 #include "../display/simimg.h"
 #include "../player/simplay.h"
 #include "../simtypes.h"
@@ -170,7 +170,7 @@ movingobj_t::movingobj_t(koord3d pos, const groundobj_desc_t *b ) :
 {
 	movingobjtype = movingobj_typen.index_of(b);
 	weg_next = 0;
-	timetochange = 0;	// will do random direct change anyway during next step
+	timetochange = 0; // will do random direct change anyway during next step
 	direction = calc_set_direction( koord3d(0,0,0), koord3d(koord::west,0) );
 	calc_image();
 	welt->sync.add( this );
@@ -212,6 +212,7 @@ void movingobj_t::rdwr(loadsave_t *file)
 	file->rdwr_byte(steps_next);
 
 	pos_next.rdwr(file);
+
 	koord p = pos_next_next.get_2d();
 	p.rdwr(file);
 	if(file->is_loading()) {
@@ -362,7 +363,7 @@ grund_t* movingobj_t::hop_check()
 		}
 	}
 
-	if(timetochange==0) {
+	if (timetochange==0) {
 		// direction change needed
 		timetochange = simrand(speed_to_kmh(get_desc()->get_speed())/3, "bool movingobj_t::hop_check()");
 		const koord pos=pos_next.get_2d();
@@ -370,7 +371,7 @@ grund_t* movingobj_t::hop_check()
 		uint8 until=0;
 		// find all tiles we can go
 		for(  int i=0;  i<4;  i++  ) {
-			const grund_t *check = welt->lookup_kartenboden(pos+koord::nsew[i]);
+			const grund_t *check = welt->lookup_kartenboden(pos+koord::nesw[i]);
 			if(check_next_tile(check)  &&  check->get_pos()!=get_pos()) {
 				to[until++] = check;
 			}
@@ -415,6 +416,7 @@ void movingobj_t::hop(grund_t* gr)
 
 	set_pos(pos_next);
 	enter_tile(gr);
+
 	// next position
 	pos_next = pos_next_next;
 }

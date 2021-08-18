@@ -11,7 +11,7 @@
 
 #include "../simunits.h"
 #include "../simworld.h"
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/vehicle.h"
 #include "../simconvoi.h"
 #include "../simdepot.h"
 #include "simwin.h"
@@ -95,7 +95,7 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	add_component(&line_selector);
 
 	// goto line button
-	line_button.set_typ(button_t::posbutton);
+	line_button.set_typ(button_t::arrowright);
 	line_button.set_targetpos3d(koord3d::invalid);
 	line_button.add_listener(this);
 	add_component(&line_button);

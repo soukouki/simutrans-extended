@@ -12,7 +12,7 @@
 #include "simtypes.h"
 #include "simworld.h"
 #include "simmenu.h"
-#include "simobj.h"
+#include "obj/simobj.h"
 
 #include "boden/wege/schiene.h"
 #include "boden/wege/strasse.h"
@@ -23,6 +23,7 @@
 #include "display/viewport.h"
 
 #include "obj/baum.h"
+#include "obj/groundobj.h"
 
 #include "player/simplay.h"
 
@@ -244,6 +245,18 @@ public:
 	bool is_init_network_safe() const OVERRIDE { return true; }
 };
 
+class tool_plant_groundobj_t : public kartenboden_tool_t {
+public:
+	tool_plant_groundobj_t() : kartenboden_tool_t(TOOL_PLANT_GROUNDOBJ | GENERAL_TOOL) {}
+	image_id get_icon(player_t *) const OVERRIDE { return groundobj_t::get_count() > 0 ? icon : IMG_EMPTY; }
+	char const* get_tooltip(player_t const*) const OVERRIDE { return translator::translate( "Plant groundobj" ); }
+	bool init(player_t*) OVERRIDE { return groundobj_t::get_count() > 0; }
+	char const* move(player_t* const player, uint16 const b, koord3d const k) OVERRIDE;
+	bool move_has_effects() const OVERRIDE { return true; }
+	char const* work(player_t*, koord3d) OVERRIDE;
+	bool is_init_network_safe() const OVERRIDE { return true; }
+};
+
 /* only called directly from schedule => no tooltip!
  * default_param must point to a schedule!
  */
@@ -276,7 +289,7 @@ protected:
 	overtaking_mode_t overtaking_mode;
 	bool look_toolbar = false;
 
-	virtual way_desc_t const* get_desc(uint16, bool) const;
+	virtual way_desc_t const* get_desc(uint16 timeline_year_month) const;
 	bool calc_route( way_builder_t &bauigel, const koord3d &, const koord3d & );
 
 public:
@@ -307,7 +320,7 @@ private:
 	char const* do_work(player_t*, koord3d const&, koord3d const&) OVERRIDE;
 public:
 	tool_build_cityroad() : tool_build_way_t(TOOL_BUILD_CITYROAD | GENERAL_TOOL) {}
-	way_desc_t const* get_desc(uint16, bool) const OVERRIDE;
+	way_desc_t const* get_desc(uint16) const OVERRIDE;
 	image_id get_icon(player_t* const player) const OVERRIDE { return tool_t::get_icon(player); }
 	bool is_selected() const OVERRIDE { return tool_t::is_selected(); }
 	bool is_init_network_safe() const OVERRIDE { return true; }
@@ -454,7 +467,6 @@ public:
 
 // builds roadsigns and signals
 class tool_build_roadsign_t : public two_click_tool_t {
-
 private:
 	const roadsign_desc_t* desc;
 	const char *place_sign_intern( player_t *, grund_t*, const roadsign_desc_t* b = NULL);
@@ -531,7 +543,8 @@ public:
 	bool is_init_network_safe() const OVERRIDE { return true; }
 };
 
-/* builds (random) tourist attraction (default_param==NULL) and maybe adds it to the next city
+/**
+ * builds (random) tourist attraction (default_param==NULL) and maybe adds it to the next city
  * the parameter string is a follow (or NULL):
  * 1#theater
  * first letter: ignore climates
@@ -632,7 +645,7 @@ public:
 class tool_forest_t : public two_click_tool_t {
 public:
 	tool_forest_t() : two_click_tool_t(TOOL_FOREST | GENERAL_TOOL) {}
-	image_id get_icon(player_t *) const OVERRIDE { return baum_t::get_count() > 0 ? icon : IMG_EMPTY; }
+	image_id get_icon(player_t *) const  OVERRIDE { return baum_t::get_count() > 0 ? icon : IMG_EMPTY; }
 	char const* get_tooltip(player_t const*) const OVERRIDE { return translator::translate("Add forest"); }
 	bool init( player_t *player) OVERRIDE { return  baum_t::get_count() > 0  &&  two_click_tool_t::init(player); }
 private:
@@ -870,7 +883,7 @@ public:
 	tool_convoy_nameplate_t() : tool_t(TOOL_CONVOY_NAMEPLATES | SIMPLE_TOOL) {}
 	char const* get_tooltip(player_t const*) const OVERRIDE { return translator::translate("switch the convoy nameplate display mode"); }
 	bool init(player_t *) OVERRIDE {
-		env_t::show_cnv_nameplates = (env_t::show_cnv_nameplates + 1) % 4;
+		env_t::show_cnv_nameplates = (env_t::show_cnv_nameplates + 1) % 8;
 		welt->set_dirty();
 		return false;
 	}
@@ -977,9 +990,9 @@ public:
 	char const* get_tooltip(player_t const*) const OVERRIDE;
 	bool is_selected() const OVERRIDE;
 	void draw_after(scr_coord, bool dirty) const OVERRIDE;
-	bool init( player_t * ) OVERRIDE;
+	bool init(player_t *) OVERRIDE;
 	char const* work(player_t*, koord3d) OVERRIDE;
-	bool exit(player_t * ) OVERRIDE { return false; }
+	bool exit(player_t *) OVERRIDE;
 	bool is_init_network_safe() const OVERRIDE { return true; }
 	bool is_work_network_safe() const OVERRIDE { return true; }
 };

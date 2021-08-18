@@ -35,8 +35,8 @@ private:
 	 */
 	class fabs_to_crossconnect_t {
 	public:
-		fabrik_t *fab;		///< The factory
-		sint32 demand;		///< To how many factories this factory needs to connect to
+		fabrik_t *fab; ///< The factory
+		sint32 demand; ///< To how many factories this factory needs to connect to
 
 		fabs_to_crossconnect_t() { fab = NULL; demand = 0; }
 		fabs_to_crossconnect_t(fabrik_t *f, sint32 d) { fab = f; demand = d; }
@@ -134,7 +134,6 @@ private:
 	/**
 	 * Checks if the site at @p pos is suitable for construction.
 	 * @param size Size of the building site
-	 * @param water true to search on water
 	 * @param cl allowed climates
 	 */
 	static bool check_construction_site(koord pos, koord size, factory_desc_t::site_t site, bool is_factory, climate_bits cl, uint16 regions_allowed);

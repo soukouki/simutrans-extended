@@ -102,9 +102,28 @@ endif
 USE_UPNP ?= 0
 USE_FREETYPE ?= 0
 
-ALLEGRO_CONFIG ?= allegro-config
-SDL2_CONFIG    ?= sdl2-config
-FREETYPE_CONFIG ?= freetype-config
+ALLEGRO_CONFIG   ?= allegro-config
+SDL2_CONFIG      ?= pkg-config sdl2
+#SDL2_CONFIG     ?= sdl2-config
+FREETYPE_CONFIG  ?= pkg-config freetype2
+#FREETYPE_CONFIG ?= freetype-config
+
+ifneq ($(LTO),)
+  CFLAGS += -flto
+  LDFLAGS += -flto
+endif
+
+ifeq ($(shell getconf LONG_BIT),64)
+  CFLAGS += -DHAS_64_BIT_SYSTEM
+endif
+
+ifneq ($(TUNE_NATIVE),)
+	CFLAGS += -march=native -mtune=native
+	LDFLAGS += -march=native -mtune=native
+  ifneq ($(GCC_POPCOUNT),)
+    CFLAGS += -DUSE_GCC_POPCOUNT	
+  endif
+endif
 
 ifneq ($(OPTIMISE),)
   CFLAGS += -O3
@@ -194,9 +213,25 @@ endif
 
 ifdef USE_ZSTD
   ifeq ($(shell expr $(USE_ZSTD) \>= 1), 1)
-    FLAGS      += -DUSE_ZSTD
-    LDFLAGS     += -lzstd
+    FLAGS   += -DUSE_ZSTD
+    LDFLAGS += -lzstd
+    SOURCES += io/rdwr/zstd_file_rdwr_stream.cc
   endif
+endif
+
+ifdef USE_FLUIDSYNTH_MIDI
+  ifeq ($(shell expr $(USE_FLUIDSYNTH_MIDI) \>= 1), 1)
+    CFLAGS  += -DUSE_FLUIDSYNTH_MIDI
+    SOURCES += music/fluidsynth.cc
+    SOURCES += gui/loadsoundfont_frame.cc
+    LDFLAGS += -lfluidsynth
+    ifeq ($(OSTYPE),mingw)
+      # fluidsynth.pc doesn't properly list dependant libraries, unable to use pkg-config. Manually listed below. Only valid for fluidsynth built with options: "-DBUILD_SHARED_LIBS=0 -Denable-aufile=0 -Denable-dbus=0 -Denable-ipv6=0 -Denable-jack=0 -Denable-ladspa=0 -Denable-midishare=0 -Denable-opensles=0 -Denable-oboe=0 -Denable-oss=0 -Denable-readline=0 -Denable-winmidi=0 -Denable-waveout=0 -Denable-libsndfile=0 -Denable-network=0 -Denable-pulseaudio=0 Denable-dsound=1 -Denable-sdl2=0"
+      LDFLAGS += -lglib-2.0 -lintl -liconv -ldsound -lole32
+    endif
+  endif
+else
+  USE_FLUIDSYNTH_MIDI = 0
 endif
 
 ifneq ($(MULTI_THREAD),)
@@ -320,6 +355,7 @@ SOURCES += obj/leitung2.cc
 SOURCES += obj/pillar.cc
 SOURCES += obj/roadsign.cc
 SOURCES += obj/signal.cc
+SOURCES += obj/simobj.cc
 SOURCES += obj/tunnel.cc
 SOURCES += obj/wayobj.cc
 SOURCES += obj/wolke.cc
@@ -361,6 +397,7 @@ SOURCES += gui/components/gui_component.cc
 SOURCES += gui/components/gui_label.cc
 SOURCES += gui/components/gui_map_preview.cc
 SOURCES += gui/components/gui_numberinput.cc
+SOURCES += gui/components/gui_schedule_item.cc
 SOURCES += gui/components/gui_scrollbar.cc
 SOURCES += gui/components/gui_scrolled_list.cc
 SOURCES += gui/components/gui_scrollpane.cc
@@ -390,6 +427,7 @@ SOURCES += gui/schedule_gui.cc
 SOURCES += gui/goods_frame_t.cc
 SOURCES += gui/goods_stats_t.cc
 SOURCES += gui/ground_info.cc
+SOURCES += gui/groundobj_edit.cc
 SOURCES += gui/gui_frame.cc
 SOURCES += gui/gui_theme.cc
 SOURCES += gui/halt_detail.cc
@@ -437,9 +475,7 @@ SOURCES += gui/signalboxlist_frame.cc
 SOURCES += gui/simwin.cc
 SOURCES += gui/sound_frame.cc
 SOURCES += gui/sprachen.cc
-SOURCES += gui/times_history.cc
 SOURCES += gui/times_history_container.cc
-SOURCES += gui/times_history_entry.cc
 SOURCES += gui/city_info.cc
 SOURCES += gui/station_building_select.cc
 SOURCES += gui/themeselector.cc
@@ -450,6 +486,11 @@ SOURCES += gui/obj_info.cc
 SOURCES += gui/vehicle_class_manager.cc
 SOURCES += gui/way_info.cc
 SOURCES += gui/welt.cc
+SOURCES += io/classify_file.cc
+SOURCES += io/rdwr/bzip2_file_rdwr_stream.cc
+SOURCES += io/rdwr/raw_file_rdwr_stream.cc
+SOURCES += io/rdwr/rdwr_stream.cc
+SOURCES += io/rdwr/zlib_file_rdwr_stream.cc
 SOURCES += network/checksum.cc
 SOURCES += network/memory_rw.cc
 SOURCES += network/network.cc
@@ -521,7 +562,6 @@ SOURCES += simcity.cc
 SOURCES += simconvoi.cc
 SOURCES += simdebug.cc
 SOURCES += simdepot.cc
-SOURCES += simobj.cc
 SOURCES += simevent.cc
 SOURCES += simfab.cc
 SOURCES += simhalt.cc
@@ -551,12 +591,16 @@ SOURCES += utils/log.cc
 SOURCES += utils/searchfolder.cc
 SOURCES += utils/sha1.cc
 SOURCES += utils/simrandom.cc
-SOURCES += vehicle/simroadtraffic.cc
 SOURCES += utils/simstring.cc
 SOURCES += utils/simthread.cc
+SOURCES += vehicle/air_vehicle.cc
 SOURCES += vehicle/movingobj.cc
-SOURCES += vehicle/simpeople.cc
-SOURCES += vehicle/simvehicle.cc
+SOURCES += vehicle/pedestrian.cc
+SOURCES += vehicle/rail_vehicle.cc
+SOURCES += vehicle/road_vehicle.cc
+SOURCES += vehicle/simroadtraffic.cc
+SOURCES += vehicle/vehicle.cc
+SOURCES += vehicle/water_vehicle.cc
 SOURCES += simunits.cc
 SOURCES += convoy.cc
 SOURCES += utils/float32e8_t.cc
@@ -576,12 +620,14 @@ ifeq ($(BACKEND),posix)
   SOURCES += music/no_midi.cc
   SOURCES += sound/no_sound.cc
 
-
 else ifeq ($(BACKEND),gdi)
   SOURCES += sys/simsys_w.cc
-  SOURCES += music/w32_midi.cc
   SOURCES += sound/win32_sound.cc
   CFLAGS += -DGDI_SOUND
+  ifneq ($(shell expr $(USE_FLUIDSYNTH_MIDI) \>= 1), 1)
+    SOURCES += music/w32_midi.cc
+  endif
+
 
 
 else ifeq ($(BACKEND),sdl2)
@@ -591,20 +637,26 @@ else ifeq ($(BACKEND),sdl2)
     ifeq ($(shell expr $(AV_FOUNDATION) \>= 1), 1)
       # Core Audio (AVFoundation) base sound system routines
       SOURCES += sound/AVF_core-audio_sound.mm
-      SOURCES += music/AVF_core-audio_midi.mm
       LIBS    += -framework Foundation -framework AVFoundation
+      ifneq ($(shell expr $(USE_FLUIDSYNTH_MIDI) \>= 1), 1)
+        SOURCES += music/AVF_core-audio_midi.mm
+      endif
     else
       # Core Audio (Quicktime) base sound system routines
       SOURCES += sound/core-audio_sound.mm
-      SOURCES += music/core-audio_midi.mm
       LIBS    += -framework Foundation -framework QTKit
+      ifneq ($(shell expr $(USE_FLUIDSYNTH_MIDI) \>= 1), 1)
+        SOURCES += music/core-audio_midi.mm
+      endif
     endif
   else
-    SOURCES  += sound/sdl2_sound.cc
-    ifeq ($(findstring $(OSTYPE), cygwin mingw32 mingw64),)
-      SOURCES += music/no_midi.cc
-    else
-      SOURCES += music/w32_midi.cc
+    SOURCES   += sound/sdl2_sound.cc
+    ifneq ($(shell expr $(USE_FLUIDSYNTH_MIDI) \>= 1), 1)
+      ifeq ($(findstring $(OSTYPE), cygwin mingw32 mingw64),)
+        SOURCES += music/no_midi.cc
+      else
+        SOURCES += music/w32_midi.cc
+      endif
     endif
   endif
 

@@ -101,7 +101,7 @@ bool loadfont_frame_t::compare_items ( const dir_entry_t & entry, const char *in
 
 /**
  * CHECK FILE
- * Check if a file name qualifies to be added tot he item list.
+ * Check if a file name qualifies to be added to the item list.
  */
 bool loadfont_frame_t::check_file(const char *filename, const char *)
 {
@@ -251,7 +251,6 @@ void loadfont_frame_t::rdwr( loadsave_t *file )
 		resize( scr_coord(0,0) );
 	}
 }
-
 
 
 bool loadfont_frame_t::action_triggered(gui_action_creator_t *component, value_t v)

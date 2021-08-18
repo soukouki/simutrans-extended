@@ -9,24 +9,24 @@
 #include "../simworld.h"
 #include "../bauer/goods_manager.h"
 
-uint32 vehicle_desc_t::calc_running_cost(const karte_t *welt, uint32 base_cost) const
+uint32 vehicle_desc_t::calc_running_cost(uint32 base_cost) const
 {
 	// No cost or no time line --> no obsolescence cost increase.
-	if (base_cost == 0 || !welt->use_timeline())
+	if (base_cost == 0 || !world()->use_timeline())
 	{
 		return base_cost;
 	}
 
 	// I am not obsolete --> no obsolescence cost increase.
-	const uint16 months_after_retire = get_obsolete_year_month(welt) - retire_date;
-	sint32 months_of_obsolescence = welt->get_current_month() - (get_retire_year_month() + months_after_retire);
+	const uint16 months_after_retire = get_obsolete_year_month() - retire_date;
+	sint32 months_of_obsolescence = world()->get_current_month() - (get_retire_year_month() + months_after_retire);
 	if (months_of_obsolescence <= 0)
 	{
 		return base_cost;
 	}
 
 	// I am obsolete --> obsolescence cost increase.
-	uint16 running_cost_increase_percent = increase_maintenance_by_percent ? increase_maintenance_by_percent :welt->get_settings().get_obsolete_running_cost_increase_percent();
+	uint16 running_cost_increase_percent = increase_maintenance_by_percent ? increase_maintenance_by_percent : world()->get_settings().get_obsolete_running_cost_increase_percent();
 	uint32 max_cost = (base_cost * running_cost_increase_percent) / 100;
 	if (max_cost == base_cost)
 	{
@@ -34,7 +34,7 @@ uint32 vehicle_desc_t::calc_running_cost(const karte_t *welt, uint32 base_cost) 
 	}
 
 	// Current month is beyond the months_of_increasing_costs --> maximum increased obsolescence cost.
-	uint16 phase_years = years_before_maintenance_max_reached ? years_before_maintenance_max_reached :welt->get_settings().get_obsolete_running_cost_increase_phase_years();
+	uint16 phase_years = years_before_maintenance_max_reached ? years_before_maintenance_max_reached : world()->get_settings().get_obsolete_running_cost_increase_phase_years();
 	sint32 months_of_increasing_costs = phase_years * 12;
 	if (months_of_obsolescence >= months_of_increasing_costs)
 	{
@@ -53,17 +53,17 @@ uint32 vehicle_desc_t::calc_running_cost(const karte_t *welt, uint32 base_cost) 
 // @author: jamespetts
 uint16 vehicle_desc_t::get_running_cost(const karte_t* welt) const
 {
-	return calc_running_cost(welt, get_running_cost());
+	return calc_running_cost(get_running_cost());
 }
 
 uint32 vehicle_desc_t::get_fixed_cost(karte_t *welt) const
 {
-	return calc_running_cost(welt, get_fixed_cost());
+	return calc_running_cost(get_fixed_cost());
 }
 
-uint32 vehicle_desc_t::get_adjusted_monthly_fixed_cost(karte_t *welt) const
+uint32 vehicle_desc_t::get_adjusted_monthly_fixed_cost() const
 {
-	return welt->calc_adjusted_monthly_figure(calc_running_cost(welt, get_fixed_cost()));
+	return world()->calc_adjusted_monthly_figure(calc_running_cost(get_fixed_cost()));
 }
 
 /**
@@ -226,7 +226,7 @@ uint32 vehicle_desc_t::get_effective_power_index(sint32 speed /* in m/s */ ) con
 	return geared_power[min(speed, max_speed)];
 }
 
-uint16 vehicle_desc_t::get_obsolete_year_month(const karte_t *welt) const
+uint16 vehicle_desc_t::get_obsolete_year_month() const
 {
 	if(increase_maintenance_after_years)
 	{
@@ -234,7 +234,7 @@ uint16 vehicle_desc_t::get_obsolete_year_month(const karte_t *welt) const
 	}
 	else
 	{
-		return retire_date + (welt->get_settings().get_default_increase_maintenance_after_years((waytype_t)wtyp) * 12);
+		return retire_date + (world()->get_settings().get_default_increase_maintenance_after_years((waytype_t)wtyp) * 12);
 	}
 }
 
@@ -379,7 +379,6 @@ void vehicle_desc_t::calc_checksum(checksum_t *chk) const
 	// freight
 	const xref_desc_t *xref = get_child<xref_desc_t>(2);
 	chk->input(xref ? xref->get_name() : "NULL");
-
 	// vehicle constraints
 	// For some reason, this records false mismatches with a few
 	// vehicles when names are used. Use  numbers instead.
@@ -427,9 +426,10 @@ uint8 vehicle_desc_t::get_interactivity() const
 	return flags;
 }
 
-uint8 vehicle_desc_t::has_available_upgrade(uint16 month_now, bool show_future) const
+uint8 vehicle_desc_t::has_available_upgrade(uint16 month_now) const
 {
 	uint8 upgrade_state = 0; // 1 = not available yet, 2 = already available
+	const bool show_future = world()->get_settings().get_show_future_vehicle_info();
 	for (int i = 0; i < upgrades; i++)
 	{
 		if (show_future) {

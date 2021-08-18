@@ -8,7 +8,7 @@
 #include <string.h>
 
 #include "simconvoi.h"
-#include "vehicle/simvehicle.h"
+#include "vehicle/vehicle.h"
 #include "gui/simwin.h"
 #include "player/simplay.h"
 #include "player/finance.h"
@@ -36,6 +36,11 @@
 
 #include "utils/cbuffer_t.h"
 
+#include "vehicle/air_vehicle.h"
+#include "vehicle/rail_vehicle.h"
+#include "vehicle/road_vehicle.h"
+#include "vehicle/water_vehicle.h"
+
 
 slist_tpl<depot_t *> depot_t::all_depots;
 
@@ -47,7 +52,7 @@ depot_t::depot_t(loadsave_t *file) : gebaeude_t()
 #endif
 {
 	rdwr(file);
-	if(file->get_version_int()<88002) {
+	if(file->is_version_less(88, 2)) {
 		set_yoff(0);
 	}
 	all_depots.append(this);
@@ -91,8 +96,8 @@ depot_t *depot_t::find_depot( koord3d start, const obj_t::typ depot_type, const 
 {
 	depot_t *found = NULL;
 	koord3d found_pos = forward ? koord3d(welt->get_size().x+1,welt->get_size().y+1,welt->get_groundwater()) : koord3d(-1,-1,-1);
-	uint32 found_hash = forward ? 0x7FFFFFF : -1;
-	uint32 start_hash = start.x + (8192 * start.y);
+	sint32 found_hash = forward ? 0x7FFFFFF : -1;
+	sint32 start_hash = start.x + (8192 * start.y);
 	FOR(slist_tpl<depot_t*>, const d, all_depots) {
 		if(d->get_typ()==depot_type  &&  d->get_owner()==player) {
 			// ok, the right type of depot
@@ -668,8 +673,8 @@ void depot_t::rdwr(loadsave_t *file)
 	gebaeude_t::rdwr(file);
 
 	rdwr_vehicle(vehicles, file);
-	if (file->get_version_int() < 81033) {
-		// waggons are stored extra, just add them to vehicles
+	if (file->is_version_less(81, 33)) {
+		// wagons are stored extra, just add them to vehicles
 		assert(file->is_loading());
 		rdwr_vehicle(vehicles, file);
 	}
@@ -750,14 +755,14 @@ void depot_t::rdwr_vehicle(slist_tpl<vehicle_t *> &list, loadsave_t *file)
 const char * depot_t:: is_deletable(const player_t *player)
 {
 	if(player!=get_owner()  &&  player!=welt->get_public_player()) {
-		return "Das Feld gehoert\neinem anderen Spieler\n";
+		return NOTICE_OWNED_BY_OTHER_PLAYER;
 	}
 	if (!vehicles.empty()) {
 		return "There are still vehicles\nstored in this depot!\n";
 	}
 
 	FOR(slist_tpl<convoihandle_t>, const c, convois) {
-		if (c->get_vehicle_count() > 0) {
+		if (c.is_bound() && c->get_vehicle_count() > 0) {
 			return "There are still vehicles\nstored in this depot!\n";
 		}
 	}

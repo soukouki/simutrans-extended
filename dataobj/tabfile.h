@@ -34,13 +34,13 @@ public:
  * format in all.
  *
  * File format:
- *	Lines starting with '#' or ' ' are comment lines.
- *	The file content is treated as a list of objects.
- *	Objects are separated by a line starting with a dash (-)
- *	Each object can contain any number of lines in the format '<Key>=<Value>'
- *	These line are NOT ordered
- *	If keys are duplicated for one object, the first value is used
- *	Keys are not case sensitive
+ *  - Lines starting with '#' or ' ' are comment lines.
+ *  - The file content is treated as a list of objects.
+ *  - Objects are separated by a line starting with a dash (-)
+ *  - Each object can contain any number of lines in the format '<Key>=<Value>'
+ *    These line are NOT ordered
+ *  - If keys are duplicated for one object, the first value is used
+ *  - Keys are not case sensitive
  */
 class tabfile_t
 {
@@ -57,7 +57,7 @@ public:
 	 * Read an entire object from the open file.
 	 *
 	 * @return bool false, if empty object or eof
-	 * @param &objinfo  will receive the object info
+	 * @param[out] objinfo  will receive the object info
 	 */
 	bool read(tabfileobj_t &objinfo, FILE *fp = NULL);
 
@@ -119,7 +119,7 @@ private:
 	bool get_x_y( const char *key, I &x, I &y );
 
 public:
-	tabfileobj_t() { ; }
+	tabfileobj_t() { }
 	~tabfileobj_t() { clear(); }
 
 	/**
@@ -140,7 +140,7 @@ public:
 	/**
 	 * Get the value for a key - key must be lowercase
 	 *
-	 * @return const char *	returns at least an empty string, never NULL.
+	 * @return const char *returns at least an empty string, never NULL.
 	 */
 	const char *get(const char *key);
 
@@ -153,7 +153,7 @@ public:
 	/**
 	 * Get the value for a koord key - key must be lowercase
 	 *
-	 * @return koord	returns def, if key is not found
+	 * @return def, if key is not found
 	 */
 	const koord &get_koord(const char *key, koord def);
 	const scr_size &get_scr_size(const char *key, scr_size def);
@@ -179,7 +179,7 @@ public:
 	 * and returns an allocated int[N + 1] with
 	 * N at pos. 0, <num 1> at pos 1, etc.
 	 * Do not forget to "delete []" the returned value.
-	 * @return const char *	returns at least an int[1], never NULL.
+	 * @return at least an int[1], never NULL.
 	 */
 	int *get_ints(const char *key);
 	sint64 *get_sint64s(const char *key);

@@ -16,7 +16,7 @@
 #include "../../dataobj/translator.h"
 #include "../../dataobj/ribi.h"
 #include "../../utils/cbuffer_t.h"
-#include "../../vehicle/simvehicle.h" /* for calc_direction */
+#include "../../vehicle/vehicle.h" /* for calc_direction */
 #include "../../obj/wayobj.h"
 #include "../../player/simplay.h"
 
@@ -77,6 +77,7 @@ strasse_t::strasse_t() : weg_t(road_wt)
 }
 
 
+
 void strasse_t::rdwr(loadsave_t *file)
 {
 	xml_tag_t s( file, "strasse_t" );
@@ -111,14 +112,13 @@ void strasse_t::rdwr(loadsave_t *file)
 		overtaking_mode = twoway_mode;
 	}
 
-	if(file->get_version_int()<89000) {
+	if(file->is_version_less(89, 0)) {
 		bool gehweg;
 		file->rdwr_bool(gehweg);
 		set_gehweg(gehweg);
 	}
 
-	if(file->is_saving())
-	{
+	if(file->is_saving()) {
 		const char *s = get_desc()->get_name();
 		file->rdwr_str(s);
 		if(file->get_extended_version() >= 12)
@@ -127,8 +127,7 @@ void strasse_t::rdwr(loadsave_t *file)
 			file->rdwr_str(s);
 		}
 	}
-	else
-	{
+	else {
 		char bname[128];
 		file->rdwr_str(bname, lengthof(bname));
 		const way_desc_t *desc = way_builder_t::get_desc(bname);

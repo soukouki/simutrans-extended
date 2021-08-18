@@ -29,7 +29,7 @@
 
 #include "simconst.h"
 
-#include "simobj.h"
+#include "obj/simobj.h"
 #include "convoy.h"
 
 /*
@@ -88,7 +88,8 @@ public:
 	/** Constants */
 	enum { max_vehicle=8, max_rail_vehicle = 64 };
 
-	enum states {INITIAL,
+	enum states {
+		INITIAL,
 		EDIT_SCHEDULE,
 		ROUTING_1,
 		ROUTING_2,
@@ -1147,8 +1148,7 @@ private:
 public:
 
 	/**
-	* @param buf the buffer to fill
-	* @return Freight description text (buf)
+	* @param[out] buf Filled with freight description
 	*/
 	void get_freight_info(cbuffer_t & buf);
 	void get_freight_info_by_class(cbuffer_t & buf);

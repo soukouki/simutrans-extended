@@ -9,7 +9,7 @@
 
 #include "dataobj/ribi.h"
 
-#include "simobj.h"
+#include "obj/simobj.h"
 #include "obj/gebaeude.h"
 
 #include "tpl/vector_tpl.h"
@@ -45,23 +45,23 @@ class building_desc_t;
 #define CITY_NAME_LABEL_WIDTH (126)	// size of
 
 enum city_cost {
-	HIST_CITIZENS=0,		// total people
-	HIST_JOBS,				// Total jobs
-	HIST_VISITOR_DEMAND,	// Total visitor demand
-	HIST_GROWTH,			// growth (just for convenience)
-	HIST_BUILDING,			// number of buildings
-	HIST_CITYCARS,			// Amount of private traffic produced by the city
-	HIST_PAS_TRANSPORTED,	// number of passengers that successfully complete their journeys
-	HIST_PAS_GENERATED,		// total number generated
-	HIST_PAS_WALKED,		// The number of passengers who walked to their destination.
-	HIST_MAIL_TRANSPORTED,	// letters that could be sent
-	HIST_MAIL_GENERATED,	// all letters generated
-	HIST_GOODS_RECEIVED,	// times all storages were not empty
-	HIST_GOODS_NEEDED,		// times storages checked
-	HIST_POWER_RECEIVED,	// power consumption
-	HIST_POWER_NEEDED,		// Power demand by the city.
-	HIST_CONGESTION,		// Level of congestion in the city, expressed in percent.
-	MAX_CITY_HISTORY		// Total number of items in array
+	HIST_CITIZENS = 0,     // total people
+	HIST_JOBS,             // Total jobs
+	HIST_VISITOR_DEMAND,   // Total visitor demand
+	HIST_GROWTH,           // growth (just for convenience)
+	HIST_BUILDING,         // number of buildings
+	HIST_CITYCARS,         // Amount of private traffic produced by the city
+	HIST_PAS_TRANSPORTED,  // number of passengers that successfully complete their journeys
+	HIST_PAS_GENERATED,    // total number generated
+	HIST_PAS_WALKED,       // The number of passengers who walked to their destination.
+	HIST_MAIL_TRANSPORTED, // letters that could be sent
+	HIST_MAIL_GENERATED,   // all letters generated
+	HIST_GOODS_RECEIVED,   // times all storages were not empty
+	HIST_GOODS_NEEDED,     // times storages checked
+	HIST_POWER_RECEIVED,   // power consumption
+	HIST_POWER_NEEDED,     // Power demand by the city.
+	HIST_CONGESTION,       // Level of congestion in the city, expressed in percent.
+	MAX_CITY_HISTORY       // Total number of items in array
 };
 
 // The base offset for passenger statistics.
@@ -90,10 +90,6 @@ private:
 	karte_t* welt;
 	road_vehicle_t *master;
 	stadt_t* origin_city;
-	const stadt_t* last_city;
-	uint32 last_tile_speed;
-	int last_tile_cost_diagonal;
-	int last_tile_cost_straight;
 	uint16 meters_per_tile_x100;
 
 public:
@@ -195,9 +191,9 @@ private:
 	static uint32 cluster_factor;
 
 	// attribute for the population (Bevoelkerung)
-	sint32 bev;	// total population (bevoelkerung)
-	sint32 arb;	// with a job (arbeit)
-	sint32 won;	// with a residence (wohnung)
+	sint32 bev; // total population (bevoelkerung)
+	sint32 arb; // with a job (arbeit)
+	sint32 won; // with a residence (wohnung)
 
 	/**
 	 * Un-supplied city growth needs
@@ -221,25 +217,25 @@ private:
 	 * Instead the average over a number of growth ticks is used, defaulting to last month average if nothing is available.
 	 */
 private:
-	 // The growth factor type in form of the amount demanded and what was received.
-	 struct city_growth_factor_t {
-		 // The wanted value.
-		 sint64 demand;
-		 // The received value.
-		 sint64 supplied;
+	// The growth factor type in form of the amount demanded and what was received.
+	struct city_growth_factor_t {
+		// The wanted value.
+		sint64 demand;
+		// The received value.
+		sint64 supplied;
 
-		 city_growth_factor_t() : demand(0), supplied(0){}
-	 };
+		city_growth_factor_t() : demand(0), supplied(0){}
+	};
 
-	 // The previous values of the growth factors. Used to get delta between ticks and must be saved for determinism.
-	 city_growth_factor_t city_growth_factor_previous[GROWTH_FACTOR_NUMBER];
+	// The previous values of the growth factors. Used to get delta between ticks and must be saved for determinism.
+	city_growth_factor_t city_growth_factor_previous[GROWTH_FACTOR_NUMBER];
 
-	 /* Method to generate comparable growth factor data.
+	/* Method to generate comparable growth factor data.
 	 * This allows one to alter the logic which computes growth.
 	 * @param factors factor array.
 	 * @param month the month which is to be used for the growth factors.
 	 */
-	 void city_growth_get_factors(city_growth_factor_t (&factors)[GROWTH_FACTOR_NUMBER], uint32 const month) const;
+	void city_growth_get_factors(city_growth_factor_t (&factors)[GROWTH_FACTOR_NUMBER], uint32 const month) const;
 
 	 /* Method to compute base growth using growth factors.
 	  * Logs differences in growth factors as well.
@@ -369,7 +365,12 @@ private:
 	 */
 	void step_grow_city(bool new_town = false, bool map_generation = false);
 
-	enum pax_return_type { no_return, factory_return, tourist_return, city_return };
+	enum pax_return_type {
+		no_return,
+		factory_return,
+		tourist_return,
+		city_return
+	};
 
 	/**
 	 * baut Spezialgebaeude, z.B Stadion
@@ -385,6 +386,7 @@ private:
 	 * constructs a new consumer
 	 */
 	void check_bau_factory(bool);
+
 
 	// find out, what building matches best
 	void bewerte_res_com_ind(const koord pos, int &ind, int &com, int &res);
@@ -451,7 +453,7 @@ private:
 public:
 
 	/**
-	 * ein Passagierziel in die Zielkarte eintragen
+	 * Returns the data set associated with the pax/mail target factories
 	 */
 	void merke_passagier_ziel(koord ziel, PIXVAL color);
 
@@ -538,15 +540,13 @@ public:
 	 * Erzeugt eine neue City auf Planquadrat (x,y) die dem Spieler player
 	 * gehoert.
 	 * @param player The owner of the city
-	 * @param x x-Planquadratkoordinate
-	 * @param y y-Planquadratkoordinate
-	 * @param number of citizens
+	 * @param pos Planquadratkoordinate
+	 * @param citizens number of citizens
 	 */
 	stadt_t(player_t* player, koord pos, sint32 citizens);
 
 	/**
 	 * Erzeugt eine neue City nach Angaben aus der Datei file.
-	 * @param welt Die Karte zu der die City gehoeren soll.
 	 * @param file Zeiger auf die Datei mit den Citybaudaten.
 	 * @see stadt_t::speichern()
 	 */
@@ -646,15 +646,13 @@ public:
 	bool is_within_players_network(const player_t* player) const;
 
 	/**
-	 * Erzeugt ein Array zufaelliger Startkoordinaten,
-	 * die fuer eine Citygruendung geeignet sind.
-	 * @param wl Die Karte auf der die City gegruendet werden soll.
-	 * @param count die Anzahl der zu liefernden Koordinaten
-	 * @param old_x, old_y: Generate no cities in (0,0) - (old_x, old_y)
+	 * Generates an array of random coordinates suitable for creating cities.
+	 * Do not consider coordinates in (0,0) - (old_x, old_y)
+	 * (leave @p old_x and @p old_y 0 to generate cities on the whole map).
+	 * @param count how many cities to generate
 	 */
 
 	static vector_tpl<koord> *random_place(const karte_t *wl, const vector_tpl<sint32> *sizes_list, sint16 old_x, sint16 old_y);
-	// geeigneten platz zur Citygruendung durch Zufall ermitteln
 
 	void show_info();
 

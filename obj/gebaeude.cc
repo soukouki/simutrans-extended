@@ -14,27 +14,20 @@ static pthread_mutex_t add_to_city_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 #include "../bauer/hausbauer.h"
+#include "../bauer/wegbauer.h"
+#include "../bauer/tunnelbauer.h"
+#include "../bauer/brueckenbauer.h"
 #include "../simworld.h"
-#include "../simobj.h"
+#include "simobj.h"
 #include "../simfab.h"
-#include "../display/simimg.h"
-#include "../display/simgraph.h"
 #include "../simhalt.h"
 #include "../gui/simwin.h"
 #include "../simcity.h"
 #include "../player/simplay.h"
 #include "../simdebug.h"
 #include "../simintr.h"
-#include "../simskin.h"
 #include "../simsignalbox.h"
-#include "../utils/simstring.h"
 
-#include "../boden/grund.h"
-#include "../boden/wege/strasse.h"
-
-#include "../bauer/wegbauer.h"
-#include "../bauer/tunnelbauer.h"
-#include "../bauer/brueckenbauer.h"
 
 #include "../descriptor/building_desc.h"
 #include "../descriptor/intro_dates.h"
@@ -113,7 +106,7 @@ gebaeude_t::gebaeude_t(loadsave_t *file, bool do_not_add_to_world_list) :
 		is_in_world_list = -1;
 	}
 	rdwr(file);
-	if (file->get_version_int()<88002) {
+	if(file->is_version_less(88, 2)) {
 		set_yoff(0);
 	}
 	if (tile  &&  tile->get_phases()>1) {
@@ -146,9 +139,8 @@ gebaeude_t::gebaeude_t(koord3d pos, player_t *player, const building_tile_desc_t
 	set_owner(player);
 
 	init();
-	if (t)
-	{
-		set_tile(t, true);	// this will set init time etc.
+	if(t) {
+		set_tile(t,true); // this will set init time etc.
 		sint64 maint;
 		if (tile->get_desc()->get_base_maintenance() == PRICE_MAGIC)
 		{
@@ -806,7 +798,8 @@ void gebaeude_t::show_info()
 		ptr.fab->show_info();
 		return;
 	}
-	int old_count = win_get_open_count();
+
+	const uint32 old_count = win_get_open_count();
 
 	if (is_headquarter()) {
 		create_win( new headquarter_info_t(get_owner()), w_info, magic_headquarter+get_owner()->get_player_nr() );
@@ -927,74 +920,63 @@ gebaeude_t* gebaeude_t::access_first_tile()
 
 void gebaeude_t::get_description(cbuffer_t & buf) const
 {
-	if (is_factory && ptr.fab != NULL)
-	{
+	if(is_factory  &&  ptr.fab != NULL) {
 		buf.append(ptr.fab->get_name());
 	}
-	else if (show_construction)
-	{
+	else if(show_construction) {
 		buf.append(translator::translate("Baustelle"));
 		buf.append("\n");
 	}
-	else
-	{
+	else {
 		const char *desc = tile->get_desc()->get_name();
-		if (desc != NULL)
-		{
+		if(desc != NULL) {
 			const char *trans_desc = translator::translate(desc);
-			if (trans_desc == desc)
-			{
+			if(trans_desc==desc) {
 				// no description here
-				switch (tile->get_desc()->get_type()) {
-				case building_desc_t::city_res:
-					trans_desc = translator::translate("residential house");
-					break;
-				case building_desc_t::city_ind:
-					trans_desc = translator::translate("industrial building");
-					break;
-				case building_desc_t::city_com:
-					trans_desc = translator::translate("shops and stores");
-					break;
-				default:
-					// use file name
-					break;
+				switch(tile->get_desc()->get_type()) {
+					case building_desc_t::city_res:
+						trans_desc = translator::translate("residential house");
+						break;
+					case building_desc_t::city_ind:
+						trans_desc = translator::translate("industrial building");
+						break;
+					case building_desc_t::city_com:
+						trans_desc = translator::translate("shops and stores");
+						break;
+					default:
+						// use file name
+						break;
 				}
 				buf.append(trans_desc);
 			}
-			else
-			{
+			else {
 				// since the format changed, we remove all but double newlines
-				char *text = new char[strlen(trans_desc) + 1];
+				char *text = new char[strlen(trans_desc)+1];
 				char *dest = text;
 				const char *src = trans_desc;
-				while (*src != 0)
-				{
+				while(  *src!=0  ) {
 					*dest = *src;
-					if (src[0] == '\n')
-					{
-						if (src[1] == '\n')
-						{
-							src++;
+					if(src[0]=='\n') {
+						if(src[1]=='\n') {
+							src ++;
 							dest++;
 							*dest = '\n';
 						}
-						else
-						{
+						else {
 							*dest = ' ';
 						}
 					}
-					src++;
-					dest++;
+					src ++;
+					dest ++;
 				}
 				// remove double line breaks at the end
 				*dest = 0;
-				while (dest>text  &&  *--dest == '\n')
-				{
+				while( dest>text  &&  *--dest=='\n'  ) {
 					*dest = 0;
 				}
 
 				buf.append(text);
-				delete[] text;
+				delete [] text;
 			}
 		}
 		else
@@ -1270,7 +1252,9 @@ void gebaeude_t::rdwr(loadsave_t *file)
 					welt->add_missing_paks(buf, karte_t::MISSING_BUILDING);
 				}
 			}
-		}	// here we should have a valid tile pointer or nothing ...
+		}
+
+		// here we should have a valid tile pointer or nothing ...
 
 			/* avoid double construction of monuments:
 			* remove them from selection lists
@@ -1283,7 +1267,7 @@ void gebaeude_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if (file->get_version_int()<99006) {
+	if(file->is_version_less(99, 6)) {
 		// ignore the sync flag
 		uint8 dummy = sync;
 		file->rdwr_byte(dummy);
@@ -1297,8 +1281,7 @@ void gebaeude_t::rdwr(loadsave_t *file)
 	}
 
 	// restore city pointer here
-	if (file->get_version_int() >= 99014 && !is_factory)
-	{
+	if(  file->is_version_atleast(99, 14) && !is_factory  ) {
 		sint32 city_index = -1;
 		if (file->is_saving() && ptr.stadt != NULL)
 		{
@@ -1908,7 +1891,7 @@ void gebaeude_t::connect_by_road_to_nearest_city()
 
 	// Next, find the nearest city
 	const uint32 rank_max = welt->get_settings().get_auto_connect_industries_and_attractions_by_road();
-	const uint32 max_road_length = env_t::networkmode ? 2048 : (uint32)env_t::intercity_road_length; // The env_t:: settings are not transmitted with network games so may diverge between client and server.
+	const uint32 max_road_length = env_t::networkmode ? 8192 : (uint32)env_t::intercity_road_length; // The env_t:: settings are not transmitted with network games so may diverge between client and server.
 	for (uint32 rank = 1; rank <= rank_max; rank++)
 	{
 		const stadt_t* city = welt->find_nearest_city(get_pos().get_2d(), rank);
@@ -1937,10 +1920,11 @@ void gebaeude_t::connect_by_road_to_nearest_city()
 		builder.set_keep_city_roads(true);
 		builder.set_build_sidewalk(false);
 		builder.set_overtaking_mode(invalid_mode);
+		builder.set_forbid_crossings(true); // Building crossings on industry roads can disrupt player railways.
 
 		koord3d end3d = welt->lookup_kartenboden(end)->get_pos();
 
-		builder.calc_route(start, end3d);
+		builder.calc_route(end3d, start); // Start and end are inverted so as to produce cleaner routes: starting in the town and moving outwards means that the line of existing roads can be followed as far as possible.
 		if (builder.get_count() > 1)
 		{
 			builder.build();

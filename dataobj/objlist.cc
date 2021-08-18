@@ -35,9 +35,9 @@
 
 #include "../player/simplay.h"
 
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/air_vehicle.h"
 #include "../vehicle/simroadtraffic.h"
-#include "../vehicle/simpeople.h"
+#include "../vehicle/pedestrian.h"
 #include "../vehicle/movingobj.h"
 
 #include "../descriptor/building_desc.h"
@@ -71,7 +71,7 @@ static uint8 type_to_pri[256]=
 	255, //
 	baum_pri, // tree
 	254, // cursor/pointers
-	200, 200, 200,	// wolke
+	200, 200, 200, // wolke
 	3, 3, // buildings
 	6, // signal
 	2, 2, // bridge/tunnel
@@ -89,28 +89,28 @@ static uint8 type_to_pri[256]=
 	1, // crossings, treated like bridges or tunnels
 	1, // groundobjs, overlays over bare ground like lakes etc.
 	1,  // narrowgaugedepot
-	255, 255, 255, 255, 255, 255, 255, 255,	// 32-63 left empty (old numbers)
+	255, 255, 255, 255, 255, 255, 255, 255, // 32-63 left empty (old numbers)
 	255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255,
-	moving_obj_pri,	// pedestrians
-	moving_obj_pri,	// city cars
-	moving_obj_pri,	// road vehicle
-	moving_obj_pri,	// rail vehicle
-	moving_obj_pri,	// monorail
-	moving_obj_pri,	// maglev
-	moving_obj_pri,	// narrowgauge
+	moving_obj_pri, // pedestrians
+	moving_obj_pri, // city cars
+	moving_obj_pri, // road vehicle
+	moving_obj_pri, // rail vehicle
+	moving_obj_pri, // monorail
+	moving_obj_pri, // maglev
+	moving_obj_pri, // narrowgauge
 	255, 255, 255, 255, 255, 255, 255, 255, 255,
-	moving_obj_pri,	// ship
-	moving_obj_pri+1,	// aircraft (no trailer, could be handled by normal method)
-	moving_obj_pri+1,	// movingobject (no trailer, could be handled by normal method)
-	255, 255, 255, 255, 255, 255, 255, 255,	// 83-95 left empty (for other moving stuff) 95, is reserved for old choosesignals
+	moving_obj_pri,   // ship
+	moving_obj_pri+1, // aircraft (no trailer, could be handled by normal method)
+	moving_obj_pri+1, // movingobject (no trailer, could be handled by normal method)
+	255, 255, 255, 255, 255, 255, 255, 255, // 83-95 left empty (for other moving stuff) 95, is reserved for old choosesignals
 	255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255,	// 96-128 left empty (old numbers)
+	255, 255, 255, 255, 255, 255, 255, 255, // 96-128 left empty (old numbers)
 	255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255, 255, 255,	// 128-255 left empty
+	255, 255, 255, 255, 255, 255, 255, 255, // 128-255 left empty
 	255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255,
@@ -193,13 +193,11 @@ objlist_t::~objlist_t()
 }
 
 
-void objlist_t::set_capacity(uint16 new_cap)
+void objlist_t::set_capacity(uint16 req_cap)
 {
 	// DBG_MESSAGE("objlist_t::set_capacity()", "old cap=%d, new cap=%d", capacity, new_cap);
 
-	if(new_cap>=255) {
-		new_cap = 254;
-	}
+	const uint8 new_cap = req_cap >= 255 ? 254 : (uint8)req_cap;
 
 	// a single object is stored differentially
 	if(new_cap==0) {
@@ -224,9 +222,8 @@ void objlist_t::set_capacity(uint16 new_cap)
 		}
 		capacity = top;
 	}
-	// a single object is stored differentially
-	else if(capacity<=1  &&  new_cap>1) {
-		// if we reach here, new_cap>1 and (capacity==0 or capacity>1)
+	else if(capacity<=1) {
+		// this means we extend from 0 or 1 elements to more than 1
 		obj_t *tmp=obj.one;
 		obj.some = dl_alloc(new_cap);
 		MEMZERON(obj.some, new_cap);
@@ -726,7 +723,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 	if(file->is_loading()) {
 
 		sint32 max_object_index;
-		if(  file->get_version_int()<=110000  ) {
+		if(  file->is_version_less(110, 1)  ) {
 			file->rdwr_long(max_object_index);
 			if(max_object_index>254) {
 				dbg->error("objlist_t::laden()","Too many objects (%i) at (%i,%i), some vehicle may not appear immediately.",max_object_index,current_pos.x,current_pos.y);
@@ -750,15 +747,15 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 			obj_t *new_obj = NULL;
 
 			switch(typ) {
-				case obj_t::bruecke:	    new_obj = new bruecke_t(file);	        break;
-				case obj_t::tunnel:	    new_obj = new tunnel_t(file);	        break;
-				case obj_t::pumpe:		    new_obj = new pumpe_t(file);	        break;
-				case obj_t::leitung:	    new_obj = new leitung_t(file);	        break;
-				case obj_t::senke:		    new_obj = new senke_t(file);	        break;
-				case obj_t::zeiger:	    new_obj = new zeiger_t(file);	        break;
-				case obj_t::signal:	    new_obj = new signal_t(file);   break;
-				case obj_t::label:			new_obj = new label_t(file); break;
-				case obj_t::crossing:		new_obj = new crossing_t(file); break;
+				case obj_t::bruecke:    new_obj = new bruecke_t(file);  break;
+				case obj_t::tunnel:     new_obj = new tunnel_t(file);   break;
+				case obj_t::pumpe:      new_obj = new pumpe_t(file);    break;
+				case obj_t::leitung:    new_obj = new leitung_t(file);  break;
+				case obj_t::senke:      new_obj = new senke_t(file);    break;
+				case obj_t::zeiger:     new_obj = new zeiger_t(file);   break;
+				case obj_t::signal:     new_obj = new signal_t(file);   break;
+				case obj_t::label:      new_obj = new label_t(file);    break;
+				case obj_t::crossing:   new_obj = new crossing_t(file); break;
 
 				case obj_t::wayobj:
 				{
@@ -1022,7 +1019,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 				||  (new_obj->get_typ()==obj_t::gebaeude  &&  ((gebaeude_t *)new_obj)->get_fabrik())
 				// things with convoi will not be saved
 				||  (new_obj->get_typ()>=66  &&  new_obj->get_typ()<82)
-				||  (env_t::server  &&  new_obj->get_typ()==obj_t::baum  &&  file->get_version_int()>=110001)
+				||  (env_t::server  &&  new_obj->get_typ()==obj_t::baum  &&  file->is_version_atleast(110, 1))
 			) {
 				// these objects are simply not saved
 			}
@@ -1032,7 +1029,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 		}
 		// now we know the number of stuff to save
 		max_object_index --;
-		if(  file->get_version_int()<=110000  ) {
+		if(  file->is_version_less(110, 1)  ) {
 			file->rdwr_long( max_object_index );
 		}
 		else {
@@ -1288,19 +1285,20 @@ void objlist_t::check_season(const bool calc_only_season_change)
 		}
 	}
 	else {
-		// only here delete list is needed!
-		slist_tpl<obj_t *> to_remove;
+		// copy object pointers to check them
+		vector_tpl<obj_t*> list;
 
 		for(  uint8 i = 0;  i < top;  i++  ) {
-			obj_t *check_obj = obj.some[i];
+			list.append(obj.some[i]);
+		}
+		// now work on the copied list
+		// check_season may change this list (by planting new trees)
+		for(  uint8 i = 0, end = list.get_count();  i < end;  i++  ) {
+			obj_t *check_obj = list[i];
 			if(  !check_obj->check_season( calc_only_season_change )  ) {
-				to_remove.insert( check_obj );
+				delete check_obj;
 			}
 		}
 
-		// delete all objects, which do not want to step any more
-		while(  !to_remove.empty()  ) {
-			delete to_remove.remove_first();
-		}
 	}
 }

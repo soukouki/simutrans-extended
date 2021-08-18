@@ -61,7 +61,7 @@ class memory_rw_t;
 class viewport_t;
 
 #define CHK_RANDS 32
-#define CHK_DEBUG_SUMS 8
+#define CHK_DEBUG_SUMS 10
 
 #ifdef MULTI_THREAD
 //#define FORBID_MULTI_THREAD_PASSENGER_GENERATION_IN_NETWORK_MODE
@@ -198,13 +198,11 @@ class karte_t
 
 public:
 	/**
-	 * Height of a point of the map with "perlin noise"
-	 *
-	 * @param frequency in 0..1.0 roughness, the higher the rougher
-	 * @param amplitude in 0..160.0 top height of mountains, may not exceed 160.0!!!
+	 * Height of a point of the map with "perlin noise".
+	 * Uses map roughness and mountain height from @p sets.
 	 */
-	static sint32 perlin_hoehe(settings_t const*, koord pos, koord const size, sint32 map_size_max);
-	sint32 perlin_hoehe(settings_t const*, koord pos, koord const size);
+	static sint32 perlin_hoehe(settings_t const *sets, koord pos, koord const size, sint32 map_size_max);
+	sint32 perlin_hoehe(settings_t const *sets, koord pos, koord const size);
 
 	/**
 	 * Loops over tiles setting heights from perlin noise
@@ -212,25 +210,25 @@ public:
 	void perlin_hoehe_loop(sint16, sint16, sint16, sint16);
 
 	enum player_cost {
-		WORLD_CITIZENS=0,		//!< total people
-		WORLD_JOBS,				//!< total jobs
-		WORLD_VISITOR_DEMAND,	//!< total visitor demand
-		WORLD_GROWTH,			//!< growth (just for convenience)
-		WORLD_TOWNS,			//!< number of all cities
-		WORLD_FACTORIES,		//!< number of all consuming only factories
-		WORLD_CONVOIS,			//!< total number of convois
-		WORLD_CITYCARS,			//!< number of passengers completing their journeys by private car
-		WORLD_PAS_RATIO,		//!< percentage of passengers that started successful
-		WORLD_PAS_GENERATED,	//!< total number generated
-		WORLD_MAIL_RATIO,		//!< percentage of mail that started successful
-		WORLD_MAIL_GENERATED,	//!< all letters generated
-		WORLD_GOODS_RATIO,		//!< ratio of chain completeness
-		WORLD_TRANSPORTED_GOODS,//!< all transported goods
-		WORLD_CAR_OWNERSHIP,	//!< The proportion of people with access to a private car
+		WORLD_CITIZENS=0,        ///< total people
+		WORLD_JOBS,              ///< total jobs
+		WORLD_VISITOR_DEMAND,    ///< total visitor demand
+		WORLD_GROWTH,            ///< growth (just for convenience)
+		WORLD_TOWNS,             ///< number of all cities
+		WORLD_FACTORIES,         ///< number of all consuming only factories
+		WORLD_CONVOIS,           ///< total number of convois
+		WORLD_CITYCARS,          ///< number of passengers completing their journeys by private car
+		WORLD_PAS_RATIO,         ///< percentage of passengers that started successful
+		WORLD_PAS_GENERATED,     ///< total number generated
+		WORLD_MAIL_RATIO,        ///< percentage of mail that started successful
+		WORLD_MAIL_GENERATED,    ///< all letters generated
+		WORLD_GOODS_RATIO,       ///< ratio of chain completeness
+		WORLD_TRANSPORTED_GOODS, ///< all transported goods
+		WORLD_CAR_OWNERSHIP,     ///< The proportion of people with access to a private car
 		MAX_WORLD_COST
 	};
 
-	#define MAX_WORLD_HISTORY_YEARS  (12) // number of years to keep history
+	#define MAX_WORLD_HISTORY_YEARS   (12) // number of years to keep history
 	#define MAX_WORLD_HISTORY_MONTHS  (12) // number of months to keep history
 
 	enum route_status_type
@@ -245,13 +243,28 @@ public:
 		on_foot
 	};
 
-	enum { NORMAL=0, PAUSE_FLAG = 0x01, FAST_FORWARD=0x02, FIX_RATIO=0x04 };
+	enum {
+		NORMAL       = 0,
+		PAUSE_FLAG   = 1 << 0,
+		FAST_FORWARD = 1 << 1,
+		FIX_RATIO    = 1 << 2
+	};
 
 	/**
 	 * Missing things during loading:
 	 * factories, vehicles, roadsigns or catenary may be severe
 	 */
-	enum missing_level_t { NOT_MISSING=0, MISSING_FACTORY=1, MISSING_VEHICLE=2, MISSING_SIGN=3, MISSING_WAYOBJ=4, MISSING_ERROR=4, MISSING_BRIDGE, MISSING_BUILDING, MISSING_WAY };
+	enum missing_level_t {
+		NOT_MISSING     = 0,
+		MISSING_FACTORY = 1,
+		MISSING_VEHICLE = 2,
+		MISSING_SIGN    = 3,
+		MISSING_WAYOBJ  = 4,
+		MISSING_ERROR   = 4,
+		MISSING_BRIDGE,
+		MISSING_BUILDING,
+		MISSING_WAY
+	};
 
 	void set_car_ownership_history_month(int month, sint64 value) { finance_history_month[month][WORLD_CAR_OWNERSHIP] = value; }
 	void set_car_ownership_history_year(int year, sint64 value) { finance_history_year[year][WORLD_CAR_OWNERSHIP] = value; }
@@ -449,7 +462,7 @@ private:
 	 * @param keep_water returns false if water tiles would be raised above water
 	 * @param hsw desired height of sw-corner
 	 * @param hse desired height of se-corner
-	 * @param hse desired height of ne-corner
+	 * @param hne desired height of ne-corner
 	 * @param hnw desired height of nw-corner
 	 * @returns NULL if raise_to operation can be performed, an error message otherwise
 	 */
@@ -473,7 +486,7 @@ private:
 	 * @param y coordinate
 	 * @param hsw desired height of sw-corner
 	 * @param hse desired height of se-corner
-	 * @param hse desired height of ne-corner
+	 * @param hne desired height of ne-corner
 	 * @param hnw desired height of nw-corner
 	 * @returns NULL if lower_to operation can be performed, an error message otherwise
 	 */
@@ -834,7 +847,10 @@ private:
 	 */
 	uint32 server_last_announce_time;
 
-	enum { SYNCX_FLAG = 0x01, GRIDS_FLAG = 0x02 };
+	enum {
+		SYNCX_FLAG = 1 << 0,
+		GRIDS_FLAG = 1 << 1
+	};
 
 	void world_xy_loop(xy_loop_func func, uint8 flags);
 	static void *world_xy_loop_thread(void *);
@@ -982,6 +998,7 @@ private:
 
 	destination find_destination(trip_type trip, uint8 g_class);
 
+	static sint32 cities_to_process;
 #ifdef MULTI_THREAD
 	friend void *check_road_connexions_threaded(void* args);
 	friend void *unreserve_route_threaded(void* args);
@@ -989,7 +1006,6 @@ private:
 	friend void *step_convoys_threaded(void* args);
 	friend void *path_explorer_threaded(void* args);
 	friend void *step_individual_convoy_threaded(void* args);
-	static sint32 cities_to_process;
 	static vector_tpl<convoihandle_t> convoys_next_step;
 	public:
 	static bool threads_initialised;
@@ -1162,6 +1178,11 @@ public:
 	 */
 	bool is_destroying() const { return destroying; }
 
+	uint32 get_cities_awaiting_private_car_route_check_count() const;
+#ifndef NETTOOL
+	uint32 get_cities_to_process() const { return cities_to_process; }
+#endif
+
 #ifdef MULTI_THREAD
 	/**
 	* @returns true if threads are being terminated
@@ -1242,7 +1263,13 @@ public:
 	 */
 	void call_change_player_tool(uint8 cmd, uint8 player_nr, uint16 param, bool scripted_call=false);
 
-	enum change_player_tool_cmds { new_player=1, toggle_freeplay=2, delete_player=3, toggle_player_active=4 };
+	enum change_player_tool_cmds {
+		new_player           = 1,
+		toggle_freeplay      = 2,
+		delete_player        = 3,
+		toggle_player_active = 4
+	};
+
 	/**
 	 * @param exec If false checks whether execution is allowed, if true executes tool.
 	 * @returns Whether execution is allowed.
@@ -1899,8 +1926,8 @@ public:
 		}
 	}
 
-	void set_mouse_rest_time(uint32 new_val) { mouse_rest_time = new_val; };
-	void set_sound_wait_time(uint32 new_val) { sound_wait_time = new_val; };
+	void set_mouse_rest_time(uint32 new_val) { mouse_rest_time = new_val; }
+	void set_sound_wait_time(uint32 new_val) { sound_wait_time = new_val; }
 
 	/**
 	* Call this when a ware is ready according to
@@ -2131,13 +2158,13 @@ public:
 	 * @return The natural slope at a position.
 	 * @note Uses the corner height for the best slope.
 	 */
-	uint8	recalc_natural_slope( const koord k, sint8 &new_height ) const;
+	uint8 recalc_natural_slope( const koord k, sint8 &new_height ) const;
 
 	/**
 	 * Returns the natural slope a a position using the grid.
 	 * @note No checking, and only using the grind for calculation.
 	 */
-	uint8	calc_natural_slope( const koord k ) const;
+	uint8 calc_natural_slope( const koord k ) const;
 
 	// Getter/setter methods for maintaining the industry density
 	inline uint32 get_target_industry_density() const { return ((uint32)finance_history_month[0][WORLD_CITIZENS] * (sint64)industry_density_proportion) / 1000000ll; }
@@ -2150,7 +2177,7 @@ public:
 	  * Initialize map.
 	  * @param sets Game settings.
 	  */
-	void init(settings_t*, sint8 const* heights);
+	void init(settings_t *sets, sint8 const* heights);
 
 	void init_tiles();
 
@@ -2172,7 +2199,7 @@ public:
 	 * File version used when loading (or current if generated)
 	 * @note Useful for finish_rd
 	 */
-	loadsave_t::combined_version load_version;
+	extended_version_t load_version;
 
 	/**
 	 * Checks if the planquadrat (tile) at coordinate (x,y)
@@ -2362,7 +2389,8 @@ public:
 	/**
 	 * Synchronous stepping of objects like vehicles.
 	 */
-	void sync_step(uint32 delta_t, bool sync, bool display );	// advance also the timer
+	void sync_step(uint32 delta_t, bool sync, bool display ); // advance also the timer
+
 	/**
 	 * Tasks that are more time-consuming, like route search of vehicles and production of factories.
 	 */
@@ -2513,9 +2541,9 @@ public:
 	/**
 	 * Plays the sound when the position is inside the visible region.
 	 * The sound plays lower when the position is outside the visible region.
-	 * @param pos Position at which the event took place.
+	 * @param k Position at which the event took place.
 	 * @param idx Index of the sound
-	 * @param idx t is the type of sound (for selective muting etc.)
+	 * @param t is the type of sound (for selective muting etc.)
 	 */
 	bool play_sound_area_clipped(koord k, uint16 idx, sound_type_t t, waytype_t cooldown_type);
 
@@ -2528,13 +2556,13 @@ public:
 
 	/**
 	 * Saves the map to a file.
-	 * @param Filename name of the file to write.
+	 * @param filename name of the file to write.
 	 */
 	void save(const char *filename, bool autosave, const char *version, const char *ex_version, const char* ex_revision, bool silent);
 
 	/**
 	 * Loads a map from a file.
-	 * @param Filename name of the file to read.
+	 * @param filename name of the file to read.
 	 */
 	bool load(const char *filename);
 
@@ -2542,7 +2570,7 @@ public:
 	 * Creates a map from a heightfield.
 	 * @param sets game settings.
 	 */
-	void load_heightfield(settings_t*);
+	void load_heightfield(settings_t *sets);
 
 	/**
 	 * Stops simulation and optionally closes the game.
@@ -2678,6 +2706,10 @@ private:
 	uint32 get_next_command_step();
 
 	void get_nearby_halts_of_tiles(const minivec_tpl<const planquadrat_t*> &tile_list, const goods_desc_t * wtyp, vector_tpl<nearby_halt_t> &halts) const;
+
+	void refresh_private_car_routes();
+
+	static void clear_private_car_routes() ;
 };
 
 

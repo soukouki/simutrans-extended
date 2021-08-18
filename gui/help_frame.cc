@@ -50,6 +50,7 @@ help_frame_t::help_frame_t(char const* const filename) :
 {
 	set_table_layout(2,0);
 	set_alignment(ALIGN_TOP | ALIGN_LEFT);
+	set_margin(scr_size(0,D_MARGIN_TOP), scr_size(0,0));
 
 	add_component(&generaltext);
 	generaltext.add_listener(this);
@@ -86,7 +87,7 @@ help_frame_t::help_frame_t(char const* const filename) :
 		if(  strstart(iter->get_tool_selector()->get_help_filename(),"list.txt" )  ) {
 			continue;
 		}
-		add_helpfile( toolbars, iter->get_tool_selector()->get_name(), iter->get_tool_selector()->get_help_filename(), false, 0 );
+		add_helpfile( toolbars, translator::translate(iter->get_tool_selector()->get_internal_name()), iter->get_tool_selector()->get_help_filename(), false, 0 );
 		if(  strstart(iter->get_tool_selector()->get_help_filename(),"railtools.txt" )  ) {
 			add_helpfile( toolbars, NULL, "bridges.txt", true, 1 );
 			add_helpfile( toolbars, NULL, "signals.txt", true, 1 );
@@ -527,7 +528,7 @@ void help_frame_t::add_helpfile( cbuffer_t &section, const char *titlename, cons
 
 /**
  * Called upon link activation
- * @param the hyper ref of the link
+ * @param extra the name of the help file
  */
 bool help_frame_t::action_triggered( gui_action_creator_t *, value_t extra)
 {
@@ -551,5 +552,5 @@ void help_frame_t::resize(const scr_coord delta)
 		helptext.set_pos( generaltext.get_pos() + scr_size( generalwidth, 0 ) );
 	}
 
-	helptext.set_size( get_client_windowsize() - scr_size( generalwidth, 0) -scr_size(D_MARGIN_RIGHT,D_MARGIN_BOTTOM) );
+	helptext.set_size( get_client_windowsize() - scr_size( generalwidth, 0) -scr_size(0,D_MARGIN_BOTTOM) );
 }

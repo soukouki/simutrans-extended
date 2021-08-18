@@ -48,7 +48,6 @@ void root_writer_t::write(const char* filename, int argc, char* argv[])
 
 		if (!outfp) {
 			dbg->fatal( "Write pak", "Cannot create destination file %s", filename );
-			exit(3);
 		}
 		printf("writing file %s\n", filename);
 		write_header(outfp);
@@ -87,8 +86,8 @@ void root_writer_t::write(const char* filename, int argc, char* argv[])
 						outfp = fopen(name.c_str(), "wb");
 						if (!outfp) {
 							dbg->fatal( "Write pak", "Cannot create destination file %s", filename );
-							exit(3);
 						}
+
 						printf("   writing file %s\n", name.c_str());
 						write_header(outfp);
 
@@ -293,7 +292,6 @@ void root_writer_t::copy(const char* name, int argc, char* argv[])
 	}
 	if (!outfp) {
 		dbg->fatal( "Merge", "Cannot open destination file %s", name);
-		exit(3);
 	}
 	fclose(outfp);
 	if (remove(name) != 0) {
@@ -307,9 +305,9 @@ void root_writer_t::copy(const char* name, int argc, char* argv[])
 	printf("writing to temporary file %s\n", tmpfile_name.c_str());
 	write_header(outfp);
 
-	long start = ftell(outfp);	// remember position for adding children
+	long start = ftell(outfp); // remember position for adding children
 	obj_node_info_t root;
-	root.children = 0;	// we will change this later
+	root.children = 0; // we will change this later
 	root.size = 0;
 	root.type = obj_root;
 	this->write_obj_node_info_t(outfp, root);
@@ -364,7 +362,6 @@ void root_writer_t::uncopy(const char* name)
 
 	if (!infp) {
 		dbg->fatal( "Unmerge", "Cannot open archive file %s\n", name);
-		exit(3);
 	}
 
 	if (skip_header(infp)) {
@@ -502,7 +499,6 @@ void root_writer_t::expand_dat(const char* filename, int argc, char* argv[])
 
 		if (!outfp) {
 			dbg->fatal( "Write dat", "Cannot create destination file %s", filename );
-			exit(3);
 		}
 		printf("writing file %s\n", filename);
 	}
@@ -538,7 +534,6 @@ void root_writer_t::expand_dat(const char* filename, int argc, char* argv[])
 					outfp = fopen(name.c_str(), "wb");
 					if (!outfp) {
 						dbg->fatal( "Write pak", "Cannot create destination file %s", name.c_str() );
-						exit(3);
 					}
 					printf("   writing file %s\n", name.c_str());
 				}

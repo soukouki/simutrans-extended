@@ -3,27 +3,29 @@
  * (see LICENSE.txt)
  */
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "simdebug.h"
-#include "display/simimg.h"
-#include "simcolor.h"
-#include "display/simgraph.h"
-#include "display/viewport.h"
-#include "gui/simwin.h"
-#include "player/simplay.h"
 #include "simobj.h"
-#include "simworld.h"
-#include "obj/baum.h"
-#include "vehicle/simvehicle.h"
-#include "dataobj/translator.h"
-#include "dataobj/loadsave.h"
-#include "boden/grund.h"
-#include "gui/obj_info.h"
-#include "utils/cbuffer_t.h"
-#include "utils/simstring.h"
+
+#include "baum.h"
+
+#include "../boden/grund.h"
+#include "../dataobj/loadsave.h"
+#include "../dataobj/translator.h"
+#include "../display/simgraph.h"
+#include "../display/simimg.h"
+#include "../display/viewport.h"
+#include "../player/simplay.h"
+#include "../gui/obj_info.h"
+#include "../gui/simwin.h"
+#include "../vehicle/vehicle.h"
+#include "../simcolor.h"
+#include "../simdebug.h"
+#include "../simworld.h"
+#include "../utils/cbuffer_t.h"
+#include "../utils/simstring.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 
 /**
@@ -183,7 +185,7 @@ const char *obj_t:: is_deletable(const player_t *player)
 void obj_t::rdwr(loadsave_t *file)
 {
 	xml_tag_t d( file, "obj_t" );
-	if(  file->get_version_int()<101000) {
+	if(  file->is_version_less(101, 0)  ) {
 		pos.rdwr( file );
 	}
 
@@ -310,7 +312,7 @@ void obj_t::display_after(int xpos, int ypos, bool) const
 	}
 }
 
-#include "simconvoi.h"
+#include "../simconvoi.h"
 
 /*
  * when a vehicle moves or a cloud moves, it needs to mark the old spot as dirty (to copy to screen)
@@ -335,7 +337,7 @@ void obj_t::mark_image_dirty(image_id image, sint16 yoff) const
 		display_mark_img_dirty( image, scr_pos.x + xpos, scr_pos.y + ypos + yoff);
 
 		// too close to border => set dirty to be sure (smoke, skyscrapers, birds, or the like)
-		KOORD_VAL xbild, ybild, wbild, hbild;
+		scr_coord_val xbild = 0, ybild = 0, wbild = 0, hbild = 0;
 		display_get_image_offset( image, &xbild, &ybild, &wbild, &hbild );
 		const sint16 distance_to_border = 3 - (yoff+get_yoff()+ybild)/(rasterweite/4);
 		if(  pos.x <= distance_to_border  ||  pos.y <= distance_to_border  ) {
