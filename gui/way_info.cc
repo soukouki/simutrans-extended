@@ -450,7 +450,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 			lb->buf().printf("%u%s", way->get_max_axle_load(), translator::translate("tonnen"));
 			lb->update();
 			if (replace_flag) {
-				const sint64 change = replacement_way->get_max_axle_load() - way->get_max_axle_load();
+				const sint64 change = (sint64)replacement_way->get_max_axle_load() - (sint64)way->get_max_axle_load();
 				new_component<gui_right_pointer_t>(change>0? SYSCOL_UP_TRIANGLE : change<0 ? SYSCOL_DOWN_TRIANGLE : COL_INACTIVE);
 				lb = new_component<gui_label_buf_t>(replacement_way->get_max_axle_load() == 0 ? COL_DANGER : SYSCOL_TEXT, gui_label_t::right);
 				lb->buf().printf("%u%s", replacement_way->get_max_axle_load(), translator::translate("tonnen"));
