@@ -23,9 +23,9 @@
 #include "../obj/roadsign.h" // for working method name
 #include "../dataobj/environment.h"
 #include "../bauer/wegbauer.h"
-#include "../../descriptor/roadsign_desc.h"
-#include "../../descriptor/tunnel_desc.h"
-#include "../../descriptor/way_desc.h"
+#include "../descriptor/roadsign_desc.h"
+#include "../descriptor/tunnel_desc.h"
+#include "../descriptor/way_desc.h"
 
 
 gui_way_detail_info_t::gui_way_detail_info_t(weg_t *way)
