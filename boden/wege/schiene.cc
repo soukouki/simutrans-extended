@@ -38,7 +38,13 @@ schiene_t::schiene_t() : weg_t(track_wt)
 {
 	reserved = convoihandle_t();
 	type = block;
-	set_desc(schiene_t::default_schiene);
+
+	if (schiene_t::default_schiene) {
+		set_desc(schiene_t::default_schiene);
+	}
+	else {
+		dbg->fatal("schiene_t::schiene_t()", "No rail way available!");
+	}
 }
 
 
@@ -201,18 +207,22 @@ void schiene_t::rdwr(loadsave_t *file)
 		}
 #endif
 
-		sint32 old_max_speed=get_max_speed();
+		sint32 old_max_speed = get_max_speed();
 		uint32 old_max_axle_load = get_max_axle_load();
 		uint32 old_bridge_weight_limit = get_bridge_weight_limit();
 		const way_desc_t *desc = way_builder_t::get_desc(bname);
+
 		if(desc==NULL) {
 			sint32 old_max_speed=get_max_speed();
 			desc = way_builder_t::get_desc(translator::compatibility_name(bname));
 			if(desc==NULL) {
 				desc = default_schiene;
+				if (!desc) {
+					dbg->fatal("schiene_t::rdwr", "Trying to load train tracks but pakset has none!");
+				}
 				welt->add_missing_paks( bname, karte_t::MISSING_WAY );
 			}
-			dbg->warning("schiene_t::rdwr()", "Unknown rail %s replaced by %s (old_max_speed %i)", bname, desc->get_name(), old_max_speed );
+			dbg->warning("schiene_t::rdwr()", "Unknown rail '%s' replaced by '%s' (old_max_speed %i)", bname, desc->get_name(), old_max_speed );
 		}
 
 		set_desc(desc, file->get_extended_version() >= 12);
@@ -241,7 +251,7 @@ void schiene_t::rdwr(loadsave_t *file)
 				set_max_speed(old_max_speed);
 			}
 		}
-		//DBG_MESSAGE("schiene_t::rdwr","track %s at (%i,%i) max_speed %i",bname,get_pos().x,get_pos().y,old_max_speed);
+//		DBG_MESSAGE("schiene_t::rdwr","track %s at (%i,%i) max_speed %i",bname,get_pos().get_str(), old_max_speed);
 		if(old_max_axle_load > 0)
 		{
 			set_max_axle_load(old_max_axle_load);
@@ -250,7 +260,7 @@ void schiene_t::rdwr(loadsave_t *file)
 		{
 			set_bridge_weight_limit(old_bridge_weight_limit);
 		}
-		//DBG_MESSAGE("schiene_t::rdwr","track %s at (%i,%i) max_speed %i",bname,get_pos().x,get_pos().y,old_max_speed);
+//		DBG_MESSAGE("schiene_t::rdwr","track %s at (%s) max_speed %i", bname, get_pos().get_str(), old_max_speed);
 	}
 #ifdef SPECIAL_RESCUE_12_6
 	if(file->is_saving() && file->get_extended_version() >= 12)

@@ -164,6 +164,7 @@ void weg_t::set_desc(const way_desc_t *b, bool from_saved_game)
 	}
 
 	desc = b;
+
 	if (!from_saved_game)
 	{
 		// Add the new maintenance cost
