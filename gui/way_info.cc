@@ -1018,7 +1018,7 @@ void way_info_t::update()
 			else {
 				lb_is_reserved.buf().append(translator::translate("track_not_reserved"));
 			}
-			lb_is_reserved.set_color(SYSCOL_TEXT_UNUSED);
+			lb_is_reserved.set_color(SYSCOL_TEXT_WEAK);
 		}
 		lb_is_reserved.update();
 		lb_reserved_convoy.update();
