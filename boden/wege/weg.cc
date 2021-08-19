@@ -137,6 +137,17 @@ const char *weg_t::waytype_to_string(waytype_t wt)
 }
 
 
+sint32 weg_t::get_max_speed(bool needs_electrification) const
+{
+	if( needs_electrification && is_electrified() ) {
+		if( grund_t* gr = welt->lookup(get_pos()) ) {
+			// "is_electrified()==true" means tile has an overhead_line wayobj
+			return min(max_speed, gr->get_wayobj(get_waytype())->get_desc()->get_topspeed());
+		}
+	}
+	return max_speed;
+}
+
 void weg_t::set_desc(const way_desc_t *b, bool from_saved_game)
 {
 	if(desc)
