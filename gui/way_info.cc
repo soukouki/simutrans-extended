@@ -176,17 +176,21 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 		}
 		if (way->is_electrified()) {
 			if (!any_permissive) {
-				add_table(2,0)->set_spacing(scr_size(D_H_SPACE, 1)); // <-- start table
+				add_table(3,0)->set_spacing(scr_size(D_H_SPACE, 1)); // <-- start table
 				if (skinverwaltung_t::alerts) {
 					new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(0), 0, ALIGN_NONE, true);
 				}
 				else {
 					new_component<gui_margin_t>(D_H_SPACE);
 				}
-				new_component<gui_label_t>("assets");
+				new_component_span<gui_label_t>("assets",2);
 
 				new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
 				new_component<gui_label_t>("elektrified");
+				gui_label_buf_t* lb = new_component<gui_label_buf_t>();
+				lb->buf().printf("  %s %ukm/h", translator::translate("Max. speed:"), wayobj->get_desc()->get_topspeed());
+				lb->set_color(way->get_max_speed(true)!=way->get_max_speed(false) ? SYSCOL_TEXT_STRONG : SYSCOL_TEXT);
+				lb->update();
 
 				any_permissive = true;
 			}
@@ -406,7 +410,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				new_component<gui_empty_t>();
 			}
 			lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
-			lb->buf().printf("%ikm/h", way->get_max_speed());
+			lb->buf().printf("%ikm/h", way->get_max_speed(false));
 			lb->update();
 			end_table();
 			if (replace_flag) {
@@ -415,7 +419,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 					change = min(restricted_speed, replacement_way->get_topspeed()) - restricted_speed;
 				}
 				else {
-					change = replacement_way->get_topspeed() - way->get_max_speed();
+					change = replacement_way->get_topspeed() - way->get_max_speed(false);
 				}
 				new_component<gui_right_pointer_t>(change>0? SYSCOL_UP_TRIANGLE : change<0 ? SYSCOL_DOWN_TRIANGLE : COL_INACTIVE);
 				add_table(2,1);
@@ -809,36 +813,83 @@ void way_info_t::update()
 
 		cont.new_component<gui_label_t>("Max. speed:");
 
+		bool has_electrification_speed_limit = false;
+
 		cont.add_table(2,1);
-		if(way1->get_desc()->get_topspeed() > way1->get_max_speed() && skinverwaltung_t::alerts){
+		if(way1->get_desc()->get_topspeed() > way1->get_max_speed(false) && skinverwaltung_t::alerts){
 			cont.new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
 		}
 		else {
 			cont.new_component<gui_empty_t>();
 		}
 		lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
-		lb->buf().printf("%ukm/h", way1->get_max_speed());
+		lb->buf().printf("%ukm/h", way1->get_max_speed(false));
 		lb->update();
 		cont.end_table();
 
+		if (way1->is_electrified() && way1->get_max_speed(false) != way1->get_max_speed(true)) {
+			has_electrification_speed_limit = true;
+		}
+
 		if (way2) {
 			cont.add_table(2,1);
-			if (way2->get_desc()->get_topspeed() > way2->get_max_speed() && skinverwaltung_t::alerts) {
+			if (way2->get_desc()->get_topspeed() > way2->get_max_speed(false) && skinverwaltung_t::alerts) {
 				cont.new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
 			}
 			else {
 				cont.new_component<gui_empty_t>();
 			}
 			lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
-			lb->buf().printf("%ukm/h", way2->get_max_speed());
+			lb->buf().printf("%ukm/h", way2->get_max_speed(false));
 			lb->update();
 			cont.end_table();
+			if (!has_electrification_speed_limit && way2->is_electrified() && way2->get_max_speed(false) != way2->get_max_speed(true)) {
+				has_electrification_speed_limit = true;
+			}
 		}
 		else {
 			cont.new_component<gui_empty_t>();
 		}
 		cont.new_component<gui_empty_t>(); // for alert
 		cont.new_component<gui_fill_t>();
+
+		if (has_electrification_speed_limit) {
+			// show electrification speed limit
+			cont.new_component<gui_empty_t>();
+			if (way1->is_electrified() && way1->get_max_speed(false) != way1->get_max_speed(true)) {
+				cont.add_table(2,1);
+				{
+					cont.new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
+					lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT_STRONG, gui_label_t::right);
+					lb->buf().printf("%ukm/h", way1->get_max_speed(true));
+					lb->update();
+				}
+				cont.end_table();
+			}
+			else {
+				cont.new_component<gui_empty_t>();
+			}
+			if (way2) {
+				if (way2->is_electrified() && way2->get_max_speed(false) != way2->get_max_speed(true)) {
+					cont.add_table(2, 1);
+					{
+						cont.new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
+						lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT_STRONG, gui_label_t::right);
+						lb->buf().printf("%ukm/h", way2->get_max_speed(true));
+						lb->update();
+					}
+					cont.end_table();
+				}
+				else {
+					cont.new_component<gui_empty_t>();
+				}
+			}
+			else {
+				cont.new_component<gui_empty_t>();
+			}
+			cont.new_component<gui_empty_t>(); // for alert
+			cont.new_component<gui_fill_t>();
+		}
 
 		// weight limit
 		if (way1->get_desc()->get_styp() == type_elevated || way1->get_waytype() == air_wt || way1->get_waytype() == water_wt
