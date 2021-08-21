@@ -374,6 +374,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 					end_table();
 					add_table(1, 2)->set_spacing(scr_size(0, 1));
 					{
+						const sint64 change_percentage = way->get_desc()->get_maintenance() > 0 ? change*100/(sint64)way->get_desc()->get_maintenance() : 0;
 						lb = new_component<gui_label_buf_t>(change_col, gui_label_t::left);
 						if (change > 0) {
 							lb->buf().append("+");
@@ -386,7 +387,18 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 						money_to_string(maintenance_number, (double)world()->calc_adjusted_monthly_figure(change) / 100.0);
 						lb->buf().printf("%s", maintenance_number);
 						lb->update();
-						new_component<gui_margin_t>(0,D_LABEL_HEIGHT);
+						if (change_percentage!=0) {
+							lb = new_component<gui_label_buf_t>(change_col, gui_label_t::left);
+							lb->buf().append("(");
+							if (change > 0) {
+								lb->buf().append("+");
+							}
+							lb->buf().printf("%i%%)", change_percentage);
+							lb->update();
+						}
+						else {
+							new_component<gui_margin_t>(0,D_LABEL_HEIGHT);
+						}
 					}
 					end_table();
 				}
