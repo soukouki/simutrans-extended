@@ -72,7 +72,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 			lb->buf().append(" ");
 			if (way->get_desc()->get_maintenance() > 0) {
 				const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(way->get_desc()->get_maintenance()) / 100.0;
-				lb->buf().printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), maint_per_tile * tiles_pr_km, maint_per_tile);
+				lb->buf().printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), maint_per_tile * tiles_pr_km, way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
 			}
 			else {
 				lb->buf().append(translator::translate("no_maintenance_costs"));
@@ -336,7 +336,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 					lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::money_right);
 					const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(way->get_desc()->get_maintenance())/100.0;
 					char maintenance_number[64];
-					money_to_string(maintenance_number, maint_per_tile);
+					money_to_string(maintenance_number, way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
 					lb->buf().printf("%s", maintenance_number);
 					lb->update();
 
@@ -352,7 +352,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				new_component<gui_label_t>("-");
 			}
 			if (replace_flag) {
-				const sint32 change = replacement_way->get_maintenance()-way->get_desc()->get_maintenance();
+				sint32 change = replacement_way->get_maintenance()-way->get_desc()->get_maintenance();
 				const PIXVAL change_col = change<0 ? SYSCOL_UP_TRIANGLE : change>0 ? SYSCOL_DOWN_TRIANGLE : COL_INACTIVE;
 				new_component<gui_right_pointer_t>(change_col);
 				if (replacement_way->get_maintenance() > 0) {
@@ -361,7 +361,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 						lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::money_right);
 						const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(replacement_way->get_maintenance()) / 100.0;
 						char maintenance_number[64];
-						money_to_string(maintenance_number, maint_per_tile);
+						money_to_string(maintenance_number, way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
 						lb->buf().printf("%s", maintenance_number);
 						lb->update();
 
@@ -379,6 +379,10 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 							lb->buf().append("+");
 						}
 						char maintenance_number[64];
+						if (way->is_diagonal()) {
+							change *= 10;
+							change /= 14;
+						}
 						money_to_string(maintenance_number, (double)world()->calc_adjusted_monthly_figure(change) / 100.0);
 						lb->buf().printf("%s", maintenance_number);
 						lb->update();
