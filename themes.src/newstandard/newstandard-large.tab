@@ -69,7 +69,7 @@ gui_color_text_shadow    = #424952
 #gui_color_text_minus     = #000000
 #gui_color_text_plus      = #000000
 #gui_color_text_unused    = #000000
-gui_color_empty          = #868c86
+gui_color_empty          = #FFFFFF
 gui_color_obsolete       = #2878ff
 
 # Scroll list and edit field
@@ -131,8 +131,8 @@ gui_color_chat_window_network_transparency = #D6ECF7
 #gui_color_down_pointing_triangle = #FF0000
 #gui_color_out_of_production      = #
 # Recommended brightness: gui_color_text < gui_color_text_weak < gui_color_text_inactive   (reversed on dark themes)
-gui_color_text_inactive = #999999
-gui_color_text_weak     = #666666
+gui_color_text_inactive = #696969
+gui_color_text_weak     = #555555
 
 ##################################size stuff##################################
 
