@@ -37,7 +37,7 @@ gui_way_detail_info_t::gui_way_detail_info_t(weg_t *way)
 	this->way = way;
 
 	speed_restricted.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2) : IMG_EMPTY, true);
-	speed_restricted.set_tooltip(speed_resticted_text);
+	speed_restricted.set_tooltip( translator::translate(speed_resticted_text) );
 
 	set_table_layout(1,0);
 	set_margin(scr_size(D_MARGIN_LEFT, D_V_SPACE), scr_size(D_H_SPACE, 0));
@@ -622,7 +622,7 @@ way_info_t::way_info_t(const grund_t* gr_) :
 	condition_bar2.add_color_value(&degraded_cond2, color_idx_to_rgb(COL_ORANGE_RED));
 
 	speed_restricted.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2):IMG_EMPTY, true);
-	speed_restricted.set_tooltip(speed_resticted_text);
+	speed_restricted.set_tooltip( translator::translate(speed_resticted_text) );
 
 	const obj_t *const d = gr->obj_bei(0);
 	if (d != NULL) {
