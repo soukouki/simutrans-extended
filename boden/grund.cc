@@ -2506,7 +2506,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 				diversion_checker->set_owner(welt->get_public_player());
 				test_driver_t *driver = diversion_checker;
 				driver = public_driver_t::apply(driver);
-				const way_desc_t* default_road = get_default_road(w);				
+				const way_desc_t* default_road = get_default_road(w);
 				const uint32 default_road_axle_load = default_road->get_axle_load();
 				const sint32 default_road_speed = default_road->get_topspeed();
 				const uint32 max_axle_load = w->get_waytype() == road_wt ? min(default_road_axle_load, w->get_max_axle_load()) : w->get_max_axle_load();
@@ -2637,7 +2637,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 			diversion_checker->set_owner(welt->get_public_player());
 			test_driver_t* driver = diversion_checker;
 			driver = public_driver_t::apply(driver);
-			const way_desc_t* default_road = get_default_road(w); 
+			const way_desc_t* default_road = get_default_road(w);
 			if (default_road == NULL) // If, for some reason, the default road is not defined
 			{
 				default_road = w->get_desc();
