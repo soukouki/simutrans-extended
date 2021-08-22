@@ -947,10 +947,7 @@ void way_info_t::update()
 		cont.new_component<gui_empty_t>(); // for alert
 		cont.new_component<gui_fill_t>();
 
-		lb = cont.new_component<gui_label_buf_t>();
-		lb->buf().printf("%s:", translator::translate("convoi passed last month:"));
-		lb->update();
-
+		cont.new_component<gui_label_t>("convoi passed last month:");
 		lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
 		lb->buf().printf("%u", way1->get_statistics(WAY_STAT_CONVOIS));
 		lb->update();
