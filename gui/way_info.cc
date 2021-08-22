@@ -738,7 +738,8 @@ void way_info_t::update()
 	// name(s)
 	cont.add_table(3,0)->set_spacing(scr_size(D_H_SPACE, 0));
 	{
-		cont.new_component<gui_image_t>()->set_image(skinverwaltung_t::get_waytype_skin(way1->get_desc()->get_styp() == type_tram ? tram_wt : way1->get_waytype())->get_image_id(0), true);
+		cont.new_component<gui_image_t>(skinverwaltung_t::get_waytype_skin(way1->get_desc()->get_styp() == type_tram ? tram_wt : way1->get_waytype())->get_image_id(0),
+			way1->get_owner() == NULL ? 1 : way1->get_owner()->get_player_nr(), ALIGN_NONE, true);
 		cont.new_component<gui_label_t>(way1->get_name(), way1->get_owner() == NULL ? SYSCOL_TEXT : color_idx_to_rgb(way1->get_owner()->get_player_color1()+env_t::gui_player_color_dark));
 		if (way1->is_electrified()) {
 			cont.new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
@@ -747,7 +748,8 @@ void way_info_t::update()
 			cont.new_component<gui_empty_t>();
 		}
 		if (way2) {
-			cont.new_component<gui_image_t>()->set_image(skinverwaltung_t::get_waytype_skin(way2->get_desc()->get_styp() == type_tram ? tram_wt : way2->get_waytype())->get_image_id(0), true);
+			cont.new_component<gui_image_t>(skinverwaltung_t::get_waytype_skin(way2->get_desc()->get_styp() == type_tram ? tram_wt : way2->get_waytype())->get_image_id(0),
+				way2->get_owner() == NULL ? 1 : way2->get_owner()->get_player_nr(), ALIGN_NONE, true);
 			cont.new_component<gui_label_t>(way2->get_name(), way2->get_owner() == NULL ? SYSCOL_TEXT : color_idx_to_rgb(way2->get_owner()->get_player_color1()+env_t::gui_player_color_dark));
 			if (way2->is_electrified()) {
 				cont.new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
@@ -811,7 +813,8 @@ void way_info_t::update()
 		cont.new_component<gui_empty_t>();
 		cont.add_table(3,1); {
 			cont.new_component<gui_fill_t>();
-			cont.new_component<gui_image_t>(skinverwaltung_t::get_waytype_skin(way1->get_desc()->get_styp() == type_tram ? tram_wt : way1->get_waytype())->get_image_id(0), 0, ALIGN_NONE, true);
+			cont.new_component<gui_image_t>(skinverwaltung_t::get_waytype_skin(way1->get_desc()->get_styp() == type_tram ? tram_wt : way1->get_waytype())->get_image_id(0),
+				way1->get_owner() == NULL ? 1 : way1->get_owner()->get_player_nr(), ALIGN_NONE, true);
 			cont.new_component<gui_fill_t>();
 		} cont.end_table();
 		cont.add_table(3,1); {
