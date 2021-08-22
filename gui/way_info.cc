@@ -253,7 +253,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 		// current way VS replacement way
 		new_component<gui_empty_t>();
 		sint32 restricted_speed = SINT32_MAX_VALUE;
-		add_table(6,0)->set_alignment(ALIGN_TOP);
+		add_table(6,0)->set_alignment(ALIGN_CENTER_V);
 		{
 			new_component_span<gui_empty_t>(2);
 			new_component_span<gui_label_t>("To be renewed with", SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left, 4);
@@ -271,35 +271,38 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				if (public_city_road) {
 					if (replacement_way == latest_city_road || latest_city_road == NULL)
 					{
-						new_component_span<gui_label_t>(4)->init("same_as_current");
+						new_component<gui_right_pointer_t>(SYSCOL_TEXT);
+						new_component_span<gui_label_t>("same_as_current", 3);
 					}
 					else {
 						replacement_way = latest_city_road;
 						new_component<gui_right_pointer_t>(COL_UPGRADEABLE);
-						new_component_span<gui_label_t>(3)->init(replacement_way->get_name());
+						new_component_span<gui_label_t>(replacement_way->get_name(), 3);
 					}
 				}
 				else if (way->get_desc() != replacement_way){
-					if (!is_current) {
-						new_component<gui_right_pointer_t>(COL_UPGRADEABLE);
+					new_component<gui_right_pointer_t>(COL_UPGRADEABLE);
+					if( !is_current ) {
 						replacement_way = way_builder_t::weg_search(replacement_way->get_waytype(), replacement_way->get_topspeed(), (sint32)replacement_way->get_axle_load(), time, (systemtype_t)replacement_way->get_styp(), replacement_way->get_wear_capacity());
-						new_component_span<gui_label_t>(3)->init(replacement_way->get_name());
 					}
-					else {
-						new_component<gui_right_pointer_t>(COL_UPGRADEABLE);
-						new_component_span<gui_label_t>(3)->init(replacement_way->get_name());
-					}
+					new_component_span<gui_label_t>(replacement_way->get_name(), 3);
 				}
 				else if (!way->is_degraded()) {
-					new_component_span<gui_label_t>(4)->init("same_as_current");
+					new_component<gui_right_pointer_t>(SYSCOL_TEXT);
+					new_component_span<gui_label_t>("same_as_current", 3);
 				}
 				else {
+					// auto-renewal seems to be stopped
 					replacement_way = NULL;
-					new_component_span<gui_label_t>(4)->init("keine");
+					new_component<gui_right_pointer_t>(COL_INACTIVE);
+					new_component_span<gui_label_t>("keine", SYSCOL_EMPTY, 2);
+					new_component<gui_fill_t>();
 				}
 			}
 			else {
-				new_component_span<gui_label_t>(4)->init("keine");
+				new_component<gui_right_pointer_t>(COL_INACTIVE);
+				new_component_span<gui_label_t>("keine", SYSCOL_EMPTY, 2);
+				new_component<gui_fill_t>();
 			}
 
 			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
