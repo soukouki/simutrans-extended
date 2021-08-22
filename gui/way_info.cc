@@ -7,7 +7,6 @@
 #include "simwin.h"
 #include "components/gui_colorbox.h"
 #include "components/gui_divider.h"
-#include "components/gui_image.h"
 #include "../simmenu.h"
 #include "../simworld.h"
 #include "../simcity.h"
@@ -31,10 +30,15 @@
 #include "../vehicle/rail_vehicle.h"
 
 
+static char const* const speed_resticted_text = "speed_restricted";
+
 gui_way_detail_info_t::gui_way_detail_info_t(weg_t *way)
 {
 	this->way = way;
-	//init()
+
+	speed_restricted.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2) : IMG_EMPTY, true);
+	speed_restricted.set_tooltip(speed_resticted_text);
+
 	set_table_layout(1,0);
 	set_margin(scr_size(D_MARGIN_LEFT, D_V_SPACE), scr_size(D_H_SPACE, 0));
 }
@@ -414,8 +418,8 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 
 			new_component<gui_label_t>("Max. speed:");
 			add_table(2,1);
-			if (way->get_desc()->get_topspeed() > way->get_max_speed() && skinverwaltung_t::alerts) {
-				new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
+			if (way->get_desc()->get_topspeed() > way->get_max_speed()) {
+				add_component(&speed_restricted);
 				restricted_speed = way->get_max_speed();
 			}
 			else {
@@ -435,8 +439,8 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				}
 				new_component<gui_right_pointer_t>(change>0? SYSCOL_UP_TRIANGLE : change<0 ? SYSCOL_DOWN_TRIANGLE : COL_INACTIVE);
 				add_table(2,1);
-				if (replacement_way->get_topspeed() > restricted_speed && skinverwaltung_t::alerts) {
-					new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
+				if (replacement_way->get_topspeed() > restricted_speed) {
+					add_component(&speed_restricted);
 				}
 				else {
 					new_component<gui_empty_t>();
@@ -616,6 +620,9 @@ way_info_t::way_info_t(const grund_t* gr_) :
 	condition_bar1.add_color_value(&degraded_cond1, color_idx_to_rgb(COL_ORANGE_RED));
 	condition_bar2.add_color_value(&condition2, color_idx_to_rgb(COL_GREEN));
 	condition_bar2.add_color_value(&degraded_cond2, color_idx_to_rgb(COL_ORANGE_RED));
+
+	speed_restricted.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2):IMG_EMPTY, true);
+	speed_restricted.set_tooltip(speed_resticted_text);
 
 	const obj_t *const d = gr->obj_bei(0);
 	if (d != NULL) {
@@ -828,8 +835,8 @@ void way_info_t::update()
 		cont.new_component<gui_label_t>("Max. speed:");
 
 		cont.add_table(2,1);
-		if(way1->get_desc()->get_topspeed() > way1->get_max_speed() && skinverwaltung_t::alerts){
-			cont.new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
+		if(way1->get_desc()->get_topspeed() > way1->get_max_speed(false)){
+			cont.add_component(&speed_restricted);
 		}
 		else {
 			cont.new_component<gui_empty_t>();
@@ -841,8 +848,8 @@ void way_info_t::update()
 
 		if (way2) {
 			cont.add_table(2,1);
-			if (way2->get_desc()->get_topspeed() > way2->get_max_speed() && skinverwaltung_t::alerts) {
-				cont.new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
+			if (way2->get_desc()->get_topspeed() > way2->get_max_speed(false)) {
+				cont.add_component(&speed_restricted);
 			}
 			else {
 				cont.new_component<gui_empty_t>();
