@@ -623,7 +623,6 @@ way_info_t::way_info_t(const grund_t* gr_) :
 	}
 	update_way_info();
 
-	gui_frame_t::set_name(gr->get_name());
 	set_table_layout(1,0);
 
 	add_table(2,0)->set_alignment(ALIGN_TOP);
@@ -1061,6 +1060,7 @@ convoihandle_t way_info_t::get_reserved_convoy(const weg_t *way) const
 
 void way_info_t::update_way_info()
 {
+	gui_frame_t::set_name( translator::translate(gr->get_name()) );
 
 	if(has_road){
 		cont_road_routes.remove_all();
