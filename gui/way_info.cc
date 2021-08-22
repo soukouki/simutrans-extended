@@ -797,11 +797,14 @@ void way_info_t::update()
 	// location
 	const stadt_t* city = welt->get_city(gr->get_pos().get_2d());
 	std::string region = welt->get_region_name(gr->get_pos().get_2d());
-	cont.add_table(city ? 4:2, 1);
+	cont.add_table(city ? 4:3, 1);
 	{
 		if (city) {
 			cont.new_component<gui_image_t>(skinverwaltung_t::intown->get_image_id(0), 0, ALIGN_NONE, true);
 			cont.new_component<gui_label_t>(city->get_name());
+		}
+		else {
+			cont.new_component<gui_label_t>("Open countryside");
 		}
 		cont.new_component<gui_label_buf_t>()->buf().printf( "(%s)", translator::translate( region.c_str() ) );
 		cont.new_component<gui_fill_t>();
