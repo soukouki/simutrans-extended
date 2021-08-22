@@ -409,7 +409,7 @@ With a big festival\n%s built\na new monument.\n%i citicens rejoiced.
 \n電化
 \nHeightfield has wrong image type.\n
 \nマップファイルの\nイメージ形式が不正です。\n
-\nis reserved by:
+is reserved by:
 優先列車：
 \nminimum speed:
 \n最低速度：
@@ -817,8 +817,8 @@ Convoi is sold when all wagons are empty.
 この編成を回送し、空車時に売却します。
 convoi mouseover tooltips
 マウスオーバーで車両の状態を表示
-convoi passed last\nmonth %i\n
-\n前月の交通量: %i\n―――――――――――
+convoi passed last month:
+前月の交通量:
 Convois
 編成数
 Convois: %d\nProfit: %s

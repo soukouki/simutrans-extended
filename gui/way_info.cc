@@ -611,7 +611,7 @@ way_info_t::way_info_t(const grund_t* gr_) :
 
 	condition_bar1.set_base(100);
 	condition_bar2.set_base(100);
-	condition_bar1.set_size(scr_size(condition_bar1.get_size().w, 3)); // 高さがsizeでセットされない
+	condition_bar1.set_size(scr_size(condition_bar1.get_size().w, 3));
 	condition_bar2.set_size(scr_size(condition_bar2.get_size().w, 3));
 	condition_bar2.set_visible(false);
 	condition_bar2.set_rigid(true);
@@ -942,8 +942,7 @@ void way_info_t::update()
 		cont.new_component<gui_fill_t>();
 
 		lb = cont.new_component<gui_label_buf_t>();
-		lb->buf().printf("%s:", translator::translate("Passed"));
-		lb->set_tooltip(translator::translate("convoi passed last\nmonth %i\n")); // this dosen't work
+		lb->buf().printf("%s:", translator::translate("convoi passed last month:"));
 		lb->update();
 
 		lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
