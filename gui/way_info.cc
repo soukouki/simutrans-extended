@@ -66,10 +66,20 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 		}
 		// owner
 		if (way->is_public_right_of_way()) {
-			new_component<gui_label_t>("Public right of way");
+			if( way->get_desc()->get_waytype()==water_wt  &&  way->get_max_speed()==0 ) {
+				// Natural streams => nothing to show
+			}
+			else if( way->get_desc()->get_waytype() == road_wt  &&  world()->get_city(way->get_pos().get_2d()) ) {
+				new_component<gui_label_t>("Municipal way");
+			}
+			else {
+				new_component<gui_label_t>("Public right of way");
+			}
 		}
 		else if(way->get_owner() != NULL) {
-			new_component<gui_label_t>(way->get_owner()->get_name(), color_idx_to_rgb(way->get_owner()->get_player_color1()+env_t::gui_player_color_dark))->set_shadow(SYSCOL_TEXT_SHADOW, true);
+			gui_label_buf_t *lb = new_component<gui_label_buf_t>(color_idx_to_rgb(way->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
+			lb->buf().printf("%s (%s)", translator::translate("Private way"), way->get_owner()->get_name());
+			lb->update();
 		}
 
 		add_table(4,0);
