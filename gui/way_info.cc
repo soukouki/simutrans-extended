@@ -553,30 +553,34 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 
 		if (restricted_speed != SINT32_MAX_VALUE) {
 			new_component<gui_empty_t>();
-			const tunnel_t *tunnel = gr ? gr->find<tunnel_t>() : NULL;
-			if (tunnel) {
-				if (way->get_max_speed() == tunnel->get_desc()->get_topspeed() || tunnel->get_desc()->get_topspeed_gradient_1() || tunnel->get_desc()->get_topspeed_gradient_2())
-				{
-					new_component<gui_label_t>("(speed_restricted_by_tunnel)", SYSCOL_TEXT_STRONG);
+			add_table(2,1);
+			{
+				add_component(&speed_restricted);
+				const tunnel_t *tunnel = gr ? gr->find<tunnel_t>() : NULL;
+				if (tunnel) {
+					if (way->get_max_speed() == tunnel->get_desc()->get_topspeed() || tunnel->get_desc()->get_topspeed_gradient_1() || tunnel->get_desc()->get_topspeed_gradient_2())
+					{
+						new_component<gui_label_t>("(speed_restricted_by_tunnel)", SYSCOL_TEXT_STRONG);
+					}
 				}
-			}
-			else if (bridge) {
-				if (way->get_max_speed() == bridge->get_desc()->get_topspeed() || bridge->get_desc()->get_topspeed_gradient_1() || bridge->get_desc()->get_topspeed_gradient_2())
-				{
-					new_component<gui_label_t>("(speed_restricted_by_bridge)", SYSCOL_TEXT_STRONG);
+				else if (bridge) {
+					if (way->get_max_speed() == bridge->get_desc()->get_topspeed() || bridge->get_desc()->get_topspeed_gradient_1() || bridge->get_desc()->get_topspeed_gradient_2())
+					{
+						new_component<gui_label_t>("(speed_restricted_by_bridge)", SYSCOL_TEXT_STRONG);
+					}
 				}
-			}
-			else if (wayobj) {
-				if (way->get_max_speed() == wayobj->get_desc()->get_topspeed() || wayobj->get_desc()->get_topspeed_gradient_1() || wayobj->get_desc()->get_topspeed_gradient_2())
-				{
-					new_component<gui_label_t>("(speed_restricted_by_wayobj)", SYSCOL_TEXT_STRONG);
+				else if (wayobj) {
+					if (way->get_max_speed() == wayobj->get_desc()->get_topspeed() || wayobj->get_desc()->get_topspeed_gradient_1() || wayobj->get_desc()->get_topspeed_gradient_2())
+					{
+						new_component<gui_label_t>("(speed_restricted_by_wayobj)", SYSCOL_TEXT_STRONG);
+					}
 				}
-			}
-			else if (way->is_degraded()) {
-				new_component<gui_label_t>("(speed_restricted_by_degradation)", SYSCOL_TEXT_STRONG);
-			}
-			else {
-				new_component<gui_label_t>("(speed_restricted_by_city)", SYSCOL_TEXT_STRONG);
+				else if (way->is_degraded()) {
+					new_component<gui_label_t>("(speed_restricted_by_degradation)", SYSCOL_TEXT_STRONG);
+				}
+				else {
+					new_component<gui_label_t>("(speed_restricted_by_city)", SYSCOL_TEXT_STRONG);
+				}
 			}
 		}
 
