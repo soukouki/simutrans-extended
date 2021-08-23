@@ -154,7 +154,47 @@ bool citylist_stats_t::compare(const gui_component_t *aa, const gui_component_t 
 			case SORT_BY_GROWTH:
 				return a->city->get_wachstum() < b->city->get_wachstum();
 			case SORT_BY_REGION:
-				return welt->get_region(a->city->get_pos()) < welt->get_region(b->city->get_pos());
+				return world()->get_region(a->city->get_pos()) < world()->get_region(b->city->get_pos());
+			case SORT_BY_JOBS:
+				return a->city->get_city_jobs() < b->city->get_city_jobs();
+			case SORT_BY_VISITOR_DEMANDS:
+				return a->city->get_city_visitor_demand() < b->city->get_city_visitor_demand();
+			case SORT_BY_TRANSPORTED:
+				return a->city->get_finance_history_year(0, HIST_PAS_TRANSPORTED) < b->city->get_finance_history_year(0, HIST_PAS_TRANSPORTED);
+			case SORT_BY_RATIO_PAX:
+			{
+				const uint64 a_temp = a->city->get_finance_history_year(0, HIST_PAS_GENERATED) ? 100*a->city->get_finance_history_year(0, HIST_PAS_TRANSPORTED)/a->city->get_finance_history_year(0, HIST_PAS_GENERATED) : 0;
+				const uint64 b_temp = b->city->get_finance_history_year(0, HIST_PAS_GENERATED) ? 100*b->city->get_finance_history_year(0, HIST_PAS_TRANSPORTED)/b->city->get_finance_history_year(0, HIST_PAS_GENERATED) : 0;
+				return a_temp < b_temp;
+			}
+			case SORT_BY_SENT:
+				return a->city->get_finance_history_year(0, HIST_MAIL_TRANSPORTED) < b->city->get_finance_history_year(0, HIST_MAIL_TRANSPORTED);
+			case SORT_BY_RATIO_MAIL:
+			{
+				const uint64 a_temp = a->city->get_finance_history_year(0, HIST_MAIL_GENERATED) ? 100*a->city->get_finance_history_year(0, HIST_MAIL_TRANSPORTED)/a->city->get_finance_history_year(0, HIST_MAIL_GENERATED) : 0;
+				const uint64 b_temp = b->city->get_finance_history_year(0, HIST_MAIL_GENERATED) ? 100*b->city->get_finance_history_year(0, HIST_MAIL_TRANSPORTED)/b->city->get_finance_history_year(0, HIST_MAIL_GENERATED) : 0;
+				return a_temp < b_temp;
+			}
+			case SORT_BY_GOODS_DEMAND:
+				return a->city->get_finance_history_year(0, HIST_GOODS_NEEDED) < b->city->get_finance_history_year(0, HIST_GOODS_NEEDED);
+			case SORT_BY_RATIO_GOODS:
+			{
+				const uint64 a_temp = a->city->get_finance_history_year(0, HIST_GOODS_NEEDED) ? 100 * a->city->get_finance_history_year(0, HIST_GOODS_RECEIVED) / a->city->get_finance_history_year(0, HIST_GOODS_NEEDED) : 0;
+				const uint64 b_temp = b->city->get_finance_history_year(0, HIST_GOODS_NEEDED) ? 100 * b->city->get_finance_history_year(0, HIST_GOODS_RECEIVED) / b->city->get_finance_history_year(0, HIST_GOODS_NEEDED) : 0;
+				return a_temp < b_temp;
+			}
+			case SORT_BY_LAND_AREA:
+				return a->city->get_land_area() < b->city->get_land_area();
+			case SORT_BY_POPULATION_DENSITY:
+				return a->city->get_population_density() < b->city->get_population_density();
+
+#ifdef DEBUG
+			case SORT_BY_UNEMPLOYED:
+				return a->city->get_unemployed() < b->city->get_unemployed();
+			case SORT_BY_HOMELESS:
+				return a->city->get_homeless() < b->city->get_homeless();
+#endif // DEBUG
+
 			default: break;
 		}
 		// default sorting ...

@@ -27,7 +27,21 @@ const char *citylist_frame_t::sort_text[citylist_stats_t::SORT_MODES] = {
 	"Name",
 	"citicens",
 	"Growth",
+	"Jobs",
+	"Passagierrate",
+	"by_public_transport_users",
+	"ratio_pax",
+	"Mail sent this year:",
+	"ratio_mail",
+	"Goods needed",
+	"ratio_goods",
+	"by_area",
+	"Population density",
 	"by_region"
+#ifdef DEBUG
+	, "by_unemployed"
+	, "by_homeless"
+#endif // DEBUG
 };
 
 const char citylist_frame_t::hist_type[karte_t::MAX_WORLD_COST][21] =
