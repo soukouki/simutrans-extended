@@ -435,14 +435,19 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 
 			new_component<gui_label_t>("Max. speed:");
 			add_table(2,1);
+			PIXVAL speed_text_color = SYSCOL_TEXT;
 			if (way->get_desc()->get_topspeed() > way->get_max_speed()) {
 				add_component(&speed_restricted);
 				restricted_speed = way->get_max_speed();
+				if (!skinverwaltung_t::alerts) {
+					// to support paksets that do not have alert symbols
+					speed_text_color = COL_CAUTION;
+				}
 			}
 			else {
 				new_component<gui_empty_t>();
 			}
-			lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+			lb = new_component<gui_label_buf_t>(speed_text_color, gui_label_t::right);
 			lb->buf().printf("%ikm/h", way->get_max_speed(false));
 			lb->update();
 			end_table();
@@ -456,13 +461,17 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				}
 				new_component<gui_right_pointer_t>(change>0? SYSCOL_UP_TRIANGLE : change<0 ? SYSCOL_DOWN_TRIANGLE : COL_INACTIVE);
 				add_table(2,1);
+				speed_text_color = SYSCOL_TEXT;
 				if (replacement_way->get_topspeed() > restricted_speed) {
 					add_component(&speed_restricted);
+					if (!skinverwaltung_t::alerts) {
+						speed_text_color = COL_CAUTION;
+					}
 				}
 				else {
 					new_component<gui_empty_t>();
 				}
-				lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+				lb = new_component<gui_label_buf_t>(speed_text_color, gui_label_t::right);
 				lb->buf().printf("%ikm/h", restricted_speed != SINT32_MAX_VALUE ? restricted_speed : replacement_way->get_topspeed());
 				lb->update();
 				end_table();
@@ -861,13 +870,18 @@ void way_info_t::update()
 		bool has_electrification_speed_limit = false;
 
 		cont.add_table(2,1);
+		PIXVAL speed_text_color = SYSCOL_TEXT;
 		if(way1->get_desc()->get_topspeed() > way1->get_max_speed(false)){
 			cont.add_component(&speed_restricted);
+			if (!skinverwaltung_t::alerts) {
+				// to support paksets that do not have alert symbols
+				speed_text_color = COL_CAUTION;
+			}
 		}
 		else {
 			cont.new_component<gui_empty_t>();
 		}
-		lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+		lb = cont.new_component<gui_label_buf_t>(speed_text_color, gui_label_t::right);
 		lb->buf().printf("%ukm/h", way1->get_max_speed(false));
 		lb->update();
 		cont.end_table();
@@ -878,13 +892,17 @@ void way_info_t::update()
 
 		if (way2) {
 			cont.add_table(2,1);
+			 speed_text_color = SYSCOL_TEXT;
 			if (way2->get_desc()->get_topspeed() > way2->get_max_speed(false)) {
 				cont.add_component(&speed_restricted);
+				if (!skinverwaltung_t::alerts) {
+					speed_text_color = COL_CAUTION;
+				}
 			}
 			else {
 				cont.new_component<gui_empty_t>();
 			}
-			lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+			lb = cont.new_component<gui_label_buf_t>(speed_text_color, gui_label_t::right);
 			lb->buf().printf("%ukm/h", way2->get_max_speed(false));
 			lb->update();
 			cont.end_table();
