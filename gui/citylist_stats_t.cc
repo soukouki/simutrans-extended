@@ -21,7 +21,6 @@ uint8 citylist_stats_t::region_filter = 0;
 
 uint16 citylist_stats_t::name_width = CITY_NAME_LABEL_WIDTH;
 
-static karte_ptr_t welt;
 
 citylist_stats_t::citylist_stats_t(stadt_t *c)
 {
@@ -64,7 +63,7 @@ citylist_stats_t::citylist_stats_t(stadt_t *c)
 void citylist_stats_t::update_label()
 {
 	electricity.set_visible(city->get_finance_history_month(0, HIST_POWER_RECEIVED));
-	if ( (city->get_finance_history_month(0, HIST_POWER_RECEIVED) * 9) < (welt->get_finance_history_month(0, HIST_POWER_NEEDED) / 10) ) {
+	if ( (city->get_finance_history_month(0, HIST_POWER_RECEIVED) * 9) < (world()->get_finance_history_month(0, HIST_POWER_NEEDED) / 10) ) {
 		electricity.set_transparent(TRANSPARENT25_FLAG);
 	}
 
@@ -80,8 +79,8 @@ void citylist_stats_t::update_label()
 	//label.set_align(gui_label_t::left);
 
 	lb_region.buf().clear();
-	if (!welt->get_settings().regions.empty()) {
-		lb_region.buf().printf("(%s)", translator::translate(welt->get_region_name(city->get_pos()).c_str()));
+	if (!world()->get_settings().regions.empty()) {
+		lb_region.buf().printf("(%s)", translator::translate(world()->get_region_name(city->get_pos()).c_str()));
 	}
 	lb_region.update();
 
