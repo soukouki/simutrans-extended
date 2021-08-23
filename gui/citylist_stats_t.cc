@@ -10,6 +10,7 @@
 #include "../simevent.h"
 #include "../simworld.h"
 
+#include "../display/viewport.h"
 #include "../utils/cbuffer_t.h"
 #include "components/gui_label.h"
 
@@ -123,6 +124,9 @@ bool citylist_stats_t::infowin_event(const event_t *ev)
 		//city->open_info_window();
 		city->show_info();
 		swallowed = true;
+	}
+	else if (IS_RIGHTRELEASE(ev)) {
+		world()->get_viewport()->change_world_position(city->get_pos());
 	}
 	return swallowed;
 }
