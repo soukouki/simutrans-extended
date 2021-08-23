@@ -31,6 +31,10 @@
 
 
 static char const* const speed_resticted_text = "speed_restricted";
+const uint8 severity_color[6] =
+{
+	COL_GREEN, COL_LIGHT_YELLOW, 30, COL_ORANGE, COL_RED, COL_OVERCROWD
+};
 
 gui_way_detail_info_t::gui_way_detail_info_t(weg_t *way)
 {
@@ -145,9 +149,15 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 			}
 			lb->update();
 
-			lb = new_component<gui_label_buf_t>();
-			lb->buf().printf(translator::translate("Congestion: %i%%"), way->get_congestion_percentage());
-			lb->update();
+			add_table(2,1);
+			{
+				const uint8 congestion_stage = min(5,(uint8)(way->get_congestion_percentage()/20));
+				new_component<gui_colorbox_t>()->init(color_idx_to_rgb(severity_color[congestion_stage]), scr_size(D_INDICATOR_BOX_WIDTH, LINEASCENT/2+2), true);
+				lb = new_component<gui_label_buf_t>();
+				lb->buf().printf(translator::translate("Congestion: %i%%"), way->get_congestion_percentage());
+				lb->update();
+			}
+			end_table();
 		}
 
 		// way permissive (assets)
