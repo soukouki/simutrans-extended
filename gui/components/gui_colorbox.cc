@@ -58,7 +58,7 @@ gui_right_pointer_t::gui_right_pointer_t(PIXVAL c, uint8 height_)
 	height = height_;
 	color = c;
 	tooltip = NULL;
-	set_size(scr_size(height, height));
+	gui_component_t::set_size(scr_size(height, height));
 }
 
 void gui_right_pointer_t::draw(scr_coord offset)
