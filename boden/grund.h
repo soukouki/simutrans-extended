@@ -764,7 +764,7 @@ public:
 	bool removing_road_would_break_monument_loop();
 
 	// Helper method
-	const way_desc_t* get_default_road(weg_t* w) const; 
+	const way_desc_t* get_default_road(weg_t* w) const;
 
 	typedef koordhashtable_tpl<koord, bool, N_BAGS_SMALL> road_network_plan_t;
 	/**

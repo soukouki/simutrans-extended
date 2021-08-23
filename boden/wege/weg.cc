@@ -1882,7 +1882,7 @@ bool weg_t::renew()
 	else if (public_right_of_way && wtyp == road_wt)
 	{
 		// Roads that are public rights of way should be renewed with the latest type.
-		const grund_t* gr = welt->lookup(get_pos()); 
+		const grund_t* gr = welt->lookup(get_pos());
 		const way_desc_t* way_desc = gr ? gr->get_default_road(this) : NULL;
 		bool default_way_is_better_than_current_way = false;
 		if(way_desc)

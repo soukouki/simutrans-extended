@@ -924,7 +924,7 @@ public:
 
 	const way_desc_t *get_city_road_type( uint16 year );
 	const way_desc_t *get_intercity_road_type( uint16 year );
-	const way_desc_t* get_industry_road_type( uint16 year ); 
+	const way_desc_t* get_industry_road_type( uint16 year );
 
 	void set_pak_diagonal_multiplier(uint16 n) { pak_diagonal_multiplier = n; }
 	uint16 get_pak_diagonal_multiplier() const { return pak_diagonal_multiplier; }

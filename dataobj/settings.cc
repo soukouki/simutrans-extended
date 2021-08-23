@@ -3323,7 +3323,7 @@ way_desc_t const* settings_t::get_intercity_road_type(uint16 const year)
 
 way_desc_t const* settings_t::get_industry_road_type(uint16 const year)
 {
-	return get_timeline_road_type(year, num_industry_roads, industry_roads); 
+	return get_timeline_road_type(year, num_industry_roads, industry_roads);
 }
 
 
