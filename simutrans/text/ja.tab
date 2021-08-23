@@ -409,7 +409,7 @@ With a big festival\n%s built\na new monument.\n%i citicens rejoiced.
 \n電化
 \nHeightfield has wrong image type.\n
 \nマップファイルの\nイメージ形式が不正です。\n
-\nis reserved by:
+is reserved by:
 優先列車：
 \nminimum speed:
 \n最低速度：
@@ -817,8 +817,8 @@ Convoi is sold when all wagons are empty.
 この編成を回送し、空車時に売却します。
 convoi mouseover tooltips
 マウスオーバーで車両の状態を表示
-convoi passed last\nmonth %i\n
-\n前月の交通量: %i\n―――――――――――
+convoi passed last month:
+前月交通量:
 Convois
 編成数
 Convois: %d\nProfit: %s
@@ -1865,6 +1865,8 @@ Speedbonus\nroad %i km/h, rail %i km/h\nships %i km/h, planes %i km/h.
 速達ボーナス:\n        道路 %i km/h, 鉄道 %i km/h, \n        海路 %i km/h 空路 %i km/h.
 Speedlimit
 制限速度
+speed_restricted
+最高速度が制限されています
 Speichern
 ゲームの保存
 Spieler
@@ -2237,10 +2239,6 @@ brakes from max. speed in %i m
 \n\n信用格付けに影響があります。
 \nCity:
 \n都市:
-\nMax. axle load:
-\n軸重制限:
-\nMax. weight:
-重量制限:
 \nMAY USE:
 \n通行可能:
 \nMUST USE:
@@ -2962,8 +2960,6 @@ one_train_staff
 one_way_sign
 一方通行標識
 Open countryside
-市域外
-open countryside
 市域外
 Open water
 水上
@@ -3690,7 +3686,7 @@ Return the vehicle(s) for a full refund.
 Sell the convoy for %s
 編成を %s にて売却します
 Congestion: %i%%
-混雑度： %i%%
+混雑度:  %i%%
 Display loaded detail
 積載情報の詳細を表示
 Displays detailed information of the vehicle's load.

@@ -7,7 +7,6 @@
 #include "simwin.h"
 #include "components/gui_colorbox.h"
 #include "components/gui_divider.h"
-#include "components/gui_image.h"
 #include "../simmenu.h"
 #include "../simworld.h"
 #include "../simcity.h"
@@ -31,10 +30,19 @@
 #include "../vehicle/rail_vehicle.h"
 
 
+static char const* const speed_resticted_text = "speed_restricted";
+const uint8 severity_color[6] =
+{
+	COL_GREEN, COL_LIGHT_YELLOW, 30, COL_ORANGE, COL_RED, COL_OVERCROWD
+};
+
 gui_way_detail_info_t::gui_way_detail_info_t(weg_t *way)
 {
 	this->way = way;
-	//init()
+
+	speed_restricted.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2) : IMG_EMPTY, true);
+	speed_restricted.set_tooltip( translator::translate(speed_resticted_text) );
+
 	set_table_layout(1,0);
 	set_margin(scr_size(D_MARGIN_LEFT, D_V_SPACE), scr_size(D_H_SPACE, 0));
 }
@@ -72,7 +80,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 			lb->buf().append(" ");
 			if (way->get_desc()->get_maintenance() > 0) {
 				const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(way->get_desc()->get_maintenance()) / 100.0;
-				lb->buf().printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), maint_per_tile * tiles_pr_km, maint_per_tile);
+				lb->buf().printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), maint_per_tile * tiles_pr_km, way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
 			}
 			else {
 				lb->buf().append(translator::translate("no_maintenance_costs"));
@@ -141,9 +149,15 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 			}
 			lb->update();
 
-			lb = new_component<gui_label_buf_t>();
-			lb->buf().printf(translator::translate("Congestion: %i%%"), way->get_congestion_percentage());
-			lb->update();
+			add_table(2,1);
+			{
+				const uint8 congestion_stage = min(5,(uint8)(way->get_congestion_percentage()/20));
+				new_component<gui_colorbox_t>()->init(color_idx_to_rgb(severity_color[congestion_stage]), scr_size(D_INDICATOR_BOX_WIDTH, LINEASCENT/2+2), true);
+				lb = new_component<gui_label_buf_t>();
+				lb->buf().printf(translator::translate("Congestion: %i%%"), way->get_congestion_percentage());
+				lb->update();
+			}
+			end_table();
 		}
 
 		// way permissive (assets)
@@ -253,7 +267,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 		// current way VS replacement way
 		new_component<gui_empty_t>();
 		sint32 restricted_speed = SINT32_MAX_VALUE;
-		add_table(6,0)->set_alignment(ALIGN_TOP);
+		add_table(6,0)->set_alignment(ALIGN_CENTER_V);
 		{
 			new_component_span<gui_empty_t>(2);
 			new_component_span<gui_label_t>("To be renewed with", SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left, 4);
@@ -271,35 +285,38 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				if (public_city_road) {
 					if (replacement_way == latest_city_road || latest_city_road == NULL)
 					{
-						new_component_span<gui_label_t>(4)->init("same_as_current");
+						new_component<gui_right_pointer_t>(SYSCOL_TEXT);
+						new_component_span<gui_label_t>("same_as_current", 3);
 					}
 					else {
 						replacement_way = latest_city_road;
 						new_component<gui_right_pointer_t>(COL_UPGRADEABLE);
-						new_component_span<gui_label_t>(3)->init(replacement_way->get_name());
+						new_component_span<gui_label_t>(replacement_way->get_name(), 3);
 					}
 				}
 				else if (way->get_desc() != replacement_way){
-					if (!is_current) {
-						new_component<gui_right_pointer_t>(COL_UPGRADEABLE);
+					new_component<gui_right_pointer_t>(COL_UPGRADEABLE);
+					if( !is_current ) {
 						replacement_way = way_builder_t::weg_search(replacement_way->get_waytype(), replacement_way->get_topspeed(), (sint32)replacement_way->get_axle_load(), time, (systemtype_t)replacement_way->get_styp(), replacement_way->get_wear_capacity());
-						new_component_span<gui_label_t>(3)->init(replacement_way->get_name());
 					}
-					else {
-						new_component<gui_right_pointer_t>(COL_UPGRADEABLE);
-						new_component_span<gui_label_t>(3)->init(replacement_way->get_name());
-					}
+					new_component_span<gui_label_t>(replacement_way->get_name(), 3);
 				}
 				else if (!way->is_degraded()) {
-					new_component_span<gui_label_t>(4)->init("same_as_current");
+					new_component<gui_right_pointer_t>(SYSCOL_TEXT);
+					new_component_span<gui_label_t>("same_as_current", 3);
 				}
 				else {
+					// auto-renewal seems to be stopped
 					replacement_way = NULL;
-					new_component_span<gui_label_t>(4)->init("keine");
+					new_component<gui_right_pointer_t>(SYSCOL_OBSOLETE);
+					new_component_span<gui_label_t>("keine", SYSCOL_EMPTY, 2);
+					new_component<gui_fill_t>();
 				}
 			}
 			else {
-				new_component_span<gui_label_t>(4)->init("keine");
+				new_component<gui_right_pointer_t>(SYSCOL_OBSOLETE);
+				new_component_span<gui_label_t>("keine", SYSCOL_EMPTY, 2);
+				new_component<gui_fill_t>();
 			}
 
 			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
@@ -340,7 +357,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 					lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::money_right);
 					const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(way->get_desc()->get_maintenance())/100.0;
 					char maintenance_number[64];
-					money_to_string(maintenance_number, maint_per_tile);
+					money_to_string(maintenance_number, way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
 					lb->buf().printf("%s", maintenance_number);
 					lb->update();
 
@@ -356,7 +373,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				new_component<gui_label_t>("-");
 			}
 			if (replace_flag) {
-				const sint32 change = replacement_way->get_maintenance()-way->get_desc()->get_maintenance();
+				sint32 change = replacement_way->get_maintenance()-way->get_desc()->get_maintenance();
 				const PIXVAL change_col = change<0 ? SYSCOL_UP_TRIANGLE : change>0 ? SYSCOL_DOWN_TRIANGLE : COL_INACTIVE;
 				new_component<gui_right_pointer_t>(change_col);
 				if (replacement_way->get_maintenance() > 0) {
@@ -365,7 +382,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 						lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::money_right);
 						const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(replacement_way->get_maintenance()) / 100.0;
 						char maintenance_number[64];
-						money_to_string(maintenance_number, maint_per_tile);
+						money_to_string(maintenance_number, way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
 						lb->buf().printf("%s", maintenance_number);
 						lb->update();
 
@@ -378,15 +395,31 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 					end_table();
 					add_table(1, 2)->set_spacing(scr_size(0, 1));
 					{
+						const sint64 change_percentage = way->get_desc()->get_maintenance() > 0 ? change*100/(sint64)way->get_desc()->get_maintenance() : 0;
 						lb = new_component<gui_label_buf_t>(change_col, gui_label_t::left);
 						if (change > 0) {
 							lb->buf().append("+");
 						}
 						char maintenance_number[64];
+						if (way->is_diagonal()) {
+							change *= 10;
+							change /= 14;
+						}
 						money_to_string(maintenance_number, (double)world()->calc_adjusted_monthly_figure(change) / 100.0);
 						lb->buf().printf("%s", maintenance_number);
 						lb->update();
-						new_component<gui_margin_t>(0,D_LABEL_HEIGHT);
+						if (change_percentage!=0) {
+							lb = new_component<gui_label_buf_t>(change_col, gui_label_t::left);
+							lb->buf().append("(");
+							if (change > 0) {
+								lb->buf().append("+");
+							}
+							lb->buf().printf("%i%%)", change_percentage);
+							lb->update();
+						}
+						else {
+							new_component<gui_margin_t>(0,D_LABEL_HEIGHT);
+						}
 					}
 					end_table();
 				}
@@ -402,8 +435,8 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 
 			new_component<gui_label_t>("Max. speed:");
 			add_table(2,1);
-			if (way->get_desc()->get_topspeed() > way->get_max_speed() && skinverwaltung_t::alerts) {
-				new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
+			if (way->get_desc()->get_topspeed() > way->get_max_speed()) {
+				add_component(&speed_restricted);
 				restricted_speed = way->get_max_speed();
 			}
 			else {
@@ -423,8 +456,8 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				}
 				new_component<gui_right_pointer_t>(change>0? SYSCOL_UP_TRIANGLE : change<0 ? SYSCOL_DOWN_TRIANGLE : COL_INACTIVE);
 				add_table(2,1);
-				if (replacement_way->get_topspeed() > restricted_speed && skinverwaltung_t::alerts) {
-					new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
+				if (replacement_way->get_topspeed() > restricted_speed) {
+					add_component(&speed_restricted);
 				}
 				else {
 					new_component<gui_empty_t>();
@@ -534,30 +567,34 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 
 		if (restricted_speed != SINT32_MAX_VALUE) {
 			new_component<gui_empty_t>();
-			const tunnel_t *tunnel = gr ? gr->find<tunnel_t>() : NULL;
-			if (tunnel) {
-				if (way->get_max_speed() == tunnel->get_desc()->get_topspeed() || tunnel->get_desc()->get_topspeed_gradient_1() || tunnel->get_desc()->get_topspeed_gradient_2())
-				{
-					new_component<gui_label_t>("(speed_restricted_by_tunnel)", SYSCOL_TEXT_STRONG);
+			add_table(2,1);
+			{
+				add_component(&speed_restricted);
+				const tunnel_t *tunnel = gr ? gr->find<tunnel_t>() : NULL;
+				if (tunnel) {
+					if (way->get_max_speed() == tunnel->get_desc()->get_topspeed() || tunnel->get_desc()->get_topspeed_gradient_1() || tunnel->get_desc()->get_topspeed_gradient_2())
+					{
+						new_component<gui_label_t>("(speed_restricted_by_tunnel)", SYSCOL_TEXT_STRONG);
+					}
 				}
-			}
-			else if (bridge) {
-				if (way->get_max_speed() == bridge->get_desc()->get_topspeed() || bridge->get_desc()->get_topspeed_gradient_1() || bridge->get_desc()->get_topspeed_gradient_2())
-				{
-					new_component<gui_label_t>("(speed_restricted_by_bridge)", SYSCOL_TEXT_STRONG);
+				else if (bridge) {
+					if (way->get_max_speed() == bridge->get_desc()->get_topspeed() || bridge->get_desc()->get_topspeed_gradient_1() || bridge->get_desc()->get_topspeed_gradient_2())
+					{
+						new_component<gui_label_t>("(speed_restricted_by_bridge)", SYSCOL_TEXT_STRONG);
+					}
 				}
-			}
-			else if (wayobj) {
-				if (way->get_max_speed() == wayobj->get_desc()->get_topspeed() || wayobj->get_desc()->get_topspeed_gradient_1() || wayobj->get_desc()->get_topspeed_gradient_2())
-				{
-					new_component<gui_label_t>("(speed_restricted_by_wayobj)", SYSCOL_TEXT_STRONG);
+				else if (wayobj) {
+					if (way->get_max_speed() == wayobj->get_desc()->get_topspeed() || wayobj->get_desc()->get_topspeed_gradient_1() || wayobj->get_desc()->get_topspeed_gradient_2())
+					{
+						new_component<gui_label_t>("(speed_restricted_by_wayobj)", SYSCOL_TEXT_STRONG);
+					}
 				}
-			}
-			else if (way->is_degraded()) {
-				new_component<gui_label_t>("(speed_restricted_by_degradation)", SYSCOL_TEXT_STRONG);
-			}
-			else {
-				new_component<gui_label_t>("(speed_restricted_by_city)", SYSCOL_TEXT_STRONG);
+				else if (way->is_degraded()) {
+					new_component<gui_label_t>("(speed_restricted_by_degradation)", SYSCOL_TEXT_STRONG);
+				}
+				else {
+					new_component<gui_label_t>("(speed_restricted_by_city)", SYSCOL_TEXT_STRONG);
+				}
 			}
 		}
 
@@ -595,7 +632,7 @@ way_info_t::way_info_t(const grund_t* gr_) :
 
 	condition_bar1.set_base(100);
 	condition_bar2.set_base(100);
-	condition_bar1.set_size(scr_size(condition_bar1.get_size().w, 3)); // 高さがsizeでセットされない
+	condition_bar1.set_size(scr_size(condition_bar1.get_size().w, 3));
 	condition_bar2.set_size(scr_size(condition_bar2.get_size().w, 3));
 	condition_bar2.set_visible(false);
 	condition_bar2.set_rigid(true);
@@ -605,13 +642,15 @@ way_info_t::way_info_t(const grund_t* gr_) :
 	condition_bar2.add_color_value(&condition2, color_idx_to_rgb(COL_GREEN));
 	condition_bar2.add_color_value(&degraded_cond2, color_idx_to_rgb(COL_ORANGE_RED));
 
+	speed_restricted.set_image(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2):IMG_EMPTY, true);
+	speed_restricted.set_tooltip( translator::translate(speed_resticted_text) );
+
 	const obj_t *const d = gr->obj_bei(0);
 	if (d != NULL) {
 		set_owner(d->get_owner());
 	}
 	update_way_info();
 
-	gui_frame_t::set_name(gr->get_name());
 	set_table_layout(1,0);
 
 	add_table(2,0)->set_alignment(ALIGN_TOP);
@@ -727,7 +766,8 @@ void way_info_t::update()
 	// name(s)
 	cont.add_table(3,0)->set_spacing(scr_size(D_H_SPACE, 0));
 	{
-		cont.new_component<gui_image_t>()->set_image(skinverwaltung_t::get_waytype_skin(way1->get_desc()->get_styp() == type_tram ? tram_wt : way1->get_waytype())->get_image_id(0), true);
+		cont.new_component<gui_image_t>(skinverwaltung_t::get_waytype_skin(way1->get_desc()->get_styp() == type_tram ? tram_wt : way1->get_waytype())->get_image_id(0),
+			way1->get_owner() == NULL ? 1 : way1->get_owner()->get_player_nr(), ALIGN_NONE, true);
 		cont.new_component<gui_label_t>(way1->get_name(), way1->get_owner() == NULL ? SYSCOL_TEXT : color_idx_to_rgb(way1->get_owner()->get_player_color1()+env_t::gui_player_color_dark));
 		if (way1->is_electrified()) {
 			cont.new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
@@ -736,7 +776,8 @@ void way_info_t::update()
 			cont.new_component<gui_empty_t>();
 		}
 		if (way2) {
-			cont.new_component<gui_image_t>()->set_image(skinverwaltung_t::get_waytype_skin(way2->get_desc()->get_styp() == type_tram ? tram_wt : way2->get_waytype())->get_image_id(0), true);
+			cont.new_component<gui_image_t>(skinverwaltung_t::get_waytype_skin(way2->get_desc()->get_styp() == type_tram ? tram_wt : way2->get_waytype())->get_image_id(0),
+				way2->get_owner() == NULL ? 1 : way2->get_owner()->get_player_nr(), ALIGN_NONE, true);
 			cont.new_component<gui_label_t>(way2->get_name(), way2->get_owner() == NULL ? SYSCOL_TEXT : color_idx_to_rgb(way2->get_owner()->get_player_color1()+env_t::gui_player_color_dark));
 			if (way2->is_electrified()) {
 				cont.new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
@@ -777,11 +818,14 @@ void way_info_t::update()
 	// location
 	const stadt_t* city = welt->get_city(gr->get_pos().get_2d());
 	std::string region = welt->get_region_name(gr->get_pos().get_2d());
-	cont.add_table(city ? 4:2, 1);
+	cont.add_table(city ? 4:3, 1);
 	{
 		if (city) {
 			cont.new_component<gui_image_t>(skinverwaltung_t::intown->get_image_id(0), 0, ALIGN_NONE, true);
 			cont.new_component<gui_label_t>(city->get_name());
+		}
+		else {
+			cont.new_component<gui_label_t>("Open countryside");
 		}
 		cont.new_component<gui_label_buf_t>()->buf().printf( "(%s)", translator::translate( region.c_str() ) );
 		cont.new_component<gui_fill_t>();
@@ -800,7 +844,8 @@ void way_info_t::update()
 		cont.new_component<gui_empty_t>();
 		cont.add_table(3,1); {
 			cont.new_component<gui_fill_t>();
-			cont.new_component<gui_image_t>(skinverwaltung_t::get_waytype_skin(way1->get_desc()->get_styp() == type_tram ? tram_wt : way1->get_waytype())->get_image_id(0), 0, ALIGN_NONE, true);
+			cont.new_component<gui_image_t>(skinverwaltung_t::get_waytype_skin(way1->get_desc()->get_styp() == type_tram ? tram_wt : way1->get_waytype())->get_image_id(0),
+				way1->get_owner() == NULL ? 1 : way1->get_owner()->get_player_nr(), ALIGN_NONE, true);
 			cont.new_component<gui_fill_t>();
 		} cont.end_table();
 		cont.add_table(3,1); {
@@ -816,8 +861,8 @@ void way_info_t::update()
 		bool has_electrification_speed_limit = false;
 
 		cont.add_table(2,1);
-		if(way1->get_desc()->get_topspeed() > way1->get_max_speed(false) && skinverwaltung_t::alerts){
-			cont.new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
+		if(way1->get_desc()->get_topspeed() > way1->get_max_speed(false)){
+			cont.add_component(&speed_restricted);
 		}
 		else {
 			cont.new_component<gui_empty_t>();
@@ -833,8 +878,8 @@ void way_info_t::update()
 
 		if (way2) {
 			cont.add_table(2,1);
-			if (way2->get_desc()->get_topspeed() > way2->get_max_speed(false) && skinverwaltung_t::alerts) {
-				cont.new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(2), 0, ALIGN_NONE, true);
+			if (way2->get_desc()->get_topspeed() > way2->get_max_speed(false)) {
+				cont.add_component(&speed_restricted);
 			}
 			else {
 				cont.new_component<gui_empty_t>();
@@ -967,11 +1012,7 @@ void way_info_t::update()
 		cont.new_component<gui_empty_t>(); // for alert
 		cont.new_component<gui_fill_t>();
 
-		lb = cont.new_component<gui_label_buf_t>();
-		lb->buf().printf("%s:", translator::translate("Passed"));
-		lb->set_tooltip(translator::translate("convoi passed last\nmonth %i\n")); // this dosen't work
-		lb->update();
-
+		cont.new_component<gui_label_t>("convoi passed last month:");
 		lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
 		lb->buf().printf("%u", way1->get_statistics(WAY_STAT_CONVOIS));
 		lb->update();
@@ -1096,6 +1137,7 @@ convoihandle_t way_info_t::get_reserved_convoy(const weg_t *way) const
 
 void way_info_t::update_way_info()
 {
+	gui_frame_t::set_name( translator::translate(gr->get_name()) );
 
 	if(has_road){
 		cont_road_routes.remove_all();
