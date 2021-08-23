@@ -70,7 +70,7 @@ gui_color_text_shadow    = #424952
 #gui_color_text_plus      = #000000
 #gui_color_text_unused    = #000000
 gui_color_empty          = #FFFFFF
-gui_color_obsolete       = #2878ff
+gui_color_obsolete       = #0000F8
 
 # Scroll list and edit field
 #gui_color_edit_text                        = #000000
