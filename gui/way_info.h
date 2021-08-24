@@ -9,6 +9,7 @@
 
 #include "base_info.h"
 #include "../boden/grund.h"
+#include "components/gui_image.h"
 #include "components/gui_label.h"
 #include "components/gui_location_view_t.h"
 #include "components/gui_scrollpane.h"
@@ -24,6 +25,8 @@ class grund_t;
 class gui_way_detail_info_t : public gui_aligned_container_t
 {
 	weg_t *way;
+	gui_image_t speed_restricted;
+
 public:
 	gui_way_detail_info_t(weg_t *way=NULL);
 
@@ -55,6 +58,7 @@ class way_info_t : public gui_frame_t, public action_listener_t
 	convoihandle_t reserved_convoi;
 	convoihandle_t get_reserved_convoy(const weg_t *way) const;
 	gui_label_buf_t lb_is_reserved, lb_reserved_convoy, lb_signal_wm, lb_reserved_cnv_speed, lb_reserved_cnv_distance;
+	gui_image_t speed_restricted;
 
 	void init();
 	void init_tabs();
