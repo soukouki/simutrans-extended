@@ -55,8 +55,9 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 	}
 	if( way ) {
 		const waytype_t wt = way->get_waytype();
-		const wayobj_t *wayobj = gr ? gr->get_wayobj(wt) : NULL;
-		const bruecke_t *bridge = gr ? gr->find<bruecke_t>() : NULL;
+		const wayobj_t  *wayobj = gr->get_wayobj(wt);
+		const bruecke_t *bridge = gr->find<bruecke_t>();
+		const tunnel_t  *tunnel = gr->find<tunnel_t>();
 		const double tiles_pr_km = (1000 / world()->get_settings().get_meters_per_tile());
 		const bool impassible = way->get_remaining_wear_capacity() == 0;
 
@@ -66,29 +67,70 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 		}
 		// owner
 		if (way->is_public_right_of_way()) {
-			new_component<gui_label_t>("Public right of way");
-		}
-		else if(way->get_owner() != NULL) {
-			new_component<gui_label_t>(way->get_owner()->get_name(), color_idx_to_rgb(way->get_owner()->get_player_color1()+env_t::gui_player_color_dark))->set_shadow(SYSCOL_TEXT_SHADOW, true);
-		}
-
-		add_table(4,0);
-		{
-			new_component<gui_margin_t>(10);
-			new_component<gui_label_t>(way->get_desc()->get_name(), way->get_owner() != NULL ? color_idx_to_rgb(way->get_owner()->get_player_color1() + env_t::gui_player_color_dark) : SYSCOL_TEXT);
-			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
-			lb->buf().append(" ");
-			if (way->get_desc()->get_maintenance() > 0) {
-				const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(way->get_desc()->get_maintenance()) / 100.0;
-				lb->buf().printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), maint_per_tile * tiles_pr_km, way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
+			if( way->get_desc()->get_waytype()==water_wt  &&  way->get_max_speed()==0 ) {
+				// Natural streams => nothing to show
+			}
+			else if( way->get_desc()->get_waytype() == road_wt  &&  world()->get_city(way->get_pos().get_2d()) ) {
+				new_component<gui_label_t>("Municipal way");
 			}
 			else {
-				lb->buf().append(translator::translate("no_maintenance_costs"));
-				lb->set_color(COL_INACTIVE);
+				new_component<gui_label_t>("Public right of way");
 			}
+		}
+		else if(way->get_owner() != NULL) {
+			gui_label_buf_t *lb = new_component<gui_label_buf_t>(color_idx_to_rgb(way->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
+			lb->buf().printf("%s (%s)", translator::translate("Private way"), way->get_owner()->get_name());
+			lb->update();
+		}
+
+		add_table(5,0);
+		{
+			const slope_t::type hang = gr ? gr->get_weg_hang() : slope_t::flat;
+			const uint8 slope_height = hang == slope_t::flat ? 0:(hang & 7) ? 1 : 2;
+			const sint32 potential_way_speed = !hang ? way->get_desc()->get_topspeed() : hang == 1 ? way->get_desc()->get_topspeed_gradient_1() : way->get_desc()->get_topspeed_gradient_2();
+			if( bridge ) {
+				new_component<gui_margin_t>(10);
+				new_component<gui_label_t>(bridge->get_desc()->get_name(), color_idx_to_rgb(bridge->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
+				gui_label_buf_t *lb_bridge = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+				const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(bridge->get_desc()->get_maintenance()) / 100.0;
+				lb_bridge->buf().printf(translator::translate(" %1.2f$/mon"), way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
+				lb_bridge->update();
+
+				const sint32 top_speed = !hang ? bridge->get_desc()->get_topspeed() : hang == 1 ? bridge->get_desc()->get_topspeed_gradient_1() : bridge->get_desc()->get_topspeed_gradient_2();
+				lb_bridge = new_component<gui_label_buf_t>(potential_way_speed > top_speed ? COL_WARNING : COL_INACTIVE, gui_label_t::right);
+				lb_bridge->buf().printf(translator::translate("%ikm/h"), top_speed);
+				lb_bridge->update();
+				new_component<gui_fill_t>();
+			}
+			else if (tunnel) {
+				new_component<gui_margin_t>(10);
+				new_component<gui_label_t>(tunnel->get_desc()->get_name(), color_idx_to_rgb(tunnel->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
+				gui_label_buf_t *lb_tunnel = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+				const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(tunnel->get_desc()->get_maintenance()) / 100.0;
+				lb_tunnel->buf().printf(translator::translate(" %1.2f$/mon"), way->is_diagonal() ? maint_per_tile * 10 / 14.0 : maint_per_tile);
+				lb_tunnel->update();
+
+				const sint32 top_speed = !hang ? tunnel->get_desc()->get_topspeed() : hang == 1 ? tunnel->get_desc()->get_topspeed_gradient_1() : tunnel->get_desc()->get_topspeed_gradient_2();
+				lb_tunnel = new_component<gui_label_buf_t>(potential_way_speed > top_speed ? COL_WARNING : COL_INACTIVE, gui_label_t::right);
+				lb_tunnel->buf().printf(translator::translate("%ikm/h"), top_speed);
+				lb_tunnel->update();
+				new_component<gui_fill_t>();
+			}
+
+			// way
+			new_component<gui_margin_t>(10);
+			new_component<gui_label_t>(way->get_desc()->get_name(), way->get_owner() != NULL ? color_idx_to_rgb(way->get_owner()->get_player_color1() + env_t::gui_player_color_dark) : SYSCOL_TEXT);
+			gui_label_buf_t *lb = new_component<gui_label_buf_t>(way->get_desc()->get_maintenance()==0 ? COL_INACTIVE : SYSCOL_TEXT, gui_label_t::right);
+			const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(way->get_desc()->get_maintenance()) / 100.0;
+			lb->buf().printf(translator::translate(" %1.2f$/mon"), way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
+			lb->update();
+
+			lb = new_component<gui_label_buf_t>(potential_way_speed > way->get_max_speed(false) ? COL_WARNING : SYSCOL_TEXT, gui_label_t::right);
+			lb->buf().printf(translator::translate("%ikm/h"), way->get_max_speed(false));
 			lb->update();
 			new_component<gui_fill_t>();
-			if (wayobj) {
+
+			if( wayobj ) {
 				if (way->is_electrified()) {
 					new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
 				}
@@ -96,16 +138,12 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 					new_component<gui_margin_t>(10);
 				}
 				new_component<gui_label_t>(wayobj->get_desc()->get_name(), color_idx_to_rgb(wayobj->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
-				lb = new_component<gui_label_buf_t>();
-				lb->buf().append(" ");
-				if (wayobj->get_desc()->get_maintenance() > 0) {
-					const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(wayobj->get_desc()->get_maintenance()) / 100.0;
-					lb->buf().printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), maint_per_tile * tiles_pr_km, maint_per_tile);
-				}
-				else {
-					lb->buf().append(translator::translate("no_maintenance_costs"));
-					lb->set_color(COL_INACTIVE);
-				}
+				lb = new_component<gui_label_buf_t>(wayobj->get_desc()->get_maintenance()==0 ? COL_INACTIVE : SYSCOL_TEXT, gui_label_t::right);
+				const double maint_per_tile = (double)world()->calc_adjusted_monthly_figure(wayobj->get_desc()->get_maintenance()) / 100.0;
+				lb->buf().printf(translator::translate(" %1.2f$/mon"), way->is_diagonal() ? maint_per_tile*10/14.0 : maint_per_tile);
+				lb->update();
+				lb = new_component<gui_label_buf_t>(way->get_max_speed(true) != way->get_max_speed(false) ? COL_WARNING : SYSCOL_TEXT, gui_label_t::right);
+				lb->buf().printf(translator::translate("%ikm/h"), wayobj->get_desc()->get_topspeed());
 				lb->update();
 				new_component<gui_fill_t>();
 			}
@@ -188,23 +226,6 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				}
 			}
 		}
-		if (way->is_electrified()) {
-			if (!any_permissive) {
-				add_table(2,0)->set_spacing(scr_size(D_H_SPACE, 1)); // <-- start table
-				if (skinverwaltung_t::alerts) {
-					new_component<gui_image_t>(skinverwaltung_t::alerts->get_image_id(0), 0, ALIGN_NONE, true);
-				}
-				else {
-					new_component<gui_margin_t>(D_H_SPACE);
-				}
-				new_component<gui_label_t>("assets");
-
-				new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
-				new_component<gui_label_t>("elektrified");
-
-				any_permissive = true;
-			}
-		}
 		if (any_permissive) {
 			end_table(); // <-- end table
 		}
@@ -238,7 +259,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 			}
 		}
 		// height restricted
-		if( gr && gr->is_height_restricted() ) {
+		if( gr->is_height_restricted() ) {
 			if (!any_prohibitive) {
 				add_table(3, 0)->set_spacing(scr_size(D_H_SPACE, 1)); // <-- start table
 				if (skinverwaltung_t::alerts) {
@@ -304,13 +325,13 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 				else {
 					// auto-renewal seems to be stopped
 					replacement_way = NULL;
-					new_component<gui_right_pointer_t>(COL_INACTIVE);
+					new_component<gui_right_pointer_t>(SYSCOL_OBSOLETE);
 					new_component_span<gui_label_t>("keine", SYSCOL_EMPTY, 2);
 					new_component<gui_fill_t>();
 				}
 			}
 			else {
-				new_component<gui_right_pointer_t>(COL_INACTIVE);
+				new_component<gui_right_pointer_t>(SYSCOL_OBSOLETE);
 				new_component_span<gui_label_t>("keine", SYSCOL_EMPTY, 2);
 				new_component<gui_fill_t>();
 			}
@@ -431,15 +452,20 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 
 			new_component<gui_label_t>("Max. speed:");
 			add_table(2,1);
+			PIXVAL speed_text_color = SYSCOL_TEXT;
 			if (way->get_desc()->get_topspeed() > way->get_max_speed()) {
 				add_component(&speed_restricted);
 				restricted_speed = way->get_max_speed();
+				if (!skinverwaltung_t::alerts) {
+					// to support paksets that do not have alert symbols
+					speed_text_color = COL_CAUTION;
+				}
 			}
 			else {
 				new_component<gui_empty_t>();
 			}
-			lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
-			lb->buf().printf("%ikm/h", way->get_max_speed());
+			lb = new_component<gui_label_buf_t>(speed_text_color, gui_label_t::right);
+			lb->buf().printf("%ikm/h", way->get_max_speed(false));
 			lb->update();
 			end_table();
 			if (replace_flag) {
@@ -448,17 +474,21 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 					change = min(restricted_speed, replacement_way->get_topspeed()) - restricted_speed;
 				}
 				else {
-					change = replacement_way->get_topspeed() - way->get_max_speed();
+					change = replacement_way->get_topspeed() - way->get_max_speed(false);
 				}
 				new_component<gui_right_pointer_t>(change>0? SYSCOL_UP_TRIANGLE : change<0 ? SYSCOL_DOWN_TRIANGLE : COL_INACTIVE);
 				add_table(2,1);
+				speed_text_color = SYSCOL_TEXT;
 				if (replacement_way->get_topspeed() > restricted_speed) {
 					add_component(&speed_restricted);
+					if (!skinverwaltung_t::alerts) {
+						speed_text_color = COL_CAUTION;
+					}
 				}
 				else {
 					new_component<gui_empty_t>();
 				}
-				lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+				lb = new_component<gui_label_buf_t>(speed_text_color, gui_label_t::right);
 				lb->buf().printf("%ikm/h", restricted_speed != SINT32_MAX_VALUE ? restricted_speed : replacement_way->get_topspeed());
 				lb->update();
 				end_table();
@@ -566,8 +596,7 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 			add_table(2,1);
 			{
 				add_component(&speed_restricted);
-				const tunnel_t *tunnel = gr ? gr->find<tunnel_t>() : NULL;
-				if (tunnel) {
+				if( tunnel ) {
 					if (way->get_max_speed() == tunnel->get_desc()->get_topspeed() || tunnel->get_desc()->get_topspeed_gradient_1() || tunnel->get_desc()->get_topspeed_gradient_2())
 					{
 						new_component<gui_label_t>("(speed_restricted_by_tunnel)", SYSCOL_TEXT_STRONG);
@@ -854,36 +883,92 @@ void way_info_t::update()
 
 		cont.new_component<gui_label_t>("Max. speed:");
 
+		bool has_electrification_speed_limit = false;
+
 		cont.add_table(2,1);
-		if(way1->get_desc()->get_topspeed() > way1->get_max_speed()){
+		PIXVAL speed_text_color = SYSCOL_TEXT;
+		if(way1->get_desc()->get_topspeed() > way1->get_max_speed(false)){
 			cont.add_component(&speed_restricted);
+			if (!skinverwaltung_t::alerts) {
+				// to support paksets that do not have alert symbols
+				speed_text_color = COL_CAUTION;
+			}
 		}
 		else {
 			cont.new_component<gui_empty_t>();
 		}
-		lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
-		lb->buf().printf("%ukm/h", way1->get_max_speed());
+		lb = cont.new_component<gui_label_buf_t>(speed_text_color, gui_label_t::right);
+		lb->buf().printf("%ukm/h", way1->get_max_speed(false));
 		lb->update();
 		cont.end_table();
 
+		if (way1->is_electrified() && way1->get_max_speed(false) != way1->get_max_speed(true)) {
+			has_electrification_speed_limit = true;
+		}
+
 		if (way2) {
 			cont.add_table(2,1);
-			if (way2->get_desc()->get_topspeed() > way2->get_max_speed()) {
+			 speed_text_color = SYSCOL_TEXT;
+			if (way2->get_desc()->get_topspeed() > way2->get_max_speed(false)) {
 				cont.add_component(&speed_restricted);
+				if (!skinverwaltung_t::alerts) {
+					speed_text_color = COL_CAUTION;
+				}
 			}
 			else {
 				cont.new_component<gui_empty_t>();
 			}
-			lb = cont.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
-			lb->buf().printf("%ukm/h", way2->get_max_speed());
+			lb = cont.new_component<gui_label_buf_t>(speed_text_color, gui_label_t::right);
+			lb->buf().printf("%ukm/h", way2->get_max_speed(false));
 			lb->update();
 			cont.end_table();
+			if (!has_electrification_speed_limit && way2->is_electrified() && way2->get_max_speed(false) != way2->get_max_speed(true)) {
+				has_electrification_speed_limit = true;
+			}
 		}
 		else {
 			cont.new_component<gui_empty_t>();
 		}
 		cont.new_component<gui_empty_t>(); // for alert
 		cont.new_component<gui_fill_t>();
+
+		if (has_electrification_speed_limit) {
+			// show electrification speed limit
+			cont.new_component<gui_empty_t>();
+			if (way1->is_electrified() && way1->get_max_speed(false) != way1->get_max_speed(true)) {
+				cont.add_table(2,1);
+				{
+					cont.new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
+					lb = cont.new_component<gui_label_buf_t>(COL_WARNING, gui_label_t::right);
+					lb->buf().printf("%ukm/h", way1->get_max_speed(true));
+					lb->update();
+				}
+				cont.end_table();
+			}
+			else {
+				cont.new_component<gui_empty_t>();
+			}
+			if (way2) {
+				if (way2->is_electrified() && way2->get_max_speed(false) != way2->get_max_speed(true)) {
+					cont.add_table(2, 1);
+					{
+						cont.new_component<gui_image_t>(skinverwaltung_t::electricity->get_image_id(0), 0, ALIGN_NONE, true);
+						lb = cont.new_component<gui_label_buf_t>(COL_WARNING, gui_label_t::right);
+						lb->buf().printf("%ukm/h", way2->get_max_speed(true));
+						lb->update();
+					}
+					cont.end_table();
+				}
+				else {
+					cont.new_component<gui_empty_t>();
+				}
+			}
+			else {
+				cont.new_component<gui_empty_t>();
+			}
+			cont.new_component<gui_empty_t>(); // for alert
+			cont.new_component<gui_fill_t>();
+		}
 
 		// weight limit
 		if (way1->get_desc()->get_styp() == type_elevated || way1->get_waytype() == air_wt || way1->get_waytype() == water_wt
@@ -1090,30 +1175,20 @@ void way_info_t::update_way_info()
 
 	if(has_road){
 		cont_road_routes.remove_all();
-		cont_road_routes.add_table(3,0)->set_spacing(scr_size(D_H_SPACE, 0));
+
+		cont_road_routes.add_component(&lb_city_count);
+		cont_road_routes.add_table(3+(!welt->get_settings().regions.empty()),0)->set_spacing(scr_size(D_H_SPACE, 0));
 		weg_t *road = way1->get_waytype() == road_wt ? way1 : way2;
 		uint32 cities_count = 0;
-		uint32 buildings_count = 0;
+		building_list.clear();
 		for(uint8 i=0;i<5;i++) {
 			for(uint32 j=0;j<road->private_car_routes[road->private_car_routes_currently_reading_element][i].get_count();j++){
 				const koord dest = road->private_car_routes[road->private_car_routes_currently_reading_element][i][j];
 				const grund_t* gr_temp = welt->lookup_kartenboden(dest);
-				const gebaeude_t* building = gr_temp ? gr_temp->get_building() : NULL;
-				if (building)
-				{
-					buildings_count++;
-	#ifdef DEBUG
-					cont_road_routes.new_component<gui_margin_t>(10);
-					cont_road_routes.new_component<gui_label_t>(translator::translate(building->get_individual_name()));
-					gui_label_buf_t *lb = cont_road_routes.new_component<gui_label_buf_t>();
-					if (building->get_stadt() != NULL) {
-						lb->buf().append(building->get_stadt()->get_name());
-					}
-					if (!welt->get_settings().regions.empty()) {
-						lb->buf().printf(" (%s)", translator::translate(welt->get_region_name(building->get_pos().get_2d()).c_str()));
-					}
-					lb->update();
-	#endif
+
+				if( gr_temp && gr_temp->get_building() ){
+					building_list.append(dest);
+					continue;
 				}
 				else {
 					dbg->message("way_info_t::update_way_info()", "Building that is a destination of a road route not found");
@@ -1127,16 +1202,18 @@ void way_info_t::update_way_info()
 					b->set_typ(button_t::posbutton_automatic);
 					b->set_targetpos(dest_city->get_pos());
 
-					gui_label_buf_t *lb_city = cont_road_routes.new_component<gui_label_buf_t>();
-					lb_city->buf().append(dest_city->get_name());
+					cont_road_routes.new_component<gui_label_t>(dest_city->get_name());
+
+					// region
 					if (!welt->get_settings().regions.empty()) {
-						lb_city->buf().printf(" (%s)", translator::translate(welt->get_region_name(dest_city->get_pos()).c_str()));
+						gui_label_buf_t *lb_region = cont_road_routes.new_component<gui_label_buf_t>();
+						lb_region->buf().printf(" (%s)", translator::translate(welt->get_region_name(dest_city->get_pos()).c_str()));
+						lb_region->update();
 					}
-					lb_city->update();
 
 					// distance
 					const uint32 distance = shortest_distance(gr->get_pos().get_2d(), dest_city->get_pos()) * welt->get_settings().get_meters_per_tile();
-					lb_city = cont_road_routes.new_component<gui_label_buf_t>();
+					gui_label_buf_t *lb_city = cont_road_routes.new_component<gui_label_buf_t>();
 					if (distance < 1000) {
 						lb_city->buf().printf("%um", distance);
 					}
@@ -1151,14 +1228,61 @@ void way_info_t::update_way_info()
 
 			}
 		}
+		lb_city_count.buf().printf(translator::translate("%u cities"), cities_count);
+		lb_city_count.update();
 
 		cont_road_routes.end_table();
 
 		cont_road_routes.new_component<gui_empty_t>();
 
 		gui_label_buf_t *lb = cont_road_routes.new_component<gui_label_buf_t>();
-		lb->buf().printf("%u buildings", buildings_count);
+		lb->buf().printf("%u buildings", building_list.get_count());
 		lb->update();
+
+		if (building_list.get_count()) {
+			cont_road_routes.add_table(4+(!welt->get_settings().regions.empty()),0)->set_spacing(scr_size(D_H_SPACE,0));
+			{
+				FOR(vector_tpl<koord>, k, building_list) {
+					const gebaeude_t* building = welt->lookup_kartenboden(k)->get_building();
+					button_t *b = cont_road_routes.new_component<button_t>();
+					b->set_typ(button_t::posbutton_automatic);
+					b->set_targetpos(k);
+					cont_road_routes.new_component<gui_label_t>(translator::translate(building->get_individual_name()));
+
+					if (building->get_stadt() != NULL) {
+						cont_road_routes.new_component<gui_label_t>(building->get_stadt()->get_name());
+					}
+					else {
+						cont_road_routes.new_component<gui_empty_t>();
+					}
+
+					// region
+					if (!welt->get_settings().regions.empty()) {
+						lb = cont_road_routes.new_component<gui_label_buf_t>();
+						lb->buf().printf(" (%s)", translator::translate(welt->get_region_name(k).c_str()));
+						lb->update();
+					}
+
+					// distance
+					const uint32 distance = shortest_distance(gr->get_pos().get_2d(), k) * welt->get_settings().get_meters_per_tile();
+					lb = cont_road_routes.new_component<gui_label_buf_t>();
+					if (distance < 1000) {
+						lb->buf().printf("%um", distance);
+					}
+					else if (distance < 20000) {
+						lb->buf().printf("%.1fkm", (double)distance / 1000.0);
+					}
+					else {
+						lb->buf().printf("%ukm", distance / 1000);
+					}
+					lb->update();
+
+				}
+			}
+			cont_road_routes.end_table();
+		}
+
+
 	}
 }
 

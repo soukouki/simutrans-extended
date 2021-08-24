@@ -60,6 +60,10 @@ class way_info_t : public gui_frame_t, public action_listener_t
 	gui_label_buf_t lb_is_reserved, lb_reserved_convoy, lb_signal_wm, lb_reserved_cnv_speed, lb_reserved_cnv_distance;
 	gui_image_t speed_restricted;
 
+	// for road route info
+	gui_label_buf_t lb_city_count;
+	vector_tpl<koord> building_list;
+
 	void init();
 	void init_tabs();
 	void update();
