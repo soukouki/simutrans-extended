@@ -855,7 +855,7 @@ void way_info_t::update()
 		cont.new_component<gui_label_t>("Max. speed:");
 
 		cont.add_table(2,1);
-		if(way1->get_desc()->get_topspeed() > way1->get_max_speed(false)){
+		if(way1->get_desc()->get_topspeed() > way1->get_max_speed()){
 			cont.add_component(&speed_restricted);
 		}
 		else {
@@ -868,7 +868,7 @@ void way_info_t::update()
 
 		if (way2) {
 			cont.add_table(2,1);
-			if (way2->get_desc()->get_topspeed() > way2->get_max_speed(false)) {
+			if (way2->get_desc()->get_topspeed() > way2->get_max_speed()) {
 				cont.add_component(&speed_restricted);
 			}
 			else {
