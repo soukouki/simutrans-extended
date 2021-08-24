@@ -2695,7 +2695,6 @@
     <ClInclude Include="gui\citylist_frame_t.h" />
     <ClInclude Include="gui\citylist_stats_t.h" />
     <ClInclude Include="gui\climates.h" />
-    <ClInclude Include="gui\colors.h" />
     <ClInclude Include="gui\convoi_detail_t.h" />
     <ClInclude Include="gui\convoi_filter_frame.h" />
     <ClInclude Include="gui\convoi_frame.h" />
