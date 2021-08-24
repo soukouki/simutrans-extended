@@ -1263,8 +1263,6 @@ Leitung
 送電線
 length: %d
 建設距離: %d
-letzen Monat: diesen Monat:
-先月:　　　　　　　　　今月:
 Line
 路線
 Line Filter
@@ -2209,7 +2207,7 @@ Zu nah am Kartenrand
 #___________________________Simutrans Extended Texts____________________________
 #_________________________________program_text__________________________________
 #_________________________________program_text__________________________________
- %1.2f$/mon)
+ %1.2f$/mon
 %1.2f$/月
  from %s
  (%sから)
@@ -4115,10 +4113,10 @@ Passengers %d %c, %d %c, %d no route
 旅客の評価 %d %c, %d %c, %d 経路無し
 Passengers %d %s, %d %s, %d no route
 旅客の評価 %d %s, %d %s, %d 経路無し
-Passengers %d %c, %d %c, %d no route, %d too slow
-旅客の評価 %d %c, %d %c, %d 経路無し, %d 許容時間超過
-Passengers %d %s, %d %s, %d no route, %d too slow
-旅客の評価 %d %s, %d %s, %d 経路無し, %d 許容時間超過
+#Passengers %d %c, %d %c, %d no route, %d too slow
+#旅客の評価 %d %c, %d %c, %d 経路無し, %d 許容時間超過
+#Passengers %d %s, %d %s, %d no route, %d too slow
+#旅客の評価 %d %s, %d %s, %d 経路無し, %d 許容時間超過
 Unhappy
 不幸せ
 The number of passengers who have left because of overcrowding or excess waiting
@@ -4127,8 +4125,6 @@ Arbeiter aus:
 労働者居住地:
 No Route
 経路無し
-Welcome to Simutrans-Experimental, a game created by Hj. Malthaner and the Simutrans community, and modified by James E. Petts and the Simutrans community
-ようこそSimutrans-Extendedへ! Simutrans-StandardはHj. MalthanerとSimutransコミュニティによって開発されました。Simutrans-ExtendedはSimutrans-Standardを元にしてJames E. PettsとSimutransコミュニティによって開発されました。
 Usage/Output
 使用量/発電量
 Vehicle Name
@@ -4173,3 +4169,9 @@ Power: %4d kW\n
 #所要
 #cl_txt_sort
 #並び替え:
+#letzen Monat: diesen Monat:
+#先月:　　　　　　　　　今月:
+#\nMax. axle load:
+#\n軸重制限:
+#\nMax. weight:
+#重量制限:
