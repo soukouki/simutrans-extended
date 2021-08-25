@@ -152,9 +152,9 @@ void gui_city_stats_t::update_table()
 
 				bandgraph.clear();
 				// link with hist_type_color
-				bandgraph.add_color_value(&num[0], color_idx_to_rgb(COL_PASSENGERS), true);
-				bandgraph.add_color_value(&num[1], color_idx_to_rgb(COL_CAR_OWNERSHIP), true);
-				bandgraph.add_color_value(&num[2], color_idx_to_rgb(45), true); // walked
+				bandgraph.add_color_value(&num[0], color_idx_to_rgb(COL_DODGER_BLUE), true);
+				bandgraph.add_color_value(&num[1], color_idx_to_rgb(COL_TRAFFIC), true);
+				bandgraph.add_color_value(&num[2], color_idx_to_rgb(COL_WARKED), true); // walked
 				bandgraph.add_color_value(&num[3], color_idx_to_rgb(COL_RED));
 				add_component(&bandgraph);
 				bandgraph.set_size(scr_size((sum*L_MAX_GRAPH_WIDTH/3 + citylist_stats_t::world_max_value-1) / citylist_stats_t::world_max_value, D_LABEL_HEIGHT*2/3));
