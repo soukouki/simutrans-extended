@@ -28,6 +28,7 @@ class gui_city_minimap_t;
 
 #define PAX_DEST_MIN_SIZE (16)      ///< minimum width/height of the minimap
 #define PAX_DEST_VERTICAL (4.0/3.0) ///< aspect factor where minimaps change to over/under instead of left/right
+#define PAX_DEST_COLOR_LEGENDS 8
 
 /**
  * Component to show both passenger destination minimaps
@@ -167,11 +168,12 @@ private:
 
 	gui_textinput_t name_input;    ///< Input field where the name of the city can be changed
 	button_t allow_growth;         ///< Checkbox to enable/disable city growth
-	button_t b_show_contour;
+	button_t bt_show_contour, bt_show_hide_legend;
+	gui_label_t lb_collapsed;
 	gui_label_buf_t lb_size, lb_buildings, lb_border, lb_powerdemand;
 
 	gui_tab_panel_t year_month_tabs, tabs;
-	gui_aligned_container_t container_chart, container_year, container_month, cont_destination_map;
+	gui_aligned_container_t container_chart, container_year, container_month, cont_destination_map, cont_minimap_legend;
 	gui_chart_t chart, mchart;                ///< Year and month history charts
 
 	gui_city_minimap_t pax_map;

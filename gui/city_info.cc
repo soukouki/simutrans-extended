@@ -70,6 +70,31 @@ const uint8 hist_type_color[MAX_CITY_HISTORY] =
 };
 
 
+const char *pax_dest_type[PAX_DEST_COLOR_LEGENDS] =
+{
+	"Happy",
+	"too_slow_and_gave_up",
+	"too_slow_and_use_privatecar",
+	"Verkehrsteilnehmer",
+	"Walked",
+	"Turned away",
+	"No route",
+	"destination_unavailable"
+};
+
+const uint8 pax_dest_color[PAX_DEST_COLOR_LEGENDS] =
+{
+	MAP_COL_HAPPY,
+	MAP_COL_TOO_SLOW,
+	MAP_COL_TOO_SLOW_USE_PRIVATECAR,
+	MAP_COL_PRIVATECAR,
+	MAP_COL_WALKED,
+	MAP_COL_OVERCROWDED,
+	MAP_COL_NOROUTE,
+	MAP_COL_UNAVAILABLE
+};
+
+
 city_info_t::city_info_t(stadt_t* city) :
 	gui_frame_t( name, NULL ),
 	city(city),
@@ -185,12 +210,32 @@ void city_info_t::init()
 	// passenger destination mapping
 	cont_destination_map.set_table_layout(1,0);
 	cont_destination_map.add_component(&pax_map);
-	cont_destination_map.new_component<gui_label_t>("Left:last month / Right:this month");
-	b_show_contour.init(button_t::square_state, "Show contour");
-	b_show_contour.set_tooltip("Color-coded terrain according to altitude.");
-	b_show_contour.add_listener(this);
-	b_show_contour.pressed=true;
-	cont_destination_map.add_component(&b_show_contour);
+
+	bt_show_contour.init(button_t::square_state, "Show contour");
+	bt_show_contour.set_tooltip("Color-coded terrain according to altitude.");
+	bt_show_contour.add_listener(this);
+	bt_show_contour.pressed=true;
+	cont_destination_map.add_component(&bt_show_contour);
+
+	cont_destination_map.add_table(3,1)->set_alignment(ALIGN_TOP);
+	{
+		bt_show_hide_legend.init(button_t::roundbox_state, "+");
+		bt_show_hide_legend.set_width(display_get_char_width('+') + gui_theme_t::gui_button_text_offset.w + gui_theme_t::gui_button_text_offset_right.x);
+		bt_show_hide_legend.add_listener(this);
+		cont_destination_map.add_component(&bt_show_hide_legend);
+
+		lb_collapsed.set_text("Open the color legend");
+		cont_destination_map.add_component(&lb_collapsed);
+
+		cont_minimap_legend.set_table_layout(2,0);
+		for (uint8 i = 0; i < PAX_DEST_COLOR_LEGENDS; i++) {
+			cont_minimap_legend.new_component<gui_colorbox_t>()->init(color_idx_to_rgb(pax_dest_color[i]), scr_size(D_INDICATOR_BOX_WIDTH, D_INDICATOR_BOX_HEIGHT), true, false);
+			cont_minimap_legend.new_component<gui_label_t>(pax_dest_type[i]);
+		}
+		cont_destination_map.add_component(&cont_minimap_legend);
+	}
+	cont_destination_map.end_table();
+	cont_minimap_legend.set_visible(false);
 
 	update_stats();
 
@@ -527,10 +572,17 @@ bool city_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		// send rename command if necessary
 		rename_city();
 	}
-	if(  comp==&b_show_contour  ) {
+	if(  comp==&bt_show_contour  ) {
 		// terrain heights color scale
-		b_show_contour.pressed = !b_show_contour.pressed;
-		pax_map.set_show_contour(b_show_contour.pressed);
+		bt_show_contour.pressed = !bt_show_contour.pressed;
+		pax_map.set_show_contour(bt_show_contour.pressed);
+		return true;
+	}
+	if(  comp==&bt_show_hide_legend  ) {
+		bt_show_hide_legend.pressed = !bt_show_hide_legend.pressed;
+		bt_show_hide_legend.set_text(bt_show_hide_legend.pressed ? "-" : "+");
+		lb_collapsed.set_visible(!bt_show_hide_legend.pressed);
+		cont_minimap_legend.set_visible(bt_show_hide_legend.pressed);
 		return true;
 	}
 	return false;
