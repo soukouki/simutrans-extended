@@ -97,15 +97,6 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define COL_BUILDING        color_idx_to_rgb(COL_GREY3)
 #define COL_VEHICLE         color_idx_to_rgb(COL_YELLOW)
 #define MAP_COL_NODATA      color_idx_to_rgb(218)
-// passenger destination mapping
-#define MAP_COL_HAPPY       color_idx_to_rgb(COL_YELLOW)
-#define MAP_COL_TOO_SLOW    color_idx_to_rgb(COL_PURPLE)
-#define MAP_COL_TOO_SLOW_USE_PRIVATECAR color_idx_to_rgb(COL_LIGHT_PURPLE)
-#define MAP_COL_NOROUTE     color_idx_to_rgb(COL_DARK_ORANGE)
-#define MAP_COL_UNAVAILABLE color_idx_to_rgb(COL_DARK_RED)
-#define MAP_COL_WALKED      color_idx_to_rgb(COL_DARK_YELLOW)
-#define MAP_COL_OVERCROWDED color_idx_to_rgb(COL_RED)
-#define MAP_COL_PRIVATECAR  color_idx_to_rgb(COL_TURQUOISE)
 
 #define COL_DANGER          color_idx_to_rgb(COL_RED)
 #define COL_WARNING         color_idx_to_rgb(COL_ORANGE)
@@ -221,5 +212,15 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define COL_NO_ROUTE        COL_RED
 #define COL_MAIL_DELIVERED  COL_DARK_GREEN+1
 #define COL_MAIL_NOROUTE    COL_BRIGHT_ORANGE
+// passenger destination mapping
+// Note the relation to the base color of the map - The land is dark green, the station is red, the tracks are dark red, the river is blue.
+#define MAP_COL_HAPPY       COL_GREEN
+#define MAP_COL_TOO_SLOW    170
+#define MAP_COL_TOO_SLOW_USE_PRIVATECAR COL_TOO_SLOW
+#define MAP_COL_PRIVATECAR  COL_TRAFFIC
+#define MAP_COL_WALKED      52
+#define MAP_COL_OVERCROWDED COL_PURPLE
+#define MAP_COL_NOROUTE     COL_RED+3
+#define MAP_COL_UNAVAILABLE COL_DARK_RED
 
 #endif
