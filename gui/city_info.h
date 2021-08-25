@@ -39,6 +39,7 @@ class gui_city_minimap_t : public gui_world_component_t
 	scr_coord minimap2_offset;     ///< position offset of second minimap
 	array2d_tpl<PIXVAL> pax_dest_old, pax_dest_new;
 	uint32 pax_destinations_last_change;
+	bool show_contour=true;
 
 	void init_pax_dest(array2d_tpl<PIXVAL> &pax_dest);
 	void add_pax_dest(array2d_tpl<PIXVAL> &pax_dest, const sparse_tpl<PIXVAL>* city_pax_dest);
@@ -55,6 +56,8 @@ public:
 
 	// for loading
 	void set_city(stadt_t* c) { city = c; }
+
+	void set_show_contour(bool yesno) { show_contour = yesno; init_pax_dest(pax_dest_new); }
 
 	// set size of minimap, decide for horizontal or vertical arrangement
 	void set_size(scr_size size) OVERRIDE
@@ -164,6 +167,7 @@ private:
 
 	gui_textinput_t name_input;    ///< Input field where the name of the city can be changed
 	button_t allow_growth;         ///< Checkbox to enable/disable city growth
+	button_t b_show_contour;
 	gui_label_buf_t lb_size, lb_buildings, lb_border, lb_powerdemand;
 
 	gui_tab_panel_t year_month_tabs, tabs;

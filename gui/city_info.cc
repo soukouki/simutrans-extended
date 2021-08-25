@@ -186,6 +186,11 @@ void city_info_t::init()
 	cont_destination_map.set_table_layout(1,0);
 	cont_destination_map.add_component(&pax_map);
 	cont_destination_map.new_component<gui_label_t>("Left:last month / Right:this month");
+	b_show_contour.init(button_t::square_state, "Show contour");
+	b_show_contour.set_tooltip("Color-coded terrain according to altitude.");
+	b_show_contour.add_listener(this);
+	b_show_contour.pressed=true;
+	cont_destination_map.add_component(&b_show_contour);
 
 	update_stats();
 
@@ -268,7 +273,7 @@ void gui_city_minimap_t::init_pax_dest( array2d_tpl<PIXVAL> &pax_dest )
 	for(  sint16 y = 0;  y < minimaps_size.h;  y++  ) {
 		for(  sint16 x = 0;  x < minimaps_size.w;  x++  ) {
 			const grund_t *gr = welt->lookup_kartenboden( koord( (x * size_x) / minimaps_size.w, (y * size_y) / minimaps_size.h ) );
-			pax_dest.at(x,y) = minimap_t::calc_ground_color(gr);
+			pax_dest.at(x,y) = minimap_t::calc_ground_color(gr, show_contour);
 		}
 	}
 }
@@ -521,6 +526,12 @@ bool city_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 	if(  comp==&name_input  ) {
 		// send rename command if necessary
 		rename_city();
+	}
+	if(  comp==&b_show_contour  ) {
+		// terrain heights color scale
+		b_show_contour.pressed = !b_show_contour.pressed;
+		pax_map.set_show_contour(b_show_contour.pressed);
+		return true;
 	}
 	return false;
 }
