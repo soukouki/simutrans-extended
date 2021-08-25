@@ -221,8 +221,6 @@ void city_info_t::init()
 
 		new_component<gui_margin_t>(LINESPACE/3);
 
-		add_component(&lb_unemployed);
-		add_component(&lb_homeless);
 		add_component(&lb_powerdemand);
 
 		new_component<gui_margin_t>(LINESPACE/3);
@@ -429,9 +427,6 @@ void city_info_t::update_labels()
 	const koord lr = c->get_rechtsunten();
 	lb_border.buf().printf( "%d,%d - %d,%d", ul.x, ul.y, lr.x , lr.y); lb_border.update();
 
-	lb_unemployed.buf().printf("%s: %d", translator::translate("Unemployed"), c->get_unemployed()); lb_unemployed.update();
-	lb_homeless.buf().printf("%s: %d", translator::translate("Homeless"), c->get_homeless());       lb_homeless.update();
-
 	lb_powerdemand.buf().printf("%s: ", translator::translate("Power demand"));
 	const uint32 power_demand = (c->get_power_demand())>>POWER_TO_MW;
 	if(power_demand == 0)
@@ -477,7 +472,6 @@ void city_info_t::update_stats()
 		cont_city_stats.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered)->buf().append(city->get_city_visitor_demand());
 		cont_city_stats.new_component<gui_empty_t>();
 
-#ifdef DEBUG
 		// demand
 		cont_city_stats.new_component<gui_margin_t>(D_MARGIN_LEFT);
 		cont_city_stats.new_component<gui_label_t>("ci_demands");
@@ -485,7 +479,6 @@ void city_info_t::update_stats()
 		cont_city_stats.new_component<gui_label_buf_t>(city->get_unemployed()<0 ? SYSCOL_DOWN_TRIANGLE : SYSCOL_UP_TRIANGLE, gui_label_t::centered)->buf().append(city->get_unemployed());
 		cont_city_stats.new_component<gui_label_t>("-", SYSCOL_TEXT_WEAK, gui_label_t::centered);
 		cont_city_stats.new_component<gui_empty_t>();
-#endif // DEBUG
 
 		// classes
 		for (uint8 c = 0; c < goods_manager_t::passengers->get_number_of_classes(); c++) {
