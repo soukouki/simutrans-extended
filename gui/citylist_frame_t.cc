@@ -29,7 +29,7 @@ const char *citylist_frame_t::sort_text[citylist_stats_t::SORT_MODES] = {
 	"Growth",
 	"Jobs",
 	"Passagierrate",
-	"by_public_transport_users",
+	"Public transport users",
 	"ratio_pax",
 	"Mail sent this year:",
 	"ratio_mail",
@@ -39,8 +39,8 @@ const char *citylist_frame_t::sort_text[citylist_stats_t::SORT_MODES] = {
 	"Population density",
 	"by_region"
 #ifdef DEBUG
-	, "by_job_demand"
-	, "by_res_demand"
+	, "Unemployed"
+	, "Homeless"
 #endif // DEBUG
 };
 

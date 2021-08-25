@@ -481,8 +481,8 @@ void city_info_t::update_stats()
 		// demand
 		cont_city_stats.new_component<gui_margin_t>(D_MARGIN_LEFT);
 		cont_city_stats.new_component<gui_label_t>("ci_demands");
-		cont_city_stats.new_component<gui_label_buf_t>(city->get_homeless()<0 ? COL_DANGER : SYSCOL_TEXT, gui_label_t::centered)->buf().append(city->get_homeless());
-		cont_city_stats.new_component<gui_label_buf_t>(city->get_unemployed()<0 ? COL_DANGER : SYSCOL_TEXT, gui_label_t::centered)->buf().append(city->get_unemployed());
+		cont_city_stats.new_component<gui_label_buf_t>(city->get_homeless() < 0 ? SYSCOL_DOWN_TRIANGLE : SYSCOL_UP_TRIANGLE, gui_label_t::centered)->buf().append(city->get_homeless());
+		cont_city_stats.new_component<gui_label_buf_t>(city->get_unemployed()<0 ? SYSCOL_DOWN_TRIANGLE : SYSCOL_UP_TRIANGLE, gui_label_t::centered)->buf().append(city->get_unemployed());
 		cont_city_stats.new_component<gui_label_t>("-", SYSCOL_TEXT_WEAK, gui_label_t::centered);
 		cont_city_stats.new_component<gui_empty_t>();
 #endif // DEBUG
@@ -491,9 +491,9 @@ void city_info_t::update_stats()
 		for (uint8 c = 0; c < goods_manager_t::passengers->get_number_of_classes(); c++) {
 			cont_city_stats.new_component<gui_margin_t>(D_MARGIN_LEFT);
 			cont_city_stats.new_component<gui_label_t>(goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_PAS, c));
-			cont_city_stats.new_component<gui_data_bar_t>()->init(city->get_population_by_class(c), city->get_city_population(), value_cell_width*2, color_idx_to_rgb(COL_DARK_GREEN+1), false, true);
-			cont_city_stats.new_component<gui_data_bar_t>()->init(city->get_jobs_by_class(c), city->get_city_jobs(), value_cell_width*2, color_idx_to_rgb(COL_COMMUTER), false, true);
-			cont_city_stats.new_component<gui_data_bar_t>()->init(city->get_visitor_demand_by_class(c), city->get_city_visitor_demand(), value_cell_width*2, goods_manager_t::passengers->get_color(), false, true);
+			cont_city_stats.new_component<gui_data_bar_t>()->init((sint64)city->get_population_by_class(c),     city->get_city_population(),     value_cell_width*2, color_idx_to_rgb(COL_DARK_GREEN+1),       false, true);
+			cont_city_stats.new_component<gui_data_bar_t>()->init((sint64)city->get_jobs_by_class(c),           city->get_city_jobs(),           value_cell_width*2, color_idx_to_rgb(COL_COMMUTER),           false, true);
+			cont_city_stats.new_component<gui_data_bar_t>()->init((sint64)city->get_visitor_demand_by_class(c), city->get_city_visitor_demand(), value_cell_width*2, goods_manager_t::passengers->get_color(), false, true);
 			cont_city_stats.new_component<gui_fill_t>();
 		}
 
