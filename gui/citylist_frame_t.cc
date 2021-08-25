@@ -143,7 +143,7 @@ citylist_frame_t::citylist_frame_t() :
 {
 	set_table_layout(1, 0);
 
-	add_table(3, 0);
+	add_table(3,1);
 	{
 		add_component(&citizens);
 
@@ -214,12 +214,12 @@ citylist_frame_t::citylist_frame_t() :
 		list.add_table(3,1);
 		{
 			list.new_component<gui_margin_t>(LINESPACE);
-			if (!welt->get_settings().regions.empty()) {
+			if (!world()->get_settings().regions.empty()) {
 				//region_selector
 				region_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All regions"), SYSCOL_TEXT);
 
-				for (uint8 r = 0; r < welt->get_settings().regions.get_count(); r++) {
-					region_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(welt->get_settings().regions[r].name.c_str()), SYSCOL_TEXT);
+				for (uint8 r = 0; r < world()->get_settings().regions.get_count(); r++) {
+					region_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(world()->get_settings().regions[r].name.c_str()), SYSCOL_TEXT);
 				}
 				region_selector.set_selection(citylist_stats_t::region_filter);
 				region_selector.set_width_fixed(true);
@@ -266,7 +266,7 @@ citylist_frame_t::citylist_frame_t() :
 
 	container_year.add_table(4, 0);
 	for (int i = 0; i < karte_t::MAX_WORLD_COST; i++) {
-		sint16 curve = chart.add_curve(color_idx_to_rgb(hist_type_color[i]), welt->get_finance_history_year(), karte_t::MAX_WORLD_COST, i, MAX_WORLD_HISTORY_YEARS, hist_type_type[i], false, true, (i == 1) ? 1 : 0, 0, hist_type_type[i]==PERCENT ? gui_chart_t::cross : gui_chart_t::square);
+		sint16 curve = chart.add_curve(color_idx_to_rgb(hist_type_color[i]), world()->get_finance_history_year(), karte_t::MAX_WORLD_COST, i, MAX_WORLD_HISTORY_YEARS, hist_type_type[i], false, true, (i == 1) ? 1 : 0, 0, hist_type_type[i]==PERCENT ? gui_chart_t::cross : gui_chart_t::square);
 		// add button
 		buttons[i] = container_year.new_component<button_t>();
 		buttons[i]->init(button_t::box_state_automatic | button_t::flexible, hist_type[i]);
@@ -287,7 +287,7 @@ citylist_frame_t::citylist_frame_t() :
 
 	container_month.add_table(4,0);
 	for (int i = 0; i<karte_t::MAX_WORLD_COST; i++) {
-		sint16 curve = mchart.add_curve(color_idx_to_rgb(hist_type_color[i]), welt->get_finance_history_month(), karte_t::MAX_WORLD_COST, i, MAX_WORLD_HISTORY_MONTHS, hist_type_type[i], false, true, (i==1) ? 1 : 0 );
+		sint16 curve = mchart.add_curve(color_idx_to_rgb(hist_type_color[i]), world()->get_finance_history_month(), karte_t::MAX_WORLD_COST, i, MAX_WORLD_HISTORY_MONTHS, hist_type_type[i], false, true, (i==1) ? 1 : 0 );
 
 		// add button
 		container_month.add_component(buttons[i]);
@@ -306,10 +306,10 @@ citylist_frame_t::citylist_frame_t() :
 void citylist_frame_t::update_label()
 {
 	citizens.buf().append(translator::translate("Total inhabitants:"));
-	citizens.buf().append(welt->get_finance_history_month()[0], 0);
+	citizens.buf().append(world()->get_finance_history_month()[0], 0);
 	citizens.update();
 
-	fluctuation_world.set_value(welt->get_finance_history_month(1, karte_t::WORLD_GROWTH));
+	fluctuation_world.set_value(world()->get_finance_history_month(1, karte_t::WORLD_GROWTH));
 
 #ifdef DEBUG
 	const sint64 world_jobs = world()->get_finance_history_month(0, karte_t::WORLD_JOBS);
@@ -337,7 +337,7 @@ void citylist_frame_t::fill_list()
 	scrolly.clear_elements();
 	strcpy(last_name_filter, name_filter);
 	FOR(const weighted_vector_tpl<stadt_t *>, city, world()->get_cities()) {
-		if (citylist_stats_t::region_filter && (citylist_stats_t::region_filter-1) != welt->get_region(city->get_pos())) {
+		if (citylist_stats_t::region_filter && (citylist_stats_t::region_filter-1) != world()->get_region(city->get_pos())) {
 			continue;
 		}
 		if (last_name_filter[0] != 0 && !utf8caseutf8(city->get_name(), last_name_filter)) {
@@ -345,7 +345,7 @@ void citylist_frame_t::fill_list()
 		}
 
 		if (!citylist_stats_t::filter_own_network ||
-			(citylist_stats_t::filter_own_network && city->is_within_players_network(welt->get_active_player()))) {
+			(citylist_stats_t::filter_own_network && city->is_within_players_network(world()->get_active_player()))) {
 			scrolly.new_component<citylist_stats_t>(city);
 		}
 	}
@@ -393,7 +393,7 @@ bool citylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 
 void citylist_frame_t::draw(scr_coord pos, scr_size size)
 {
-	welt->update_history();
+	world()->update_history();
 
 	if(  (sint32)world()->get_cities().get_count() != scrolly.get_count()  ||  strcmp(last_name_filter, name_filter)  ) {
 		fill_list();
