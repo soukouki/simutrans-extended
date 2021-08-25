@@ -97,6 +97,15 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define COL_BUILDING        color_idx_to_rgb(COL_GREY3)
 #define COL_VEHICLE         color_idx_to_rgb(COL_YELLOW)
 #define MAP_COL_NODATA      color_idx_to_rgb(218)
+// passenger destination mapping
+#define MAP_COL_HAPPY       color_idx_to_rgb(COL_YELLOW)
+#define MAP_COL_TOO_SLOW    color_idx_to_rgb(COL_PURPLE)
+#define MAP_COL_TOO_SLOW_USE_PRIVATECAR color_idx_to_rgb(COL_LIGHT_PURPLE)
+#define MAP_COL_NOROUTE     color_idx_to_rgb(COL_DARK_ORANGE)
+#define MAP_COL_UNAVAILABLE color_idx_to_rgb(COL_DARK_RED)
+#define MAP_COL_WALKED      color_idx_to_rgb(COL_DARK_YELLOW)
+#define MAP_COL_OVERCROWDED color_idx_to_rgb(COL_RED)
+#define MAP_COL_PRIVATECAR  color_idx_to_rgb(COL_TURQUOISE)
 
 #define COL_DANGER          color_idx_to_rgb(COL_RED)
 #define COL_WARNING         color_idx_to_rgb(COL_ORANGE)
