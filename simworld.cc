@@ -42,7 +42,7 @@
 #include "gui/simwin.h"
 #include "simworld.h"
 
-#include "vehicle/simpeople.h"
+#include "vehicle/pedestrian.h"
 
 #include "tpl/vector_tpl.h"
 #include "tpl/binary_heap_tpl.h"
@@ -53,7 +53,7 @@
 #include "boden/wasser.h"
 
 #include "old_blockmanager.h"
-#include "vehicle/simvehicle.h"
+#include "vehicle/vehicle.h"
 #include "vehicle/simroadtraffic.h"
 #include "vehicle/movingobj.h"
 #include "boden/wege/schiene.h"
@@ -5533,12 +5533,18 @@ void karte_t::recalc_average_speed(bool skip_messages)
 		}
 		else {
 			DBG_MESSAGE("karte_t::new_month()","Month %d has started", last_month);
-			city_road = way_builder_t::weg_search(road_wt, 50, get_timeline_year_month(), type_flat);
+			city_road = way_builder_t::weg_search(road_wt, settings.get_town_road_speed_limit(), get_timeline_year_month(), type_flat);
 		}
 	}
 	else {
 		// defaults
-		city_road = way_builder_t::weg_search(road_wt, 50, get_timeline_year_month(), 5, type_flat, 25000000);
+		if (way_desc_t const* city_road_test = settings.get_city_road_type(0)) {
+			city_road = city_road_test;
+		}
+		else {
+			DBG_MESSAGE("karte_t::new_month()", "No optimal city road was found with timeline setting is off");
+			city_road = way_builder_t::weg_search(road_wt, settings.get_town_road_speed_limit(), 0, 5, type_flat, 0);
+		}
 	}
 }
 

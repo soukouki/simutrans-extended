@@ -250,7 +250,11 @@ void display_colorbox_with_tooltip(scr_coord_val, scr_coord_val, scr_coord_val, 
 {
 }
 
-void display_veh_form_wh_clip_rgb(scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, bool, uint8, uint8, bool CLIP_NUM_DEF_NOUSE)
+void display_veh_form_wh_clip_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, bool, bool, uint8, uint8 CLIP_NUM_DEF_NOUSE)
+{
+}
+
+void display_convoy_arrow_wh_clip_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
@@ -427,6 +431,10 @@ void display_filled_circle_rgb( scr_coord_val, scr_coord_val, int, const PIXVAL 
 }
 
 void display_right_triangle_rgb(scr_coord_val, scr_coord_val, scr_coord_val, const PIXVAL, const bool)
+{
+}
+
+void display_right_pointer_rgb(scr_coord_val, scr_coord_val, uint8, const PIXVAL, const bool)
 {
 }
 
