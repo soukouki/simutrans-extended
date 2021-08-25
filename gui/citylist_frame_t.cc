@@ -39,8 +39,22 @@ const char *citylist_frame_t::sort_text[citylist_stats_t::SORT_MODES] = {
 	"Population density",
 	"by_region"
 #ifdef DEBUG
-	, "by_unemployed"
-	, "by_homeless"
+	, "by_job_demand"
+	, "by_res_demand"
+#endif // DEBUG
+};
+
+const char *citylist_frame_t::display_mode_text[citylist_stats_t::CITYLIST_MODES] =
+{
+	"cl_general",
+	"citicens",
+	"Jobs",
+	"Visitor demand",
+	"pax_traffic",
+	"mail_traffic",
+	"goods_traffic"
+#ifdef DEBUG
+	, "DBG_demands"
 #endif // DEBUG
 };
 
@@ -150,11 +164,18 @@ citylist_frame_t::citylist_frame_t() :
 		// 1st row
 		list.new_component<gui_label_t>("hl_txt_sort");
 
-		list.add_table(2, 1);
+		list.add_table(3,1);
 		{
 			list.new_component<gui_label_t>("Filter:");
 			name_filter_input.set_text(name_filter, lengthof(name_filter));
+			name_filter_input.set_width(D_BUTTON_WIDTH);
 			list.add_component(&name_filter_input);
+
+			filter_within_network.init(button_t::square_state, "Within own network");
+			filter_within_network.set_tooltip("Show only cities within the active player's transportation network");
+			filter_within_network.add_listener(this);
+			filter_within_network.pressed = citylist_stats_t::filter_own_network;
+			list.add_component(&filter_within_network);
 		}
 		list.end_table();
 
@@ -199,11 +220,14 @@ citylist_frame_t::citylist_frame_t() :
 				list.new_component<gui_empty_t>();
 			}
 
-			filter_within_network.init(button_t::square_state, "Within own network");
-			filter_within_network.set_tooltip("Show only cities within the active player's transportation network");
-			filter_within_network.add_listener(this);
-			filter_within_network.pressed = citylist_stats_t::filter_own_network;
-			list.add_component(&filter_within_network);
+			for (uint8 i = 0; i < citylist_stats_t::CITYLIST_MODES; i++) {
+				cb_display_mode.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(display_mode_text[i]), SYSCOL_TEXT);
+			}
+			cb_display_mode.set_selection(citylist_stats_t::display_mode);
+			cb_display_mode.set_width_fixed(true);
+			cb_display_mode.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
+			cb_display_mode.add_listener(this);
+			list.add_component(&cb_display_mode);
 		}
 		list.end_table();
 	}
@@ -314,6 +338,18 @@ bool citylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 		citylist_stats_t::sortreverse = !citylist_stats_t::sortreverse;
 		scrolly.sort(0);
 		sorteddir.pressed = citylist_stats_t::sortreverse;
+	}
+	else if (comp == &cb_display_mode) {
+		int tmp = cb_display_mode.get_selection();
+		if (tmp < 0 || tmp >= cb_display_mode.count_elements())
+		{
+			tmp = 0;
+		}
+		cb_display_mode.set_selection(tmp);
+		citylist_stats_t::display_mode = tmp;
+		citylist_stats_t::recalc_wold_max();
+		scrolly.sort(0);
+		resize(scr_coord(0,0));
 	}
 	else if (comp == &filter_within_network) {
 		citylist_stats_t::filter_own_network = !citylist_stats_t::filter_own_network;

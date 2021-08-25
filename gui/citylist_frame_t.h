@@ -30,13 +30,14 @@ class citylist_frame_t : public gui_frame_t, private action_listener_t
 
  private:
     static const char *sort_text[citylist_stats_t::SORT_MODES];
+	static const char *display_mode_text[citylist_stats_t::CITYLIST_MODES];
 
 	static const char hist_type[karte_t::MAX_WORLD_COST][21];
 	static const char hist_type_tooltip[karte_t::MAX_WORLD_COST][256];
 	static const uint8 hist_type_color[karte_t::MAX_WORLD_COST];
 	static const uint8 hist_type_type[karte_t::MAX_WORLD_COST];
 
-	gui_combobox_t sortedby, region_selector;
+	gui_combobox_t sortedby, region_selector, cb_display_mode;
 	button_t sorteddir;
 	button_t filter_within_network;
 
