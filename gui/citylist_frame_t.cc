@@ -98,11 +98,11 @@ const char citylist_frame_t::hist_type_tooltip[karte_t::MAX_WORLD_COST][256] =
 
 const uint8 citylist_frame_t::hist_type_color[karte_t::MAX_WORLD_COST] =
 {
-	COL_WHITE,
-	COL_GREY6,
-	COL_GREY3,
-	COL_DARK_GREEN,
+	COL_DARK_GREEN+1,
+	COL_COMMUTER,
 	COL_LIGHT_PURPLE,
+	COL_DARK_GREEN,
+	COL_GREY3,
 	71 /*COL_GREEN*/,
 	COL_TURQUOISE,
 	COL_TRAFFIC,
