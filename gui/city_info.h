@@ -18,6 +18,8 @@
 #include "components/gui_button.h"
 #include "components/gui_button_to_chart.h"
 #include "components/gui_tab_panel.h"
+#include "components/gui_scrollpane.h"
+#include "components/gui_speedbar.h"
 
 class stadt_t;
 template <class T> class sparse_tpl;
@@ -37,8 +39,8 @@ private:
 	button_t allow_growth;         ///< Checkbox to enable/disable city growth
 	gui_label_buf_t lb_size, lb_buildings, lb_border, lb_unemployed, lb_homeless, lb_powerdemand;
 
-	gui_tab_panel_t year_month_tabs;
-	gui_aligned_container_t container_year, container_month;
+	gui_tab_panel_t year_month_tabs, tabs;
+	gui_aligned_container_t container_chart, container_year, container_month;
 	gui_chart_t chart, mchart;                ///< Year and month history charts
 
 	gui_city_minimap_t *pax_map;
@@ -53,6 +55,16 @@ private:
 	void reset_city_name();
 
 	void update_labels();
+
+	// stats table
+	gui_aligned_container_t cont_city_stats;
+	gui_scrollpane_t scrolly_stats;
+	gui_bandgraph_t transportation_last_year, transportation_this_year;
+	int transportation_pas[6];
+	// update trigger
+	uint32 old_month = 0;
+	int update_seed = 0;
+	void update_stats();
 
 	void init();
 public:

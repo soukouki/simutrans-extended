@@ -4846,6 +4846,28 @@ uint32 stadt_t::get_population_by_class(uint8 p_class)
 	return sum;
 }
 
+uint32 stadt_t::get_jobs_by_class(uint8 p_class)
+{
+	uint32 sum = 0;
+	for (weighted_vector_tpl<gebaeude_t*>::const_iterator i = buildings.begin(); i != buildings.end(); ++i)
+	{
+		gebaeude_t* building = *i;
+		sum += building->get_adjusted_jobs_by_class(p_class);
+	}
+	return sum;
+}
+
+uint32 stadt_t::get_visitor_demand_by_class(uint8 p_class)
+{
+	uint32 sum = 0;
+	for (weighted_vector_tpl<gebaeude_t*>::const_iterator i = buildings.begin(); i != buildings.end(); ++i)
+	{
+		gebaeude_t* building = *i;
+		sum += building->get_adjusted_visitor_demand_by_class(p_class);
+	}
+	return sum;
+}
+
 
 void stadt_t::add_all_buildings_to_world_list()
 {

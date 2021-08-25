@@ -516,6 +516,8 @@ public:
 
 	uint32 get_buildings()  const { return buildings.get_count(); }
 	uint32 get_population_by_class(uint8 p_class);
+	uint32 get_jobs_by_class(uint8 p_class);
+	uint32 get_visitor_demand_by_class(uint8 p_class);
 	sint32 get_unemployed() const { return bev - arb; }
 	sint32 get_homeless()   const { return bev - won; }
 
