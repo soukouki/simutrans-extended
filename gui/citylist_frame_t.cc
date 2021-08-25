@@ -35,7 +35,7 @@ const char *citylist_frame_t::sort_text[citylist_stats_t::SORT_MODES] = {
 	"ratio_mail",
 	"Goods needed",
 	"ratio_goods",
-	"by_area",
+	"City size",
 	"Population density",
 	"by_region"
 #ifdef DEBUG

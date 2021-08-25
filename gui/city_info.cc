@@ -20,6 +20,7 @@
 #include "components/gui_button_to_chart.h"
 #include "components/gui_image.h"
 #include "components/gui_colorbox.h"
+#include "components/gui_divider.h"
 
 #include "../display/simgraph.h"
 
@@ -116,11 +117,12 @@ void city_info_t::init()
 	name_input.add_listener( this );
 	add_component(&name_input);
 
+	lb_size.set_align(gui_label_t::centered);
+	lb_buildings.set_align(gui_label_t::centered);
+
 	add_table(1,0)->set_alignment(ALIGN_TOP);
 	{
 		add_table(1,0)->set_spacing(scr_size(D_H_SPACE, 0));
-		add_component(&lb_size);
-		add_component(&lb_buildings);
 		add_component(&lb_border);
 
 		new_component<gui_margin_t>(LINESPACE/3);
@@ -353,8 +355,8 @@ void city_info_t::update_labels()
 	stadt_t* const c = city;
 
 	// display city stats
-	lb_size.buf().printf("%s: %.2f %s", translator::translate("City size"), c->get_land_area(), translator::translate("sq. km.")); lb_size.update();
-	lb_buildings.buf().printf("%s:\n%d /%s", translator::translate("Population density"), c->get_population_density(), translator::translate("sq. km.")); lb_buildings.update();
+	lb_size.buf().printf("%.2f %s", c->get_land_area(), translator::translate("sq. km.")); lb_size.update();
+	lb_buildings.buf().printf("%d/%s", c->get_population_density(), translator::translate("sq. km.")); lb_buildings.update();
 
 	const koord ul = c->get_linksoben();
 	const koord lr = c->get_rechtsunten();
@@ -398,16 +400,14 @@ void city_info_t::update_stats()
 		cont_city_stats.new_component<gui_fill_t>();
 
 		// data
-		cont_city_stats.new_component<gui_empty_t>();
-		cont_city_stats.new_component<gui_empty_t>();
+		cont_city_stats.new_component_span<gui_label_t>("Total", 2);
 		cont_city_stats.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered)->buf().append(city->get_city_population());
 		cont_city_stats.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered)->buf().append(city->get_city_jobs());
 		cont_city_stats.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered)->buf().append(city->get_city_visitor_demand());
 		cont_city_stats.new_component<gui_empty_t>();
 
 		// demand
-		cont_city_stats.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		cont_city_stats.new_component<gui_label_t>("ci_demands");
+		cont_city_stats.new_component_span<gui_label_t>("(ci_demands)", 2);
 		cont_city_stats.new_component<gui_label_buf_t>(city->get_homeless() < 0 ? SYSCOL_DOWN_TRIANGLE : SYSCOL_UP_TRIANGLE, gui_label_t::centered)->buf().append(city->get_homeless());
 		cont_city_stats.new_component<gui_label_buf_t>(city->get_unemployed()<0 ? SYSCOL_DOWN_TRIANGLE : SYSCOL_UP_TRIANGLE, gui_label_t::centered)->buf().append(city->get_unemployed());
 		cont_city_stats.new_component<gui_label_t>("-", SYSCOL_TEXT_WEAK, gui_label_t::centered);
@@ -422,7 +422,19 @@ void city_info_t::update_stats()
 			cont_city_stats.new_component<gui_data_bar_t>()->init((sint64)city->get_visitor_demand_by_class(c), city->get_city_visitor_demand(), value_cell_width*2, goods_manager_t::passengers->get_color(), false, true);
 			cont_city_stats.new_component<gui_fill_t>();
 		}
+		cont_city_stats.new_component_span<gui_border_t>(5);
+		cont_city_stats.new_component<gui_fill_t>();
 
+		// area
+		cont_city_stats.new_component_span<gui_label_t>("City size",2);
+		cont_city_stats.add_component(&lb_size);
+		cont_city_stats.new_component_span<gui_empty_t>(2);
+		cont_city_stats.new_component<gui_fill_t>();
+
+		cont_city_stats.new_component_span<gui_label_t>("Population density",2);
+		cont_city_stats.add_component(&lb_buildings);
+		cont_city_stats.new_component_span<gui_empty_t>(2);
+		cont_city_stats.new_component<gui_fill_t>();
 
 	}
 	cont_city_stats.end_table();
