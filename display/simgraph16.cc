@@ -5346,8 +5346,8 @@ void display_signal_direction_rgb(scr_coord_val x, scr_coord_val y, scr_coord_va
 			col1_dark = color_idx_to_rgb(45);
 			break;
 		case roadsign_t::call_on:
-			col1      = color_idx_to_rgb(175);
-			col1_dark = color_idx_to_rgb(174);
+			col1      = color_idx_to_rgb(COL_GREY5+1);
+			col1_dark = color_idx_to_rgb(COL_GREY4+2);
 			break;
 		case 254: /* drive by sight */
 			col1 =      color_idx_to_rgb(COL_ORANGE + 2);
