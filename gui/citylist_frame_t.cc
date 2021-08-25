@@ -255,7 +255,7 @@ citylist_frame_t::citylist_frame_t() :
 
 	container_year.add_table(4, 0);
 	for (int i = 0; i < karte_t::MAX_WORLD_COST; i++) {
-		sint16 curve = chart.add_curve(color_idx_to_rgb(hist_type_color[i]), welt->get_finance_history_year(), karte_t::MAX_WORLD_COST, i, MAX_WORLD_HISTORY_YEARS, hist_type_type[i], false, true, (i == 1) ? 1 : 0);
+		sint16 curve = chart.add_curve(color_idx_to_rgb(hist_type_color[i]), welt->get_finance_history_year(), karte_t::MAX_WORLD_COST, i, MAX_WORLD_HISTORY_YEARS, hist_type_type[i], false, true, (i == 1) ? 1 : 0, 0, hist_type_type[i]==PERCENT ? gui_chart_t::cross : gui_chart_t::square);
 		// add button
 		buttons[i] = container_year.new_component<button_t>();
 		buttons[i]->init(button_t::box_state_automatic | button_t::flexible, hist_type[i]);
