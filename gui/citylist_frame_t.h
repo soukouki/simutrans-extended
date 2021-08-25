@@ -56,6 +56,9 @@ class citylist_frame_t : public gui_frame_t, private action_listener_t
 	gui_aligned_container_t list, statistics;
 	gui_label_buf_t citizens;
 	gui_label_updown_t fluctuation_world;
+#ifdef DEBUG
+	gui_label_buf_t lb_worker_shortage, lb_job_shortage;
+#endif
 
 	void fill_list();
 	void update_label();

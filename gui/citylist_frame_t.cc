@@ -154,6 +154,17 @@ citylist_frame_t::citylist_frame_t() :
 	}
 	end_table();
 
+#ifdef DEBUG
+	add_table(4,1);
+	{
+		new_component<gui_label_t>("(DBG)wolrd's worker needs factor:");
+		add_component(&lb_worker_shortage);
+		new_component<gui_label_t>("(DBG)job_shortage:");
+		add_component(&lb_job_shortage);
+	}
+	end_table();
+#endif
+
 	add_component(&main);
 	main.add_tab(&list, translator::translate("City list"));
 
@@ -299,6 +310,25 @@ void citylist_frame_t::update_label()
 	citizens.update();
 
 	fluctuation_world.set_value(welt->get_finance_history_month(1, karte_t::WORLD_GROWTH));
+
+#ifdef DEBUG
+	const sint64 world_jobs = world()->get_finance_history_month(0, karte_t::WORLD_JOBS);
+	const sint64 monthly_job_demand_global = world()->calc_monthly_job_demand();
+
+	// If this is negative, the new city will not be able to build a single house to begin with,
+	// so citybuilding will not build anything and the process will be aborted.
+	const sint64 res_needs_factor = (world_jobs * 100l) - (monthly_job_demand_global * 110l);
+	lb_worker_shortage.buf().append(res_needs_factor,0);
+	lb_worker_shortage.set_color(res_needs_factor<0? COL_DANGER:SYSCOL_TEXT);
+	lb_worker_shortage.set_tooltip("This should not be a negative!");
+	lb_worker_shortage.update();
+
+	const sint64 job_needs_factor = (monthly_job_demand_global * 100l) - (world_jobs * 110l);
+	lb_job_shortage.buf().append(job_needs_factor,0);
+	lb_job_shortage.update();
+
+#endif
+
 }
 
 
