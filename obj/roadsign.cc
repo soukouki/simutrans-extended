@@ -39,6 +39,8 @@
 #include "roadsign.h"
 #include "signal.h"
 
+#include "../simconvoi.h"
+#include "../vehicle/rail_vehicle.h"
 
 const roadsign_desc_t *roadsign_t::default_signal = NULL;
 
@@ -725,6 +727,39 @@ void roadsign_t::display_after(int xpos, int ypos, bool ) const
 	}
 }
 
+koord3d roadsign_t::get_next_pos_nw(uint8 dir, sint8 slope) const
+{
+	koord3d next_pos = get_pos();
+
+	if( dir & ribi_t::north ) {
+		next_pos.y--;
+		if (slope == slope_t::south) { is_one_high(slope) ? next_pos.z++ : next_pos.z += 2; }
+	}
+	if( dir & ribi_t::west  ) {
+		next_pos.x--;
+		if (slope == slope_t::east) { is_one_high(slope) ? next_pos.z++ : next_pos.z += 2; }
+	}
+	grund_t *test_gr = welt->lookup_with_checking_down_way_slope(next_pos);
+
+	return test_gr ? test_gr->get_pos() : koord3d::invalid;
+}
+
+koord3d roadsign_t::get_next_pos_se(uint8 dir, sint8 slope) const
+{
+	koord3d next_pos = get_pos();
+
+	if( dir & ribi_t::south ) {
+		next_pos.y++;
+		if (slope == slope_t::north) { is_one_high(slope) ? next_pos.z++ : next_pos.z += 2; }
+	}
+	if( dir & ribi_t::east  ) {
+		next_pos.x++;
+		if (slope == slope_t::west) { is_one_high(slope) ? next_pos.z++ : next_pos.z += 2; }
+	}
+	grund_t *test_gr = welt->lookup_with_checking_down_way_slope(next_pos);
+
+	return test_gr ? test_gr->get_pos() : koord3d::invalid;
+}
 
 void roadsign_t::display_overlay(int xpos, int ypos) const
 {
@@ -753,10 +788,75 @@ void roadsign_t::display_overlay(int xpos, int ypos) const
 		}
 		else {
 			if (desc->is_signal_type() || desc->is_single_way()) {
+				uint8 state_temp = state;
+				uint8 signal_dir = get_dir();
+				uint8 open_dir = ribi_t::all;
+				bool reserve_nw = false;
+				bool reserve_se = false;
+				if (desc->get_working_method() == drive_by_sight) {
+					state_temp = 254;
+				}
+				else if (desc->get_working_method() == one_train_staff) {
+					// we need to check if the staff is there and switch the signal indication
+
+					// The staff post has a direction, but is capable of receiving staff from both directions.
+					signal_dir = way_ribi;
+
+					grund_t *gr = welt->lookup(get_pos());
+					// check next tile (N/W)
+					const koord3d next_pos_nw = get_next_pos_nw(way_ribi, gr->get_weg_hang());
+					if (next_pos_nw != koord3d::invalid) {
+						schiene_t *sch_nw = (schiene_t *)(welt->lookup(next_pos_nw)->get_weg(wt));
+						convoihandle_t reserved_convoi = sch_nw->get_reserved_convoi();
+						if (reserved_convoi.is_bound()) {
+							rail_vehicle_t* rail_vehicle = (rail_vehicle_t*)reserved_convoi->front();
+							if (rail_vehicle->get_working_method() == one_train_staff) {
+								reserve_nw = true; // found in N or W
+							}
+						}
+					}
+					// check next tile (S/E)
+					if( !reserve_nw ) {
+						const koord3d next_pos_se = get_next_pos_se(way_ribi, gr->get_weg_hang());
+						if( next_pos_se != koord3d::invalid ) {
+							schiene_t *sch_se = (schiene_t *)(welt->lookup(next_pos_se)->get_weg(wt));
+							convoihandle_t reserved_convoi = sch_se->get_reserved_convoi();
+							if (reserved_convoi.is_bound()) {
+								rail_vehicle_t* rail_vehicle = (rail_vehicle_t*)reserved_convoi->front();
+								if (rail_vehicle->get_working_method() == one_train_staff) {
+									reserve_se = true; // found
+								}
+							}
+						}
+					}
+
+					if (!reserve_nw && !reserve_se) {
+						// The stuff is here
+						if (state != call_on) {
+							state_temp = roadsign_t::caution;
+						}
+					}
+					else {
+						// The staff has been taken by a train.
+						// Entering the block is not allowed. Only exiting the block is allowed.
+						// It meand the direction is limited, and when the staff is returned, it switches to drive_by_sight mode.
+						state_temp = 254; // drive_by_sight
+						open_dir = way_ribi;
+						if (reserve_nw) {
+							open_dir &= ~ribi_t::northwest;
+						}
+						else if (reserve_se) {
+							open_dir &= ~ribi_t::southeast;
+						}
+					}
+					/* -- This is the end of the process for one train staff -- */
+				}
+				else if (desc->is_single_way()) {
+					state_temp = 255;
+				}
 
 				// signal, no_entry/one_way sign
-				display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, dir,
-					(desc->get_working_method()==drive_by_sight) ? 254 : desc->is_single_way() ? 255 : state, is_diagonal);
+				display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, signal_dir, state_temp, is_diagonal, open_dir);
 			}
 		}
 	}
