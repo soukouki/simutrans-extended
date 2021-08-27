@@ -769,6 +769,7 @@ void roadsign_t::display_overlay(int xpos, int ypos) const
 		weg_t *weg = welt->lookup(get_pos())->get_weg(wt);
 		const bool is_diagonal= weg->is_diagonal();
 		const uint8 way_ribi = weg->get_ribi_unmasked();
+		grund_t *gr = welt->lookup(get_pos());
 
 		const int raster_width = get_current_tile_raster_width();
 		xpos += raster_width/2;
@@ -778,7 +779,7 @@ void roadsign_t::display_overlay(int xpos, int ypos) const
 			if (desc->is_signal_type()) {
 				const schiene_t* sch1 = (schiene_t*)weg;
 				ribi_t::ribi reserved_direction = sch1->get_reserved_direction();
-				display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, dir, sch1->is_reserved_directional() ? 255 : state, is_diagonal, reserved_direction);
+				display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, dir, sch1->is_reserved_directional() ? 255 : state, is_diagonal, reserved_direction, gr->get_weg_hang());
 			}
 			// TODO: Remove "ribi_arrow" from the intersection.
 			//       Next, pass the opening direction considering the one-way restriction.
@@ -802,7 +803,6 @@ void roadsign_t::display_overlay(int xpos, int ypos) const
 					// The staff post has a direction, but is capable of receiving staff from both directions.
 					signal_dir = way_ribi;
 
-					grund_t *gr = welt->lookup(get_pos());
 					// check next tile (N/W)
 					const koord3d next_pos_nw = get_next_pos_nw(way_ribi, gr->get_weg_hang());
 					if (next_pos_nw != koord3d::invalid) {
@@ -856,7 +856,7 @@ void roadsign_t::display_overlay(int xpos, int ypos) const
 				}
 
 				// signal, no_entry/one_way sign
-				display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, signal_dir, state_temp, is_diagonal, open_dir);
+				display_signal_direction_rgb(xpos, ypos + raster_width / 2, raster_width, way_ribi, signal_dir, state_temp, is_diagonal, open_dir, gr->get_weg_hang());
 			}
 		}
 	}

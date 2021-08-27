@@ -447,7 +447,7 @@ void draw_bezier_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val,
 {
 }
 
-void display_signal_direction_rgb(scr_coord_val, scr_coord_val, scr_coord_val, uint8, uint8, uint8, bool, uint8)
+void display_signal_direction_rgb(scr_coord_val, scr_coord_val, scr_coord_val, uint8, uint8, uint8, bool, uint8, sint8)
 {
 }
 

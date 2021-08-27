@@ -5317,7 +5317,7 @@ int display_fluctuation_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 hei
 }
 
 
-void display_signal_direction_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val raster_width, uint8 way_dir, uint8 sig_dir, uint8 state, bool is_diagonal, uint8 open_dir)
+void display_signal_direction_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val raster_width, uint8 way_dir, uint8 sig_dir, uint8 state, bool is_diagonal, uint8 open_dir, sint8 slope)
 {
 	PIXVAL col1      = color_idx_to_rgb(COL_RED+2);
 	PIXVAL col1_dark = color_idx_to_rgb(COL_RED);
@@ -5443,29 +5443,40 @@ void display_signal_direction_rgb(scr_coord_val x, scr_coord_val y, scr_coord_va
 			}
 		}
 
+		scr_coord_val slope_offset_y = 0;
 		if (sig_dir & ribi_t::south) {
 			// upper right
+			if ( slope == slope_t::south*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::south  ) { slope_offset_y = width/4; }
 			for (uint8 xoff = 0; xoff < width; xoff++) {
-				display_vline_wh_clip_rgb(x + xoff, y, (scr_coord_val)(xoff/2) + 1, col1, true);
-				display_vline_wh_clip_rgb(x + xoff, y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y,  (scr_coord_val)(xoff/2) + 1, col1, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
 			}
 		}
 		if (sig_dir & ribi_t::east) {
+			if ( slope == slope_t::east*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::east  ) { slope_offset_y = width/4; }
 			for (uint8 xoff = 0; xoff < width; xoff++) {
-				display_vline_wh_clip_rgb(x - xoff - 1, y, (scr_coord_val)(xoff/2) + 1, col1, true);
-				display_vline_wh_clip_rgb(x - xoff - 1, y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y,  (scr_coord_val)(xoff/2) + 1, col1, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
 			}
 		}
 		if (sig_dir & ribi_t::west) {
+			slope_offset_y = 0;
+			if ( slope == slope_t::west*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::west  ) { slope_offset_y = width/4; }
 			for (uint8 xoff = 0; xoff < width; xoff++) {
-				display_vline_wh_clip_rgb(x + xoff, y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
-				display_vline_wh_clip_rgb(x + xoff, y + height*2 + 1, thickness, col2_dark, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + height*2 + 1, thickness, col2_dark, true);
 			}
 		}
 		if (sig_dir & ribi_t::north) {
+			slope_offset_y = 0;
+			if ( slope == slope_t::north*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::north  ) { slope_offset_y = width/4; }
 			for (uint8 xoff = 0; xoff < width; xoff++) {
-				display_vline_wh_clip_rgb(x - xoff - 1, y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
-				display_vline_wh_clip_rgb(x - xoff - 1, y + height*2 + 1, thickness, col2_dark, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + height*2 + 1, thickness, col2_dark, true);
 			}
 		}
 	}
