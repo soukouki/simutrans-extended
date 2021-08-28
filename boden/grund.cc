@@ -446,12 +446,37 @@ void grund_t::rdwr(loadsave_t *file)
 	// need to add a crossing for old games ...
 	if (file->is_loading()  &&  ist_uebergang()  &&  !find<crossing_t>(2)) {
 		const crossing_desc_t *cr_desc = crossing_logic_t::get_crossing( ((weg_t *)obj_bei(0))->get_waytype(), ((weg_t *)obj_bei(1))->get_waytype(), ((weg_t *)obj_bei(0))->get_max_speed(), ((weg_t *)obj_bei(1))->get_max_speed(), 0 );
-		if(cr_desc==0) {
-			dbg->fatal("crossing_t::crossing_t()","requested for waytypes %i and %i but nothing defined!", ((weg_t *)obj_bei(0))->get_waytype(), ((weg_t *)obj_bei(1))->get_waytype() );
+		if(cr_desc == 0)
+		{
+			// Try to recover games with crossings in wrong places.
+			if (((weg_t*)obj_bei(1))->get_waytype() == water_wt)
+			{
+				dbg->error("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", ((weg_t*)obj_bei(0))->get_waytype(), ((weg_t*)obj_bei(1))->get_waytype());
+				weg_t* w = (weg_t*)obj_bei(0);
+				objlist.remove(w);
+				w->cleanup(NULL);
+				delete w;
+
+			}
+			else if (((weg_t*)obj_bei(0))->get_waytype() == water_wt)
+			{
+				dbg->error("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", ((weg_t*)obj_bei(0))->get_waytype(), ((weg_t*)obj_bei(1))->get_waytype());
+				weg_t* w = (weg_t*)obj_bei(1);
+				objlist.remove(w);
+				w->cleanup(NULL);
+				delete w;
+			}
+			else
+			{
+				dbg->fatal("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", ((weg_t*)obj_bei(0))->get_waytype(), ((weg_t*)obj_bei(1))->get_waytype());
+			}
 		}
-		crossing_t *cr = new crossing_t(obj_bei(0)->get_owner(), pos, cr_desc, ribi_t::is_straight_ns(get_weg(cr_desc->get_waytype(1))->get_ribi_unmasked()) );
-		objlist.add( cr );
-		crossing_logic_t::add( cr, crossing_logic_t::CROSSING_INVALID );
+		else
+		{
+			crossing_t* cr = new crossing_t(obj_bei(0)->get_owner(), pos, cr_desc, ribi_t::is_straight_ns(get_weg(cr_desc->get_waytype(1))->get_ribi_unmasked()));
+			objlist.add(cr);
+			crossing_logic_t::add(cr, crossing_logic_t::CROSSING_INVALID);
+		}
 	}
 }
 
