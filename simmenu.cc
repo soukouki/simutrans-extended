@@ -148,6 +148,7 @@ tool_t *create_simple_tool(int toolnr)
 		case TOOL_ZOOM_OUT:             tool = new tool_zoom_out_t();             break;
 		case TOOL_SHOW_COVERAGE:        tool = new tool_show_coverage_t();        break;
 		case TOOL_SHOW_NAME:            tool = new tool_show_name_t();            break;
+		case TOOL_SHOW_DEPOT_NAME:      tool = new tool_show_depot_name_t();      break;
 		case TOOL_SHOW_SIGNALBOX_COVERAGE:     tool = new tool_show_signalbox_coverage_t(); break;
 		case TOOL_SHOW_GRID:            tool = new tool_show_grid_t();            break;
 		case TOOL_SHOW_TREES:           tool = new tool_show_trees_t();           break;
@@ -180,7 +181,6 @@ tool_t *create_simple_tool(int toolnr)
 		case TOOL_SHOW_RIBI:            tool = new tool_show_ribi_t();            break;
 		case TOOL_RECOLOUR_TOOL_DEPRECATED:
 		case TOOL_RECOLOUR_TOOL:		tool = new tool_recolour_t(); break;
-		case TOOL_ACCESS_TOOL_DEPRECATED:
 		case TOOL_ACCESS_TOOL:          tool = new tool_access_t(); break;
 		case UNUSED_WKZ_PWDHASH_TOOL:
 			dbg->warning("create_simple_tool()","deprecated tool [%i] requested", toolnr);
@@ -190,7 +190,7 @@ tool_t *create_simple_tool(int toolnr)
 			return NULL;
 	}
 
-	assert(tool->get_id()  ==  (toolnr | SIMPLE_TOOL)  ||  (toolnr == TOOL_RECOLOUR_TOOL_DEPRECATED ||  toolnr == TOOL_ACCESS_TOOL_DEPRECATED));
+	assert(tool->get_id()  ==  (toolnr | SIMPLE_TOOL)  ||  toolnr == TOOL_RECOLOUR_TOOL_DEPRECATED );
 	return tool;
 }
 
@@ -461,7 +461,7 @@ void tool_t::read_menu(const std::string &objfilename)
 			if(*str) {
 				// Check if tool is deprecated
 				if(  (  t==0  &&  i==TOOL_REASSIGN_SIGNAL_DEPRECATED  )
-				   || (  t==1  &&  ( i== TOOL_RECOLOUR_TOOL_DEPRECATED || i==TOOL_ACCESS_TOOL_DEPRECATED )  )  ) {
+				   || (  t==1  &&  i== TOOL_RECOLOUR_TOOL_DEPRECATED  )  ) {
 					// Do not warn if new id also appears in menuconf:
 					char new_id[256];
 					sprintf( new_id, "%s[%i]", info[t].type, tool->get_id()&0xFFF );

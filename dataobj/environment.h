@@ -330,6 +330,9 @@ public:
 	 */
 	static sint32 show_names;
 
+	/// Show own depot name label
+	static bool show_depot_names;
+
 	/// Display detail level of station freight waiting bar
 	static uint8 freight_waiting_bar_level;
 
