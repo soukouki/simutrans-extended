@@ -453,8 +453,17 @@ void grund_t::rdwr(loadsave_t *file)
 			{
 				dbg->error("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", ((weg_t*)obj_bei(0))->get_waytype(), ((weg_t*)obj_bei(1))->get_waytype());
 				weg_t* w = (weg_t*)obj_bei(0);
-				objlist.remove(w);
+				// delete the second way ...
+				if (flags & has_way2)
+				{
+					flags &= ~has_way2;
+				}
+				else
+				{
+					flags &= ~has_way1;
+				}
 				w->cleanup(NULL);
+				objlist.remove(w);
 				delete w;
 				
 			}
@@ -462,8 +471,16 @@ void grund_t::rdwr(loadsave_t *file)
 			{
 				dbg->error("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", ((weg_t*)obj_bei(0))->get_waytype(), ((weg_t*)obj_bei(1))->get_waytype());
 				weg_t* w = (weg_t*)obj_bei(1);
-				objlist.remove(w);
+				if (flags & has_way2)
+				{
+					flags &= ~has_way2;
+				}
+				else
+				{
+					flags &= ~has_way1;
+				}
 				w->cleanup(NULL);
+				objlist.remove(w);
 				delete w;
 			}
 			else
