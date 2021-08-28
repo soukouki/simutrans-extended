@@ -456,7 +456,7 @@ void grund_t::rdwr(loadsave_t *file)
 				objlist.remove(w);
 				w->cleanup(NULL);
 				delete w;
-				
+
 			}
 			else if (((weg_t*)obj_bei(0))->get_waytype() == water_wt)
 			{
