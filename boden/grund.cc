@@ -44,6 +44,7 @@
 #include "../obj/wayobj.h"
 
 #include "../gui/ground_info.h"
+#include "../gui/way_info.h"
 #include "../gui/minimap.h"
 
 #include "../tpl/inthashtable_tpl.h"
@@ -584,7 +585,12 @@ void grund_t::show_info()
 			return;
 		}
 	}
-	if(env_t::ground_info  ||  hat_wege()) {
+	// has way
+	if (hat_wege()) {
+		create_win(new way_info_t(this), w_info, (ptrdiff_t)this);
+		return;
+	}
+	if(env_t::ground_info) {
 		create_win(new grund_info_t(this), w_info, (ptrdiff_t)this);
 	}
 }
@@ -662,7 +668,7 @@ void grund_t::info(cbuffer_t& buf) const
 	if (!is_water())
 	{
 		char price[64];
-		money_to_string(price, abs(welt->get_land_value(pos)));
+		money_to_string(price, abs(welt->get_land_value(pos))/100.0);
 		buf.printf("%s: %s\n", translator::translate("Land value"), price);
 		if (!has_way || (flags&has_way1 && get_weg_nr(0)->is_degraded()) || (flags&has_way2 && get_weg_nr(1)->is_degraded()))
 		{
@@ -1981,7 +1987,7 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 			}
 
 			// add the way
-			objlist.add( weg );
+			objlist.add(weg);
 			weg->set_ribi(ribi);
 			weg->set_pos(pos);
 			flags |= has_way2;
@@ -1995,6 +2001,11 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 				}
 				else
 				{
+					// If this crossing is a ford type (waytype no. 2 = water; topspeed no. 2 = 0), only allow crossing unnavigable rivers
+					if (cr_desc->get_waytype(1) == water_wt && cr_desc->get_maxspeed(1) == 0 && other->get_max_speed() > 0)
+					{
+						dbg->error("crossing_t::crossing_t()", "Fording a navigable river");
+					}
 					crossing_t* cr = new crossing_t(obj_bei(0)->get_owner(), pos, cr_desc, ribi_t::is_straight_ns(get_weg(cr_desc->get_waytype(1))->get_ribi_unmasked()));
 					objlist.add(cr);
 					cr->finish_rd();
