@@ -560,14 +560,21 @@ DBG_MESSAGE("tool_remover()",  "removing roadsign at (%s)", pos.get_str());
 		if(  weg==NULL  &&  rs->get_desc()->get_wtyp()==tram_wt  ) {
 			weg = gr->get_weg(track_wt);
 		}
+
 		rs->cleanup(player);
 		delete rs;
-		assert( weg );
-		weg->count_sign();
-		if(weg->get_waytype() == road_wt)
-		{
-			welt->set_recheck_road_connexions();
+
+		// no need to update way if there is none
+		// may happen when public player builds a signal on a company track,
+		// the company goes bankrupt and the public player tries to remove the signal
+		if (weg) {
+			weg->count_sign();
+			if(weg->get_waytype() == road_wt)
+			{
+				welt->set_recheck_road_connexions();
+			}
 		}
+
 		return true;
 	}
 
@@ -7140,7 +7147,7 @@ bool tool_build_land_chain_t::init( player_t * )
  * factory_builder_t::build_factory() which returns a fabrik_t*.
  * These two routines (methods) should probably be merged, although I
  * am yet unsure how to combine the parts of the two classes
- * together. — WL
+ * together. ? WL
  */
 const char *tool_build_land_chain_t::work( player_t *player, koord3d pos )
 {

@@ -133,7 +133,7 @@ void main_view_t::display(bool force_dirty)
 		force_dirty = false;
 	}
 
-	const int dpy_width = disp_width + 2;
+	const int dpy_width = display_get_width()/IMG_SIZE + 2;
 	const int dpy_height = (disp_real_height*4)/IMG_SIZE;
 
 	const int i_off = viewport->get_world_position().x + viewport->get_viewport_ij_offset().x;
