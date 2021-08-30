@@ -447,6 +447,10 @@ void draw_bezier_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val,
 {
 }
 
+void display_signal_direction_rgb(scr_coord_val, scr_coord_val, scr_coord_val, uint8, uint8, uint8, bool, uint8, sint8)
+{
+}
+
 void display_depot_symbol(scr_coord_val, scr_coord_val, scr_coord_val, const uint8, const bool)
 {
 }

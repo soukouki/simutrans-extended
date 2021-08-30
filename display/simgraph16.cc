@@ -33,6 +33,8 @@
 #include "../gui/simwin.h"
 #include "../gui/gui_theme.h"
 
+#include "../obj/roadsign.h" // for signal status indicator
+
 
 #ifdef _MSC_VER
 #	include <io.h>
@@ -5314,6 +5316,171 @@ int display_fluctuation_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 hei
 //	mark_rect_dirty_wc( x0-radius, y0-radius, x0+radius+1, y0+radius+1 );
 }
 
+
+void display_signal_direction_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val raster_width, uint8 way_dir, uint8 sig_dir, uint8 state, bool is_diagonal, uint8 open_dir, sint8 slope)
+{
+	PIXVAL col1      = color_idx_to_rgb(COL_RED+2);
+	PIXVAL col1_dark = color_idx_to_rgb(COL_RED);
+	PIXVAL col2      = color_idx_to_rgb(COL_RED+2);
+	PIXVAL col2_dark = color_idx_to_rgb(COL_RED);
+
+	switch (state) {
+		case roadsign_t::clear:
+		case roadsign_t::clear_no_choose:
+			col1      = color_idx_to_rgb(140);
+			col1_dark = color_idx_to_rgb(COL_DARK_GREEN+1);
+			break;
+		case roadsign_t::caution:
+		case roadsign_t::caution_no_choose:
+			col1      = COL_CAUTION;
+			col1_dark = color_idx_to_rgb(COL_DARK_YELLOW+1);
+			break;
+		case roadsign_t::preliminary_caution:
+		case roadsign_t::preliminary_caution_no_choose:
+			col1      = color_idx_to_rgb(206); // yellow green
+			col1_dark = color_idx_to_rgb(204);
+			break;
+		case roadsign_t::advance_caution:
+		case roadsign_t::advance_caution_no_choose:
+			col1      = color_idx_to_rgb(47);
+			col1_dark = color_idx_to_rgb(45);
+			break;
+		case roadsign_t::call_on:
+			col1      = color_idx_to_rgb(COL_GREY5+1);
+			col1_dark = color_idx_to_rgb(COL_GREY4+2);
+			break;
+		case 254: /* drive by sight */
+			col1 =      color_idx_to_rgb(COL_ORANGE + 2);
+			col1_dark = color_idx_to_rgb(COL_DARK_ORANGE);
+			break;
+		case 255: /* one way, directional reservation */
+			col1      = color_idx_to_rgb(COL_BLUE+4);
+			col1_dark = color_idx_to_rgb(COL_BLUE+2);
+			break;
+		case roadsign_t::danger:
+		default:
+			col1      = color_idx_to_rgb(COL_RED+2);
+			col1_dark = color_idx_to_rgb(COL_RED);
+			break;
+	}
+
+	if (open_dir == ribi_t::all) {
+		col2 = col1;
+		col2_dark = col1_dark;
+	}
+
+	assert(raster_width<768);
+	uint8 width  = is_diagonal ? raster_width/6*0.353 : raster_width/6;
+	const uint8 height = is_diagonal ? raster_width/6*0.353 : raster_width/12;
+	const uint8 thickness = max(raster_width/36, 2);
+
+	if (is_diagonal) {
+		if (open_dir != ribi_t::all) {
+			if (open_dir == ribi_t::southeast || open_dir == ribi_t::northeast) {
+				col2      = col1;
+				col2_dark = col1_dark;
+				col1      = color_idx_to_rgb(COL_RED+2);
+				col1_dark = color_idx_to_rgb(COL_RED);
+			}
+		}
+
+		if (way_dir == ribi_t::northeast || way_dir == ribi_t::southwest) {
+			// vertical
+			x += (way_dir==ribi_t::northeast) ? raster_width/4 : (-raster_width/4);
+			y += raster_width/16;
+			width = width<<2; // 4x
+
+			// upper
+			for (uint8 xoff = 0; xoff < width/2; xoff++) {
+				const uint8 yoff = (uint8)((xoff+1)/2);
+				// up
+				if (sig_dir & ribi_t::east || sig_dir & ribi_t::south) {
+					display_vline_wh_clip_rgb(x + xoff, y+yoff, width/4 - yoff, col1, true);
+					display_vline_wh_clip_rgb(x-xoff-1, y+yoff, width/4 - yoff, col1, true);
+				}
+				// down
+				if (sig_dir & ribi_t::west || sig_dir & ribi_t::north) {
+					display_vline_wh_clip_rgb(x + xoff, y+raster_width/6,              width/4-yoff, col2,      true);
+					display_vline_wh_clip_rgb(x + xoff, y+raster_width/6+width/4-yoff, thickness,    col2_dark, true);
+					display_vline_wh_clip_rgb(x-xoff-1, y+raster_width/6,              width/4-yoff, col2,      true);
+					display_vline_wh_clip_rgb(x-xoff-1, y+raster_width/6+width/4-yoff, thickness,    col2_dark, true);
+				}
+			}
+			// up
+			if (sig_dir & ribi_t::east || sig_dir & ribi_t::south) {
+				display_fillbox_wh_clip_rgb(x - width/2, y + width/4, width, thickness, col1_dark, true);
+			}
+		}
+		else {
+			// horizontal
+			y -= raster_width/12;
+			if (way_dir == ribi_t::southeast) {
+				y += raster_width/4;
+			}
+
+			for (uint8 xoff = 0; xoff < width*2; xoff++) {
+				const uint8 h = width*2 - (scr_coord_val)(xoff + 1);
+				// left
+				if (sig_dir & ribi_t::north || sig_dir & ribi_t::east) {
+					display_vline_wh_clip_rgb(x - xoff - width*2, y + (scr_coord_val)((xoff+1)/2),   h, col1, true);
+					display_vline_wh_clip_rgb(x - xoff - width*2, y + (scr_coord_val)((xoff+1)/2)+h, thickness, col1_dark, true);
+				}
+				// right
+				if (sig_dir & ribi_t::south || sig_dir & ribi_t::west) {
+					display_vline_wh_clip_rgb(x + xoff + width*2, y + (scr_coord_val)((xoff+1)/2),   h, col2, true);
+					display_vline_wh_clip_rgb(x + xoff + width*2, y + (scr_coord_val)((xoff+1)/2)+h, thickness, col2_dark, true);
+				}
+			}
+		}
+	}
+	else {
+		if (open_dir != ribi_t::all) {
+			if (open_dir == ribi_t::south || open_dir == ribi_t::east) {
+				col2      = col1;
+				col2_dark = col1_dark;
+				col1      = color_idx_to_rgb(COL_RED+2);
+				col1_dark = color_idx_to_rgb(COL_RED);
+			}
+		}
+
+		scr_coord_val slope_offset_y = 0;
+		if (sig_dir & ribi_t::south) {
+			// upper right
+			if ( slope == slope_t::south*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::south  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y,  (scr_coord_val)(xoff/2) + 1, col1, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
+			}
+		}
+		if (sig_dir & ribi_t::east) {
+			if ( slope == slope_t::east*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::east  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y,  (scr_coord_val)(xoff/2) + 1, col1, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
+			}
+		}
+		if (sig_dir & ribi_t::west) {
+			slope_offset_y = 0;
+			if ( slope == slope_t::west*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::west  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + height*2 + 1, thickness, col2_dark, true);
+			}
+		}
+		if (sig_dir & ribi_t::north) {
+			slope_offset_y = 0;
+			if ( slope == slope_t::north*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::north  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + height*2 + 1, thickness, col2_dark, true);
+			}
+		}
+	}
+}
 
 
 void display_depot_symbol(scr_coord_val x, scr_coord_val y, scr_coord_val width, const uint8 darkest_pcol_idx, const bool dirty)

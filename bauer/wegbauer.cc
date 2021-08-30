@@ -1828,18 +1828,7 @@ void way_builder_t::intern_calc_straight_route(const koord3d start, const koord3
 			pos.z = bd_von->get_vmove(diff);
 
 			// check next tile
-			grund_t *bd_nach = welt->lookup(pos + diff);
-			if(  !bd_nach  ) {
-				// check for slope down ...
-				bd_nach = welt->lookup(pos + diff + koord3d(0,0,-1));
-				if(  !bd_nach  ) {
-					bd_nach = welt->lookup(pos + diff + koord3d(0,0,-2));
-				}
-				if(  bd_nach  &&  bd_nach->get_weg_hang() == slope_t::flat  ) {
-					// Don't care about _flat_ tunnels below.
-					bd_nach = NULL;
-				}
-			}
+			grund_t *bd_nach = welt->lookup_with_checking_down_way_slope(pos + diff);
 			if(  bd_nach == NULL  ){
 				bd_nach = new tunnelboden_t(pos + diff, slope_t::flat);
 				bd_nach_new = true;
