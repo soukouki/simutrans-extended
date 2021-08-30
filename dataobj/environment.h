@@ -345,6 +345,9 @@ public:
 	/// Show convoy loading gauge
 	static uint8 show_cnv_loadingbar;
 
+	/// Show factory storage bar
+	static uint8 show_factory_storage_bar;
+
 	/// if a schedule is open, show tiles which are used by it
 	static bool visualize_schedule;
 

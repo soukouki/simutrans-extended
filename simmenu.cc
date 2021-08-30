@@ -161,6 +161,7 @@ tool_t *create_simple_tool(int toolnr)
 		case TOOL_VEHICLE_TOOLTIPS:     tool = new tool_vehicle_tooltips_t();     break;
 		case TOOL_CONVOY_NAMEPLATES:    tool = new tool_convoy_nameplate_t();     break;
 		case TOOL_CONVOY_LOADINGBAR:    tool = new tool_convoy_loadingbar_t();    break;
+		case TOOL_SHOW_FACTORY_STORAGE: tool = new tool_show_factory_storage_t(); break;
 		case TOOL_TOOGLE_PAX:           tool = new tool_toggle_pax_station_t();   break;
 		case TOOL_TOOGLE_PEDESTRIANS:   tool = new tool_toggle_pedestrians_t();   break;
 		case TOOL_TRAFFIC_LEVEL:        tool = new tool_traffic_level_t();        break;

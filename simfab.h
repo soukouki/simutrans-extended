@@ -681,6 +681,11 @@ public:
 	uint32 get_total_output_capacity() const;
 
 	/**
+	 * Draws some nice colored bars giving some status information
+	 */
+	void display_status(sint16 xpos, sint16 ypos);
+
+	/**
 	 * Crossconnects all factories
 	 */
 	void add_all_suppliers();

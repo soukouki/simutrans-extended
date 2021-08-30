@@ -54,6 +54,7 @@ enum {
 	IDBTN_SHOW_SIGNALBOX_COVERAGE,
 	IDBTN_CLASSES_WAITING_BAR,
 	IDBTN_SHOW_DEPOT_NAME,
+	IDBTN_SHOW_FACTORY_STORAGE,
 	COLORS_MAX_BUTTONS,
 };
 
@@ -539,6 +540,21 @@ label_settings_t::label_settings_t()
 	add_component(buttons + IDBTN_SHOW_DEPOT_NAME);
 
 	new_component<gui_divider_t>();
+	add_table(2,1);
+	{
+		new_component<gui_label_t>("Industry tooltip")->set_tooltip(translator::translate("Display bars above the industry building to show the storage status"));
+		factory_tooltip.set_focusable(false);
+		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("never show"), SYSCOL_TEXT);
+		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("mouseover"), SYSCOL_TEXT);
+		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Within own network"), SYSCOL_TEXT);
+		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("always show all"), SYSCOL_TEXT);
+		factory_tooltip.set_selection(env_t::show_factory_storage_bar);
+		add_component(&factory_tooltip);
+		factory_tooltip.add_listener(this);
+	}
+	end_table();
+
+	new_component<gui_divider_t>();
 
 	new_component<gui_label_t>("Convoy tooltips");
 	add_table(3,0);
@@ -614,6 +630,10 @@ label_settings_t::label_settings_t()
 
 bool label_settings_t::action_triggered(gui_action_creator_t *comp, value_t v)
 {
+	// Factory tooltip
+	if(&factory_tooltip == comp){
+		env_t::show_factory_storage_bar = v.i;
+	}
 	// Convoy tooltip
 	if (&convoy_tooltip == comp) {
 		env_t::show_vehicle_states = (uint8)v.i;
@@ -654,6 +674,7 @@ void label_settings_t::draw(scr_coord offset)
 	convoy_tooltip.set_selection(env_t::show_vehicle_states);
 	freight_waiting_bar.set_selection(env_t::freight_waiting_bar_level);
 	freight_waiting_bar.enable(env_t::show_names & 2);
+	factory_tooltip.set_selection(env_t::show_factory_storage_bar % 4);
 
 	gui_aligned_container_t::draw(offset);
 }
