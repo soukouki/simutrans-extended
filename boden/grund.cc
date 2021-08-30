@@ -44,6 +44,7 @@
 #include "../obj/wayobj.h"
 
 #include "../gui/ground_info.h"
+#include "../gui/way_info.h"
 #include "../gui/minimap.h"
 
 #include "../tpl/inthashtable_tpl.h"
@@ -51,7 +52,7 @@
 #include "../utils/cbuffer_t.h"
 # include "../utils/simstring.h"
 
-#include "../vehicle/simpeople.h"
+#include "../vehicle/pedestrian.h"
 
 #include "wege/kanal.h"
 #include "wege/maglev.h"
@@ -445,12 +446,54 @@ void grund_t::rdwr(loadsave_t *file)
 	// need to add a crossing for old games ...
 	if (file->is_loading()  &&  ist_uebergang()  &&  !find<crossing_t>(2)) {
 		const crossing_desc_t *cr_desc = crossing_logic_t::get_crossing( ((weg_t *)obj_bei(0))->get_waytype(), ((weg_t *)obj_bei(1))->get_waytype(), ((weg_t *)obj_bei(0))->get_max_speed(), ((weg_t *)obj_bei(1))->get_max_speed(), 0 );
-		if(cr_desc==0) {
-			dbg->fatal("crossing_t::crossing_t()","requested for waytypes %i and %i but nothing defined!", ((weg_t *)obj_bei(0))->get_waytype(), ((weg_t *)obj_bei(1))->get_waytype() );
+		if(cr_desc == 0)
+		{
+			// Try to recover games with crossings in wrong places.
+			if (((weg_t*)obj_bei(1))->get_waytype() == water_wt)
+			{
+				dbg->error("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", ((weg_t*)obj_bei(0))->get_waytype(), ((weg_t*)obj_bei(1))->get_waytype());
+				weg_t* w = (weg_t*)obj_bei(0);
+				// delete the second way ...
+				if (flags & has_way2)
+				{
+					flags &= ~has_way2;
+				}
+				else
+				{
+					flags &= ~has_way1;
+				}
+				w->cleanup(NULL);
+				objlist.remove(w);
+				delete w;
+
+			}
+			else if (((weg_t*)obj_bei(0))->get_waytype() == water_wt)
+			{
+				dbg->error("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", ((weg_t*)obj_bei(0))->get_waytype(), ((weg_t*)obj_bei(1))->get_waytype());
+				weg_t* w = (weg_t*)obj_bei(1);
+				if (flags & has_way2)
+				{
+					flags &= ~has_way2;
+				}
+				else
+				{
+					flags &= ~has_way1;
+				}
+				w->cleanup(NULL);
+				objlist.remove(w);
+				delete w;
+			}
+			else
+			{
+				dbg->fatal("crossing_t::crossing_t()", "requested for waytypes %i and %i but nothing defined!", ((weg_t*)obj_bei(0))->get_waytype(), ((weg_t*)obj_bei(1))->get_waytype());
+			}
 		}
-		crossing_t *cr = new crossing_t(obj_bei(0)->get_owner(), pos, cr_desc, ribi_t::is_straight_ns(get_weg(cr_desc->get_waytype(1))->get_ribi_unmasked()) );
-		objlist.add( cr );
-		crossing_logic_t::add( cr, crossing_logic_t::CROSSING_INVALID );
+		else
+		{
+			crossing_t* cr = new crossing_t(obj_bei(0)->get_owner(), pos, cr_desc, ribi_t::is_straight_ns(get_weg(cr_desc->get_waytype(1))->get_ribi_unmasked()));
+			objlist.add(cr);
+			crossing_logic_t::add(cr, crossing_logic_t::CROSSING_INVALID);
+		}
 	}
 }
 
@@ -584,7 +627,12 @@ void grund_t::show_info()
 			return;
 		}
 	}
-	if(env_t::ground_info  ||  hat_wege()) {
+	// has way
+	if (hat_wege()) {
+		create_win(new way_info_t(this), w_info, (ptrdiff_t)this);
+		return;
+	}
+	if(env_t::ground_info) {
 		create_win(new grund_info_t(this), w_info, (ptrdiff_t)this);
 	}
 }
@@ -662,7 +710,7 @@ void grund_t::info(cbuffer_t& buf) const
 	if (!is_water())
 	{
 		char price[64];
-		money_to_string(price, abs(welt->get_land_value(pos)));
+		money_to_string(price, abs(welt->get_land_value(pos))/100.0);
 		buf.printf("%s: %s\n", translator::translate("Land value"), price);
 		if (!has_way || (flags&has_way1 && get_weg_nr(0)->is_degraded()) || (flags&has_way2 && get_weg_nr(1)->is_degraded()))
 		{
@@ -1961,7 +2009,10 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 				// already own this land.
 
 				// get_land_value returns a *negative* value.
-				cost += welt->get_land_value(pos);
+				if (!weg->is_public_right_of_way())
+				{
+					cost += welt->get_land_value(pos);
+				}
 			}
 
 			// add
@@ -1978,7 +2029,7 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 			}
 
 			// add the way
-			objlist.add( weg );
+			objlist.add(weg);
 			weg->set_ribi(ribi);
 			weg->set_pos(pos);
 			flags |= has_way2;
@@ -1992,6 +2043,11 @@ sint64 grund_t::neuen_weg_bauen(weg_t *weg, ribi_t::ribi ribi, player_t *player,
 				}
 				else
 				{
+					// If this crossing is a ford type (waytype no. 2 = water; topspeed no. 2 = 0), only allow crossing unnavigable rivers
+					if (cr_desc->get_waytype(1) == water_wt && cr_desc->get_maxspeed(1) == 0 && other->get_max_speed() > 0)
+					{
+						dbg->error("crossing_t::crossing_t()", "Fording a navigable river");
+					}
 					crossing_t* cr = new crossing_t(obj_bei(0)->get_owner(), pos, cr_desc, ribi_t::is_straight_ns(get_weg(cr_desc->get_waytype(1))->get_ribi_unmasked()));
 					objlist.add(cr);
 					cr->finish_rd();
@@ -2503,11 +2559,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 				diversion_checker->set_owner(welt->get_public_player());
 				test_driver_t *driver = diversion_checker;
 				driver = public_driver_t::apply(driver);
-				const way_desc_t* default_road = welt->get_city(w->get_pos().get_2d()) ? welt->get_settings().get_city_road_type(welt->get_timeline_year_month()) : welt->get_settings().get_intercity_road_type(welt->get_timeline_year_month());
-				if(default_road == NULL) // If, for some reason, the default road is not defined
-				{
-					default_road = w->get_desc();
-				}
+				const way_desc_t* default_road = get_default_road(w);
 				const uint32 default_road_axle_load = default_road->get_axle_load();
 				const sint32 default_road_speed = default_road->get_topspeed();
 				const uint32 max_axle_load = w->get_waytype() == road_wt ? min(default_road_axle_load, w->get_max_axle_load()) : w->get_max_axle_load();
@@ -2547,7 +2599,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 				{
 					// Check whether the immediately adjacent tile is an intersection.
 					const weg_t* this_way = to->get_weg(wt);
-					if (this_way->is_junction())
+					if (to->is_water() || this_way->is_junction())
 					{
 						intersections.append_unique(to);
 						break;
@@ -2638,7 +2690,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 			diversion_checker->set_owner(welt->get_public_player());
 			test_driver_t* driver = diversion_checker;
 			driver = public_driver_t::apply(driver);
-			const way_desc_t* default_road = welt->get_city(w->get_pos().get_2d()) ? welt->get_settings().get_city_road_type(welt->get_timeline_year_month()) : welt->get_settings().get_intercity_road_type(welt->get_timeline_year_month());
+			const way_desc_t* default_road = get_default_road(w);
 			if (default_road == NULL) // If, for some reason, the default road is not defined
 			{
 				default_road = w->get_desc();
@@ -2742,6 +2794,57 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 		}
 	}
 	return false;
+}
+
+const way_desc_t* grund_t::get_default_road(weg_t* w) const
+{
+	const way_desc_t* default_road;
+	if (welt->get_city(w->get_pos().get_2d()))
+	{
+		// City road
+		default_road = welt->get_settings().get_city_road_type(welt->get_timeline_year_month());
+	}
+	else
+	{
+		// Either an inter-city or an industry road.
+
+		// Check for connected road routes
+		bool city_destinations = false;
+		for (uint8 i = 0; i < 5; i++)
+		{
+			for (uint32 j = 0; j < w->private_car_routes[w->private_car_routes_currently_reading_element][i].get_count(); j++)
+			{
+				const koord dest = w->private_car_routes[w->private_car_routes_currently_reading_element][i][j];
+				const grund_t* gr = welt->lookup_kartenboden(dest);
+
+				const stadt_t* city = welt->get_city(dest);
+				if (city && dest == city->get_townhall_road())
+				{
+					city_destinations = true;
+					break;
+				}
+			}
+			if (city_destinations)
+			{
+				break;
+			}
+		}
+
+		if (city_destinations)
+		{
+			default_road = welt->get_settings().get_intercity_road_type(welt->get_timeline_year_month());
+		}
+		else
+		{
+			default_road = welt->get_settings().get_industry_road_type(welt->get_timeline_year_month());
+		}
+	}
+
+	if (default_road == NULL) // If, for some reason, the default road is not defined
+	{
+		default_road = w->get_desc();
+	}
+	return default_road;
 }
 
 // this function is called many many times => make it as fast as possible
@@ -2921,15 +3024,34 @@ bool grund_t::remove_everything_from_way(player_t* player, waytype_t wt, ribi_t:
 
 		// need to remove railblocks to recalculate connections
 		// remove all ways or just some?
-		if(add==ribi_t::none) {
+		if(add==ribi_t::none)
+		{
 			player_t* owner = weg->get_owner();
 			koord3d pos = weg->get_pos();
 			costs -= weg_entfernen(wt, true);
-			if(owner == player)
+			const sint64 land_refund_cost = welt->get_land_value(weg->get_pos()); // Refund the land value to the player who owned the way, as by bulldozing, the player is selling the land.
+			const bool public_right_of_way = weg->is_public_right_of_way(); // We must capture this before deleting the way object.
+			const bool is_main_way = get_weg_nr(0) == weg;
+			const bool are_other_ways = get_weg_nr(1);
+			if (!public_right_of_way && is_main_way) // Land costs are not used for public rights of way; also, do not refund the land value when deleting a crossing over another player's way.
 			{
-				// Need to sell the land on which the way is situated: refund the land value.
-				// Note that get_land_value() produces a negative number.
-				costs -= welt->get_land_value(pos);
+				if (player == owner)
+				{
+					costs += land_refund_cost;
+					if (are_other_ways)
+					{
+						// If we are deleting a crossing over another player's way
+						// and the deleting player paid to buy the land, then the land
+						// value must be debited from the other player's way to avoid
+						// that other player being able to get a refund of the value of
+						// land for which that player had never paid.
+						player_t::book_construction_costs(get_weg_nr(0)->get_owner(), -land_refund_cost, get_pos().get_2d(), wt);
+					}
+				}
+				else
+				{
+					player_t::book_construction_costs(owner, -land_refund_cost, get_pos().get_2d(), wt);
+				}
 			}
 			if(flags&is_kartenboden) {
 				// remove ribis from sea tiles

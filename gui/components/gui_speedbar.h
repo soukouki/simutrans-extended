@@ -115,7 +115,7 @@ private:
 	slist_tpl <info_t> values;
 
 public:
-	gui_bandgraph_t(scr_size size = D_INDICATOR_SIZE, bool size_fixed_ = false) { set_size(size); size_fixed=size_fixed_; }
+	gui_bandgraph_t(scr_size size = D_INDICATOR_SIZE, bool size_fixed_ = true) { set_size(size); size_fixed=size_fixed_; }
 
 	void add_color_value(const sint32 *value, PIXVAL color, bool cylinder_style=false);
 

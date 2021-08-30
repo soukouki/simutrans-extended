@@ -8,7 +8,8 @@
 #include "convoi_info_t.h"
 #include "replace_frame.h"
 
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/air_vehicle.h"
+#include "../vehicle/rail_vehicle.h"
 #include "../simcolor.h"
 #include "../display/viewport.h"
 #include "../simworld.h"
@@ -28,6 +29,8 @@
 
 #include "../utils/simstring.h"
 #include "convoi_detail_t.h"
+
+#include "../obj/roadsign.h"
 
 #define CHART_HEIGHT (100)
 
@@ -164,16 +167,6 @@ void convoi_info_t::init(convoihandle_t cnv)
 				end_table();
 				new_component<gui_margin_t>(100);
 
-				add_component(&next_halt_cells,2);
-				next_halt_cells.set_table_layout(3,1);
-				next_halt_cells.new_component<gui_label_t>("Fahrtziel"); // "Destination"
-				next_halt_cells.add_component(&next_halt_number);
-				next_halt_cells.add_component(&target_label);
-
-				distance_label.set_align(gui_label_t::right);
-				add_component(&distance_label);
-				add_component(&route_bar);
-
 				add_component(&container_line,2);
 				container_line.set_table_layout(4,1);
 				container_line.add_component(&line_button);
@@ -194,7 +187,18 @@ void convoi_info_t::init(convoihandle_t cnv)
 				line_button.add_listener( this );
 				line_bound = false;
 
-				add_component(&avg_triptime_label, 2);
+				add_component(&next_halt_cells,2);
+				next_halt_cells.set_table_layout(3,1);
+				next_halt_cells.new_component<gui_label_t>("Fahrtziel"); // "Destination"
+				next_halt_cells.add_component(&next_halt_number);
+				next_halt_cells.add_component(&target_label);
+
+				distance_label.set_align(gui_label_t::right);
+				add_component(&distance_label);
+				add_component(&route_bar);
+
+				lb_working_method.set_align(gui_label_t::right);
+				add_component(&lb_working_method, 2);
 			}
 			end_table();
 
@@ -530,7 +534,7 @@ void convoi_info_t::update_labels()
 		schedule_t::gimme_short_stop_name(target_label.buf(), welt, cnv->get_owner(), schedule, schedule->get_current_stop(), 50);
 	}
 	target_label.update();
-	uint8 halt_col_idx;
+	uint8 halt_col_idx = COL_INACTIVE;
 	uint8 halt_symbol_style=0;
 	const koord3d next_pos = schedule->get_current_entry().pos;
 	const halthandle_t next_halt = haltestelle_t::get_halt(next_pos, cnv->get_owner());
@@ -543,7 +547,7 @@ void convoi_info_t::update_labels()
 	else if (welt->lookup(next_pos) && welt->lookup(next_pos)->get_depot() != NULL) {
 		halt_symbol_style=gui_schedule_entry_number_t::number_style::depot;
 	}
-	next_halt_number.init(schedule->get_current_stop() + 1, halt_col_idx, halt_symbol_style);
+	next_halt_number.init(schedule->get_current_stop(), halt_col_idx, halt_symbol_style);
 
 	// distance
 	sint32 cnv_route_index_left = cnv->get_route()->get_count() - 1 - cnv_route_index;
@@ -575,14 +579,24 @@ void convoi_info_t::update_labels()
 	}
 	line_label.update();
 
-	sint64 average_round_trip_time = cnv->get_average_round_trip_time();
-	if (average_round_trip_time) {
-		char as_clock[32];
-		welt->sprintf_ticks(as_clock, sizeof(as_clock), average_round_trip_time);
-		avg_triptime_label.buf().printf("%s: %s", translator::translate("Avg trip time"), as_clock);
-	}
-	avg_triptime_label.update();
 
+	vehicle_t* v1 = cnv->get_vehicle(0);
+	if (v1->get_waytype() == track_wt || v1->get_waytype() == maglev_wt || v1->get_waytype() == tram_wt || v1->get_waytype() == narrowgauge_wt || v1->get_waytype() == monorail_wt) {
+		if (cnv->in_depot()) {
+			lb_working_method.buf().append("");
+		}
+		else {
+			// Current working method
+			rail_vehicle_t* rv1 = (rail_vehicle_t*)v1;
+			rail_vehicle_t* rv2 = (rail_vehicle_t*)cnv->get_vehicle(cnv->get_vehicle_count() - 1);
+			lb_working_method.buf().printf("%s: %s", translator::translate("Current working method"), translator::translate(rv1->is_leading() ? roadsign_t::get_working_method_name(rv1->get_working_method()) : roadsign_t::get_working_method_name(rv2->get_working_method())));
+		}
+	}
+	else if (uint16 minimum_runway_length = cnv->get_vehicle(0)->get_desc()->get_minimum_runway_length()) {
+		// for air vehicle
+		lb_working_method.buf().printf("%s: %i m \n", translator::translate("Minimum runway length"), minimum_runway_length);
+	}
+	lb_working_method.update();
 
 	// buffer update now only when needed by convoi itself => dedicated buffer for this
 	const int old_len=freight_info.len();

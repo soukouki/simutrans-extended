@@ -61,7 +61,7 @@ class memory_rw_t;
 class viewport_t;
 
 #define CHK_RANDS 32
-#define CHK_DEBUG_SUMS 8
+#define CHK_DEBUG_SUMS 10
 
 #ifdef MULTI_THREAD
 //#define FORBID_MULTI_THREAD_PASSENGER_GENERATION_IN_NETWORK_MODE
@@ -2054,6 +2054,25 @@ public:
 		const planquadrat_t *plan = access(pos.x, pos.y);
 		return plan ? plan->get_boden_in_hoehe(pos.z) : NULL;
 		//"boden in height" = floor in height (Google)
+	}
+	// Take into account the possibility that the tile to be checked is a down(way)slope and search for it
+	inline grund_t *lookup_with_checking_down_way_slope(const koord3d &pos) const
+	{
+		const planquadrat_t *plan = access(pos.x, pos.y);
+		if( !plan ) {
+			return NULL;
+		}
+		if( plan->get_boden_in_hoehe(pos.z) ) {
+			return plan->get_boden_in_hoehe(pos.z);
+		}
+		if( plan->get_boden_in_hoehe(pos.z-1) ) {
+			return plan->get_boden_in_hoehe(pos.z-1);
+		}
+		if( plan->get_boden_in_hoehe(pos.z-2)  &&  plan->get_boden_in_hoehe(pos.z-2)->get_weg_hang()!=slope_t::flat ){
+			// Don't care about _flat_ tunnels below.
+			return plan->get_boden_in_hoehe(pos.z-2);
+		}
+		return NULL;
 	}
 
 	/**

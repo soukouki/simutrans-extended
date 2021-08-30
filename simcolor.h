@@ -20,7 +20,7 @@
 
 // pixels stored in system type (uint16)
 typedef unsigned short PIXVAL;
-// PIXVAL with above flas (eg. ransparent) (uint32)
+// PIXVAL with above flags (eg. transparent) (uint32)
 typedef unsigned int FLAGGED_PIXVAL;
 
 // Menu colours (they don't change between day and night)
@@ -37,7 +37,7 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define COL_RED             131
 #define COL_DARK_RED        128
 #define COL_LIGHT_RED       134
-#define COL_YELLOW          171
+#define COL_YELLOW          173
 #define COL_DARK_YELLOW     168
 #define COL_LIGHT_YELLOW    175
 #define COL_LEMON_YELLOW    31
@@ -52,7 +52,7 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define COL_DARK_GREEN      136
 #define COL_LIGHT_GREEN     143
 #define COL_APRICOT         95
-#define COL_ORANGE          155
+#define COL_ORANGE          156
 #define COL_DARK_ORANGE     153
 #define COL_LIGHT_ORANGE    158
 #define COL_BRIGHT_ORANGE   133
@@ -194,8 +194,6 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define SYSCOL_STATUSBAR_DIVIDER            gui_theme_t::gui_color_statusbar_divider
 #define SYSCOL_HIGHLIGHT                    gui_theme_t::gui_highlight_color
 #define SYSCOL_SHADOW                       gui_theme_t::gui_shadow_color
-#define SYSCOL_INDICATOR_BORDER1            gui_theme_t::gui_color_indicator_border_top_left
-#define SYSCOL_INDICATOR_BORDER2            gui_theme_t::gui_color_indicator_border_bottom_right
 #define SYSCOL_LOADINGBAR_INNER             gui_theme_t::gui_color_loadingbar_inner
 #define SYSCOL_LOADINGBAR_PROGRESS          gui_theme_t::gui_color_loadingbar_progress
 #define SYSCOL_OBSOLETE                     gui_theme_t::gui_color_obsolete

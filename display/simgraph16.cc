@@ -33,6 +33,8 @@
 #include "../gui/simwin.h"
 #include "../gui/gui_theme.h"
 
+#include "../obj/roadsign.h" // for signal status indicator
+
 
 #ifdef _MSC_VER
 #	include <io.h>
@@ -619,7 +621,7 @@ static const uint8 special_pal[SPECIAL_COLOR_COUNT*3] =
 	128, 64, 0,
 	193, 97, 0,
 	215, 107, 0,
-	255, 128, 0,
+	235, 118, 0,
 	255, 128, 0,
 	255, 149, 43,
 	255, 170, 85,
@@ -633,13 +635,13 @@ static const uint8 special_pal[SPECIAL_COLOR_COUNT*3] =
 	104, 148, 28,
 	128, 168, 44,
 	164, 164, 0,
+	180, 180, 0,
 	193, 193, 0,
 	215, 215, 0,
+	235, 235, 0,
 	255, 255, 0,
-	255, 255, 32,
 	255, 255, 64,
 	255, 255, 128,
-	255, 255, 172,
 	32, 4, 0,
 	64, 20, 8,
 	84, 28, 16,
@@ -2111,7 +2113,7 @@ void register_image(image_t *image_in)
 
 	/* valid image? */
 	if(  image_in->len == 0  ||  image_in->h == 0  ) {
-		fprintf(stderr, "Warning: ignoring image %d because of missing data\n", anz_images);
+		dbg->warning("register_image()", "Ignoring image %d because of missing data", anz_images);
 		image_in->imageid = IMG_EMPTY;
 		return;
 	}
@@ -2670,7 +2672,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			// player colour images are rezoomed/recoloured in display_color_img
 			sp = images[n].data[use_player];
 			if(  sp == NULL  ) {
-				printf("CImg[%i] %u failed!\n", use_player, n);
+				dbg->warning("display_img_aux", "CImg[%i] %u failed!", use_player, n);
 				return;
 			}
 		}
@@ -2684,7 +2686,7 @@ void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const
 			}
 			sp = images[n].data[0];
 			if(  sp == NULL  ) {
-				printf("Img %u failed!\n", n);
+				dbg->warning("display_img_aux", "Img %u failed!", n);
 				return;
 			}
 		}
@@ -4271,12 +4273,25 @@ void display_cylinderbar_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coo
 
 void display_colorbox_with_tooltip(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty, const char *text)
 {
-	display_ddd_box_clip_rgb(xp, yp, w, h, SYSCOL_INDICATOR_BORDER1, SYSCOL_INDICATOR_BORDER2);
+	display_ddd_box_clip_rgb(xp, yp, w, h, color_idx_to_rgb(MN_GREY0), color_idx_to_rgb(MN_GREY4));
 	//display_fb_internal(xp+1, yp+1, w-2, h-2, color, dirty, CR.clip_rect.x, CR.clip_rect.xx, CR.clip_rect.y, CR.clip_rect.yy);
 	display_fillbox_wh_clip_rgb(xp + 1, yp + 1, w - 2, h - 2, color, dirty);
 	if (text) {
 		if (text && (xp <= get_mouse_x() && yp <= get_mouse_y() && (xp + w) > get_mouse_x() && (yp + h) > get_mouse_y())) {
 			win_set_tooltip(get_mouse_x() + TOOLTIP_MOUSE_OFFSET_X + D_H_SPACE, yp + h + h / 2 + TOOLTIP_MOUSE_OFFSET_Y / 2 + D_V_SPACE, text);
+		}
+	}
+}
+
+
+void display_convoy_arrow_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty  CLIP_NUM_DEF)
+{
+	for (int x = 0; x < w; x++) {
+		if (x < (w + 1) / 2) {
+			display_vline_wh_clip_rgb(xp + x, yp + x, h - w / 2, color, dirty  CLIP_NUM_PAR);
+		}
+		else {
+			display_vline_wh_clip_rgb(xp + x, yp + w - x - 1, h - w / 2, color, dirty  CLIP_NUM_PAR);
 		}
 	}
 }
@@ -4339,40 +4354,40 @@ void display_array_wh(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_c
 	}
 }
 
-void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, PIXVAL color, bool dirty, uint8 basic_constraint_flags, uint8 interactivity, bool is_rightside  CLIP_NUM_DEF_NOUSE)
+void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty, bool is_rightside, uint8 basic_constraint_flags, uint8 interactivity  CLIP_NUM_DEF_NOUSE)
 {
-	uint8 h = VEHICLE_BAR_HEIGHT;
-	uint8 width = (uint8)((w + 1) * 0.9);
-	uint8 margin_left = w - width;
+	if (h > 1 && h % 2 == 0) { h--; }
+	const uint8 width = (uint8)((w + 1) * 0.9);
+	const uint8 margin_left = w - width;
 
 	if (is_rightside) {
 		// right side of the bar - check only [next] parameter. check the alternate side if vehicle is reversed
-		display_fillbox_wh_clip_rgb(xp, yp, width - h / 2, h, color, dirty);
+		display_fillbox_wh_clip_rgb(xp, yp, width - h/2, h, color, dirty);
 
 		// draw right end >
 		if (basic_constraint_flags & vehicle_desc_t::unknown_constraint) {
-			display_fillbox_wh_clip_rgb(xp + width - h / 2, yp, h / 2, h, color, dirty);
+			display_fillbox_wh_clip_rgb(xp + width - h/2, yp, h/2, h, color, dirty);
 		}
 		else if (basic_constraint_flags & vehicle_desc_t::can_be_tail) {
 			display_pixel(xp + width - 1, yp+h/2, color);
 			// draw "tail" shape
 			if ((interactivity & BIDIRECTIONAL) == 0) {
 				// one directional (tail)
-				display_vline_wh_clip_rgb(xp + width - 1, yp, h / 2, color, dirty);
-				for (int i = 1; i < h / 2; ++i) {
-					display_vline_wh_clip_rgb(xp + width - 1 - i, yp, h / 2 + i + 1, color, dirty);
+				display_vline_wh_clip_rgb(xp + width - 1, yp, h/2, color, dirty);
+				for (int i = 1; i < h/2; ++i) {
+					display_vline_wh_clip_rgb(xp + width - 1 - i, yp, h/2 + i + 1, color, dirty);
 				}
 			}
 			else if (basic_constraint_flags & vehicle_desc_t::can_be_head) {
 				// cab end
-				for (int i = 1; i < h / 2; ++i) {
-					display_vline_wh_clip_rgb(xp + width -1 - i, yp + h / 2 - i, i * 2 + 1, color, dirty);
+				for (int i = 1; i < h/2; ++i) {
+					display_vline_wh_clip_rgb(xp + width -1 - i, yp + h/2 - i, i * 2 + 1, color, dirty);
 				}
 			}
 			else {
 				// tail end
 				display_vline_wh_clip_rgb(xp + width - 1, yp + 1, h - 2, color, dirty);
-				for (int i = 1; i < h / 2; ++i) {
+				for (int i = 1; i < h/2; ++i) {
 					display_vline_wh_clip_rgb(xp + width - 1 - i, yp, h, color, dirty);
 				}
 			}
@@ -4381,20 +4396,20 @@ void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_
 			// intermediate end
 			display_pixel(xp + width - 1, yp, color);
 			display_pixel(xp + width - 1, yp+h-1, color);
-			for (int i = 1; i < h / 2; ++i) {
+			for (int i = 1; i < h/2; ++i) {
 				display_vline_wh_clip_rgb(xp + width - 1 - i, yp, h, color, dirty);
 			}
 		}
 		// un-powerd vehicle
 		if (!(interactivity & HAS_POWER)) {
-			display_blend_wh_rgb(xp, yp + 1, width - h / 2, h - 2, color_idx_to_rgb(COL_WHITE), 30);
+			display_blend_wh_rgb(xp, yp + 1, width - h/2, h - 2, color_idx_to_rgb(COL_WHITE), 30);
 			if ((interactivity & BIDIRECTIONAL)==0 && basic_constraint_flags & vehicle_desc_t::can_be_tail) {
-				display_pixel(xp + width - h / 2 - 1, yp + h - 2, color);
+				display_pixel(xp + width - h/2 - 1, yp + h - 2, color);
 			}
 			if (basic_constraint_flags & vehicle_desc_t::can_be_head) {
-				display_pixel(xp + width - h / 2 - 1, yp + h - 2, color);
+				display_pixel(xp + width - h/2 - 1, yp + h - 2, color);
 				if (interactivity & BIDIRECTIONAL) {
-					display_pixel(xp + width - h / 2 - 1, yp + 1, color);
+					display_pixel(xp + width - h/2 - 1, yp + 1, color);
 				}
 			}
 		}
@@ -4414,16 +4429,16 @@ void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_
 
 		// < draw left end's base color
 		if (basic_constraint_flags & vehicle_desc_t::unknown_constraint) {
-			display_fillbox_wh_clip_rgb(xp + margin_left, yp, h / 2, h, color, dirty);
+			display_fillbox_wh_clip_rgb(xp + margin_left, yp, h/2, h, color, dirty);
 		}
 		else if (basic_constraint_flags & vehicle_desc_t::can_be_head) {
-			display_pixel(xp + margin_left, yp + h / 2, color);
+			display_pixel(xp + margin_left, yp + h/2, color);
 			// draw "head" shape
 			if((interactivity & BIDIRECTIONAL)==0){
 				// one directional (front)
 				display_vline_wh_clip_rgb(xp + margin_left, yp + h/2 + 1, h/2, color, dirty);
 				for (int i = 1; i < h/2; ++i) {
-					display_vline_wh_clip_rgb(xp + margin_left + i, yp + h / 2 - i, h/2 + i + 1, color, dirty);
+					display_vline_wh_clip_rgb(xp + margin_left + i, yp + h/2 - i, h/2 + i + 1, color, dirty);
 				}
 			}
 			else {
@@ -4444,24 +4459,24 @@ void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_
 			// intermediate end
 			display_pixel(xp+margin_left, yp, color);
 			display_pixel(xp+margin_left, yp+h-1, color);
-			for (int i = 1; i < h / 2; ++i) {
+			for (int i = 1; i < h/2; ++i) {
 				display_vline_wh_clip_rgb(xp + margin_left + i, yp, h, color, dirty);
 			}
 		}
 		// un-powerd vehicle
 		if (!(interactivity & HAS_POWER)) {
-			display_blend_wh_rgb(xp + margin_left + h/2, yp + 1, width - h / 2, h - 2, color_idx_to_rgb(COL_WHITE), 30);
+			display_blend_wh_rgb(xp + margin_left + h/2, yp + 1, width - h/2, h - 2, color_idx_to_rgb(COL_WHITE), 30);
 			if (basic_constraint_flags & vehicle_desc_t::can_be_head) {
-				display_pixel(xp + margin_left + h / 2, yp + 1, color);
+				display_pixel(xp + margin_left + h/2, yp + 1, color);
 				if(interactivity & BIDIRECTIONAL){
-					display_pixel(xp + margin_left + h / 2, yp + h - 2, color);
+					display_pixel(xp + margin_left + h/2, yp + h - 2, color);
 				}
 			}
 		}
 
 		// draw the "coupler" line
 		//if (reversed ? basic_constraint_flags & vehicle_desc_t::fixed_coupling_next : basic_constraint_flags & vehicle_desc_t::fixed_coupling_prev) {
-		//	display_blend_wh(xp + margin_left - 2, yp + h / 2 -1, 3, h/2, COL_BLACK, 66);
+		//	display_blend_wh(xp + margin_left - 2, yp + h/2 -1, 3, h/2, COL_BLACK, 66);
 		//}
 		// -| permanent coupling
 		//if (reversed ? basic_constraint_flags & vehicle_desc_t::permanent_coupling_next : basic_constraint_flags & vehicle_desc_t::permanent_coupling_prev) {
@@ -5255,7 +5270,7 @@ void display_filled_circle_rgb( scr_coord_val x0, scr_coord_val  y0, int radius,
 
 // Currently, only right-facing equilateral triangles are supported. Can be expanded if needed to accommodate another direction.
 // The horizontal size is sqrt(3) times the height. - Ranran
-void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const PIXVAL colval, const bool dirty)
+void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val height, const PIXVAL colval, const bool dirty)
 {
 	double sqrt3 = sqrt(3);
 	for (uint16 x0 = 0; x0 <= (uint16)(0.99 + height * (sqrt3)); x0++)
@@ -5263,6 +5278,22 @@ void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 height, 
 		display_vline_wh_rgb(x + x0, y + (uint16)(0.99 + x0 / sqrt3), height - (uint16)(0.99 + x0 / sqrt3) * 2, colval, dirty);
 	}
 }
+
+void display_right_pointer_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const PIXVAL colval, const bool dirty)
+{
+	uint8 width = height - height % 2;
+	for (uint16 i = 0; i < height; i++)
+	{
+		uint8 xoff = (height/2 - abs(i-height/2))/2;
+		uint8 w    = (height/2 - abs(i-height/2))*2;
+
+		display_fillbox_wh_clip_rgb(x+xoff+1, y+i, w-xoff, 1, colval, dirty);
+		if (i != height /2) {
+			display_blend_wh_rgb(x+xoff+1+w-xoff, y+i, 1, 1, colval, 50);
+		}
+	}
+}
+
 
 int display_fluctuation_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const bool dirty, sint64 value)
 {
@@ -5283,6 +5314,172 @@ int display_fluctuation_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 hei
 	}
 	return width;
 //	mark_rect_dirty_wc( x0-radius, y0-radius, x0+radius+1, y0+radius+1 );
+}
+
+
+void display_signal_direction_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val raster_width, uint8 way_dir, uint8 sig_dir, uint8 state, bool is_diagonal, uint8 open_dir, sint8 slope)
+{
+	PIXVAL col1      = color_idx_to_rgb(COL_RED+2);
+	PIXVAL col1_dark = color_idx_to_rgb(COL_RED);
+	PIXVAL col2      = color_idx_to_rgb(COL_RED+2);
+	PIXVAL col2_dark = color_idx_to_rgb(COL_RED);
+
+	switch (state) {
+		case roadsign_t::clear:
+		case roadsign_t::clear_no_choose:
+			col1      = color_idx_to_rgb(140);
+			col1_dark = color_idx_to_rgb(COL_DARK_GREEN+1);
+			break;
+		case roadsign_t::caution:
+		case roadsign_t::caution_no_choose:
+			col1      = COL_CAUTION;
+			col1_dark = color_idx_to_rgb(COL_DARK_YELLOW+1);
+			break;
+		case roadsign_t::preliminary_caution:
+		case roadsign_t::preliminary_caution_no_choose:
+			col1      = color_idx_to_rgb(206); // yellow green
+			col1_dark = color_idx_to_rgb(204);
+			break;
+		case roadsign_t::advance_caution:
+		case roadsign_t::advance_caution_no_choose:
+			col1      = color_idx_to_rgb(47);
+			col1_dark = color_idx_to_rgb(45);
+			break;
+		case roadsign_t::call_on:
+			col1      = color_idx_to_rgb(COL_GREY5+1);
+			col1_dark = color_idx_to_rgb(COL_GREY4+2);
+			break;
+		case 254: /* drive by sight */
+			col1 =      color_idx_to_rgb(COL_ORANGE + 2);
+			col1_dark = color_idx_to_rgb(COL_DARK_ORANGE);
+			break;
+		case 255: /* one way, directional reservation */
+			col1      = color_idx_to_rgb(COL_BLUE+4);
+			col1_dark = color_idx_to_rgb(COL_BLUE+2);
+			break;
+		case roadsign_t::danger:
+		default:
+			col1      = color_idx_to_rgb(COL_RED+2);
+			col1_dark = color_idx_to_rgb(COL_RED);
+			break;
+	}
+
+	if (open_dir == ribi_t::all) {
+		col2 = col1;
+		col2_dark = col1_dark;
+	}
+
+	assert(raster_width<768);
+	uint8 width  = is_diagonal ? raster_width/6*0.353 : raster_width/6;
+	const uint8 height = is_diagonal ? raster_width/6*0.353 : raster_width/12;
+	const uint8 thickness = max(raster_width/36, 2);
+
+	if (is_diagonal) {
+		if (open_dir != ribi_t::all) {
+			if (open_dir == ribi_t::southeast || open_dir == ribi_t::northeast) {
+				col2      = col1;
+				col2_dark = col1_dark;
+				col1      = color_idx_to_rgb(COL_RED+2);
+				col1_dark = color_idx_to_rgb(COL_RED);
+			}
+		}
+
+		if (way_dir == ribi_t::northeast || way_dir == ribi_t::southwest) {
+			// vertical
+			x += (way_dir==ribi_t::northeast) ? raster_width/4 : (-raster_width/4);
+			y += raster_width/16;
+			width = width<<2; // 4x
+
+			// upper
+			for (uint8 xoff = 0; xoff < width/2; xoff++) {
+				const uint8 yoff = (uint8)((xoff+1)/2);
+				// up
+				if (sig_dir & ribi_t::east || sig_dir & ribi_t::south) {
+					display_vline_wh_clip_rgb(x + xoff, y+yoff, width/4 - yoff, col1, true);
+					display_vline_wh_clip_rgb(x-xoff-1, y+yoff, width/4 - yoff, col1, true);
+				}
+				// down
+				if (sig_dir & ribi_t::west || sig_dir & ribi_t::north) {
+					display_vline_wh_clip_rgb(x + xoff, y+raster_width/6,              width/4-yoff, col2,      true);
+					display_vline_wh_clip_rgb(x + xoff, y+raster_width/6+width/4-yoff, thickness,    col2_dark, true);
+					display_vline_wh_clip_rgb(x-xoff-1, y+raster_width/6,              width/4-yoff, col2,      true);
+					display_vline_wh_clip_rgb(x-xoff-1, y+raster_width/6+width/4-yoff, thickness,    col2_dark, true);
+				}
+			}
+			// up
+			if (sig_dir & ribi_t::east || sig_dir & ribi_t::south) {
+				display_fillbox_wh_clip_rgb(x - width/2, y + width/4, width, thickness, col1_dark, true);
+			}
+		}
+		else {
+			// horizontal
+			y -= raster_width/12;
+			if (way_dir == ribi_t::southeast) {
+				y += raster_width/4;
+			}
+
+			for (uint8 xoff = 0; xoff < width*2; xoff++) {
+				const uint8 h = width*2 - (scr_coord_val)(xoff + 1);
+				// left
+				if (sig_dir & ribi_t::north || sig_dir & ribi_t::east) {
+					display_vline_wh_clip_rgb(x - xoff - width*2, y + (scr_coord_val)((xoff+1)/2),   h, col1, true);
+					display_vline_wh_clip_rgb(x - xoff - width*2, y + (scr_coord_val)((xoff+1)/2)+h, thickness, col1_dark, true);
+				}
+				// right
+				if (sig_dir & ribi_t::south || sig_dir & ribi_t::west) {
+					display_vline_wh_clip_rgb(x + xoff + width*2, y + (scr_coord_val)((xoff+1)/2),   h, col2, true);
+					display_vline_wh_clip_rgb(x + xoff + width*2, y + (scr_coord_val)((xoff+1)/2)+h, thickness, col2_dark, true);
+				}
+			}
+		}
+	}
+	else {
+		if (open_dir != ribi_t::all) {
+			if (open_dir == ribi_t::south || open_dir == ribi_t::east) {
+				col2      = col1;
+				col2_dark = col1_dark;
+				col1      = color_idx_to_rgb(COL_RED+2);
+				col1_dark = color_idx_to_rgb(COL_RED);
+			}
+		}
+
+		scr_coord_val slope_offset_y = 0;
+		if (sig_dir & ribi_t::south) {
+			// upper right
+			if ( slope == slope_t::south*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::south  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y,  (scr_coord_val)(xoff/2) + 1, col1, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
+			}
+		}
+		if (sig_dir & ribi_t::east) {
+			if ( slope == slope_t::east*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::east  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y,  (scr_coord_val)(xoff/2) + 1, col1, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
+			}
+		}
+		if (sig_dir & ribi_t::west) {
+			slope_offset_y = 0;
+			if ( slope == slope_t::west*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::west  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + height*2 + 1, thickness, col2_dark, true);
+			}
+		}
+		if (sig_dir & ribi_t::north) {
+			slope_offset_y = 0;
+			if ( slope == slope_t::north*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::north  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + height*2 + 1, thickness, col2_dark, true);
+			}
+		}
+	}
 }
 
 

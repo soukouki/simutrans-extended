@@ -45,7 +45,7 @@ extern int default_font_linespace;
 #define LOADINGBAR_WIDTH 100
 
 #define D_ENTRY_NO_HEIGHT (LINESPACE+4)
-#define D_ENTRY_NO_WIDTH (proportional_string_width("88")+6)
+#define D_ENTRY_NO_WIDTH (proportional_string_width("188")+6)
 
 /**
 * Alignment enum to align controls against each other
@@ -284,12 +284,15 @@ void display_cylinderbar_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coo
 
 void display_colorbox_with_tooltip(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty, const char *text=NULL);
 
-void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, PIXVAL color, bool dirty, uint8 basic_coupling_constraint, uint8 interactivity, bool is_rightside CLIP_NUM_DEF CLIP_NUM_DEFAULT_ZERO);
-
 enum {
 	BIDIRECTIONAL = 1,
 	HAS_POWER = 2
 };
+
+void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty, bool is_rightside=false, uint8 basic_coupling_constraint=1, uint8 interactivity=BIDIRECTIONAL|HAS_POWER CLIP_NUM_DEF CLIP_NUM_DEFAULT_ZERO);
+
+void display_convoy_arrow_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty  CLIP_NUM_DEF CLIP_NUM_DEFAULT_ZERO);
+#define display_convoy_arrow_wh_clip( x, y, w, h, c, d ) display_convoy_arrow_wh_clip_rgb( (x), (y), (w), (h), specialcolormap_all_day[(c)&0xFF], (d))
 
 void display_vline_wh_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val h, PIXVAL color, bool dirty);
 
@@ -391,9 +394,12 @@ void display_direct_line_rgb(const scr_coord_val x, const scr_coord_val y, const
 void display_direct_line_dotted_rgb(const scr_coord_val x, const scr_coord_val y, const scr_coord_val xx, const scr_coord_val yy, const scr_coord_val draw, const scr_coord_val dontDraw, const PIXVAL color);
 void display_circle_rgb(scr_coord_val x0, scr_coord_val  y0, int radius, const PIXVAL color);
 void display_filled_circle_rgb(scr_coord_val x0, scr_coord_val  y0, int radius, const PIXVAL color);
-void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const PIXVAL colval, const bool dirty);
 void draw_bezier_rgb(scr_coord_val Ax, scr_coord_val Ay, scr_coord_val Bx, scr_coord_val By, scr_coord_val ADx, scr_coord_val ADy, scr_coord_val BDx, scr_coord_val BDy, const PIXVAL colore, scr_coord_val draw, scr_coord_val dontDraw);
 int display_fluctuation_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const bool dirty, sint64 value=0);
+
+void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val height, const PIXVAL colval, const bool dirty);
+void display_right_pointer_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const PIXVAL colval, const bool dirty);
+void display_signal_direction_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val raster_width, uint8 way_dir, uint8 sig_dir, uint8 state, bool is_diagonal=false, uint8 open_dir=15/* all */, sint8 slope=type_flat);
 
 void display_set_clip_wh(scr_coord_val x, scr_coord_val y, scr_coord_val w, scr_coord_val h  CLIP_NUM_DEF CLIP_NUM_DEFAULT_ZERO, bool fit = false);
 clip_dimension display_get_clip_wh(CLIP_NUM_DEF0 CLIP_NUM_DEFAULT_ZERO);

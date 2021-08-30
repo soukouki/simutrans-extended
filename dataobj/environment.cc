@@ -125,7 +125,7 @@ bool env_t::townhall_info;
 bool env_t::single_info;
 bool env_t::window_buttons_right;
 bool env_t::window_frame_active;
-uint8 env_t::verbose_debug;
+log_t::level_t env_t::verbose_debug;
 uint8 env_t::default_sortmode;
 uint32 env_t::default_mapmode;
 uint8 env_t::show_month;
@@ -248,7 +248,7 @@ void env_t::init()
 	remember_window_positions = true;
 
 	// debug level (0: only fatal, 1: error, 2: warning, 3: all
-	verbose_debug = 0;
+	verbose_debug = log_t::LEVEL_FATAL;
 
 	default_sortmode = 1; // sort by amount
 	default_mapmode = 0;  // show cities
@@ -588,18 +588,20 @@ void env_t::rdwr(loadsave_t *file)
 		file->rdwr_bool(classes_waiting_bar);
 		file->rdwr_long(sound_distance_scaling);
 	}
-	if( file->is_version_atleast( 122, 1 ) ) {
+
+	if( file->is_version_ex_atleast(14, 41) ) {
+		file->rdwr_byte(gui_titlebar_player_color_background_brightness);
+		file->rdwr_short(env_t::menupos);
+		env_t::menupos &= 3;
+		file->rdwr_bool( reselect_closes_tool );
+	}
+
+	if( file->is_version_atleast( 122, 1 )  ||  file->is_version_ex_atleast(14, 42) ) {
 		plainstring str = soundfont_filename.c_str();
 		file->rdwr_str( str );
 		if(  file->is_loading()  ) {
 			soundfont_filename = str ? str.c_str() : "";
 		}
-	}
-	if( file->is_version_ex_atleast(14, 40) ) {
-		file->rdwr_byte(gui_titlebar_player_color_background_brightness);
-		file->rdwr_short(env_t::menupos);
-		env_t::menupos &= 3;
-		file->rdwr_bool( reselect_closes_tool );
 	}
 
 	// server settings are not saved, since they are server specific

@@ -12,8 +12,6 @@
 #include "../obj_node_info.h"
 #include "building_reader.h"
 #include "../../network/pakset_info.h"
-#include "../../tpl/array_tpl.h"
-
 
 /**
  * Old building types, for compatibility ...
@@ -34,18 +32,19 @@ struct old_btyp
 
 obj_desc_t * tile_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 {
-	array_tpl<char> desc_buf(node.size);
-	if (fread(desc_buf.begin(), node.size, 1, fp) != 1) {
-		return NULL;
-	}
-	char *p = desc_buf.begin();
+	ALLOCA(char, desc_buf, node.size);
+
+	building_tile_desc_t *desc = new building_tile_desc_t();
+
+	// Read data
+	fread(desc_buf, node.size, 1, fp);
+
+	char * p = desc_buf;
 
 	// old versions of PAK files have no version stamp.
 	// But we know, the highest bit was always cleared.
 	const uint16 v = decode_uint16(p);
 	const int version = (v & 0x8000)!=0 ? v&0x7FFF : 0;
-
-	building_tile_desc_t *desc = new building_tile_desc_t();
 
 	if(version == 2) {
 //  DBG_DEBUG("tile_reader_t::read_node()","version=1");
@@ -216,12 +215,14 @@ bool building_reader_t::successfully_loaded() const
 
 obj_desc_t * building_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 {
-	array_tpl<char> desc_buf(node.size);
-	if (fread(desc_buf.begin(), node.size, 1, fp) != 1) {
-		return NULL;
-	}
-	char * p = desc_buf.begin();
+	ALLOCA(char, desc_buf, node.size);
 
+	building_desc_t *desc = new building_desc_t();
+
+	// Read data
+	fread(desc_buf, node.size, 1, fp);
+
+	char * p = desc_buf;
 	// old versions of PAK files have no version stamp.
 	// But we know, the highest bit was always cleared.
 	const uint16 v = decode_uint16(p);
@@ -252,9 +253,6 @@ obj_desc_t * building_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 	{
 		extended_version = 3;
 	}
-	old_btyp::typ btyp = old_btyp::unknown;
-
-	building_desc_t *desc = new building_desc_t();
 
 	if(version <= 7)
 	{
@@ -267,6 +265,8 @@ obj_desc_t * building_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 		desc->employment_capacity = 65535;
 		desc->mail_demand_and_production_capacity = 65535;
 	}
+
+	old_btyp::typ btyp = old_btyp::unknown;
 
 	if (version == 8 || version == 9)
 	{

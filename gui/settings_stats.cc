@@ -10,7 +10,7 @@
 #include "../dataobj/environment.h"
 #include "../dataobj/translator.h"
 #include "../player/finance.h" // MAX_PLAYER_HISTORY_YEARS
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/vehicle.h"
 #include "../path_explorer.h"
 #include "settings_stats.h"
 #include "components/gui_divider.h"
@@ -122,7 +122,10 @@ static const char *revision_ex[] =
 	"37",
 	"38",
 	"39",
-	"40"
+	"40",
+	"41",
+	"42",
+	"43"
 };
 
 

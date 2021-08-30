@@ -6,7 +6,7 @@
 #include "../simevent.h"
 #include "../simcolor.h"
 #include "../simconvoi.h"
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/vehicle.h"
 #include "../simdepot.h"
 #include "../simhalt.h"
 #include "../simfab.h"
@@ -1386,7 +1386,7 @@ const fabrik_t* minimap_t::draw_factory_connections(const fabrik_t* const fab, b
 				const char * name = translator::translate(fab2->get_name());
 				int name_width = proportional_string_width(name)+8;
 				boxpos.x = clamp( boxpos.x, pos.x, pos.x+get_size().w-name_width );
-				display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, color_idx_to_rgb(5), color_idx_to_rgb(COL_WHITE), name, true);
+				display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, supplier_link ? color_idx_to_rgb(COL_DODGER_BLUE-1) : color_idx_to_rgb(COL_ORANGE-1), color_idx_to_rgb(COL_WHITE), name, true);
 			}
 		}
 	}
@@ -2001,7 +2001,7 @@ void minimap_t::draw(scr_coord pos)
 			int name_width = proportional_string_width(name)+8;
 			boxpos.x = clamp( boxpos.x, 0, 0+get_size().w-name_width );
 			boxpos += pos;
-			display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, 10, color_idx_to_rgb(COL_WHITE), name, true);
+			display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, color_idx_to_rgb(10), color_idx_to_rgb(COL_WHITE), name, true);
 		}
 
 		for (uint32 i = 0; i < win_get_open_count(); i++) {

@@ -10,11 +10,12 @@
 #include "../dataobj/schedule.h"
 #include "../display/viewport.h"
 
-
 #include "components/gui_schedule_item.h"
 #include "../player/simplay.h"
 #include "components/gui_image.h"
 #include "components/gui_divider.h"
+
+#include "../vehicle/vehicle.h"
 
 #define L_TIME_6_DIGITS_WIDTH (proportional_string_width("88:88:88")+6) // May be shared with another gui
 gui_times_history_t::gui_times_history_t(linehandle_t line_, convoihandle_t convoi_, bool line_reversed_display)
@@ -120,6 +121,15 @@ void gui_times_history_t::build_table()
 	}
 	remove_all();
 
+	slist_tpl<uint8> *schedule_indices = new slist_tpl<uint8>();
+	slist_tpl<departure_point_t *> *time_keys = new slist_tpl<departure_point_t *>();
+
+	construct_data(schedule_indices, time_keys);
+
+	if (!schedule_indices->get_count()) {
+		return;
+	}
+
 	const scr_coord_val heading_pading_x= D_HEADING_HEIGHT*2;
 	if (mirrored) {
 		new_component<gui_heading_t>("bidirectional_order",
@@ -136,29 +146,46 @@ void gui_times_history_t::build_table()
 
 	new_component<gui_margin_t>(0, D_V_SPACE);
 
-	slist_tpl<uint8> *schedule_indices = new slist_tpl<uint8>();
-	slist_tpl<departure_point_t *> *time_keys = new slist_tpl<departure_point_t *>();
-
-	construct_data(schedule_indices, time_keys);
-
 	const uint8 base_line_style = mirrored ? gui_colored_route_bar_t::line_style::doubled : gui_colored_route_bar_t::line_style::solid;
 
-	if (!schedule_indices->get_count()) {
-		return;
+	const minivec_tpl<schedule_entry_t>& entries = schedule->entries;
+
+	// for convoy loacation
+	sint32 cnv_route_index;
+	sint32 cnv_route_index_left;
+	PIXVAL convoy_state_col = COL_SAFETY;
+	uint16 min_range; // in km
+	bool found_location = false;
+	if (convoy.is_bound()) {
+		cnv_route_index = convoy->front()->get_route_index();
+		cnv_route_index_left = convoy->get_route()->get_count() - cnv_route_index;
+		old_route_index = cnv_route_index;
+		if (convoy->has_obsolete_vehicles()) {
+			convoy_state_col = COL_OBSOLETE;
+		}
+		min_range = convoy->get_min_range();
+	}
+	else {
+		min_range = line->get_min_range();
 	}
 
-	const minivec_tpl<schedule_entry_t>& entries = schedule->entries;
-	add_table(8,0)->set_spacing(scr_size(D_H_SPACE, 0));
+	add_table(8 + convoy.is_bound(),0)->set_spacing(scr_size(D_H_SPACE, 0));
 	{
 		// header
 		new_component<gui_empty_t>();
 		new_component<gui_empty_t>();
+		if (convoy.is_bound()) {
+			new_component<gui_empty_t>();
+		}
 		new_component<gui_label_t>("stations");
 		new_component_span<gui_label_t>("latest_3", 3);
 		new_component_span<gui_label_t>("average", 2);
 
 		new_component<gui_divider_t>();
 		new_component<gui_divider_t>()->init(scr_coord(0,0), D_ENTRY_NO_WIDTH);
+		if (convoy.is_bound()) {
+			new_component<gui_divider_t>()->init(scr_coord(0, 0), LINESPACE*0.7);
+		}
 		new_component<gui_divider_t>();
 		new_component_span<gui_divider_t>(3);
 		new_component_span<gui_divider_t>(2);
@@ -169,31 +196,109 @@ void gui_times_history_t::build_table()
 			const schedule_entry_t entry = entries[entry_index];
 			const halthandle_t halt = haltestelle_t::get_halt(entry.pos, player);
 
-			const bool is_interchange = (halt->registered_lines.get_count() + halt->registered_convoys.get_count()) > 1;
+			const bool is_interchange = halt.is_bound() ? (halt->registered_lines.get_count() + halt->registered_convoys.get_count()) > 1 : false;
 
-			button_t *b = new_component<button_t>();
-			b->set_typ(button_t::posbutton_automatic);
-			b->set_targetpos(entry.pos.get_2d());
+			// convoy location check
+			bool stopped_here = false;
+			bool in_this_section = false;
+			const uint8 next_stop_index = min(schedule_indices->at(i == schedule_indices->get_count() - 1 ? 0 : i + 1), entries.get_count()-1);
+			if (convoy.is_bound() && !found_location) {
+				if (cnv_route_index_left > 0) {
+					if (mirrored) {
+						if ((!reversed && i < (schedule_indices->get_count()/2)) || (reversed && i >= (schedule_indices->get_count()/2))) {
+							in_this_section = next_stop_index == schedule->get_current_stop();
+						}
+					}
+					else {
+						in_this_section = next_stop_index == schedule->get_current_stop();
+					}
 
-			new_component<gui_schedule_entry_number_t>(entry_index, halt->get_owner()->get_player_color1(),
-				is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt, scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT,D_ENTRY_NO_HEIGHT)));
-			new_component<gui_label_t>(halt->get_name());
+					if (cnv_route_index==1 && in_this_section) {
+						// still at this halt
+						in_this_section = false;
+						stopped_here = true;
+					}
+				}
+				else if(!stopped_here) {
+					if (mirrored) {
+						if ((!reversed && i <= (schedule_indices->get_count()/2)) || (reversed && i > (schedule_indices->get_count()/2))) {
+							stopped_here = entry_index == schedule->get_current_stop();
+						}
+					}
+					else {
+						stopped_here = (i>0 && entry_index == schedule->get_current_stop());
+					}
+				}
+				found_location = (in_this_section || stopped_here);
+			}
+
+			add_table(2,1)->set_spacing(scr_size(0,0));
+			{
+				add_table(2,1)->set_alignment(ALIGN_LEFT);
+				{
+					button_t *b = new_component<button_t>();
+					b->set_typ(button_t::posbutton_automatic);
+					b->set_targetpos(entry.pos.get_2d());
+					new_component<gui_margin_t>(max(0,L_TIME_6_DIGITS_WIDTH-D_POS_BUTTON_WIDTH-D_FIXED_SYMBOL_WIDTH*2));
+				}
+				end_table();
+				add_table(2,1)->set_alignment(ALIGN_RIGHT); {
+					new_component<gui_image_t>()->set_image(entry.wait_for_time && skinverwaltung_t::waiting_time ? skinverwaltung_t::waiting_time->get_image_id(0) : IMG_EMPTY, true);
+					new_component<gui_image_t>()->set_image(entry.minimum_loading>0 ? skinverwaltung_t::goods->get_image_id(0) : IMG_EMPTY, true);
+				}
+				end_table();
+			}
+			end_table();
+
+			uint8 line_col_idx = (!mirrored && reversed) ? player->get_player_color2() : player->get_player_color1();
+			new_component<gui_schedule_entry_number_t>(entry_index, halt.is_bound() ? halt->get_owner()->get_player_color1() : line_col_idx,
+				halt.is_bound() ? (is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt)
+					: gui_schedule_entry_number_t::number_style::waypoint,
+				scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT,D_ENTRY_NO_HEIGHT)));
+			// convoy location
+			if (convoy.is_bound()) {
+				if (stopped_here) {
+					new_component<gui_convoy_arrow_t>(convoy_state_col);
+				}
+				else {
+					new_component<gui_empty_t>();
+				}
+			}
+
+			add_table(2,1); {
+				new_component<gui_label_t>(halt.is_bound() ? halt->get_name() : "Wegpunkt");
+				new_component<gui_label_t>(entry.reverse==1 ? "[<<]" : NULL, SYSCOL_TEXT_STRONG);
+			}
+			end_table();
 
 			new_component_span<gui_empty_t>(5);
 
 			// row2
-			uint8 line_col_idx = reversed ? player->get_player_color2() : player->get_player_color1();
 			if (i < schedule_indices->get_count() - 1) {
-				uint32 distance_to_next_stop = shortest_distance(entry.pos.get_2d(), entries[next_entry_index].pos.get_2d()) * world()->get_settings().get_meters_per_tile();
-				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+				const uint32 distance_to_next_stop = shortest_distance(entry.pos.get_2d(), entries[next_entry_index].pos.get_2d()) * world()->get_settings().get_meters_per_tile();
+				const bool exceed_range = min_range && (distance_to_next_stop > min_range*1000);
+				gui_label_buf_t *lb = new_component<gui_label_buf_t>(exceed_range ? COL_DANGER : SYSCOL_TEXT, gui_label_t::right);
 				lb->buf().printf("%4.1f%s", (double)(distance_to_next_stop / 1000.0), "km");
+				if (exceed_range) {
+					lb->set_tooltip(translator::translate("out of range"));
+				}
 				lb->set_fixed_width(L_TIME_6_DIGITS_WIDTH);
 				lb->update();
 
 				if (mirrored && i >= (schedule_indices->get_count()/2)) {
 					line_col_idx = player->get_player_color2();
 				}
-				new_component<gui_colored_route_bar_t>(line_col_idx, base_line_style);
+				new_component<gui_colored_route_bar_t>(line_col_idx, base_line_style)->set_alert_level(exceed_range*3);
+
+
+				if (convoy.is_bound()) {
+					if (in_this_section) {
+						new_component<gui_convoy_arrow_t>(convoy_state_col);
+					}
+					else {
+						new_component<gui_empty_t>();
+					}
+				}
 
 				new_component<gui_empty_t>();
 
@@ -203,7 +308,7 @@ void gui_times_history_t::build_table()
 				if (retrieved_value) { history = *retrieved_value; }
 
 				for (uint8 j = 0; j < TIMES_HISTORY_SIZE; j++) {
-					uint32 time = history.get_entry(j);
+					const uint32 time = history.get_entry(j);
 					lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
 					if (time != 0) {
 						char time_as_clock[32];
@@ -242,17 +347,37 @@ void gui_times_history_t::build_table()
 				else {
 					new_component<gui_empty_t>();
 				}
-
 			}
 			else {
 				new_component<gui_empty_t>();
 				new_component<gui_colored_route_bar_t>(line_col_idx, gui_colored_route_bar_t::line_style::dashed);
+				if (convoy.is_bound()) {
+					new_component<gui_empty_t>();
+				}
 				new_component_span<gui_empty_t>(6);
 			}
+		}
+
+		if (convoy.is_bound()) {
+			new_component_span<gui_empty_t>(9);
+
+			new_component_span<gui_empty_t>(4);
+			new_component_span<gui_label_t>(translator::translate("Avg trip time"), SYSCOL_TEXT, gui_label_t::right, 3);
+
+			sint64 average_round_trip_time = convoy->get_average_round_trip_time();
+			gui_label_buf_t *avg_triptime_label = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
+			if (average_round_trip_time) {
+				char as_clock[32];
+				world()->sprintf_ticks(as_clock, sizeof(as_clock), average_round_trip_time);
+				avg_triptime_label->buf().printf(": %s", as_clock);
+			}
+			avg_triptime_label->update();
+			new_component<gui_empty_t>();
 		}
 	}
 	end_table();
 	new_component<gui_margin_t>(0, D_V_SPACE);
+
 
 	if (line.is_bound()) {
 		update_time = world()->get_ticks();
@@ -266,9 +391,14 @@ void gui_times_history_t::draw(scr_coord offset)
 		if (!convoy->get_schedule()->matches(world(), schedule)) {
 			init();
 		}
-		else if( old_current_stop != schedule->get_current_stop() ) {
-			old_current_stop = schedule->get_current_stop();
-			build_table();
+		else {
+			sint32 cnv_route_index = convoy->front()->get_route_index();
+			const sint32 cnv_route_index_left = convoy->get_route()->get_count() - convoy->front()->get_route_index();
+			if (cnv_route_index < old_route_index || (cnv_route_index_left==0 && old_route_index != cnv_route_index) || cnv_route_index == 2) {
+				old_route_index = cnv_route_index;
+				old_current_stop = schedule->get_current_stop();
+				build_table();
+			}
 		}
 	}
 	else if(line.is_bound()) {

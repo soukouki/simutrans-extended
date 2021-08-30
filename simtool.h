@@ -883,7 +883,7 @@ public:
 	tool_convoy_nameplate_t() : tool_t(TOOL_CONVOY_NAMEPLATES | SIMPLE_TOOL) {}
 	char const* get_tooltip(player_t const*) const OVERRIDE { return translator::translate("switch the convoy nameplate display mode"); }
 	bool init(player_t *) OVERRIDE {
-		env_t::show_cnv_nameplates = (env_t::show_cnv_nameplates + 1) % 4;
+		env_t::show_cnv_nameplates = (env_t::show_cnv_nameplates + 1) % 8;
 		welt->set_dirty();
 		return false;
 	}
@@ -990,9 +990,9 @@ public:
 	char const* get_tooltip(player_t const*) const OVERRIDE;
 	bool is_selected() const OVERRIDE;
 	void draw_after(scr_coord, bool dirty) const OVERRIDE;
-	bool init( player_t * ) OVERRIDE;
+	bool init(player_t *) OVERRIDE;
 	char const* work(player_t*, koord3d) OVERRIDE;
-	bool exit(player_t * ) OVERRIDE { return false; }
+	bool exit(player_t *) OVERRIDE;
 	bool is_init_network_safe() const OVERRIDE { return true; }
 	bool is_work_network_safe() const OVERRIDE { return true; }
 };

@@ -39,6 +39,7 @@ protected:
 	bool preview:1;
 	uint8 ticks_ns;
 	uint8 ticks_ow;
+        uint8 ticks_amber_ns, ticks_amber_ow;
 	uint8 ticks_offset;
 
 	sint8 after_yoffset, after_xoffset;
@@ -134,16 +135,32 @@ public:
 	void set_ticks_ns(uint8 ns) {
 		ticks_ns = ns;
 		// To prevent overflow in ticks_offset when rotating
-		if (ticks_ow > 256-ticks_ns) {
-			ticks_ow = 256-ticks_ns;
+		if (ticks_ow > 256-ticks_ns - ticks_amber_ns - ticks_amber_ow ) {
+			ticks_ow = 256-ticks_ns-ticks_amber_ns-ticks_amber_ow;
 		}
 	}
 	uint8 get_ticks_ow() const { return ticks_ow; }
 	void set_ticks_ow(uint8 ow) {
 		ticks_ow = ow;
 		// To prevent overflow in ticks_offset when rotating
-		if (ticks_ns > 256-ticks_ow) {
-			ticks_ns = 256-ticks_ow;
+		if (ticks_ns > 256-ticks_ow - ticks_amber_ns-ticks_amber_ow ) {
+			ticks_ns = 256-ticks_ow-ticks_amber_ns-ticks_amber_ow;
+		}
+	}
+	uint8 get_ticks_amber_ns() const { return ticks_amber_ns; }
+	void set_ticks_amber_ns(uint8 amber) {
+		ticks_amber_ns = amber;
+		// To prevent overflow in ticks_offset when rotating
+		if (ticks_amber_ns > 256-ticks_ns - ticks_ow - ticks_amber_ow) {
+		  ticks_amber_ns = 256-ticks_ns-ticks_ow-ticks_amber_ow;
+		}
+	}
+	uint8 get_ticks_amber_ow() const { return ticks_amber_ow; }
+	void set_ticks_amber_ow(uint8 amber) {
+		ticks_amber_ow = amber;
+		// To prevent overflow in ticks_offset when rotating
+		if (ticks_amber_ow > 256-ticks_ns - ticks_ow - ticks_amber_ns) {
+		  ticks_amber_ow = 256-ticks_ns-ticks_ow-ticks_amber_ns;
 		}
 	}
 	uint8 get_ticks_offset() const { return ticks_offset; }
@@ -152,6 +169,9 @@ public:
 	uint8 get_lane_affinity() const { return lane_affinity; }
 	void set_lane_affinity(uint8 lf) { lane_affinity = lf; }
 	const koord3d get_intersection() const;
+
+	koord3d get_next_pos_nw(uint8 dir, sint8 slope = slope_t::flat) const;
+	koord3d get_next_pos_se(uint8 dir, sint8 slope = slope_t::flat) const;
 
 	inline void set_image( image_id b ) { image = b; }
 	image_id get_image() const OVERRIDE { return image; }
@@ -171,6 +191,9 @@ public:
 #else
 	void display_after(int xpos, int ypos, bool dirty) const OVERRIDE;
 #endif
+
+	void display_overlay(int xpos, int ypos) const;
+	inline bool is_bidirectional() const { return ((dir & ribi_t::east) && (dir & ribi_t::west)) || ((dir & ribi_t::south) && (dir & ribi_t::north)) || ((dir & ribi_t::northeast) && (dir & ribi_t::southwest)) || ((dir & ribi_t::northwest) && (dir & ribi_t::southeast)); }
 
 	void rdwr(loadsave_t *file) OVERRIDE;
 

@@ -238,6 +238,8 @@ private:
 	road_timeline_t city_roads[16];
 	uint16 num_intercity_roads;
 	road_timeline_t intercity_roads[16];
+	uint16 num_industry_roads;
+	road_timeline_t industry_roads[16];
 
 	/**
 	 * Use numbering for stations?
@@ -817,7 +819,7 @@ public:
 	sint32 get_size_y() const {return size_y;}
 
 	void reset_regions(sint32 old_x, sint32 old_y);
-	void rotate_regions(sint16 y_size);
+	void rotate_regions();
 
 	sint32 get_map_number() const {return map_number;}
 
@@ -884,7 +886,7 @@ public:
 	void rotate90() {
 		rotation = (rotation+1)&3;
 		set_size( size_y, size_x, true);
-		rotate_regions(size_y);
+		rotate_regions();
 	}
 	uint8 get_rotation() const { return rotation; }
 
@@ -922,6 +924,7 @@ public:
 
 	const way_desc_t *get_city_road_type( uint16 year );
 	const way_desc_t *get_intercity_road_type( uint16 year );
+	const way_desc_t* get_industry_road_type( uint16 year );
 
 	void set_pak_diagonal_multiplier(uint16 n) { pak_diagonal_multiplier = n; }
 	uint16 get_pak_diagonal_multiplier() const { return pak_diagonal_multiplier; }

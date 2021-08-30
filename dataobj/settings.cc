@@ -18,7 +18,7 @@
 #include "../utils/simrandom.h"
 #include "../utils/simstring.h"
 #include "../utils/float32e8_t.h"
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/vehicle.h"
 #include "../player/simplay.h"
 #include "loadsave.h"
 #include "tabfile.h"
@@ -810,6 +810,24 @@ void settings_t::rdwr(loadsave_t *file)
 					file->rdwr_str(intercity_roads[i].name, lengthof(intercity_roads[i].name) );
 					file->rdwr_short(intercity_roads[i].intro );
 					file->rdwr_short(intercity_roads[i].retire );
+				}
+				if (file->is_version_ex_atleast(14, 43))
+				{
+					// Industry roads are now different from inter-city roads
+					file->rdwr_short(num_industry_roads);
+					if (num_industry_roads >= 16) {
+						dbg->fatal("settings_t::rdwr()", "Too many (%i) industry roads!", num_industry_roads);
+					}
+
+					for (int i = 0; i < num_industry_roads; i++) {
+						file->rdwr_str(industry_roads[i].name, lengthof(industry_roads[i].name));
+						file->rdwr_short(industry_roads[i].intro);
+						file->rdwr_short(industry_roads[i].retire);
+					}
+				}
+				else
+				{
+					num_industry_roads = 0;
 				}
 			}
 			file->rdwr_long(max_route_steps );
@@ -2198,7 +2216,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	if( num_city_roads == 0 ) {
 		// take fallback value: "city_road"
 		tstrncpy( city_roads[ 0 ].name, "city_road", lengthof( city_roads[ 0 ].name ) );
-		// default her: always available
+		// default: always available
 		city_roads[ 0 ].intro = 1;
 		city_roads[ 0 ].retire = NEVER;
 		num_city_roads = 1;
@@ -2211,7 +2229,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 		num_intercity_roads = 1;
 		tstrncpy( intercity_roads[ 0 ].name, str, lengthof( intercity_roads[ 0 ].name ) );
 		rtrim( intercity_roads[ 0 ].name );
-		// default her: always available
+		// default: always available
 		intercity_roads[ 0 ].intro = 1;
 		intercity_roads[ 0 ].retire = NEVER;
 	}
@@ -2231,7 +2249,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 					p++;
 				}
 				tstrncpy( intercity_roads[ num_intercity_roads ].name, test, (unsigned)(p - test) + 1 );
-				// default her: intro/retire=0 -> set later to intro/retire of way-desc
+				// default: intro/retire=0 -> set later to intro/retire of way-desc
 				intercity_roads[ num_intercity_roads ].intro = 0;
 				intercity_roads[ num_intercity_roads ].retire = 0;
 				if( *p == ',' ) {
@@ -2251,10 +2269,51 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	if( num_intercity_roads == 0 ) {
 		// take fallback value: "asphalt_road"
 		tstrncpy( intercity_roads[ 0 ].name, "asphalt_road", lengthof( intercity_roads[ 0 ].name ) );
-		// default her: always available
+		// default: always available
 		intercity_roads[ 0 ].intro = 1;
 		intercity_roads[ 0 ].retire = NEVER;
 		num_intercity_roads = 1;
+	}
+
+	// Up to 16 industry roads are available
+	if (*contents.get("industry_road[0]")) {
+		// renew them always when a table is encountered ...
+		num_industry_roads = 0;
+		for (int i = 0; i < 16; i++) {
+			char name[256];
+			sprintf(name, "industry_road[%i]", i);
+			// format is "industry_road[%i]=name_of_road,using from (year), using to (year)"
+			const char* test = ltrim(contents.get(name));
+			if (*test) {
+				const char* p = test;
+				while (*p && *p != ',') {
+					p++;
+				}
+				tstrncpy(industry_roads[num_industry_roads].name, test, (unsigned)(p - test) + 1);
+				// default: intro/retire=0 -> set later to intro/retire of way-desc
+				industry_roads[num_industry_roads].intro = 0;
+				industry_roads[num_industry_roads].retire = 0;
+				if (*p == ',') {
+					++p;
+					industry_roads[num_industry_roads].intro = atoi(p) * 12;
+					while (*p && *p != ',') {
+						p++;
+					}
+				}
+				if (*p == ',') {
+					industry_roads[num_industry_roads].retire = atoi(p + 1) * 12;
+				}
+				num_industry_roads++;
+			}
+		}
+	}
+	if (num_industry_roads == 0) {
+		// take fallback value: "asphalt_road"
+		tstrncpy(industry_roads[0].name, "asphalt_road", lengthof(industry_roads[0].name));
+		// default: always available
+		industry_roads[0].intro = 1;
+		industry_roads[0].retire = NEVER;
+		num_industry_roads = 1;
 	}
 
 	env_t::autosave = (contents.get_int( "autosave", env_t::autosave ));
@@ -2333,7 +2392,6 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 			else {
 				startingmoneyperyear[ k ].interpol = false;
 			}
-			//			printf("smpy[%d] year=%d money=%lld\n",k,startingmoneyperyear[k].year,startingmoneyperyear[k].money);
 			j++;
 		}
 		else {
@@ -3060,8 +3118,6 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	if(  *contents.get("soundfont_filename")  ) {
 		env_t::soundfont_filename = ltrim(contents.get("soundfont_filename"));
 	}
-
-	printf("Reading simuconf.tab successful!\n" );
 }
 
 // colour stuff can only be parsed when the graphic system has already started
@@ -3157,13 +3213,17 @@ void settings_t::reset_regions(sint32 old_x, sint32 old_y)
 	}
 }
 
-void settings_t::rotate_regions(sint16 y_size)
+void settings_t::rotate_regions()
 {
 	vector_tpl<region_definition_t> temp_regions;
 	FOR(vector_tpl<region_definition_t>, region, regions)
 	{
-		region.top_left.rotate90(y_size);
-		region.bottom_right.rotate90(y_size);
+		const sint16 temp_top_y= region.top_left.y;
+		region.top_left.y = region.bottom_right.y;
+		region.bottom_right.y= temp_top_y;
+
+		region.top_left.rotate90(world()->get_size().y-1);
+		region.bottom_right.rotate90(world()->get_size().y-1);
 		temp_regions.append(region);
 	}
 
@@ -3256,10 +3316,14 @@ way_desc_t const* settings_t::get_city_road_type(uint16 const year)
 	return get_timeline_road_type(year, num_city_roads, city_roads );
 }
 
-
 way_desc_t const* settings_t::get_intercity_road_type(uint16 const year)
 {
 	return get_timeline_road_type(year, num_intercity_roads, intercity_roads );
+}
+
+way_desc_t const* settings_t::get_industry_road_type(uint16 const year)
+{
+	return get_timeline_road_type(year, num_industry_roads, industry_roads);
 }
 
 

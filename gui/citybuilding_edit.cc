@@ -209,9 +209,9 @@ void citybuilding_edit_frame_t::fill_list()
 		// color code for objects: BLACK: normal, YELLOW: consumer only, GREEN: source only
 		PIXVAL color;
 		switch (i->get_type()) {
-			case building_desc_t::city_res: color = color_idx_to_rgb(COL_DARK_BLUE + env_t::gui_player_color_dark); break;
-			case building_desc_t::city_com: color = color_idx_to_rgb(40 + env_t::gui_player_color_dark);            break;
-			default:                        color = SYSCOL_TEXT;                                                    break;
+			case building_desc_t::city_res: color = color_idx_to_rgb(COL_BLUE);       break;
+			case building_desc_t::city_com: color = color_idx_to_rgb(COL_DARK_GREEN); break;
+			default:                        color = SYSCOL_TEXT;                      break;
 		}
 		char const* const name = get_sortedby()==gui_sorting_item_t::BY_NAME_OBJECT ?  i->get_name() : translator::translate(i->get_name());
 		scl.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(name, color);
@@ -331,7 +331,7 @@ void citybuilding_edit_frame_t::change_item_info(sint32 entry)
 
 		// the tools will be always updated, even though the data up there might be still current
 		param_str.clear();
-		param_str.printf("%i%c%s", bt_climates.pressed, rotation>253 ? (rotation==254 ? 'A' : '#') : '0'+rotation, desc->get_name() );
+		param_str.printf("%i%i%c%s", bt_climates.pressed, bt_ignore_regions.pressed, rotation>253 ? (rotation==254 ? 'A' : '#') : '0'+rotation, desc->get_name() );
 		haus_tool.set_default_param(param_str);
 		welt->set_tool( &haus_tool, player );
 	}

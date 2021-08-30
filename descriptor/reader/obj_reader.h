@@ -80,13 +80,8 @@ class obj_reader_t
 	static unresolved_map unresolved;
 	static ptrhashtable_tpl<obj_desc_t **, int, N_BAGS_SMALL>  fatals;
 
-	/// Read a descriptor node.
-	/// @param fp File to read from
-	/// @param[out] data If reading is successful, contains descriptor for the object, else NULL.
-	/// @param register_nodes Nesting level for desc-nodes, should normally be 0
-	/// @param version File format version
-	static bool read_nodes(FILE* fp, obj_desc_t *&data, int register_nodes, uint32 version);
-	static bool skip_nodes(FILE *fp, uint32 version);
+	static void read_nodes(FILE* fp, obj_desc_t*& data, int register_nodes,uint32 version);
+	static void skip_nodes(FILE *fp,uint32 version);
 
 protected:
 	obj_reader_t() { /* Beware: Cannot register here! */}
@@ -96,8 +91,15 @@ protected:
 	static void xref_to_resolve(obj_type type, const char *name, obj_desc_t **dest, bool fatal);
 	static void resolve_xrefs();
 
-	virtual obj_desc_t* read_node(FILE* fp, obj_node_info_t& node) = 0;
-	virtual void register_obj(obj_desc_t *&/*data*/) {}
+	/// Read a descriptor from @p fp. Does version check and compatibility transformations.
+	/// @returns The descriptor on success, or NULL on failure
+	virtual obj_desc_t *read_node(FILE *fp, obj_node_info_t &node) = 0;
+
+	/// Register descriptor so the object described by the descriptor can be built in-game.
+	virtual void register_obj(obj_desc_t *&/*desc*/) {}
+
+	/// Does post-loading checks.
+	/// @returns true if everything ok
 	virtual bool successfully_loaded() const { return true; }
 
 	void register_reader();
@@ -116,7 +118,6 @@ public:
 	virtual const char *get_type_name() const = 0;
 
 	static bool finish_rd();
-
 	/**
 	 * Loads all pak files from a directory, displaying a progress bar if the display is initialized
 	 * @param path Directory to be scanned for PAK files
@@ -125,7 +126,7 @@ public:
 	static bool load(const char *path, const char *message);
 
 	// Only for single files, must take care of all the cleanup/registering matrix themselves
-	static bool read_file(const char *name);
+	static void read_file(const char *name);
 };
 
 #endif

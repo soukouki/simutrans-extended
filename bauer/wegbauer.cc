@@ -450,8 +450,10 @@ bool way_builder_t::check_crossing(const koord zv, const grund_t *bd, waytype_t 
 	// crossing available and ribis ok
 	const crossing_desc_t *crd = crossing_logic_t::get_crossing(wtyp, w->get_waytype(), 0, 0, welt->get_timeline_year_month());
 	if(crd!=NULL) {
-		// If existing way is water, then only allow building if desired way (presumably road) has max axle load of 0.
-		if ( (w->get_waytype() == water_wt) && (desc->get_axle_load() > 0)) {
+		if (w->get_waytype() == water_wt && crd->get_maxspeed(1) == 0 && w->get_max_speed() > 0)
+		{
+			// If the ford flag is set (waytype 2 of the crossing is water and its maximum speed is zero),
+			// do not allow fording a navigable river.
 			return false;
 		}
 
@@ -1826,18 +1828,7 @@ void way_builder_t::intern_calc_straight_route(const koord3d start, const koord3
 			pos.z = bd_von->get_vmove(diff);
 
 			// check next tile
-			grund_t *bd_nach = welt->lookup(pos + diff);
-			if(  !bd_nach  ) {
-				// check for slope down ...
-				bd_nach = welt->lookup(pos + diff + koord3d(0,0,-1));
-				if(  !bd_nach  ) {
-					bd_nach = welt->lookup(pos + diff + koord3d(0,0,-2));
-				}
-				if(  bd_nach  &&  bd_nach->get_weg_hang() == slope_t::flat  ) {
-					// Don't care about _flat_ tunnels below.
-					bd_nach = NULL;
-				}
-			}
+			grund_t *bd_nach = welt->lookup_with_checking_down_way_slope(pos + diff);
 			if(  bd_nach == NULL  ){
 				bd_nach = new tunnelboden_t(pos + diff, slope_t::flat);
 				bd_nach_new = true;
@@ -2182,8 +2173,7 @@ void way_builder_t::build_tunnel_and_bridges()
 /*
  * returns the amount needed to built this way
  */
-sint64 way_builder_t::calc_costs()
-{
+sint64 way_builder_t::calc_costs() {
 	if(desc->is_mothballed())
 	{
 		// It is free to mothball a way. No other calculations are needed, as mothballed types
@@ -2227,7 +2217,8 @@ sint64 way_builder_t::calc_costs()
 		sint64 replace_cost = 0;
 		bool upgrading = false;
 
-		const grund_t* gr = welt->lookup(route[i] + offset);
+		const koord3d pos = route[i] + offset;
+		const grund_t* gr = welt->lookup(pos);
 		if( gr ) {
 			if( bautyp&tunnel_flag ) {
 				const tunnel_t *tunnel = gr->find<tunnel_t>();
@@ -2255,13 +2246,12 @@ sint64 way_builder_t::calc_costs()
 			}
 
 			sint64 forge_cost = upgrading ? 0 : welt->get_settings().get_forge_cost(desc->get_waytype());
-			const koord3d pos = gr->get_pos();
 
 			if(!upgrading && !(bautyp & tunnel_flag) && !(bautyp & elevated_flag) && route.get_count() > 1)
 			{
 				for(int n = 0; n < 8; n ++)
 				{
-					const koord kn = pos.get_2d().neighbours[n] + pos.get_2d();
+					const koord kn = koord::neighbours[n] + pos.get_2d();
 					if(!welt->is_within_grid_limits(kn))
 					{
 						continue;
@@ -2289,10 +2279,10 @@ sint64 way_builder_t::calc_costs()
 			single_cost += forge_cost;
 
 			const obj_t* obj = gr->obj_bei(0);
-			if(!upgrading && (obj == NULL || obj->get_owner() != player_builder))
+			if(!upgrading && (obj == NULL || obj->get_owner() == NULL))
 			{
-				// Only add the cost of the land if the player does not
-				// already own this land.
+				// Only add the cost of the land if this land is not already owned
+				// by either this player or some other player.
 
 				// get_land_value returns a *negative* value.
 				single_cost -= welt->get_land_value(gr->get_pos());
@@ -2318,7 +2308,7 @@ sint64 way_builder_t::calc_costs()
 		}
 		else if(!gr)
 		{
-			// No ground -building a new elevated way. Do not add the land value as it is still possible to build underneath an elevated way.
+			// No ground - building a new elevated way. Do not add the land value as it is still possible to build underneath an elevated way.
 			costs += (welt->get_settings().get_forge_cost(desc->get_waytype()) + desc->get_value());
 		}
 		else
@@ -2645,9 +2635,14 @@ void way_builder_t::build_road()
 					{
 						if (str->get_owner() != player_builder)
 						{
-							// If taking ownership of a way, must buy the underlying land.
 							str->set_owner(player_builder);
-							cost += welt->get_land_value(gr->get_pos());
+							// If taking ownership of a way, must buy the underlying land,
+							// except in cases of public rights of way, in which the underlying land
+							// is assumed to be owned by third parties subject to the way.
+							if (!str->is_public_right_of_way())
+							{
+								cost += welt->get_land_value(gr->get_pos());
+							}
 						}
 						// Set maintenance costs here
 						// including corrections for diagonals.
