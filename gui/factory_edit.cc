@@ -184,8 +184,8 @@ void factory_edit_frame_t::fill_list()
 				&&  ( desc->get_building()->get_allowed_climate_bits() & get_climate()) ) {
 				// timeline allows for this, and so does climates setting
 
-				if( ( city_chain  &&  (desc->get_placement() == factory_desc_t::City && desc->is_consumer_only() ) )
-				||  ( land_chain  &&  (desc->get_placement() != factory_desc_t::City && desc->is_consumer_only() ) )
+				if( ( city_chain  &&  ((desc->get_placement() == factory_desc_t::City || desc->get_placement() == factory_desc_t::shore_city || desc->get_placement() == factory_desc_t::river_city) && desc->is_consumer_only() ) )
+				||  ( land_chain  &&  ((desc->get_placement() == factory_desc_t::City || desc->get_placement() == factory_desc_t::shore_city || desc->get_placement() == factory_desc_t::river_city) && desc->is_consumer_only() ) )
 				||  (!city_chain  &&  !land_chain) ) {
 					switch(sortedby) {
 						case gui_sorting_item_t::BY_NAME_TRANSLATED:     factory_list.insert_ordered( desc, compare_factory_desc_name );           break;
