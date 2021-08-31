@@ -24,11 +24,12 @@
 
 #include "gui_frame.h"
 #include "halt_info.h" // gui_halt_type_images_t
-#include "components/gui_speedbar.h"
 #include "components/gui_halthandled_lines.h"
 
-#define MINI_WAITING_BAR_HEIGHT 4
-#define MINI_WAITING_BAR_WIDTH 33
+#define HISTBAR_SCALE_FACTOR 10
+#define WAITINGBAR_SCALE_FACTOR 4
+#define L_KOORD_LABEL_WIDTH proportional_string_width("(8888,8888)")
+#define L_HALT_CAPACITY_LABEL_WIDTH proportional_string_width("8,888")
 
 uint16 halt_list_stats_t::name_width = 0;
 
@@ -47,16 +48,13 @@ gui_halt_stats_t::gui_halt_stats_t(halthandle_t h)
 	set_table_layout(1,0);
 	set_spacing(scr_size(1,1));
 	set_margin(scr_size(1,1), scr_size(0,0));
+
+	update_table();
 }
 
-#define HISTBAR_SCALE_FACTOR 10
-#define WAITINGBAR_SCALE_FACTOR 4
-#define L_KOORD_LABEL_WIDTH proportional_string_width("(8888,8888)")
-#define L_HALT_CAPACITY_LABEL_WIDTH proportional_string_width("8,888")
-void gui_halt_stats_t::draw(scr_coord offset)
+void gui_halt_stats_t::update_table()
 {
 	remove_all();
-
 	switch (display_mode) {
 		case halt_list_stats_t::hl_waiting_detail:
 			new_component<gui_halt_waiting_summary_t>(halt);
@@ -127,12 +125,14 @@ void gui_halt_stats_t::draw(scr_coord offset)
 				                        /* freight_type==2*/ halt->get_finance_history(0, HALT_WAITING) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
 				const scr_coord_val h = D_LABEL_HEIGHT*2/3;
 
-				const sint32 waiting_sum_under_capacity = (sint32)min(waiting_sum, capacity);
-				const sint32 over_capacity = (sint64)waiting_sum - waiting_sum_under_capacity;
+				num[0] = (sint32)min(waiting_sum, capacity);
+				num[1] = (sint64)waiting_sum - num[0];
 
-				gui_bandgraph_t *ev = new_component<gui_bandgraph_t>(scr_size(min(256, (waiting_sum + (WAITINGBAR_SCALE_FACTOR - 1)) / WAITINGBAR_SCALE_FACTOR), D_LABEL_HEIGHT * 2 / 3), true);
-				ev->add_color_value(&waiting_sum_under_capacity, colval, true);
-				ev->add_color_value(&over_capacity, color_idx_to_rgb(COL_OVERCROWD), true);
+				bandgraph.clear();
+				bandgraph.add_color_value(&num[0], colval, true);
+				bandgraph.add_color_value(&num[1], color_idx_to_rgb(COL_OVERCROWD), true);
+				add_component(&bandgraph);
+				bandgraph.set_size(scr_size(min(256, (waiting_sum + (WAITINGBAR_SCALE_FACTOR-1)) / WAITINGBAR_SCALE_FACTOR), D_LABEL_HEIGHT*2/3));
 
 				// show arrow for capped values
 				new_component<gui_capped_arrow_t>()->set_visible(waiting_sum > 1024);
@@ -180,15 +180,15 @@ void gui_halt_stats_t::draw(scr_coord offset)
 		case halt_list_stats_t::hl_pax_evaluation:
 		{
 			add_table(3,1);
-			const sint32 hist_traveled    = halt->get_finance_history(1, HALT_HAPPY);
-			const sint32 hist_overcrowded = halt->get_finance_history(1, HALT_UNHAPPY);
-			const sint32 hist_refund      = halt->get_finance_history(1, HALT_TOO_WAITING);
-			const sint32 hist_too_slow    = halt->get_finance_history(1, HALT_TOO_SLOW);
-			const sint32 hist_no_route    = halt->get_finance_history(1, HALT_NOROUTE);
+			num[0] = halt->get_finance_history(1, HALT_HAPPY);
+			num[1] = halt->get_finance_history(1, HALT_UNHAPPY);
+			num[2] = halt->get_finance_history(1, HALT_TOO_WAITING);
+			num[3] = halt->get_finance_history(1, HALT_TOO_SLOW);
+			num[4] = halt->get_finance_history(1, HALT_NOROUTE);
 
 			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
 			if (halt->get_potential_passenger_number(1)) {
-				lb->buf().append(hist_traveled, 0);
+				lb->buf().append(num[0], 0);
 				lb->init(color_idx_to_rgb(COL_HAPPY), gui_label_t::right);
 			}
 			else {
@@ -199,12 +199,14 @@ void gui_halt_stats_t::draw(scr_coord offset)
 			lb->init(color_idx_to_rgb(COL_HAPPY), gui_label_t::right);
 			lb->update();
 
-			gui_bandgraph_t *ev = new_component<gui_bandgraph_t>(scr_size(min(256,(halt->get_potential_passenger_number(1)+(HISTBAR_SCALE_FACTOR-1))/HISTBAR_SCALE_FACTOR), D_LABEL_HEIGHT*2/3),true);
-			ev->add_color_value(&hist_traveled,    color_idx_to_rgb(COL_HAPPY)     );
-			ev->add_color_value(&hist_overcrowded, color_idx_to_rgb(COL_OVERCROWD) );
-			ev->add_color_value(&hist_refund,      color_idx_to_rgb(COL_TOO_WAITNG));
-			ev->add_color_value(&hist_too_slow,    color_idx_to_rgb(COL_TOO_SLOW)  );
-			ev->add_color_value(&hist_no_route,    color_idx_to_rgb(COL_NO_ROUTE)  );
+			bandgraph.clear();
+			bandgraph.add_color_value(&num[0], color_idx_to_rgb(COL_HAPPY));
+			bandgraph.add_color_value(&num[1], color_idx_to_rgb(COL_OVERCROWD));
+			bandgraph.add_color_value(&num[2], color_idx_to_rgb(COL_TOO_WAITNG));
+			bandgraph.add_color_value(&num[3], color_idx_to_rgb(COL_TOO_SLOW));
+			bandgraph.add_color_value(&num[4], color_idx_to_rgb(COL_NO_ROUTE));
+			add_component(&bandgraph);
+			bandgraph.set_size(scr_size(min(256, (halt->get_potential_passenger_number(1) + (HISTBAR_SCALE_FACTOR-1)) / HISTBAR_SCALE_FACTOR), D_LABEL_HEIGHT*2/3));
 
 			lb = new_component<gui_label_buf_t>();
 			if (halt->get_pax_enabled()) {
@@ -219,13 +221,13 @@ void gui_halt_stats_t::draw(scr_coord offset)
 		case halt_list_stats_t::hl_mail_evaluation:
 		{
 			add_table(3,1);
-			const sint32 hist_delivered = halt->get_finance_history(1, HALT_MAIL_DELIVERED);
-			const sint32 hist_no_route  = halt->get_finance_history(1, HALT_MAIL_NOROUTE  );
-			const sint64 potential_passenger_number = hist_delivered + hist_no_route;
+			num[0] = halt->get_finance_history(1, HALT_MAIL_DELIVERED);
+			num[1] = halt->get_finance_history(1, HALT_MAIL_NOROUTE);
+			const sint64 potential_mail_users = num[0] + num[1];
 
 			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
-			if (potential_passenger_number) {
-				lb->buf().append(hist_delivered, 0);
+			if (potential_mail_users) {
+				lb->buf().append(num[0], 0);
 				lb->init(color_idx_to_rgb(COL_MAIL_DELIVERED), gui_label_t::right);
 			}
 			else {
@@ -236,13 +238,15 @@ void gui_halt_stats_t::draw(scr_coord offset)
 			lb->init(color_idx_to_rgb(COL_HAPPY), gui_label_t::right);
 			lb->update();
 
-			gui_bandgraph_t *ev = new_component<gui_bandgraph_t>(scr_size(min(256,(potential_passenger_number +(HISTBAR_SCALE_FACTOR-1))/HISTBAR_SCALE_FACTOR), D_LABEL_HEIGHT*2/3),true);
-			ev->add_color_value(&hist_delivered, color_idx_to_rgb(COL_MAIL_DELIVERED));
-			ev->add_color_value(&hist_no_route,  color_idx_to_rgb(COL_MAIL_NOROUTE)  );
+			bandgraph.clear();
+			bandgraph.add_color_value(&num[0], color_idx_to_rgb(COL_MAIL_DELIVERED));
+			bandgraph.add_color_value(&num[1], color_idx_to_rgb(COL_MAIL_NOROUTE));
+			add_component(&bandgraph);
+			bandgraph.set_size(scr_size(min(256, (potential_mail_users + (HISTBAR_SCALE_FACTOR-1)) / HISTBAR_SCALE_FACTOR), D_LABEL_HEIGHT*2/3));
 
 			lb = new_component<gui_label_buf_t>();
 			if (halt->get_mail_enabled()) {
-				lb->buf().append(potential_passenger_number, 0);
+				lb->buf().append(potential_mail_users, 0);
 				lb->init(SYSCOL_TEXT, gui_label_t::left);
 			}
 			lb->update();
@@ -361,7 +365,72 @@ void gui_halt_stats_t::draw(scr_coord offset)
 #endif
 			break;
 	}
+
+	old_display_mode = display_mode;
+
 	set_size(get_size());
+}
+
+void gui_halt_stats_t::draw(scr_coord offset)
+{
+	bool update_flag = false;
+
+	if (old_display_mode != display_mode) {
+		update_flag = true;
+	}
+	else {
+		switch (display_mode) {
+			case halt_list_stats_t::hl_waiting_pax:
+			case halt_list_stats_t::hl_waiting_mail:
+			case halt_list_stats_t::hl_waiting_goods:
+				if (update_seed != halt->get_finance_history(0, HALT_WAITING)) {
+					update_flag = true;
+					update_seed = halt->get_finance_history(0, HALT_WAITING);
+				}
+				break;
+			case halt_list_stats_t::hl_facility:
+			{
+				const sint32 check = (sint32)(halt->get_capacity(0) + halt->get_capacity(1) + halt->get_capacity(2) + halt->get_tiles().get_count());
+				if (update_seed != check) {
+					update_flag = true;
+					update_seed = check;
+				}
+				break;
+			}
+			case halt_list_stats_t::hl_serve_lines:
+			case halt_list_stats_t::hl_pax_evaluation:
+			case halt_list_stats_t::hl_mail_evaluation:
+				// update once at the beginning of the month
+				if (update_seed != (sint32)world()->get_current_month()) {
+					update_flag = true;
+					update_seed = (sint32)world()->get_current_month();
+				}
+				break;
+#ifdef DEBUG
+			// These have a high processing load, so please do not update them frequently.
+			case halt_list_stats_t::coverage_output_pax:
+			case halt_list_stats_t::coverage_output_mail:
+			case halt_list_stats_t::coverage_visitor_demands:
+			case halt_list_stats_t::coverage_job_demands:
+				update_flag = false; // Only when reselect or reopen.
+				break;
+#endif
+			case halt_list_stats_t::hl_waiting_detail:
+			case halt_list_stats_t::hl_location:
+			case halt_list_stats_t::hl_goods_needed:
+			case halt_list_stats_t::hl_products:
+			default:
+				// No automatic updates or components do their own updates.
+				update_flag = false;
+				break;
+		}
+	}
+
+	if (update_flag) {
+		update_seed = 0;
+		update_table();
+	}
+
 	gui_aligned_container_t::draw(offset);
 }
 

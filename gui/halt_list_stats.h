@@ -15,6 +15,7 @@
 #include "components/gui_image.h"
 #include "components/gui_label.h"
 #include "components/gui_scrolled_list.h"
+#include "components/gui_speedbar.h"
 #include "../halthandle_t.h"
 
 class gui_halt_type_images_t;
@@ -37,9 +38,19 @@ class gui_halt_stats_t : public gui_aligned_container_t
 {
 	halthandle_t halt;
 	cbuffer_t buf;
+
+	sint32 update_seed = 0;
+	uint8 old_display_mode = 255;
+	gui_bandgraph_t bandgraph;
+
+	int num[5];
+
+
 public:
 	uint8 display_mode = 0;
 	gui_halt_stats_t(halthandle_t h);
+
+	void update_table();
 
 	void draw(scr_coord offset) OVERRIDE;
 };
