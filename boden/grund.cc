@@ -17,6 +17,7 @@
 #include "../player/simplay.h"
 #include "../gui/simwin.h"
 #include "../simworld.h"
+#include "../simfab.h"
 
 #include "../bauer/wegbauer.h"
 #include "../bauer/vehikelbauer.h" /* for diversion route checking */
@@ -42,6 +43,7 @@
 #include "../obj/signal.h"
 #include "../obj/tunnel.h"
 #include "../obj/wayobj.h"
+#include "../obj/zeiger.h"
 
 #include "../gui/ground_info.h"
 #include "../gui/way_info.h"
@@ -1846,6 +1848,45 @@ void grund_t::display_overlay(const sint16 xpos, const sint16 ypos)
 			const halthandle_t halt = get_halt();
 			if(halt.is_bound()  &&  halt->get_basis_pos3d()==pos) {
 				halt->display_status(xpos, ypos);
+			}
+		}
+	}
+
+	if(  env_t::show_factory_storage_bar  ) {
+		if( get_building() ) {
+			if( env_t::show_factory_storage_bar == 1 || get_building()->get_first_tile()==get_building() ) {
+				if (fabrik_t *fab = get_building()->get_first_tile()->get_fabrik()) {
+					if( ( env_t::show_factory_storage_bar == 2 && fab->is_connected_to_network(welt->get_active_player()) )
+						||  env_t::show_factory_storage_bar == 3 ) {
+						fab->display_status(xpos, ypos);
+					}
+					else if (env_t::show_factory_storage_bar == 1 && welt->get_zeiger()->get_pos() == get_pos()) {
+						const sint16 raster_tile_width = get_tile_raster_width();
+						sint16 new_xpos = xpos + (fab->get_pos().x-get_pos().x)*raster_tile_width/2 - (fab->get_pos().y - get_pos().y)*raster_tile_width/2;
+						sint16 new_ypos = ypos + (fab->get_pos().x-get_pos().x)*raster_tile_width/4 + (fab->get_pos().y - get_pos().y)*raster_tile_width/4;
+						fab->display_status(new_xpos, new_ypos);
+					}
+				}
+			}
+		}
+	}
+
+
+
+	if(  env_t::show_depot_names  ) {
+		if(  depot_t *dep = get_depot()  ) {
+			const player_t* owner = dep->get_owner();
+			if( owner==welt->get_active_player() ) {
+				const char *text = dep->get_name();
+
+				const sint16 raster_tile_width = get_tile_raster_width();
+				const int width = proportional_string_width(text)+7;
+				int new_xpos = xpos - (width-raster_tile_width)/2;
+
+				const scr_coord_val depot_sym_width = max(12,(LINESPACE*3)>>2);
+
+				display_depot_symbol(new_xpos, ypos-LINESPACE/4, depot_sym_width, owner->get_player_color1());
+				display_outline_proportional_rgb(new_xpos+depot_sym_width+4, ypos-LINESPACE/4, color_idx_to_rgb(owner->get_player_color1()+4), color_idx_to_rgb(COL_BLACK), text, dirty);
 			}
 		}
 	}

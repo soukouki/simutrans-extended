@@ -451,6 +451,10 @@ void display_signal_direction_rgb(scr_coord_val, scr_coord_val, scr_coord_val, u
 {
 }
 
+void display_depot_symbol(scr_coord_val, scr_coord_val, scr_coord_val, const uint8, const bool)
+{
+}
+
 void display_set_progress_text(const char *)
 {
 }

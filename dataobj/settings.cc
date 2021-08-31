@@ -2026,6 +2026,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 
 	// display stuff
 	env_t::show_names = contents.get_int( "show_names", env_t::show_names );
+	env_t::show_depot_names = contents.get_int( "show_depot_names", env_t::show_depot_names );
 	env_t::show_month = contents.get_int( "show_month", env_t::show_month );
 	env_t::max_acceleration = contents.get_int( "fast_forward", env_t::max_acceleration );
 	env_t::fps = clamp( (uint32)contents.get_int( "frames_per_second", env_t::fps ), env_t::min_fps, env_t::max_fps );
