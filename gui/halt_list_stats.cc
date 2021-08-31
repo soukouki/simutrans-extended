@@ -56,8 +56,6 @@ gui_halt_stats_t::gui_halt_stats_t(halthandle_t h)
 void gui_halt_stats_t::draw(scr_coord offset)
 {
 	remove_all();
-	scr_coord_val left = pos.x + offset.x;
-	scr_coord_val top = offset.y;
 
 	switch (display_mode) {
 		case halt_list_stats_t::hl_waiting_detail:
@@ -359,7 +357,7 @@ void gui_halt_stats_t::draw(scr_coord offset)
 #endif
 		default:
 #ifdef DEBUG
-			left += display_proportional_clip_rgb(left, top, "default", ALIGN_LEFT, COL_DANGER, true);
+			new_component<gui_label_t>("(debug)default", COL_DANGER);
 #endif
 			break;
 	}
