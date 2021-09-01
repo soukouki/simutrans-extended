@@ -750,7 +750,7 @@ void schedule_list_gui_t::display(scr_coord pos)
 	}
 
 	const uint8 last = stop_infos.get_count() - 1;
-	
+
 	if (stop_infos.get_count() && last_schedule != line->get_schedule() && last>0) {
 		halthandle_t origin_halt = stop_infos.get_element(0)->get_halt();
 		halthandle_t destination_halt = stop_infos.get_element(last)->get_halt();
