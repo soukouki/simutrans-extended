@@ -141,7 +141,7 @@ public:
 		init();
 	}
 	void draw(scr_coord offset) OVERRIDE;
-}
+};
 
 
 class gui_capacity_bar_t : public gui_colorbox_t
