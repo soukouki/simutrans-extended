@@ -40,12 +40,12 @@ public:
 		by_mail_delivered_last_month,
 		by_convoy_arrivals_last_month,
 		by_region,
-#ifdef DEBUG
+/*#ifdef DEBUG
 		by_surrounding_population,
 		by_surrounding_mail_demand,
 		by_surrounding_visitor_demand,
 		by_surrounding_jobs,
-#endif
+#endif*/
 		SORT_MODES
 	};
 
