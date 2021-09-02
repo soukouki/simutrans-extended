@@ -1877,7 +1877,7 @@ void grund_t::display_overlay(const sint16 xpos, const sint16 ypos)
 		if(  depot_t *dep = get_depot()  ) {
 			const player_t* owner = dep->get_owner();
 			if( owner==welt->get_active_player() ) {
-				const char *text = dep->get_name();
+				const char *text = translator::translate( dep->get_name() );
 
 				const sint16 raster_tile_width = get_tile_raster_width();
 				const int width = proportional_string_width(text)+7;
@@ -1886,7 +1886,7 @@ void grund_t::display_overlay(const sint16 xpos, const sint16 ypos)
 				const scr_coord_val depot_sym_width = max(12,(LINESPACE*3)>>2);
 
 				display_depot_symbol(new_xpos, ypos-LINESPACE/4, depot_sym_width, owner->get_player_color1());
-				display_outline_proportional_rgb(new_xpos+depot_sym_width+4, ypos-LINESPACE/4, color_idx_to_rgb(owner->get_player_color1()+4), color_idx_to_rgb(COL_BLACK), text, dirty);
+				display_outline_proportional_rgb(new_xpos+depot_sym_width+4, ypos-LINESPACE/4, color_idx_to_rgb(owner->get_player_color1()+6), color_idx_to_rgb(COL_BLACK), text, dirty);
 			}
 		}
 	}
