@@ -883,8 +883,8 @@ void schedule_list_gui_t::set_windowsize(scr_size size)
 
 	scrolly_line_info.set_size( scr_size(LINE_NAME_COLUMN_WIDTH-4, get_client_windowsize().h - scrolly_line_info.get_pos().y-1) );
 
-	info_tabs.set_size(scr_size(rest_width+2, get_windowsize().h - info_tabs.get_pos().y - D_TITLEBAR_HEIGHT));
-	scrolly_convois.set_size(     scr_size(info_tabs.get_size().w+1, info_tabs.get_size().h - scrolly_convois.get_pos().y      - D_H_SPACE-1));
+	info_tabs.set_size( scr_size(rest_width+2, get_windowsize().h-info_tabs.get_pos().y-D_TITLEBAR_HEIGHT-1) );
+	scrolly_convois.set_size( scr_size(info_tabs.get_size().w+1, info_tabs.get_size().h - scrolly_convois.get_pos().y - D_H_SPACE-1) );
 	chart.set_size(scr_size(rest_width-68-D_MARGIN_RIGHT, SCL_HEIGHT-14-(button_rows*(D_BUTTON_HEIGHT+D_H_SPACE))));
 	inp_name.set_size(scr_size(rest_width - 31, D_EDIT_HEIGHT));
 
