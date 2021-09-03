@@ -522,6 +522,9 @@ show_delete_buttons = 1
 #   8 = box left of name in yellow outline
 show_names = 3
 
+# Show the name of depot above own depots
+#show_depot_names = 0
+
 # Color of cursor overlay, which is blended over marked ground tiles
 # The available colors and their numbers can be found on
 #    http://simutrans-germany.com/wiki/wiki/tiki-index.php?page=en_FactoryDef#mapcolor

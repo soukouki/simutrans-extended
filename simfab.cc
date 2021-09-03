@@ -3785,6 +3785,85 @@ uint32 fabrik_t::get_total_output_capacity() const
 	return sum;
 }
 
+/**
+ * Draws some nice colored bars giving some status information
+ */
+void fabrik_t::display_status(sint16 xpos, sint16 ypos)
+{
+	const sint16 count = input.get_count()+output.get_count();
+
+	ypos -= D_LABEL_HEIGHT / 2 + D_WAITINGBAR_WIDTH;
+	xpos -= (count * D_WAITINGBAR_WIDTH - get_tile_raster_width()) / 2;
+	if( sector==marine_resource ) {
+		ypos -= D_LABEL_HEIGHT / 2 + D_WAITINGBAR_WIDTH;
+		xpos -= get_tile_raster_width()/4;
+	}
+	//const int x = xpos;
+	const bool active = (status != missing_connection && status != inactive);
+
+	// if pakset has symbol, display it
+	if( input.get_count() ) {
+		if( active ) {
+			display_ddd_box_clip_rgb(xpos-2,  ypos-1, D_WAITINGBAR_WIDTH*input.get_count()+4, 6, color_idx_to_rgb(10), color_idx_to_rgb(12));
+		}
+		display_fillbox_wh_clip_rgb(xpos-1, ypos, D_WAITINGBAR_WIDTH*input.get_count()+2, 4, color_idx_to_rgb(COL_DODGER_BLUE-1), true);
+
+		int i = 0;
+		FORX(array_tpl<ware_production_t>, const& goods, input, i++) {
+			if (!desc->get_supplier(i)) {
+				continue;
+			}
+			const sint64 pfactor = desc->get_supplier(i) ? (sint64)desc->get_supplier(i)->get_consumption() : 1ll;
+			//const sint64 max_transit      = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max_transit * pfactor) >> (fabrik_t::precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
+			const uint32 stock_quantity   = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.menge * pfactor) >> (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
+			const uint32 storage_capacity = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max * pfactor) >> (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
+			const PIXVAL goods_color = goods.get_typ()->get_color();
+
+			const uint16 v = min(25, (uint16)(25 * stock_quantity / storage_capacity))+2;
+
+			if( active ) {
+				display_fillbox_wh_clip_rgb(xpos, ypos - v - 1, 1, v, color_idx_to_rgb(COL_GREY4), true);
+				display_fillbox_wh_clip_rgb(xpos + 1, ypos - v - 1, D_WAITINGBAR_WIDTH - 2, v, goods_color, true);
+				display_fillbox_wh_clip_rgb(xpos + D_WAITINGBAR_WIDTH - 1, ypos - v - 1, 1, v, color_idx_to_rgb(COL_GREY1), true);
+			}
+			else{
+				display_blend_wh_rgb(xpos + 1, ypos - v - 1, D_WAITINGBAR_WIDTH - 2, v, goods_color, 60);
+			}
+
+			xpos += D_WAITINGBAR_WIDTH;
+		}
+		xpos += 4;
+	}
+
+	if( output.get_count() ) {
+		if( active ) {
+			display_ddd_box_clip_rgb(xpos-2,  ypos-1, D_WAITINGBAR_WIDTH*output.get_count()+4, 6, color_idx_to_rgb(10), color_idx_to_rgb(12));
+		}
+		display_fillbox_wh_clip_rgb(xpos-1, ypos, D_WAITINGBAR_WIDTH*output.get_count()+2, 4, color_idx_to_rgb(COL_ORANGE), true);
+
+		int i = 0;
+		FORX(array_tpl<ware_production_t>, const& goods, output, i++) {
+			const sint64 pfactor = (sint64)desc->get_product(i)->get_factor();
+			const uint32 stock_quantity   = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.menge * pfactor) >> (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
+			const uint32 storage_capacity = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max * pfactor) >> (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
+			const PIXVAL goods_color  = goods.get_typ()->get_color();
+
+			const uint16 v = min(25, (uint16)(25 * stock_quantity / storage_capacity)) + 2;
+
+			if( active ) {
+				display_fillbox_wh_clip_rgb(xpos, ypos - v - 1, 1, v, color_idx_to_rgb(COL_GREY4), true);
+				display_fillbox_wh_clip_rgb(xpos + 1, ypos - v - 1, D_WAITINGBAR_WIDTH - 2, v, goods_color, true);
+				display_fillbox_wh_clip_rgb(xpos + D_WAITINGBAR_WIDTH - 1, ypos - v - 1, 1, v, color_idx_to_rgb(COL_GREY1), true);
+			}
+			else {
+				display_blend_wh_rgb(xpos + 1, ypos - v - 1, D_WAITINGBAR_WIDTH - 2, v, goods_color, 60);
+			}
+
+			xpos += D_WAITINGBAR_WIDTH;
+		}
+	}
+}
+
 uint32 fabrik_t::get_lead_time(const goods_desc_t* wtype)
 {
 	if(suppliers.empty())
