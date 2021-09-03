@@ -276,7 +276,6 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 
 	cont_line_info.add_table(2,1);
 	{
-		lb_convoy_count.set_fixed_width(LINE_NAME_COLUMN_WIDTH - D_MARGINS_X - D_BUTTON_WIDTH);
 		cont_line_info.add_component(&lb_convoy_count);
 		bt_withdraw_line.init(button_t::box_state, "Withdraw All", scr_coord(0, 0), D_BUTTON_SIZE);
 		bt_withdraw_line.set_tooltip("Convoi is sold when all wagons are empty.");
