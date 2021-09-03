@@ -933,7 +933,7 @@ const char* dr_get_locale()
 		return LanguageCode;
 	}
 #endif
-	return NULL,
+	return NULL;
 }
 
 
