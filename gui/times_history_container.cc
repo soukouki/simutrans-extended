@@ -267,7 +267,12 @@ void gui_times_history_t::build_table()
 
 			add_table(2,1); {
 				new_component<gui_label_t>(halt.is_bound() ? halt->get_name() : "Wegpunkt");
-				new_component<gui_label_t>(entry.reverse==1 ? "[<<]" : NULL, SYSCOL_TEXT_STRONG);
+				if (entry.reverse == 1) {
+					new_component<gui_label_t>("[<<]", SYSCOL_TEXT_STRONG);
+				}
+				else {
+					new_component<gui_empty_t>();
+				}
 			}
 			end_table();
 
