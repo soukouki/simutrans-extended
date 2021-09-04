@@ -43,12 +43,12 @@ halt_detail_t::halt_detail_t(halthandle_t halt_) :
 	pas(halt_),
 	goods(halt_),
 	cont_service(halt_),
-	destinations(halt_, selected_route_catg_index),
 	scrolly_pas(&pas),
 	scrolly_goods(&cont_goods),
 	scrolly_service(&cont_service),
 	scrolly_route(&cont_desinations),
-	nearby_factory(halt_)
+	nearby_factory(halt_),
+	destinations(halt_, selected_route_catg_index)
 {
 	if (halt.is_bound()) {
 		init();
