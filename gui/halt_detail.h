@@ -224,14 +224,15 @@ private:
 	gui_tab_panel_t tabs;
 
 	// route tab stuffs
+	uint8 selected_route_catg_index = goods_manager_t::INDEX_NONE;
+	uint8 selected_class = 0;
 	gui_halt_route_info_t destinations;
 	bool list_by_station = false;
 	button_t bt_by_category, bt_by_station;
 	slist_tpl<button_t *>catg_buttons, pas_class_buttons, mail_class_buttons;
 	char *pass_class_name_untranslated[32];
 	char *mail_class_name_untranslated[32];
-	uint8 selected_route_catg_index = goods_manager_t::INDEX_NONE;
-	uint8 selected_class = 0;
+
 	// Opening and closing the button panel on the route tab
 	void open_close_catg_buttons();
 
