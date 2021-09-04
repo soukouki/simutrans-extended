@@ -54,7 +54,6 @@ class halt_detail_goods_t : public gui_container_t
 {
 private:
 	halthandle_t halt;
-	karte_t *welt;
 
 	cbuffer_t goods_info;
 
@@ -230,8 +229,6 @@ private:
 	bool list_by_station = false;
 	button_t bt_by_category, bt_by_station;
 	slist_tpl<button_t *>catg_buttons, pas_class_buttons, mail_class_buttons;
-	char *pass_class_name_untranslated[32];
-	char *mail_class_name_untranslated[32];
 
 	// Opening and closing the button panel on the route tab
 	void open_close_catg_buttons();

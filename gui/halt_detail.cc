@@ -32,8 +32,6 @@
 #define BARCOL_TRANSFER_IN color_idx_to_rgb(10)
 #define MAX_CATEGORY_COLS 16
 
-static uint16 routelist_default_pos_y = 0;
-
 sint16 halt_detail_t::tabstate = -1;
 
 halt_detail_t::halt_detail_t(halthandle_t halt_) :
@@ -451,7 +449,7 @@ void halt_detail_t::update_components()
 
 
 
-bool halt_detail_t::action_triggered( gui_action_creator_t *comp, value_t extra)
+bool halt_detail_t::action_triggered( gui_action_creator_t *comp, value_t /*extra*/)
 {
 	if (tabstate != tabs.get_active_tab_index() || get_windowsize().h == get_min_windowsize().h) {
 		set_tab_opened();
@@ -712,8 +710,6 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 		pas_info.clear();
 
 		// color bar
-		PIXVAL overlay_color = i < good_category->get_number_of_classes() / 2 ? COL_BLACK : COL_WHITE;
-		uint8 overlay_transparency = abs(good_category->get_number_of_classes() / 2 - i) * 7;
 		uint bar_width = ((waiting_sum_by_class*GOODS_WAITING_BAR_BASE_WIDTH) + (base_capacity-1)) / base_capacity;
 		// transferring bar
 		display_fillbox_wh_clip_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 10, y + GOODS_COLOR_BOX_YOFF + 1, (transfers_in * GOODS_WAITING_BAR_BASE_WIDTH / base_capacity) + bar_width, 6, BARCOL_TRANSFER_IN, true);
@@ -1025,8 +1021,6 @@ void halt_detail_goods_t::draw(scr_coord offset)
 			display_direct_line_rgb(offset.x + GOODS_SYMBOL_CELL_WIDTH + D_BUTTON_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 5 + 4, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + D_BUTTON_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 5 + GOODS_WAITING_BAR_BASE_WIDTH, offset.y + top, color_idx_to_rgb(MN_GREY1));
 			top += 4;
 
-			uint32 max_capacity = halt->get_capacity(2);
-			const uint8 max_classes = max(goods_manager_t::passengers->get_number_of_classes(), goods_manager_t::mail->get_number_of_classes());
 			for (uint8 i = 0; i < goods_manager_t::get_max_catg_index(); i++) {
 				if (i == goods_manager_t::INDEX_PAS || i == goods_manager_t::INDEX_MAIL)
 				{
@@ -1381,7 +1375,7 @@ void gui_halt_service_info_t::draw(scr_coord offset)
 	gui_aligned_container_t::draw(offset);
 }
 
-void gui_halt_service_info_t::update_connections(halthandle_t h)
+void gui_halt_service_info_t::update_connections(halthandle_t /*h*/)
 {
 	if (!halt.is_bound()) {
 		// first call, or invalid handle
@@ -1827,10 +1821,6 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 
 void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 {
-	clip_dimension const cd = display_get_clip_wh();
-	const int start = cd.y - LINESPACE - 1;
-	const int end = cd.yy + LINESPACE + 1;
-
 	static cbuffer_t buf;
 	int xoff = pos.x;
 	int yoff = pos.y;
@@ -1838,7 +1828,6 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 
 	uint8 g_class = goods_manager_t::get_classes_catg_index(selected_route_catg_index) - 1;
 
-	uint32 sel = line_selected;
 	FORX(const vector_tpl<halthandle_t>, const dest, halt_list, yoff += LINESPACE + 1)
 	{
 		if (!dest.is_bound())
