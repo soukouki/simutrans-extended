@@ -69,7 +69,7 @@ private:
 	button_t bt_convoy_id_plate[2];
 public:
 	label_settings_t();
-	virtual bool action_triggered(gui_action_creator_t *comp, value_t v);
+	bool action_triggered(gui_action_creator_t *comp, value_t v) OVERRIDE;
 	void draw(scr_coord offset) OVERRIDE;
 };
 
