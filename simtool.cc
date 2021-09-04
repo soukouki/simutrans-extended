@@ -3480,7 +3480,7 @@ const char *tool_build_tunnel_t::check_pos( player_t *player, koord3d pos)
 				if(  sl == slope_t::flat  ||  !slope_t::is_way( sl ) ) {
 					// cannot start a tunnel here, wrong slope
 					return "";
-				} 
+				}
 
 				if(  env_t::pak_height_conversion_factor != slope_t::max_diff(sl)  ) {
 					win_set_static_tooltip( translator::translate("The gradient does not fit a tunnel") );
