@@ -64,8 +64,11 @@ class legend_entry_t : public gui_component_t
 {
 	gui_label_t label;
 	PIXVAL color;
+	bool filtered;
 public:
-	legend_entry_t(const char* text, PIXVAL c) : label(text), color(c) {}
+	legend_entry_t(const char* text, PIXVAL c, bool filtered_=false) : label(text), color(c), filtered(filtered_) {
+		label.set_color(filtered ? SYSCOL_TEXT_INACTIVE : SYSCOL_TEXT);
+	}
 
 	scr_size get_min_size() const OVERRIDE
 	{
@@ -80,7 +83,9 @@ public:
 	void draw(scr_coord offset) OVERRIDE
 	{
 		scr_coord pos = get_pos() + offset;
-		display_ddd_box_clip_rgb( pos.x, pos.y+D_GET_CENTER_ALIGN_OFFSET(D_INDICATOR_BOX_HEIGHT,LINESPACE)-1, D_INDICATOR_BOX_WIDTH, D_INDICATOR_HEIGHT+2, color_idx_to_rgb(MN_GREY0), color_idx_to_rgb(MN_GREY4) );
+		if (!filtered) {
+			display_ddd_box_clip_rgb( pos.x, pos.y+D_GET_CENTER_ALIGN_OFFSET(D_INDICATOR_BOX_HEIGHT,LINESPACE)-1, D_INDICATOR_BOX_WIDTH, D_INDICATOR_HEIGHT+2, SYSCOL_TEXT, SYSCOL_TEXT );
+		}
 		display_fillbox_wh_clip_rgb( pos.x+1, pos.y+D_GET_CENTER_ALIGN_OFFSET(D_INDICATOR_BOX_HEIGHT,LINESPACE), D_INDICATOR_BOX_WIDTH-2, D_INDICATOR_BOX_HEIGHT, color, false );
 		label.draw( pos+scr_size(D_INDICATOR_BOX_WIDTH+D_H_SPACE,0) );
 	}
@@ -443,13 +448,14 @@ void map_frame_t::update_factory_legend()
 		// now sort
 
 		// add corresponding legend entries
+		bool filter_by_catg = (minimap_t::get_instance()->freight_type_group_index_showed_on_map != nullptr && minimap_t::get_instance()->freight_type_group_index_showed_on_map != goods_manager_t::none);
 		PIXVAL prev_color = NULL;
 		const char *prev_name = {};
 		FOR(vector_tpl<const factory_desc_t*>, f, factory_types) {
 			if (prev_name && !strcmp(translator::translate(f->get_name()), prev_name) && f->get_color()==prev_color) {
 				continue;
 			}
-			directory_container.new_component<legend_entry_t>(f->get_name(), f->get_color());
+			directory_container.new_component<legend_entry_t>(f->get_name(), f->get_color(), ( filter_by_catg  &&  !f->has_goods_catg_demand( minimap_t::get_instance()->freight_type_group_index_showed_on_map->get_catg_index() ) ));
 			prev_color = f->get_color();
 			prev_name = translator::translate(f->get_name());
 		}
@@ -551,6 +557,8 @@ bool map_frame_t::action_triggered( gui_action_creator_t *comp, value_t)
 	else if (  comp == &freight_type_c  ) {
 		minimap_t::get_instance()->freight_type_group_index_showed_on_map = viewable_freight_types[freight_type_c.get_selection()];
 		minimap_t::get_instance()->invalidate_map_lines_cache();
+		update_factory_legend();
+		reset_min_windowsize();
 	}
 	else if (  comp == &b_overlay_networks_load_factor  ) {
 		minimap_t::get_instance()->show_network_load_factor = !minimap_t::get_instance()->show_network_load_factor;
