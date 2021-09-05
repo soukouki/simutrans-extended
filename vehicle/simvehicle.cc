@@ -302,7 +302,7 @@ void vehicle_base_t::leave_tile()
 			for(k.x=0; k.x<welt->get_size().x; k.x++) {
 				grund_t *gr = welt->access( k )->get_boden_von_obj(this);
 				if(gr && gr->obj_remove(this)) {
-					dbg->warning("vehicle_base_t::leave_tile()","removed vehicle typ %i (%p) from %d %d",get_name(), this, k.x, k.y);
+					dbg->warning("vehicle_base_t::leave_tile()","removed vehicle typ %i (%p) from %d %d",get_typ(), this, k.x, k.y);
 					ok = true;
 				}
 			}
@@ -3256,13 +3256,17 @@ void vehicle_t::display_after(int xpos, int ypos, bool is_global) const
 		ypos += tile_raster_scale_y(get_yoff(), raster_width) + 14;
 
 		// convoy(line) nameplate
-		if (cnv && (env_t::show_cnv_nameplates == 3 || (env_t::show_cnv_nameplates == 2 && cnv->get_owner() == welt->get_active_player())
-			|| ((env_t::show_cnv_nameplates == 1 || env_t::show_cnv_nameplates == 2) && welt->get_zeiger()->get_pos() == get_pos()) ))
+		if (cnv && (env_t::show_cnv_nameplates%4 == 3 || (env_t::show_cnv_nameplates%4 == 2 && cnv->get_owner() == welt->get_active_player())
+			|| ((env_t::show_cnv_nameplates%4 == 1 || env_t::show_cnv_nameplates%4 == 2) && welt->get_zeiger()->get_pos() == get_pos()) ))
 		{
 			char nameplate_text[1024];
 			// show the line name, including when the convoy is coupled.
 			linehandle_t lh = cnv->get_line();
-			if (lh.is_bound()) {
+			if (env_t::show_cnv_nameplates & 4 ) {
+				// convoy ID
+				sprintf(nameplate_text, "%i", cnv->self.get_id());
+			}
+			else if (lh.is_bound()) {
 				// line name
 				tstrncpy(nameplate_text, lh->get_name(), lengthof(nameplate_text));
 			}
@@ -3274,8 +3278,16 @@ void vehicle_t::display_after(int xpos, int ypos, bool is_global) const
 
 			const int width = proportional_string_width(nameplate_text) + 7;
 			if (ypos > LINESPACE + 32 && ypos + LINESPACE < display_get_clip_wh().yy) {
-				display_ddd_proportional_clip(xpos, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT - LINESPACE/2-2, width, 0, col_val, color_idx_to_rgb(COL_WHITE), nameplate_text, true);
-				// (*)display_ddd_proportional_clip's height is LINESPACE/2+1+1
+				const scr_coord_val yoff = LOADINGBAR_HEIGHT + WAITINGBAR_HEIGHT + LINESPACE/2 + 2;
+				if (env_t::show_cnv_nameplates & 4) {
+					display_veh_form_wh_clip_rgb(xpos,                     ypos-yoff-LINESPACE/2-1, width/2+LINESPACE/2, LINESPACE+4, col_val, true, false, vehicle_desc_t::can_be_head, HAS_POWER | BIDIRECTIONAL);
+					display_veh_form_wh_clip_rgb(xpos+width/2+LINESPACE/2, ypos-yoff-LINESPACE/2-1, width/2+LINESPACE/2, LINESPACE+4, col_val, true, true,  vehicle_desc_t::can_be_head|vehicle_desc_t::can_be_tail, HAS_POWER | BIDIRECTIONAL);
+					display_text_proportional_len_clip_rgb(xpos+LINESPACE/2+3, ypos-yoff-LINESPACE/2+1, nameplate_text, ALIGN_LEFT | DT_CLIP, color_idx_to_rgb(COL_WHITE), true, -1);
+				}
+				else {
+					display_ddd_proportional_clip(xpos, ypos-yoff, width, 0, col_val, color_idx_to_rgb(COL_WHITE), nameplate_text, true);
+					// (*)display_ddd_proportional_clip's height is LINESPACE/2+1+1
+				}
 			}
 		}
 
@@ -7125,7 +7137,7 @@ sint32 rail_vehicle_t::block_reserver(route_t *route, uint16 start_index, uint16
 		bool no_reverse = schedule->entries[schedule_index].reverse == 0;
 		schedule->increment_index(&schedule_index, &rev);
 		koord3d cur_pos = route->back();
-		uint16 next_next_signal;
+		uint16 next_next_signal = INVALID_INDEX;
 		bool route_success;
 		sint32 token_block_blocks = 0;
 		if(no_reverse || one_train_staff_onward_reservation)

@@ -21,13 +21,10 @@
 #include "scenario_frame.h"
 #include "server_frame.h"
 #include "components/gui_image.h"
+#include "optionen.h"
 
-#define L_LINESPACE_EXTRA_2  ( LINESPACE + 2 )
-#define L_LINESPACE_EXTRA_5  ( LINESPACE + 5 )
-#define L_LINESPACE_EXTRA_7  ( LINESPACE + 7 )
 
 // Local adjustments
-#define L_TEXT_INDENT        ( 24 )                            // Shadow text indent
 #define L_BANNER_ROWS        ( 5 )                             // Rows of scroll text
 #define L_BANNER_TEXT_INDENT ( 4 )                             // Scroll text padding (left/right)
 #define L_BANNER_HEIGHT      ( L_BANNER_ROWS * LINESPACE + 2 ) // Banner control height in pixels
@@ -128,7 +125,10 @@ banner_t::banner_t() : gui_frame_t("")
 		load_scenario.add_listener( this );
 		add_component( &load_scenario );
 
-		new_component<gui_empty_t>();
+		// Options button
+		options.init( button_t::roundbox | button_t::flexible, "Optionen");
+		options.add_listener( this );
+		add_component( &options );
 
 		// Play online button
 		join_map.init( button_t::roundbox | button_t::flexible, "join game");
@@ -171,6 +171,10 @@ bool banner_t::action_triggered( gui_action_creator_t *comp, value_t)
 	else if(  comp == &load_scenario  ) {
 		destroy_all_win(true);
 		create_win( new scenario_frame_t(), w_info, magic_load_t );
+	}
+	else if(  comp == &options  ) {
+		destroy_all_win(true);
+		create_win( new optionen_gui_t(), w_info, magic_optionen_gui_t );
 	}
 	else if(  comp == &join_map  ) {
 		destroy_all_win(true);

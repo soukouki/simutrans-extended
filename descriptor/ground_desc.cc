@@ -22,9 +22,11 @@ const int totalslopes = 81;
 * maybe they should be put in their own module, even though they are only used here ...
 */
 
+#if COLOUR_DEPTH != 0
 #define red_comp(pix)    (((pix)>>10)&0x001f)
 #define green_comp(pix)   (((pix)>>5)&0x001f)
 #define blue_comp(pix)         ((pix)&0x001f)
+#endif
 
 
 /* combines a texture and a lightmap
@@ -544,8 +546,11 @@ bool ground_desc_t::register_desc(const ground_desc_t *desc)
 {
 	if(strcmp("Outside", desc->get_name())==0) {
 		image_t const* const image = desc->get_child<image_array_t>(2)->get_image(0,0);
-		dbg->message("ground_desc_t::register_desc()", "setting raster width to %i", image->get_pic()->w);
-		display_set_base_raster_width(image->get_pic()->w);
+		if (image)
+		{
+			dbg->message("ground_desc_t::register_desc()", "setting raster width to %i", image->get_pic()->w);
+			display_set_base_raster_width(image->get_pic()->w);
+		}
 	}
 	// find out water animation stages
 	if(strcmp("Water", desc->get_name())==0) {

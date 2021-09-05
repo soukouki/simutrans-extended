@@ -16,6 +16,9 @@
 #include "../utils/simrandom.h"
 void rdwr_win_settings(loadsave_t *file); // simwin
 
+sint16 env_t::menupos = MENU_TOP;
+bool env_t::reselect_closes_tool = true;
+
 sint8 env_t::pak_tile_height_step = 16;
 sint8 env_t::pak_height_conversion_factor = 1;
 env_t::height_conversion_mode env_t::height_conv_mode = env_t::HEIGHT_CONV_LINEAR;
@@ -107,10 +110,12 @@ bool env_t::use_transparency_station_coverage;
 uint8 env_t::station_coverage_show;
 uint8 env_t::signalbox_coverage_show;
 sint32 env_t::show_names;
+bool env_t::show_depot_names;
 uint8 env_t::freight_waiting_bar_level;
 bool env_t::classes_waiting_bar;
 uint8 env_t::show_cnv_nameplates;
 uint8 env_t::show_cnv_loadingbar;
+uint8 env_t::show_factory_storage_bar;
 sint32 env_t::message_flags[4];
 uint32 env_t::water_animation;
 uint32 env_t::ground_object_probability;
@@ -221,10 +226,12 @@ void env_t::init()
 	signalbox_coverage_show = 0;
 
 	show_names = 3;
+	show_depot_names = false;
 	freight_waiting_bar_level = 2;
 	classes_waiting_bar = false;
 	show_cnv_nameplates = 0;
 	show_cnv_loadingbar = 0;
+	show_factory_storage_bar = 0;
 	player_finance_display_account = true;
 
 	water_animation = 250; // 250ms per wave stage
@@ -321,7 +328,7 @@ void env_t::init()
 	// upper right
 	compass_map_position = ALIGN_RIGHT|ALIGN_TOP;
 	// lower right
-	compass_screen_position = 0, // disbale, other could be ALIGN_RIGHT|ALIGN_BOTTOM;
+	compass_screen_position = 0; // disbale, other could be ALIGN_RIGHT|ALIGN_BOTTOM;
 
 	// Listen on all addresses by default
 	listen.append_unique("::");
@@ -588,9 +595,8 @@ void env_t::rdwr(loadsave_t *file)
 
 	if( file->is_version_ex_atleast(14, 41) ) {
 		file->rdwr_byte(gui_titlebar_player_color_background_brightness);
-		sint16 dummy_menupos=0;
-		file->rdwr_short(dummy_menupos);
-		bool reselect_closes_tool=false; // dummy
+		file->rdwr_short(env_t::menupos);
+		env_t::menupos &= 3;
 		file->rdwr_bool( reselect_closes_tool );
 	}
 
@@ -600,6 +606,10 @@ void env_t::rdwr(loadsave_t *file)
 		if(  file->is_loading()  ) {
 			soundfont_filename = str ? str.c_str() : "";
 		}
+	}
+	if( file->is_version_ex_atleast(14, 44) ) {
+		file->rdwr_bool( env_t::show_depot_names );
+		file->rdwr_byte( show_factory_storage_bar );
 	}
 
 	// server settings are not saved, since they are server specific

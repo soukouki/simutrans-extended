@@ -14,6 +14,7 @@
 
 #include "../simtypes.h"
 #include "../simconst.h"
+#include "../display/scr_coord.h"
 
 #include <stddef.h> // for ptrdiff_t
 
@@ -68,7 +69,6 @@ enum magic_numbers {
 	magic_listtools,
 	magic_edittools,
 	magic_slopetools,
-	magic_halt_list_t,
 	magic_label_frame,
 	magic_city_info_t,
 	magic_citylist_frame_t,
@@ -115,8 +115,7 @@ enum magic_numbers {
 	// magic numbers with big jumps between them
 	magic_convoi_info,
 	magic_convoi_detail       = magic_convoi_info         + 0x10000,
-	magic_convoi_time_history = magic_convoi_detail       + 0x10000,
-	magic_halt_info           = magic_convoi_time_history + 0x10000,
+	magic_halt_info           = magic_convoi_detail       + 0x10000,
 	magic_halt_detail         = magic_halt_info           + 0x10000,
 	magic_replace             = magic_halt_detail         + 0x10000,
 	magic_toolbar             = magic_replace             + 0x10000,
@@ -138,8 +137,10 @@ void rdwr_all_win(loadsave_t *file);
 // save windowsizes in settings
 void rdwr_win_settings(loadsave_t *file);
 
+void win_clamp_xywh_position(scr_coord_val &x, scr_coord_val &y, scr_size wh, bool move_to_full_view);
+
 int create_win(gui_frame_t*, wintype, ptrdiff_t magic);
-int create_win(int x, int y, gui_frame_t*, wintype, ptrdiff_t magic);
+int create_win(scr_coord_val x, scr_coord_val y, gui_frame_t*, wintype, ptrdiff_t magic, bool move_to_show_full=false);
 
 bool check_pos_win(event_t*);
 
@@ -208,13 +209,13 @@ void win_redraw_world();
 /**
  * Loads new font. Notifies gui's, world.
  */
-void win_load_font(const char *fname, uint16 fontsize);
+void win_load_font(const char *fname, uint8 fontsize);
 
 /**
  * Sets the tooltip to display.
  * @param owner : owner==NULL disables timing (initial delay and visible duration)
  */
-void win_set_tooltip(int xpos, int ypos, const char *text, const void *const owner = 0, const void *const group = 0);
+void win_set_tooltip(scr_coord_val xpos, scr_coord_val ypos, const char *text, const void *const owner = 0, const void *const group = 0);
 
 /**
  * Sets a static tooltip that follows the mouse

@@ -9,7 +9,6 @@
 #include "components/gui_chart.h"
 
 #include "../simconvoi.h"
-#include "../vehicle/simvehicle.h"
 #include "../simcolor.h"
 #include "../simunits.h"
 #include "../simworld.h"
@@ -25,11 +24,12 @@
 #include "../utils/simstring.h"
 #include "../utils/cbuffer_t.h"
 
-#include "../obj/roadsign.h"
 #include "simwin.h"
 #include "vehicle_class_manager.h"
 
 #include "../display/simgraph.h"
+#include "../vehicle/rail_vehicle.h"
+#include "../display/viewport.h"
 
 
 #define LOADING_BAR_WIDTH 150
@@ -37,6 +37,8 @@
 #define CHART_HEIGHT (100)
 #define L_COL_ACCEL_FULL COL_ORANGE_RED
 #define L_COL_ACCEL_EMPTY COL_DODGER_BLUE
+
+sint16 convoi_detail_t::tabstate = -1;
 
 class convoy_t;
 
@@ -280,8 +282,7 @@ void convoi_detail_t::init(convoihandle_t cnv)
 		class_management_button.add_listener(this);
 
 		// 2nd row
-		add_component(&lb_working_method);
-		new_component<gui_fill_t>();
+		new_component_span<gui_empty_t>(2);
 
 		for (uint8 i = 0; i < gui_convoy_formation_t::CONVOY_OVERVIEW_MODES; i++) {
 			overview_selctor.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(gui_convoy_formation_t::cnvlist_mode_button_texts[i]), SYSCOL_TEXT);
@@ -474,30 +475,38 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	set_resizemode(diagonal_resize);
 }
 
+void convoi_detail_t::set_tab_opened()
+{
+	const scr_coord_val margin_above_tab = D_TITLEBAR_HEIGHT + tabs.get_pos().y;
+	scr_coord_val ideal_size_h = margin_above_tab + D_MARGIN_BOTTOM;
+	switch (tabstate)
+	{
+		case 0: // spec
+		default:
+			ideal_size_h += veh_info.get_size().h;
+			break;
+		case 1: // loaded detail
+			ideal_size_h += cont_payload.get_size().h;
+			break;
+		case 2: // maintenance
+			ideal_size_h += cont_maintenance.get_size().h + D_V_SPACE*2;
+			break;
+		case 3: // chart
+			ideal_size_h += container_chart.get_size().h + D_V_SPACE*2;
+			break;
+	}
+	if (get_windowsize().h != ideal_size_h) {
+		set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, ideal_size_h)));
+	}
+}
 
 void convoi_detail_t::update_labels()
 {
-	lb_vehicle_count.buf().printf("%s %i (%s %i)", translator::translate("Fahrzeuge:"), cnv->get_vehicle_count(), translator::translate("Station tiles:"), cnv->get_tile_length());
+	lb_vehicle_count.buf().printf("%s %i", translator::translate("Fahrzeuge:"), cnv->get_vehicle_count());
+	if( cnv->front()->get_waytype()!=water_wt ) {
+		lb_vehicle_count.buf().printf(" (%s %i)", translator::translate("Station tiles:"), cnv->get_tile_length());
+	}
 	lb_vehicle_count.update();
-
-	vehicle_t* v1 = cnv->get_vehicle(0);
-
-	if (v1->get_waytype() == track_wt || v1->get_waytype() == maglev_wt || v1->get_waytype() == tram_wt || v1->get_waytype() == narrowgauge_wt || v1->get_waytype() == monorail_wt) {
-		if (cnv->in_depot()) {
-			lb_working_method.buf().append("");
-		}
-		else {
-			// Current working method
-			rail_vehicle_t* rv1 = (rail_vehicle_t*)v1;
-			rail_vehicle_t* rv2 = (rail_vehicle_t*)cnv->get_vehicle(cnv->get_vehicle_count() - 1);
-			lb_working_method.buf().printf("%s: %s", translator::translate("Current working method"), translator::translate(rv1->is_leading() ? roadsign_t::get_working_method_name(rv1->get_working_method()) : roadsign_t::get_working_method_name(rv2->get_working_method())));
-		}
-	}
-	else if (uint16 minimum_runway_length = cnv->get_vehicle(0)->get_desc()->get_minimum_runway_length()) {
-		// for air vehicle
-		lb_working_method.buf().printf("%s: %i m \n", translator::translate("Minimum runway length"), minimum_runway_length);
-	}
-	lb_working_method.update();
 
 	// update the convoy overview panel
 	formation.set_mode(overview_selctor.get_selection());
@@ -533,7 +542,7 @@ void convoi_detail_t::update_labels()
 		lb_value.update();
 	}
 
-	set_min_windowsize(scr_size(max(D_DEFAULT_WIDTH, get_min_windowsize().w), D_TITLEBAR_HEIGHT + tabs.get_pos().y + D_TAB_HEADER_HEIGHT + D_MARGIN_TOP));
+	set_min_windowsize(scr_size(max(D_DEFAULT_WIDTH, get_min_windowsize().w), D_TITLEBAR_HEIGHT + tabs.get_pos().y + D_TAB_HEADER_HEIGHT));
 	resize(scr_coord(0, 0));
 }
 
@@ -722,11 +731,32 @@ bool convoi_detail_t::action_triggered(gui_action_creator_t *comp, value_t)
 			payload_info.set_show_detail(display_detail_button.pressed);
 			return true;
 		}
+		else if (comp == &tabs) {
+			const sint16 old_tab = tabstate;
+			tabstate = tabs.get_active_tab_index();
+			if (get_windowsize().h == get_min_windowsize().h || tabstate == old_tab) {
+				set_tab_opened();
+			}
+			return true;
+		}
 	}
 	return false;
 }
 
-
+bool convoi_detail_t::infowin_event(const event_t *ev)
+{
+	if (cnv.is_bound() && formation.getroffen(ev->cx - formation.get_pos().x, ev->cy - D_TITLEBAR_HEIGHT  - scrolly_formation.get_pos().y)) {
+		if (IS_LEFTRELEASE(ev)) {
+			cnv->show_info();
+			return true;
+		}
+		else if (IS_RIGHTRELEASE(ev)) {
+			world()->get_viewport()->change_world_position(cnv->get_pos());
+			return true;
+		}
+	}
+	return gui_frame_t::infowin_event(ev);
+}
 
 void convoi_detail_t::rdwr(loadsave_t *file)
 {
@@ -753,9 +783,9 @@ void convoi_detail_t::rdwr(loadsave_t *file)
 	size.rdwr( file );
 	file->rdwr_long( xoff );
 	file->rdwr_long( yoff );
+	uint8 selected_tab = tabs.get_active_tab_index();
 	if( file->is_version_ex_atleast(14,41) ) {
-		uint8 dummy=0;
-		file->rdwr_byte(dummy);
+		file->rdwr_byte(selected_tab);
 	}
 
 	if(  file->is_loading()  ) {
@@ -773,6 +803,7 @@ void convoi_detail_t::rdwr(loadsave_t *file)
 		w->set_windowsize( size );
 		w->scrolly.set_scroll_position( xoff, yoff );
 		w->scrolly_formation.set_scroll_position(formation_xoff, formation_yoff);
+		w->tabs.set_active_tab_index(selected_tab);
 		// we must invalidate halthandle
 		cnv = convoihandle_t();
 		destroy_win( this );
@@ -1106,8 +1137,8 @@ void gui_convoy_payload_info_t::draw(scr_coord offset)
 			if (v->get_desc()->is_obsolete(month_now)) {
 				veh_bar_color = COL_OBSOLETE;
 			}
-			display_veh_form_wh_clip_rgb(pos.x + offset.x+1, pos.y + offset.y + total_height + extra_y + LINESPACE, (grid_width-6)/2, veh_bar_color, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_next() : v->get_desc()->get_basic_constraint_prev(), v->get_desc()->get_interactivity(), false);
-			display_veh_form_wh_clip_rgb(pos.x + offset.x + (grid_width-6)/2 + 1, pos.y + offset.y + total_height + extra_y + LINESPACE, (grid_width-6)/2, veh_bar_color, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_prev() : v->get_desc()->get_basic_constraint_next(), v->get_desc()->get_interactivity(), true);
+			display_veh_form_wh_clip_rgb(pos.x+offset.x+1,                  pos.y+offset.y+total_height+extra_y+LINESPACE, (grid_width-6)/2, VEHICLE_BAR_HEIGHT, veh_bar_color, true, false, v->is_reversed() ? v->get_desc()->get_basic_constraint_next() : v->get_desc()->get_basic_constraint_prev(), v->get_desc()->get_interactivity());
+			display_veh_form_wh_clip_rgb(pos.x+offset.x+(grid_width-6)/2+1, pos.y+offset.y+total_height+extra_y+LINESPACE, (grid_width-6)/2, VEHICLE_BAR_HEIGHT, veh_bar_color, true, true,  v->is_reversed() ? v->get_desc()->get_basic_constraint_prev() : v->get_desc()->get_basic_constraint_next(), v->get_desc()->get_interactivity());
 
 			// goods category symbol
 			if (v->get_desc()->get_total_capacity() || v->get_desc()->get_overcrowded_capacity()) {
@@ -1442,8 +1473,8 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 			if (v->get_desc()->is_obsolete(month_now)) {
 				veh_bar_color = COL_OBSOLETE;
 			}
-			display_veh_form_wh_clip_rgb(pos.x + offset.x+1, pos.y + offset.y + total_height + extra_y + LINESPACE, (grid_width-6)/2, veh_bar_color, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_next() : v->get_desc()->get_basic_constraint_prev(), v->get_desc()->get_interactivity(), false);
-			display_veh_form_wh_clip_rgb(pos.x + offset.x + (grid_width-6)/2 + 1, pos.y + offset.y + total_height + extra_y + LINESPACE, (grid_width-6)/2, veh_bar_color, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_prev() : v->get_desc()->get_basic_constraint_next(), v->get_desc()->get_interactivity(), true);
+			display_veh_form_wh_clip_rgb(pos.x+offset.x+1,                  pos.y+offset.y+total_height+extra_y+LINESPACE, (grid_width-6)/2, VEHICLE_BAR_HEIGHT, veh_bar_color, true, false, v->is_reversed() ? v->get_desc()->get_basic_constraint_next() : v->get_desc()->get_basic_constraint_prev(), v->get_desc()->get_interactivity());
+			display_veh_form_wh_clip_rgb(pos.x+offset.x+(grid_width-6)/2+1, pos.y+offset.y+total_height+extra_y+LINESPACE, (grid_width-6)/2, VEHICLE_BAR_HEIGHT, veh_bar_color, true, true,  v->is_reversed() ? v->get_desc()->get_basic_constraint_prev() : v->get_desc()->get_basic_constraint_next(), v->get_desc()->get_interactivity());
 
 			// goods category symbol
 			if (v->get_desc()->get_total_capacity() || v->get_desc()->get_overcrowded_capacity()) {
@@ -1594,8 +1625,8 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 						else if (desc->is_obsolete(month_now)) {
 							upgrade_state_color = COL_OBSOLETE;
 						}
-						display_veh_form_wh_clip_rgb(pos.x + extra_w + offset.x + D_MARGIN_LEFT, pos.y + offset.y + total_height + extra_y + 1, VEHICLE_BAR_HEIGHT * 2, upgrade_state_color, true, desc->get_basic_constraint_prev(), desc->get_interactivity(), false);
-						display_veh_form_wh_clip_rgb(pos.x + extra_w + offset.x + D_MARGIN_LEFT + VEHICLE_BAR_HEIGHT * 2 - 1, pos.y + offset.y + total_height + extra_y + 1, VEHICLE_BAR_HEIGHT * 2, upgrade_state_color, true, desc->get_basic_constraint_next(), desc->get_interactivity(), true);
+						display_veh_form_wh_clip_rgb(pos.x+extra_w+offset.x+D_MARGIN_LEFT,                        pos.y+offset.y+total_height+extra_y+1, VEHICLE_BAR_HEIGHT*2, VEHICLE_BAR_HEIGHT, upgrade_state_color, true, false, desc->get_basic_constraint_prev(), desc->get_interactivity());
+						display_veh_form_wh_clip_rgb(pos.x+extra_w+offset.x+D_MARGIN_LEFT+VEHICLE_BAR_HEIGHT*2-1, pos.y+offset.y+total_height+extra_y+1, VEHICLE_BAR_HEIGHT*2, VEHICLE_BAR_HEIGHT, upgrade_state_color, true, true,  desc->get_basic_constraint_next(), desc->get_interactivity());
 
 						buf.clear();
 						buf.append(translator::translate(v->get_desc()->get_upgrades(i)->get_name()));

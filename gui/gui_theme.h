@@ -149,7 +149,9 @@ enum {
 	SKIN_WINDOW_RESIZE,
 	SKIN_GADGET_GOTOPOS,
 //	SKIN_GADGET_BUTTON,
-	SKIN_GADGET_COUNT, // maximum number, NOT AN IMAGE
+	SKIN_GADGET_NOTLOCKED,
+	SKIN_GADGET_LOCKED,
+	SKIN_GADGET_COUNT,// maximum number, NOT AN IMAGE
 
 	// scrollbars horizontal
 	SKIN_BUTTON_ARROW_LEFT = 0,
@@ -251,9 +253,9 @@ public:
 	static PIXVAL gui_color_obsolete;                     //@< Color for obsolete convois/server entries
 	static PIXVAL gui_color_out_of_production;            //@< (EX unique) Color for convoy that is no longer in production (but not obsolete)
 	static PIXVAL gui_color_empty;                        //@< Color for empty entries
+	static PIXVAL gui_color_chat_window_network_transparency; //@< Color if chat window is transparent in network mode
 	static PIXVAL gui_color_up_pointing_triangle;         //@< (EX unique) Color to draw an upward triangle indicating an increase in the number
 	static PIXVAL gui_color_down_pointing_triangle;       //@< (EX unique) Color to draw an downward triangle indicating an decrease in the number
-
 	/// @}
 
 	/// @name GUI element sizes used by gui components
@@ -296,6 +298,9 @@ public:
 	static stretch_map_t button_tiles[3];
 	static stretch_map_t button_color_tiles[2];
 	static stretch_map_t round_button_tiles[3];
+	static stretch_map_t round_button_left_tiles[3];
+	static stretch_map_t round_button_middle_tiles[3];
+	static stretch_map_t round_button_right_tiles[3];
 	static stretch_map_t h_scroll_back_tiles;
 	static stretch_map_t h_scroll_knob_tiles;
 	static stretch_map_t v_scroll_back_tiles;
@@ -315,7 +320,6 @@ public:
 
 	static bool gui_drop_shadows;
 	static bool pressed_button_sinks;
-
 
 public:
 	// default dimensions and colors

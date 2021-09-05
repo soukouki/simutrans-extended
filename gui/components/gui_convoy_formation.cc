@@ -3,7 +3,7 @@
 #include "gui_convoy_formation.h"
 
 #include "../../simconvoi.h"
-#include "../../vehicle/simvehicle.h"
+#include "../../vehicle/vehicle.h"
 
 #include "../../simcolor.h"
 #include "../../display/simgraph.h"
@@ -115,7 +115,7 @@ scr_size gui_convoy_formation_t::draw_formation(scr_coord offset) const
 			buf.append(car_number);
 		}
 
-		int left = display_proportional_clip_rgb(offset.x + 2, offset.y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
+		scr_coord_val left = display_proportional_clip_rgb(offset.x + 2, offset.y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 #ifdef DEBUG
 		if (v->is_reversed()) {
 			display_proportional_clip_rgb(offset.x + 2 + left, offset.y - 2, "*", ALIGN_LEFT, COL_CAUTION, true);
@@ -131,14 +131,14 @@ scr_size gui_convoy_formation_t::draw_formation(scr_coord offset) const
 		if (v->get_desc()->is_obsolete(month_now)) {
 			col_val = COL_OBSOLETE;
 		}
-		display_veh_form_wh_clip_rgb(offset.x + 2, offset.y + LINESPACE, (grid_width-6)/2, col_val, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_next() : v->get_desc()->get_basic_constraint_prev(), v->get_desc()->get_interactivity(), false);
-		display_veh_form_wh_clip_rgb(offset.x + (grid_width-6)/2 + 2, offset.y + LINESPACE, (grid_width-6)/2, col_val, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_prev() : v->get_desc()->get_basic_constraint_next(), v->get_desc()->get_interactivity(), true);
+		display_veh_form_wh_clip_rgb(offset.x + 2, offset.y + LINESPACE, (grid_width-6)/2, VEHICLE_BAR_HEIGHT, col_val, true, false, v->is_reversed() ? v->get_desc()->get_basic_constraint_next() : v->get_desc()->get_basic_constraint_prev(), v->get_desc()->get_interactivity());
+		display_veh_form_wh_clip_rgb(offset.x + (grid_width-6)/2 + 2, offset.y + LINESPACE, (grid_width-6)/2, VEHICLE_BAR_HEIGHT, col_val, true, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_prev() : v->get_desc()->get_basic_constraint_next(), v->get_desc()->get_interactivity());
 
 		offset.x += grid_width;
 	}
 
 	scr_size size(grid_width*cnv->get_vehicle_count() + D_MARGIN_LEFT * 2, LINESPACE + VEHICLE_BAR_HEIGHT + 10 + D_SCROLLBAR_HEIGHT);
-	return size;
+	return scr_size(size.w, max(get_size().h, size.h));
 }
 
 scr_size gui_convoy_formation_t::draw_vehicles(scr_coord offset, bool display_images) const
@@ -158,7 +158,7 @@ scr_size gui_convoy_formation_t::draw_vehicles(scr_coord offset, bool display_im
 		s.w += (w*2)/3;
 		s.h = max(s.h, h);
 	}
-	return s;
+	return scr_size(s.w, max(get_size().h, s.h));
 }
 
 scr_size gui_convoy_formation_t::draw_capacities(scr_coord offset) const
@@ -235,5 +235,5 @@ scr_size gui_convoy_formation_t::draw_capacities(scr_coord offset) const
 		}
 	}
 	scr_size size(left, top+LINESPACE);
-	return size;
+	return scr_size(size.w, max(get_size().h, size.h));
 }

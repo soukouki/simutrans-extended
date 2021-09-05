@@ -23,10 +23,17 @@
 #include "../unicode.h"
 #include "../simticker.h"
 #include "../utils/simstring.h"
+//#include "../io/raw_image.h"
+
+#include "../gui/simwin.h"
+#include "../dataobj/environment.h"
+
 #include "simgraph.h"
 #include "../descriptor/vehicle_desc.h"
 #include "../gui/simwin.h"
 #include "../gui/gui_theme.h"
+
+#include "../obj/roadsign.h" // for signal status indicator
 
 
 #ifdef _MSC_VER
@@ -614,7 +621,7 @@ static const uint8 special_pal[SPECIAL_COLOR_COUNT*3] =
 	128, 64, 0,
 	193, 97, 0,
 	215, 107, 0,
-	255, 128, 0,
+	235, 118, 0,
 	255, 128, 0,
 	255, 149, 43,
 	255, 170, 85,
@@ -628,13 +635,13 @@ static const uint8 special_pal[SPECIAL_COLOR_COUNT*3] =
 	104, 148, 28,
 	128, 168, 44,
 	164, 164, 0,
+	180, 180, 0,
 	193, 193, 0,
 	215, 215, 0,
+	235, 235, 0,
 	255, 255, 0,
-	255, 255, 32,
 	255, 255, 64,
 	255, 255, 128,
-	255, 255, 172,
 	32, 4, 0,
 	64, 20, 8,
 	84, 28, 16,
@@ -2620,7 +2627,7 @@ static void display_img_nc(scr_coord_val h, const scr_coord_val xp, const scr_co
 
 
 // only used for GUI
-void display_img_aligned( const image_id n, scr_rect area, int align, const int dirty)
+void display_img_aligned( const image_id n, scr_rect area, int align, const bool dirty)
 {
 	if(  n < anz_images  ) {
 		scr_coord_val x,y;
@@ -2653,7 +2660,7 @@ void display_img_aligned( const image_id n, scr_rect area, int align, const int 
 /**
  * Draw image with vertical clipping (quickly) and horizontal (slowly)
  */
-void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr_raw, const int /*daynight*/, const int dirty  CLIP_NUM_DEF)
+void display_img_aux(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr_raw, const bool /*daynight*/, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  ) {
 		// only use player images if needed
@@ -3025,7 +3032,7 @@ static void display_color_img_wc_daytime(const PIXVAL* sp, scr_coord_val x, scr_
 /**
  * Draw Image, replaced player color
  */
-void display_color_img(const image_id n, scr_coord_val xp, scr_coord_val yp, sint8 player_nr_raw, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_color_img(const image_id n, scr_coord_val xp, scr_coord_val yp, sint8 player_nr_raw, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  ) {
 		// do we have to use a player nr?
@@ -3103,7 +3110,7 @@ void display_color_img_with_tooltip(const image_id n, scr_coord_val xp, scr_coor
 /**
  * draw unscaled images, replaces base color
  */
-void display_base_img(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_base_img(const image_id n, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  base_tile_raster_width==tile_raster_width  ) {
 		// same size => use standard routine
@@ -3785,7 +3792,7 @@ static void display_img_alpha_wc(scr_coord_val h, const scr_coord_val xp, const 
 /**
  * draws the transparent outline of an image
  */
-void display_rezoomed_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char /*player_nr*/, const FLAGGED_PIXVAL color_index, const int /*daynight*/, const int dirty  CLIP_NUM_DEF)
+void display_rezoomed_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char /*player_nr*/, const FLAGGED_PIXVAL color_index, const bool /*daynight*/, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  ) {
 		// need to go to nightmode and or rezoomed?
@@ -3866,7 +3873,7 @@ void display_rezoomed_img_blend(const image_id n, scr_coord_val xp, scr_coord_va
 }
 
 
-void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const signed char /*player_nr*/, const FLAGGED_PIXVAL color_index, const int /*daynight*/, const int dirty  CLIP_NUM_DEF)
+void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const sint8 /*player_nr*/, const FLAGGED_PIXVAL color_index, const bool /*daynight*/, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  n < anz_images  &&  alpha_n < anz_images  ) {
 		// need to go to nightmode and or rezoomed?
@@ -3956,7 +3963,7 @@ void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const 
 
 
 // For blending or outlining unzoomed image. Adapted from display_base_img() and display_unzoomed_img_blend()
-void display_base_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char player_nr, const FLAGGED_PIXVAL color_index, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_base_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp, const signed char player_nr, const FLAGGED_PIXVAL color_index, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  base_tile_raster_width == tile_raster_width  ) {
 		// same size => use standard routine
@@ -4035,7 +4042,7 @@ void display_base_img_blend(const image_id n, scr_coord_val xp, scr_coord_val yp
 }
 
 
-void display_base_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const signed char player_nr, const FLAGGED_PIXVAL color_index, const int daynight, const int dirty  CLIP_NUM_DEF)
+void display_base_img_alpha(const image_id n, const image_id alpha_n, const unsigned alpha_flags, scr_coord_val xp, scr_coord_val yp, const sint8 player_nr, const FLAGGED_PIXVAL color_index, const bool daynight, const bool dirty  CLIP_NUM_DEF)
 {
 	if(  base_tile_raster_width == tile_raster_width  ) {
 		// same size => use standard routine
@@ -4277,6 +4284,19 @@ void display_colorbox_with_tooltip(scr_coord_val xp, scr_coord_val yp, scr_coord
 }
 
 
+void display_convoy_arrow_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty  CLIP_NUM_DEF)
+{
+	for (int x = 0; x < w; x++) {
+		if (x < (w + 1) / 2) {
+			display_vline_wh_clip_rgb(xp + x, yp + x, h - w / 2, color, dirty  CLIP_NUM_PAR);
+		}
+		else {
+			display_vline_wh_clip_rgb(xp + x, yp + w - x - 1, h - w / 2, color, dirty  CLIP_NUM_PAR);
+		}
+	}
+}
+
+
 /**
  * Draw vertical line
  */
@@ -4334,40 +4354,40 @@ void display_array_wh(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_c
 	}
 }
 
-void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, PIXVAL color, bool dirty, uint8 basic_constraint_flags, uint8 interactivity, bool is_rightside  CLIP_NUM_DEF_NOUSE)
+void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty, bool is_rightside, uint8 basic_constraint_flags, uint8 interactivity  CLIP_NUM_DEF_NOUSE)
 {
-	uint8 h = VEHICLE_BAR_HEIGHT;
-	uint8 width = (uint8)((w + 1) * 0.9);
-	uint8 margin_left = w - width;
+	if (h > 1 && h % 2 == 0) { h--; }
+	const uint8 width = (uint8)((w + 1) * 0.9);
+	const uint8 margin_left = w - width;
 
 	if (is_rightside) {
 		// right side of the bar - check only [next] parameter. check the alternate side if vehicle is reversed
-		display_fillbox_wh_clip_rgb(xp, yp, width - h / 2, h, color, dirty);
+		display_fillbox_wh_clip_rgb(xp, yp, width - h/2, h, color, dirty);
 
 		// draw right end >
 		if (basic_constraint_flags & vehicle_desc_t::unknown_constraint) {
-			display_fillbox_wh_clip_rgb(xp + width - h / 2, yp, h / 2, h, color, dirty);
+			display_fillbox_wh_clip_rgb(xp + width - h/2, yp, h/2, h, color, dirty);
 		}
 		else if (basic_constraint_flags & vehicle_desc_t::can_be_tail) {
 			display_pixel(xp + width - 1, yp+h/2, color);
 			// draw "tail" shape
 			if ((interactivity & BIDIRECTIONAL) == 0) {
 				// one directional (tail)
-				display_vline_wh_clip_rgb(xp + width - 1, yp, h / 2, color, dirty);
-				for (int i = 1; i < h / 2; ++i) {
-					display_vline_wh_clip_rgb(xp + width - 1 - i, yp, h / 2 + i + 1, color, dirty);
+				display_vline_wh_clip_rgb(xp + width - 1, yp, h/2, color, dirty);
+				for (int i = 1; i < h/2; ++i) {
+					display_vline_wh_clip_rgb(xp + width - 1 - i, yp, h/2 + i + 1, color, dirty);
 				}
 			}
 			else if (basic_constraint_flags & vehicle_desc_t::can_be_head) {
 				// cab end
-				for (int i = 1; i < h / 2; ++i) {
-					display_vline_wh_clip_rgb(xp + width -1 - i, yp + h / 2 - i, i * 2 + 1, color, dirty);
+				for (int i = 1; i < h/2; ++i) {
+					display_vline_wh_clip_rgb(xp + width -1 - i, yp + h/2 - i, i * 2 + 1, color, dirty);
 				}
 			}
 			else {
 				// tail end
 				display_vline_wh_clip_rgb(xp + width - 1, yp + 1, h - 2, color, dirty);
-				for (int i = 1; i < h / 2; ++i) {
+				for (int i = 1; i < h/2; ++i) {
 					display_vline_wh_clip_rgb(xp + width - 1 - i, yp, h, color, dirty);
 				}
 			}
@@ -4376,20 +4396,20 @@ void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_
 			// intermediate end
 			display_pixel(xp + width - 1, yp, color);
 			display_pixel(xp + width - 1, yp+h-1, color);
-			for (int i = 1; i < h / 2; ++i) {
+			for (int i = 1; i < h/2; ++i) {
 				display_vline_wh_clip_rgb(xp + width - 1 - i, yp, h, color, dirty);
 			}
 		}
 		// un-powerd vehicle
 		if (!(interactivity & HAS_POWER)) {
-			display_blend_wh_rgb(xp, yp + 1, width - h / 2, h - 2, color_idx_to_rgb(COL_WHITE), 30);
+			display_blend_wh_rgb(xp, yp + 1, width - h/2, h - 2, color_idx_to_rgb(COL_WHITE), 30);
 			if ((interactivity & BIDIRECTIONAL)==0 && basic_constraint_flags & vehicle_desc_t::can_be_tail) {
-				display_pixel(xp + width - h / 2 - 1, yp + h - 2, color);
+				display_pixel(xp + width - h/2 - 1, yp + h - 2, color);
 			}
 			if (basic_constraint_flags & vehicle_desc_t::can_be_head) {
-				display_pixel(xp + width - h / 2 - 1, yp + h - 2, color);
+				display_pixel(xp + width - h/2 - 1, yp + h - 2, color);
 				if (interactivity & BIDIRECTIONAL) {
-					display_pixel(xp + width - h / 2 - 1, yp + 1, color);
+					display_pixel(xp + width - h/2 - 1, yp + 1, color);
 				}
 			}
 		}
@@ -4409,16 +4429,16 @@ void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_
 
 		// < draw left end's base color
 		if (basic_constraint_flags & vehicle_desc_t::unknown_constraint) {
-			display_fillbox_wh_clip_rgb(xp + margin_left, yp, h / 2, h, color, dirty);
+			display_fillbox_wh_clip_rgb(xp + margin_left, yp, h/2, h, color, dirty);
 		}
 		else if (basic_constraint_flags & vehicle_desc_t::can_be_head) {
-			display_pixel(xp + margin_left, yp + h / 2, color);
+			display_pixel(xp + margin_left, yp + h/2, color);
 			// draw "head" shape
 			if((interactivity & BIDIRECTIONAL)==0){
 				// one directional (front)
 				display_vline_wh_clip_rgb(xp + margin_left, yp + h/2 + 1, h/2, color, dirty);
 				for (int i = 1; i < h/2; ++i) {
-					display_vline_wh_clip_rgb(xp + margin_left + i, yp + h / 2 - i, h/2 + i + 1, color, dirty);
+					display_vline_wh_clip_rgb(xp + margin_left + i, yp + h/2 - i, h/2 + i + 1, color, dirty);
 				}
 			}
 			else {
@@ -4439,24 +4459,24 @@ void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_
 			// intermediate end
 			display_pixel(xp+margin_left, yp, color);
 			display_pixel(xp+margin_left, yp+h-1, color);
-			for (int i = 1; i < h / 2; ++i) {
+			for (int i = 1; i < h/2; ++i) {
 				display_vline_wh_clip_rgb(xp + margin_left + i, yp, h, color, dirty);
 			}
 		}
 		// un-powerd vehicle
 		if (!(interactivity & HAS_POWER)) {
-			display_blend_wh_rgb(xp + margin_left + h/2, yp + 1, width - h / 2, h - 2, color_idx_to_rgb(COL_WHITE), 30);
+			display_blend_wh_rgb(xp + margin_left + h/2, yp + 1, width - h/2, h - 2, color_idx_to_rgb(COL_WHITE), 30);
 			if (basic_constraint_flags & vehicle_desc_t::can_be_head) {
-				display_pixel(xp + margin_left + h / 2, yp + 1, color);
+				display_pixel(xp + margin_left + h/2, yp + 1, color);
 				if(interactivity & BIDIRECTIONAL){
-					display_pixel(xp + margin_left + h / 2, yp + h - 2, color);
+					display_pixel(xp + margin_left + h/2, yp + h - 2, color);
 				}
 			}
 		}
 
 		// draw the "coupler" line
 		//if (reversed ? basic_constraint_flags & vehicle_desc_t::fixed_coupling_next : basic_constraint_flags & vehicle_desc_t::fixed_coupling_prev) {
-		//	display_blend_wh(xp + margin_left - 2, yp + h / 2 -1, 3, h/2, COL_BLACK, 66);
+		//	display_blend_wh(xp + margin_left - 2, yp + h/2 -1, 3, h/2, COL_BLACK, 66);
 		//}
 		// -| permanent coupling
 		//if (reversed ? basic_constraint_flags & vehicle_desc_t::permanent_coupling_next : basic_constraint_flags & vehicle_desc_t::permanent_coupling_prev) {
@@ -4550,7 +4570,7 @@ utf32 get_next_char_with_metrics(const char* &text, unsigned char &byte_length, 
 	}
 	else {
 		text += len;
-		byte_length = len;
+		byte_length = (uint8)len;
 		pixel_width = default_font.get_glyph_advance(char_code);
 	}
 	return char_code;
@@ -4625,7 +4645,7 @@ utf32 get_prev_char_with_metrics(const char* &text, const char *const text_start
 
 	size_t len = 0;
 	char_code = utf8_decoder_t::decode((utf8 const *)text, len);
-	byte_length = len;
+	byte_length = (uint8)len;
 	pixel_width = default_font.get_glyph_advance(char_code);
 
 	return char_code;
@@ -4928,7 +4948,7 @@ scr_coord_val display_proportional_ellipsis_rgb( scr_rect r, const char *text, i
 		default: ;
 	}
 	if (shadowed) {
-		display_text_proportional_len_clip_rgb( r.x, r.y, text, ALIGN_LEFT | DT_CLIP, shadow_color, dirty, -1  CLIP_NUM_DEFAULT);
+		display_text_proportional_len_clip_rgb( r.x+1, r.y+1, text, ALIGN_LEFT | DT_CLIP, shadow_color, dirty, -1  CLIP_NUM_DEFAULT);
 	}
 	return display_text_proportional_len_clip_rgb( r.x, r.y, text, ALIGN_LEFT | DT_CLIP, color, dirty, -1  CLIP_NUM_DEFAULT);
 }
@@ -5083,7 +5103,7 @@ int display_multiline_text_rgb(scr_coord_val x, scr_coord_val y, const char *buf
 				max_px_len = px_len;
 			}
 			y += LINESPACE;
-		} while (buf = (next ? next+1 : NULL), buf != NULL);
+		} while ((void)(buf = (next ? next+1 : NULL)), buf != NULL);
 	}
 	return max_px_len;
 }
@@ -5259,6 +5279,22 @@ void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val 
 	}
 }
 
+void display_right_pointer_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const PIXVAL colval, const bool dirty)
+{
+	uint8 width = height - height % 2;
+	for (uint16 i = 0; i < height; i++)
+	{
+		uint8 xoff = (height/2 - abs(i-height/2))/2;
+		uint8 w    = (height/2 - abs(i-height/2))*2;
+
+		display_fillbox_wh_clip_rgb(x+xoff+1, y+i, w-xoff, 1, colval, dirty);
+		if (i != height /2) {
+			display_blend_wh_rgb(x+xoff+1+w-xoff, y+i, 1, 1, colval, 50);
+		}
+	}
+}
+
+
 int display_fluctuation_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const bool dirty, sint64 value)
 {
 	if (!value) { return 0; } // nothing to draw
@@ -5280,6 +5316,192 @@ int display_fluctuation_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 hei
 //	mark_rect_dirty_wc( x0-radius, y0-radius, x0+radius+1, y0+radius+1 );
 }
 
+
+void display_signal_direction_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val raster_width, uint8 way_dir, uint8 sig_dir, uint8 state, bool is_diagonal, uint8 open_dir, sint8 slope)
+{
+	PIXVAL col1      = color_idx_to_rgb(COL_RED+2);
+	PIXVAL col1_dark = color_idx_to_rgb(COL_RED);
+	PIXVAL col2      = color_idx_to_rgb(COL_RED+2);
+	PIXVAL col2_dark = color_idx_to_rgb(COL_RED);
+
+	switch (state) {
+		case roadsign_t::clear:
+		case roadsign_t::clear_no_choose:
+			col1      = color_idx_to_rgb(140);
+			col1_dark = color_idx_to_rgb(COL_DARK_GREEN+1);
+			break;
+		case roadsign_t::caution:
+		case roadsign_t::caution_no_choose:
+			col1      = COL_CAUTION;
+			col1_dark = color_idx_to_rgb(COL_DARK_YELLOW+1);
+			break;
+		case roadsign_t::preliminary_caution:
+		case roadsign_t::preliminary_caution_no_choose:
+			col1      = color_idx_to_rgb(206); // yellow green
+			col1_dark = color_idx_to_rgb(204);
+			break;
+		case roadsign_t::advance_caution:
+		case roadsign_t::advance_caution_no_choose:
+			col1      = color_idx_to_rgb(47);
+			col1_dark = color_idx_to_rgb(45);
+			break;
+		case roadsign_t::call_on:
+			col1      = color_idx_to_rgb(COL_GREY5+1);
+			col1_dark = color_idx_to_rgb(COL_GREY4+2);
+			break;
+		case 254: /* drive by sight */
+			col1 =      color_idx_to_rgb(COL_ORANGE + 2);
+			col1_dark = color_idx_to_rgb(COL_DARK_ORANGE);
+			break;
+		case 255: /* one way, directional reservation */
+			col1      = color_idx_to_rgb(COL_BLUE+4);
+			col1_dark = color_idx_to_rgb(COL_BLUE+2);
+			break;
+		case roadsign_t::danger:
+		default:
+			col1      = color_idx_to_rgb(COL_RED+2);
+			col1_dark = color_idx_to_rgb(COL_RED);
+			break;
+	}
+
+	if (open_dir == ribi_t::all) {
+		col2 = col1;
+		col2_dark = col1_dark;
+	}
+
+	assert(raster_width<768);
+	uint8 width  = is_diagonal ? raster_width/6*0.353 : raster_width/6;
+	const uint8 height = is_diagonal ? raster_width/6*0.353 : raster_width/12;
+	const uint8 thickness = max(raster_width/36, 2);
+
+	if (is_diagonal) {
+		if (open_dir != ribi_t::all) {
+			if (open_dir == ribi_t::southeast || open_dir == ribi_t::northeast) {
+				col2      = col1;
+				col2_dark = col1_dark;
+				col1      = color_idx_to_rgb(COL_RED+2);
+				col1_dark = color_idx_to_rgb(COL_RED);
+			}
+		}
+
+		if (way_dir == ribi_t::northeast || way_dir == ribi_t::southwest) {
+			// vertical
+			x += (way_dir==ribi_t::northeast) ? raster_width/4 : (-raster_width/4);
+			y += raster_width/16;
+			width = width<<2; // 4x
+
+			// upper
+			for (uint8 xoff = 0; xoff < width/2; xoff++) {
+				const uint8 yoff = (uint8)((xoff+1)/2);
+				// up
+				if (sig_dir & ribi_t::east || sig_dir & ribi_t::south) {
+					display_vline_wh_clip_rgb(x + xoff, y+yoff, width/4 - yoff, col1, true);
+					display_vline_wh_clip_rgb(x-xoff-1, y+yoff, width/4 - yoff, col1, true);
+				}
+				// down
+				if (sig_dir & ribi_t::west || sig_dir & ribi_t::north) {
+					display_vline_wh_clip_rgb(x + xoff, y+raster_width/6,              width/4-yoff, col2,      true);
+					display_vline_wh_clip_rgb(x + xoff, y+raster_width/6+width/4-yoff, thickness,    col2_dark, true);
+					display_vline_wh_clip_rgb(x-xoff-1, y+raster_width/6,              width/4-yoff, col2,      true);
+					display_vline_wh_clip_rgb(x-xoff-1, y+raster_width/6+width/4-yoff, thickness,    col2_dark, true);
+				}
+			}
+			// up
+			if (sig_dir & ribi_t::east || sig_dir & ribi_t::south) {
+				display_fillbox_wh_clip_rgb(x - width/2, y + width/4, width, thickness, col1_dark, true);
+			}
+		}
+		else {
+			// horizontal
+			y -= raster_width/12;
+			if (way_dir == ribi_t::southeast) {
+				y += raster_width/4;
+			}
+
+			for (uint8 xoff = 0; xoff < width*2; xoff++) {
+				const uint8 h = width*2 - (scr_coord_val)(xoff + 1);
+				// left
+				if (sig_dir & ribi_t::north || sig_dir & ribi_t::east) {
+					display_vline_wh_clip_rgb(x - xoff - width*2, y + (scr_coord_val)((xoff+1)/2),   h, col1, true);
+					display_vline_wh_clip_rgb(x - xoff - width*2, y + (scr_coord_val)((xoff+1)/2)+h, thickness, col1_dark, true);
+				}
+				// right
+				if (sig_dir & ribi_t::south || sig_dir & ribi_t::west) {
+					display_vline_wh_clip_rgb(x + xoff + width*2, y + (scr_coord_val)((xoff+1)/2),   h, col2, true);
+					display_vline_wh_clip_rgb(x + xoff + width*2, y + (scr_coord_val)((xoff+1)/2)+h, thickness, col2_dark, true);
+				}
+			}
+		}
+	}
+	else {
+		if (open_dir != ribi_t::all) {
+			if (open_dir == ribi_t::south || open_dir == ribi_t::east) {
+				col2      = col1;
+				col2_dark = col1_dark;
+				col1      = color_idx_to_rgb(COL_RED+2);
+				col1_dark = color_idx_to_rgb(COL_RED);
+			}
+		}
+
+		scr_coord_val slope_offset_y = 0;
+		if (sig_dir & ribi_t::south) {
+			// upper right
+			if ( slope == slope_t::south*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::south  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y,  (scr_coord_val)(xoff/2) + 1, col1, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
+			}
+		}
+		if (sig_dir & ribi_t::east) {
+			if ( slope == slope_t::east*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::east  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y,  (scr_coord_val)(xoff/2) + 1, col1, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + (scr_coord_val)(xoff/2) + 1, thickness, col1_dark, true);
+			}
+		}
+		if (sig_dir & ribi_t::west) {
+			slope_offset_y = 0;
+			if ( slope == slope_t::west*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::west  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
+				display_vline_wh_clip_rgb(x + xoff, y - slope_offset_y + height*2 + 1, thickness, col2_dark, true);
+			}
+		}
+		if (sig_dir & ribi_t::north) {
+			slope_offset_y = 0;
+			if ( slope == slope_t::north*2 ) { slope_offset_y = width/2; }
+			else if(slope==slope_t::north  ) { slope_offset_y = width/4; }
+			for (uint8 xoff = 0; xoff < width; xoff++) {
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + height*2 - (scr_coord_val)(xoff/2) + 1, (scr_coord_val)(xoff/2) + 1, col2, true);
+				display_vline_wh_clip_rgb(x - xoff - 1, y - slope_offset_y + height*2 + 1, thickness, col2_dark, true);
+			}
+		}
+	}
+}
+
+
+void display_depot_symbol(scr_coord_val x, scr_coord_val y, scr_coord_val width, const uint8 darkest_pcol_idx, const bool dirty)
+{
+	if (width < 6) { return; } // too small to draw!
+	// first, draw the roof (upper triangle)
+	for (uint8 i = 0; i < width/4; i++) {
+		const scr_coord_val w = i*4 + 2;
+		display_fillbox_wh_clip_rgb(x + (width-w) / 2, y+i, w, 1, color_idx_to_rgb(darkest_pcol_idx+3), dirty);
+	}
+	display_fillbox_wh_clip_rgb(x, y+width/4, width, width-width/3-1, color_idx_to_rgb(darkest_pcol_idx+3), dirty);
+	// draw the door
+	const scr_coord_val y_start = width/4+1;
+	display_vline_wh_rgb(x+1,             y+y_start, width-width/3-2, color_idx_to_rgb(darkest_pcol_idx+6), dirty);
+	display_vline_wh_rgb(x+(width/2)*2-2, y+y_start, width-width/3-2, color_idx_to_rgb(darkest_pcol_idx+6), dirty);
+	if (width < 8) { return; } // too small to draw!
+	for (uint8 i=y_start; i < width-3; i+=2) {
+		const scr_coord_val w = i==y_start ? (width/2)*2-4 : (width/2)*2-6;
+		display_fillbox_wh_clip_rgb(x+3-(i==y_start), y+i, w, 1, color_idx_to_rgb(darkest_pcol_idx+6), dirty);
+	}
+}
 
 /**
  * Print a bezier curve between points A and B
@@ -5352,16 +5574,20 @@ void display_flush_buffer()
 	{
 		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 	};
+
 #ifdef USE_SOFTPOINTER
 	ex_ord_update_mx_my();
+
+	const scr_coord_val ticker_ypos_bottom = display_get_height() - win_get_statusbar_height() - (env_t::menupos == MENU_BOTTOM) * env_t::iconsize.h;
+	const scr_coord_val ticker_ypos_top = ticker_ypos_bottom - TICKER_HEIGHT;
 
 	// use mouse pointer image if available
 	if (softpointer != -1 && standard_pointer >= 0) {
 		display_color_img(standard_pointer, sys_event.mx, sys_event.my, 0, false, true  CLIP_NUM_DEFAULT);
 
 		// if software emulated mouse pointer is over the ticker, redraw it totally at next occurs
-		if (!ticker::empty() && sys_event.my+images[standard_pointer].h >= disp_height-TICKER_YPOS_BOTTOM &&
-		   sys_event.my <= disp_height-TICKER_YPOS_BOTTOM+TICKER_HEIGHT) {
+		if (!ticker::empty() && sys_event.my+images[standard_pointer].h >= ticker_ypos_top &&
+		   sys_event.my <= ticker_ypos_bottom) {
 			ticker::set_redraw_all(true);
 		}
 	}
@@ -5373,8 +5599,7 @@ void display_flush_buffer()
 		display_direct_line_rgb( sys_event.mx, sys_event.my-2, sys_event.mx, sys_event.my+2, color_idx_to_rgb(COL_BLACK) );
 
 		// if crosshair is over the ticker, redraw it totally at next occurs
-		if(!ticker::empty() && sys_event.my+2 >= disp_height-TICKER_YPOS_BOTTOM &&
-		   sys_event.my-2 <= disp_height-TICKER_YPOS_BOTTOM+TICKER_HEIGHT) {
+		if(!ticker::empty() && sys_event.my+2 >= ticker_ypos_top && sys_event.my-2 <= ticker_ypos_bottom) {
 			ticker::set_redraw_all(true);
 		}
 	}

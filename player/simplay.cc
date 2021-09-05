@@ -55,7 +55,7 @@
 #include "../utils/cbuffer_t.h"
 #include "../utils/simstring.h"
 
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/air_vehicle.h"
 
 #include "simplay.h"
 #include "finance.h"
@@ -325,10 +325,10 @@ void player_t::set_player_color(uint8 col1, uint8 col2)
 		cbuffer_t message;
 		const char* player_name = welt->get_player(player_nr)->get_name();
 		message.printf(player_name);
-		welt->get_message()->add_message(message, koord::invalid, message_t::ai, player_color_1);
+		welt->get_message()->add_message(message, koord::invalid, message_t::ai, color_idx_to_rgb(player_color_1));
 		message.clear();
 		message.printf(translator::translate("has changed its colour scheme."));
-		welt->get_message()->add_message(message, koord::invalid, message_t::ai, col1);
+		welt->get_message()->add_message(message, koord::invalid, message_t::ai, color_idx_to_rgb(col1));
 	}
 	set_player_color_no_message(col1, col2);
 }
@@ -741,6 +741,7 @@ void player_t::complete_liquidation()
 								break;
 							case obj_t::gebaeude:
 								hausbauer_t::remove( this, (gebaeude_t *)obj, false );
+								gr = plan->get_boden_bei(b); // fundament has now been replaced by normal ground
 								break;
 							case obj_t::way:
 							{

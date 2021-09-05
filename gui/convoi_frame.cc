@@ -20,7 +20,7 @@
 #include "../dataobj/translator.h"
 #include "../player/simplay.h"
 #include "../utils/simstring.h"
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/vehicle.h"
 #include "../simline.h"
 
  /**
@@ -276,7 +276,7 @@ convoi_frame_t::convoi_frame_t() :
 
 	add_table(4,2);
 	{
-		new_component_span<gui_label_t>("cl_txt_sort", 2);
+		new_component_span<gui_label_t>("hl_txt_sort", 2);
 		new_component<gui_label_t>("cl_txt_mode");
 		filter_on.init(button_t::square, "cl_txt_filter");
 		filter_on.set_tooltip(translator::translate("cl_btn_filter_tooltip"));
@@ -440,9 +440,7 @@ void convoi_frame_t::rdwr(loadsave_t *file)
 			}
 			waren_filter = &waren_filter_rd;
 		}
-	}
 
-	if (file->is_loading()) {
 		sortby = (sort_mode_t)default_sortmode;
 		sort_order.pressed = sortreverse;
 		filter_on.pressed = filter_is_on;

@@ -98,7 +98,7 @@ public:
 		double bar_width = (double)get_size().w/(double)MAX_SEVERITY_COLORS;
 		// color bar
 		for(  int i=0;  i<MAX_SEVERITY_COLORS;  i++  ) {
-			display_fillbox_wh_clip_rgb(pos.x + (i*bar_width), pos.y+2,  bar_width+1, 7, minimap_t::calc_severity_color(i, MAX_SEVERITY_COLORS-1), false);
+			display_fillbox_wh_clip_rgb(pos.x + (scr_coord_val)(i*bar_width), pos.y+2, (scr_coord_val)bar_width+1, 7, minimap_t::calc_severity_color(i, MAX_SEVERITY_COLORS-1), false);
 		}
 	}
 	scr_size get_min_size() const OVERRIDE
@@ -291,9 +291,9 @@ map_frame_t::map_frame_t() :
 		viewable_freight_types.append(NULL);
 		freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate("All freight types"), SYSCOL_TEXT) ;
 		viewable_freight_types.append(goods_manager_t::passengers);
-		freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate("Passagiere"), SYSCOL_TEXT) ;
+		freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>( translator::translate("Passagiere"), SYSCOL_TEXT, skinverwaltung_t::passengers->get_image_id(0)) ;
 		viewable_freight_types.append(goods_manager_t::mail);
-		freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate("Post"), SYSCOL_TEXT) ;
+		freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>( translator::translate("Post"), SYSCOL_TEXT, skinverwaltung_t::mail->get_image_id(0)) ;
 		viewable_freight_types.append(goods_manager_t::none); // for all freight ...
 		freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate("Fracht"), SYSCOL_TEXT) ;
 		for(  int i = 0;  i < goods_manager_t::get_max_catg_index();  i++  ) {
@@ -302,7 +302,7 @@ map_frame_t::map_frame_t() :
 			if(  index == goods_manager_t::INDEX_NONE  ||  freight_type->get_catg()==0  ) {
 				continue;
 			}
-			freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(freight_type->get_catg_name()), SYSCOL_TEXT);
+			freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>(translator::translate(freight_type->get_catg_name()), SYSCOL_TEXT, freight_type->get_catg_symbol());
 			viewable_freight_types.append(freight_type);
 		}
 		for(  int i=0;  i < goods_manager_t::get_count();  i++  ) {
@@ -310,7 +310,7 @@ map_frame_t::map_frame_t() :
 			if(  ware->get_catg() == 0  &&  ware->get_index() > 2  ) {
 				// Special freight: Each good is special
 				viewable_freight_types.append(ware);
-				freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate(ware->get_name()), SYSCOL_TEXT) ;
+				freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>( translator::translate(ware->get_name()), SYSCOL_TEXT, ware->get_catg_symbol()) ;
 			}
 		}
 	}
@@ -399,45 +399,21 @@ void map_frame_t::update_buttons()
 
 static bool compare_factories(const factory_desc_t* const a, const factory_desc_t* const b)
 {
-	if (a->get_supplier_count() == 0) {
-		// a source
-		if (b->get_supplier_count() > 0) {
-			return true;
-		}
-		else {
-			// both producer, sort by name
-			return strcmp(translator::translate(a->get_name()), translator::translate(b->get_name())) < 0;
-		}
+	const bool a_producer_only = a->get_supplier_count() == 0;
+	const bool b_producer_only = b->get_supplier_count() == 0;
+	const bool a_consumer_only = a->get_product_count() == 0;
+	const bool b_consumer_only = b->get_product_count() == 0;
+
+	if (a_producer_only != b_producer_only) {
+		return a_producer_only; // producers to the front
+	}
+	else if (a_consumer_only != b_consumer_only) {
+		return !a_consumer_only; // consumers to the end
 	}
 	else {
-		// a not source
-		if (b->get_supplier_count() == 0) {
-			// b source, in front
-			return false;
-		}
-		else {
-			if (a->get_product_count() == 0) {
-				// a consumer
-				if (b->get_product_count() > 0) {
-					// b factory, in front
-					return false;
-				}
-				else {
-					// both consumer, sort by name
-					return strcmp(translator::translate(a->get_name()), translator::translate(b->get_name())) < 0;
-				}
-			}
-			else {
-				// a factory
-				if (b->get_product_count() == 0) {
-					// b producer to end
-					return true;
-				}
-			}
-		}
+		// both of same type, sort by name
+		return strcmp(translator::translate(a->get_name()), translator::translate(b->get_name())) < 0;
 	}
-	// both factory, sort by name
-	return strcmp(translator::translate(a->get_name()), translator::translate(b->get_name())) < 0;
 }
 
 

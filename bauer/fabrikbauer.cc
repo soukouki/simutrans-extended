@@ -55,7 +55,7 @@ static void add_factory_to_fab_map(karte_t const* const welt, fabrik_t const* co
 	koord3d      const& pos     = fab->get_pos();
 	sint16       const  spacing = welt->get_settings().get_min_factory_spacing();
 	building_desc_t const& bdsc  = *fab->get_desc()->get_building();
-	sint16       const  rotate  = fab->get_rotate();
+	uint8        const  rotate  = fab->get_rotate();
 	sint16       const  start_y = max(0, pos.y - spacing);
 	sint16       const  start_x = max(0, pos.x - spacing);
 	sint16       const  end_y   = min(welt->get_size().y - 1, pos.y + bdsc.get_y(rotate) + spacing);
@@ -94,7 +94,7 @@ void init_fab_map( karte_t *welt )
  * @param x,y world position
  * @returns true, if factory coordinate
  */
-inline bool is_factory_at( sint16 x, sint16 y)
+inline bool is_factory_at(sint16 x, sint16 y)
 {
 	uint32 idx = (fab_map_w*y)+(x/8);
 	return idx < fab_map.get_count()  &&  (fab_map[idx]&(1<<(x%8)))!=0;
@@ -175,13 +175,33 @@ public:
 								condmet += gr->hat_weg(road_wt);
 								break;
 							case factory_desc_t::shore:
-								condmet += welt->get_climate(k)==water_climate;
+							case factory_desc_t::shore_city:
+								if (welt->get_climate(k) == water_climate)
+								{
+									if (site == factory_desc_t::shore_city)
+									{
+										condmet += gr->hat_weg(road_wt);
+									}
+									else
+									{
+										condmet++;
+									}
+								}
 								break;
 							case factory_desc_t::river:
+							case factory_desc_t::river_city:
 							if(  welt->get_settings().get_river_number() >0  ) {
 								weg_t* river = gr->get_weg(water_wt);
-								if (river  &&  river->get_desc()->get_styp()==type_river) {
-									condmet++;
+								if (river  &&  river->get_desc()->get_styp()==type_river)
+								{
+									if (site == factory_desc_t::river_city)
+									{
+										condmet += gr->hat_weg(road_wt);
+									}
+									else
+									{
+										condmet++;
+									}
 									DBG_DEBUG("factory_site_searcher_t::is_area_ok()", "Found river near %s", pos.get_str());
 								}
 								break;
@@ -647,7 +667,7 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 	}
 
 	// no cities at all?
-	if (info->get_placement() == factory_desc_t::City  &&  welt->get_cities().empty()) {
+	if ((info->get_placement() == factory_desc_t::City || info->get_placement() == factory_desc_t::shore_city || info->get_placement() == factory_desc_t::river_city) &&  welt->get_cities().empty()) {
 		return 0;
 	}
 
@@ -662,7 +682,7 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 	}
 
 	// Industries in town needs different place search
-	if (info->get_placement() == factory_desc_t::City) {
+	if (info->get_placement() == factory_desc_t::City || info->get_placement() == factory_desc_t::shore_city || info->get_placement() == factory_desc_t::river_city) {
 
 		koord size=info->get_building()->get_size(0);
 
@@ -689,7 +709,40 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 			k1 = factory_site_searcher_t(welt, factory_desc_t::City).find_place(city->get_pos(), size.y, size.x, cl, regions_allowed);
 		}
 
-		rotate = simrand( info->get_building()->get_all_layouts(), " factory_builder_t::build_link" );
+
+                int streetdir = 0;
+                if (size.x == 1 && size.y == 1) {
+                  static int const neighbours_to_senw[] = { 0x0c, 0x08, 0x09, 0x01, 0x03, 0x02, 0x06, 0x04 };
+                  for ( int i = 1;  i < 8;  i+=2  ) {
+                    grund_t *gr2 = welt->lookup_kartenboden(k + koord::neighbours[i]);
+                    if ( gr2  &&  gr2->get_weg_hang() == gr2->get_grund_hang()  &&  gr2->get_weg(road_wt) != NULL  ) {
+                      // update directions - note this is SENW, conversion from neighbours to SENW is
+                      // neighbours SENW   Bits in building_layout
+                      // 3          0      0x01
+                      // 5          1      0x02
+                      // 7          2      0x04
+                      // 1          3      0x08
+                      streetdir |= neighbours_to_senw[i];
+                    }
+                  }
+                  if (streetdir == 0) { // No adjacent streets; check diagonally
+                    for(  int i = 0;  i < 8;  i+=2  ) {
+                      grund_t *gr2 = welt->lookup_kartenboden(k + koord::neighbours[i]);
+                      if(  gr2  &&  gr2->get_weg_hang() == gr2->get_grund_hang()  &&  gr2->get_weg(road_wt) != NULL  ) {
+                        streetdir |= neighbours_to_senw[i];
+                      }
+                    }
+                  }
+                }
+
+                if (streetdir == 0) { // No adjacent streets; choose random rotation
+                  rotate = simrand( info->get_building()->get_all_layouts(), " factory_builder_t::build_link" );
+                } else {
+                  // Copied from simtool.cc, this converts senw to desired rotations.
+                  static int const building_layout[] = { 0, 0, 1, 4, 2, 0, 5, 1, 3, 7, 1, 0, 6, 3, 2, 0 };
+                  rotate = building_layout[streetdir];
+                }
+
 		if (k1 == koord::invalid) {
 			if (size.x != size.y) {
 				rotate &= 2; // rotation must be even number
@@ -699,6 +752,7 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 			k = k1;
 			rotate |= 1; // rotation must be odd number
 		}
+
 		if (!info->get_building()->can_rotate()) {
 			rotate = 0;
 		}
@@ -1272,7 +1326,7 @@ next_ware_check:
 						continue;
 					}
 				}
-				const bool in_city = consumer->get_placement() == factory_desc_t::City;
+				const bool in_city = consumer->get_placement() == factory_desc_t::City || consumer->get_placement() == factory_desc_t::shore_city || consumer->get_placement() == factory_desc_t::river_city;
 				if (in_city && welt->get_cities().empty())
 				{
 					// we cannot build this factory here

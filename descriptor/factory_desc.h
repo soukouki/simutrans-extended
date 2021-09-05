@@ -197,7 +197,9 @@ public:
 		City,
 		river,
 		shore,
-		forest
+		forest,
+		river_city,
+		shore_city
 	};
 
 private:

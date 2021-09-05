@@ -78,7 +78,7 @@ void halt_detail_t::init()
 	old_factory_count = 0;
 	old_catg_count = 0;
 	cached_active_player=NULL;
-	cashed_size_y = 0;
+	cached_size_y = 0;
 	show_pas_info = false;
 	show_freight_info = false;
 
@@ -100,19 +100,20 @@ void halt_detail_t::init()
 
 	// route tab components
 	cont_route.set_table_layout(1,0);
-	cont_route.add_table(3, 1);
+	cont_route.add_table(4,1)->set_spacing(scr_size(0,0));
 	{
 		cont_route.set_margin(scr_size(D_H_SPACE, D_V_SPACE), scr_size(0, 0));
 
-		bt_by_station.init(button_t::roundbox_state, "hd_btn_by_station", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
-		bt_by_category.init(button_t::roundbox_state, "hd_btn_by_category", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+		bt_by_station.init(button_t::roundbox_left_state, "hd_btn_by_station", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+		bt_by_category.init(button_t::roundbox_right_state, "hd_btn_by_category", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
 		bt_by_station.add_listener(this);
 		bt_by_category.add_listener(this);
 		bt_by_station.pressed = false;
 		bt_by_category.pressed = true;
+		cont_route.new_component<gui_fill_t>();
 		cont_route.add_component(&bt_by_station);
 		cont_route.add_component(&bt_by_category);
-		cont_route.new_component<gui_fill_t>();
+		cont_route.new_component<gui_margin_t>(D_MARGIN_RIGHT);
 	}
 	cont_route.end_table();
 	lb_serve_catg.init("lb_served_goods_and_classes", scr_coord(0, 0),
@@ -141,13 +142,12 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				char *class_name = new char[32]();
-				if (class_name != nullptr)
-				{
-					sprintf(class_name, "p_class[%u]", c);
-					pass_class_name_untranslated[c] = class_name;
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_PAS, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				if (classes>1) {
+					if (c == 0) { cb->set_typ(button_t::roundbox_left_state);  }
+					else if(c == classes-1) { cb->set_typ(button_t::roundbox_right_state); }
+					else { cb->set_typ(button_t::roundbox_middle_state); }
 				}
-				cb->init(button_t::roundbox_state, class_name, scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				cb->disable();
 				cb->add_listener(this);
 				cont_route.add_component(cb);
@@ -177,13 +177,12 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				char *class_name = new char[32]();
-				if (class_name != nullptr)
-				{
-					sprintf(class_name, "m_class[%u]", c);
-					mail_class_name_untranslated[c] = class_name;
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_MAIL, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				if (classes > 1) {
+					if (c == 0) { cb->set_typ(button_t::roundbox_left_state); }
+					else if (c == classes - 1) { cb->set_typ(button_t::roundbox_right_state); }
+					else { cb->set_typ(button_t::roundbox_middle_state); }
 				}
-				cb->init(button_t::roundbox_state, class_name, scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				cb->disable();
 				cb->add_listener(this);
 				cont_route.add_component(cb);
@@ -291,7 +290,6 @@ bool halt_detail_t::is_weltpos()
 // update all buffers
 void halt_detail_t::update_components()
 {
-	line_number.draw(scr_coord(0,0));
 	waiting_bar->update();
 	bool reset_tab = false;
 	int old_tab = tabs.get_active_tab_index();
@@ -339,8 +337,8 @@ void halt_detail_t::update_components()
 	}
 
 	// tab1
-	if (cashed_size_y != pas.get_size().h) {
-		cashed_size_y = pas.get_size().h;
+	if (cached_size_y != pas.get_size().h) {
+		cached_size_y = pas.get_size().h;
 		if (tabstate==0) {
 			set_tab_opened();
 		}
@@ -590,7 +588,7 @@ void halt_detail_t::set_tab_opened()
 	{
 		case 0: // pas
 		default:
-			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cashed_size_y)));
+			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cached_size_y)));
 			break;
 		case 1: // goods
 			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cont_goods.get_size().h)));
@@ -633,9 +631,9 @@ void halt_detail_t::rdwr(loadsave_t *file)
 	}
 	halt_pos.rdwr( file );
 	size.rdwr( file );
+	uint8 selected_tab = tabs.get_active_tab_index();
 	if( file->is_version_ex_atleast(14,41) ) {
-		uint8 dummy=0;
-		file->rdwr_byte(dummy);
+		file->rdwr_byte( selected_tab );
 	}
 	if(  file->is_loading()  ) {
 		halt = welt->lookup( halt_pos )->get_halt();
@@ -644,6 +642,7 @@ void halt_detail_t::rdwr(loadsave_t *file)
 		halt_detail_t *w = new halt_detail_t(halt);
 		create_win(pos.x, pos.y, w, w_info, magic_halt_detail + halt.get_id());
 		w->set_windowsize( size );
+		w->tabs.set_active_tab_index(selected_tab);
 		destroy_win( this );
 	}
 }

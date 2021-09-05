@@ -7,6 +7,7 @@
 #define GUI_DISPLAY_SETTINGS_H
 
 
+#include "simwin.h"
 #include "gui_frame.h"
 #include "components/gui_divider.h"
 #include "components/gui_label.h"
@@ -39,6 +40,9 @@ private:
 		cities_to_process_label;
 
 public:
+	button_t toolbar_pos[4];
+	button_t reselect_closes_tool;
+
 	gui_settings_t();
 	virtual void draw( scr_coord offset ) OVERRIDE;
 };
@@ -61,7 +65,8 @@ public:
 class label_settings_t : public gui_aligned_container_t, public action_listener_t
 {
 private:
-	gui_combobox_t convoy_tooltip, money_booking, convoy_nameplate, convoy_loadingbar, freight_waiting_bar;
+	gui_combobox_t convoy_tooltip, money_booking, convoy_nameplate, convoy_loadingbar, freight_waiting_bar, factory_tooltip;
+	button_t bt_convoy_id_plate[2];
 public:
 	label_settings_t();
 	virtual bool action_triggered(gui_action_creator_t *comp, value_t v);
@@ -76,7 +81,7 @@ private:
 	gui_combobox_t follow_mode;
 public:
 	traffic_settings_t();
-	virtual bool action_triggered( gui_action_creator_t *comp, value_t v );
+	bool action_triggered( gui_action_creator_t *comp, value_t v ) OVERRIDE;
 };
 
 /**
@@ -106,6 +111,10 @@ public:
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
+
+	uint32 get_rdwr_id() OVERRIDE { return magic_color_gui_t; }
+
+	void rdwr(loadsave_t*) OVERRIDE;
 };
 
 #endif

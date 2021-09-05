@@ -8,6 +8,7 @@
 #include "../../simcolor.h"
 #include "../../simworld.h"
 
+#include "../../dataobj/environment.h"
 #include "../../dataobj/translator.h"
 #include "../../utils/cbuffer_t.h"
 
@@ -346,7 +347,7 @@ void gui_factory_connection_stat_t::draw(scr_coord offset)
 			display_colorbox_with_tooltip(offset.x + xoff, offset.y + yoff + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, transport_goods->get_color(), NULL);
 			xoff += 12;
 			// [distance]
-			col_val = is_within_own_network ? SYSCOL_TEXT : color_idx_to_rgb(COL_GREY3);
+			col_val = is_within_own_network ? SYSCOL_TEXT : SYSCOL_TEXT_WEAK;
 			distance = (double)(shortest_distance(k, fab->get_pos().get_2d()) * welt->get_settings().get_meters_per_tile()) / 1000.0;
 			if (distance < 1)
 			{
@@ -375,13 +376,12 @@ void gui_factory_connection_stat_t::draw(scr_coord offset)
 				buf.clear();
 				if (lead_time == UINT32_MAX_VALUE) {
 					buf.append("--:--:--");
-					col_val = color_idx_to_rgb(COL_GREY4);
 				}
 				else {
 					char lead_time_as_clock[32];
 					welt->sprintf_time_tenths(lead_time_as_clock, 32, lead_time);
 					buf.append(lead_time_as_clock);
-					col_val = is_connected_to_own_network ? SYSCOL_TEXT : color_idx_to_rgb(COL_GREY4);
+					col_val = is_connected_to_own_network ? SYSCOL_TEXT : SYSCOL_TEXT_INACTIVE;
 				}
 				xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, col_val, true);
 				xoff += D_H_SPACE * 2;
@@ -549,7 +549,7 @@ void gui_factory_nearby_halt_info_t::draw(scr_coord offset)
 			// [name]
 			buf.clear();
 			buf.append(halt->get_name());
-			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, color_idx_to_rgb(halt->get_owner()->get_player_color1()), true);
+			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, color_idx_to_rgb(halt->get_owner()->get_player_color1() + env_t::gui_player_color_dark), true);
 			xoff += D_H_SPACE * 2;
 
 			bool has_active_freight_connection = false;
@@ -625,4 +625,66 @@ void gui_factory_nearby_halt_info_t::draw(scr_coord offset)
 	if (size != get_size()) {
 		set_size(size);
 	}
+}
+
+
+void gui_goods_handled_factory_t::build_factory_list(const goods_desc_t *ware)
+{
+	factory_list.clear();
+	FOR(vector_tpl<fabrik_t*>, const f, world()->get_fab_list()) {
+		if (show_consumer) {
+			// consume(accept) this?
+			if(f->get_desc()->get_accepts_these_goods(ware)) {
+				factory_list.append_unique(f->get_desc());
+			}
+		}
+		else {
+			// produce this?
+			FOR(array_tpl<ware_production_t>, const& product, f->get_output()) {
+				if (product.get_typ() == ware) {
+					factory_list.append_unique(f->get_desc());
+					break; // found
+				}
+			}
+		}
+	}
+}
+
+void gui_goods_handled_factory_t::draw(scr_coord offset)
+{
+	offset += pos;
+	scr_coord_val xoff = 0;
+	if (factory_list.get_count() > 0) {
+		// if pakset has symbol, show symbol
+		if (skinverwaltung_t::input_output){
+			display_color_img(skinverwaltung_t::input_output->get_image_id(show_consumer ? 0:1), offset.x, offset.y + FIXED_SYMBOL_YOFF, 0, false, false);
+			xoff += 14;
+		}
+
+		uint n = 0;
+		FORX(vector_tpl<const factory_desc_t*>, f, factory_list, n++) {
+			bool is_retired=false;
+			if (world()->use_timeline()){
+				if (f->get_building()->get_intro_year_month() > world()->get_timeline_year_month()) {
+					// is future
+					continue;
+				}
+				if (f->get_building()->get_retire_year_month() < world()->get_timeline_year_month()) {
+					is_retired = true;
+				}
+			}
+			if (n) {
+				xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, ", ", ALIGN_LEFT, SYSCOL_TEXT, true);
+			}
+			buf.clear();
+			buf.printf("%s", translator::translate(f->get_name()));
+			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, buf, ALIGN_LEFT, is_retired ? SYSCOL_OUT_OF_PRODUCTION : SYSCOL_TEXT, true);
+		}
+
+	}
+	else {
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, "-", ALIGN_LEFT, COL_INACTIVE, true);
+	}
+
+	set_size(scr_size(xoff + D_H_SPACE * 2, D_LABEL_HEIGHT));
 }

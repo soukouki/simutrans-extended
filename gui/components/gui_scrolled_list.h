@@ -93,6 +93,16 @@ public:
 
 	};
 
+	// Currently, it is assumed to display a general-purpose symbol with a width of about 12px.
+	class img_label_scrollitem_t : public const_text_scrollitem_t
+	{
+		image_id img;
+	public:
+		img_label_scrollitem_t(char const* const t, PIXVAL const col, const image_id i = IMG_EMPTY) : const_text_scrollitem_t( t, col) { img=i; }
+
+		void draw(scr_coord pos) OVERRIDE;
+	};
+
 
 private:
 	enum type type;
@@ -151,6 +161,9 @@ public:
 	void new_component(const A1& a1, const A2& a2, const A3& a3) { container.new_component<C>(a1, a2, a3)->set_focusable(true); }
 	template<class C, class A1, class A2, class A3, class A4>
 	void new_component(const A1& a1, const A2& a2, const A3& a3, const A4& a4) { container.new_component<C>(a1, a2, a3, a4)->set_focusable(true); }
+
+	void take_component(gui_component_t* comp) { container.take_component(comp, 1); }
+
 	/**
 	 * Sorts the list.
 	 * Calls the virtual method scrollitem_t::sort of element at position @p offset.

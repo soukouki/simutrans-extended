@@ -56,11 +56,16 @@
 #include "obj/wayobj.h"
 #include "obj/signal.h"
 
-#include "vehicle/simvehicle.h"
+#include "vehicle/vehicle.h"
 #include "vehicle/overtaker.h"
 
 #include "utils/simstring.h"
 #include "utils/cbuffer_t.h"
+
+#include "vehicle/air_vehicle.h"
+#include "vehicle/rail_vehicle.h"
+#include "vehicle/road_vehicle.h"
+#include "vehicle/water_vehicle.h"
 
 #include "convoy.h"
 
@@ -1350,7 +1355,6 @@ sync_result convoi_t::sync_step(uint32 delta_t)
 
 		default:
 			dbg->fatal("convoi_t::sync_step()", "Wrong state %d!\n", state);
-			break;
 	}
 
 	// Debug sums:
@@ -5066,7 +5070,7 @@ void convoi_t::info(cbuffer_t & buf) const
 
 		buf.printf(" %s: %ikW\n", translator::translate("Leistung"), sum_power );
 
-		buf.printf(" %s: %i (%i) t\n", translator::translate("Gewicht"), sum_weight, sum_gesamtweight-sum_weight );
+		buf.printf(" %s: %ld (%ld) t\n", translator::translate("Gewicht"), (long)sum_weight, (long)(sum_gesamtweight - sum_weight));
 
 		buf.printf(" %s: ", translator::translate("Gewinn")  );
 
@@ -5181,9 +5185,8 @@ void convoi_t::get_freight_info(cbuffer_t & buf)
 
 		// apend info on total capacity
 		slist_tpl <ware_t>capacity;
-
-		for (size_t i = 0; i != n; ++i) {
-			if (max_loaded_waren[i] > 0 && i != goods_manager_t::INDEX_NONE) {
+		for (uint16 i = 0; i != n; ++i) {
+			if(max_loaded_waren[i]>0  &&  i!=goods_manager_t::INDEX_NONE) {
 				ware_t ware(goods_manager_t::get_info(i));
 				ware.menge = max_loaded_waren[i];
 				// append to category?
@@ -5230,7 +5233,7 @@ void convoi_t::get_freight_info_by_class(cbuffer_t &)
 
 void convoi_t::open_schedule_window( bool show )
 {
-	DBG_MESSAGE("convoi_t::open_schedule_window()","Id = %ld, State = %d, Lock = %d",self.get_id(), state, wait_lock);
+	DBG_MESSAGE("convoi_t::open_schedule_window()","Id = %hu, State = %d, Lock = %d", self.get_id(), (int)state, wait_lock);
 
 	// manipulation of schedule not allowed while:
 	// - just starting
@@ -5773,12 +5776,11 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
  */
 void convoi_t::hat_gehalten(halthandle_t halt)
 {
-
-	grund_t *gr = welt->lookup(front()->get_pos());
+	grund_t *gr=welt->lookup(front()->get_pos());
 
 	// now find out station length
 	uint16 vehicles_loading=0;
-	if(  gr->is_water()  ) {
+	if(  gr->is_water()  ||  gr->hat_weg(water_wt)  ) {
 		// harbour has any size
 		vehicles_loading = vehicle_count;
 	}
@@ -7344,7 +7346,7 @@ bool convoi_t::can_overtake(overtaker_t *other_overtaker, sint32 other_speed, si
 			strasse_t *str=(strasse_t *)gr->get_weg(road_wt);
 			if(  str==NULL  ) {
 				return false;
-			}else if(  akt_speed < fmin(get_max_power_speed(), str->get_max_speed())/2  &&  diff_speed >= kmh_to_speed(0)  ){
+			}else if(  akt_speed < fmin(get_max_power_speed(), str->get_max_speed(is_electric))/2  &&  diff_speed >= kmh_to_speed(0)  ){
 				//Warning: diff_speed == 0 is acceptable. We must consider the case diff_speed == 0.
 				in_congestion = true;
 			}else{
@@ -7426,7 +7428,7 @@ bool convoi_t::can_overtake(overtaker_t *other_overtaker, sint32 other_speed, si
 			return false;
 		}
 		// street gets too slow (TODO: should be able to be correctly accounted for)
-		if(  overtaking_mode_loop >= twoway_mode  &&  akt_speed > kmh_to_speed(str->get_max_speed())  ) {
+		if(  overtaking_mode_loop >= twoway_mode  &&  akt_speed > kmh_to_speed(str->get_max_speed(is_electric))  ) {
 			return false;
 		}
 
@@ -7497,13 +7499,13 @@ bool convoi_t::can_overtake(overtaker_t *other_overtaker, sint32 other_speed, si
 
 		if(  ribi_t::is_straight(str->get_ribi())  ) {
 			// The code from Standard can produce a division be zero error.
-			if (kmh_to_speed(str->get_max_speed()) > 0)
+			if (kmh_to_speed(str->get_max_speed(is_electric)) > 0)
 			{
-				time_overtaking -= (VEHICLE_STEPS_PER_TILE << 16) / kmh_to_speed(str->get_max_speed());
+				time_overtaking -= (VEHICLE_STEPS_PER_TILE << 16) / kmh_to_speed(str->get_max_speed(is_electric));
 			}
 		}
 		else {
-			time_overtaking -= (vehicle_base_t::get_diagonal_vehicle_steps_per_tile()<<16) / kmh_to_speed(str->get_max_speed());
+			time_overtaking -= (vehicle_base_t::get_diagonal_vehicle_steps_per_tile()<<16) / kmh_to_speed(str->get_max_speed(is_electric));
 		}
 
 		// Check for other vehicles in facing direction

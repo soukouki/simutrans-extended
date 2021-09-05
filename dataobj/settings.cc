@@ -18,7 +18,7 @@
 #include "../utils/simrandom.h"
 #include "../utils/simstring.h"
 #include "../utils/float32e8_t.h"
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/vehicle.h"
 #include "../player/simplay.h"
 #include "loadsave.h"
 #include "tabfile.h"
@@ -811,6 +811,24 @@ void settings_t::rdwr(loadsave_t *file)
 					file->rdwr_short(intercity_roads[i].intro );
 					file->rdwr_short(intercity_roads[i].retire );
 				}
+				if (file->is_version_ex_atleast(14, 43))
+				{
+					// Industry roads are now different from inter-city roads
+					file->rdwr_short(num_industry_roads);
+					if (num_industry_roads >= 16) {
+						dbg->fatal("settings_t::rdwr()", "Too many (%i) industry roads!", num_industry_roads);
+					}
+
+					for (int i = 0; i < num_industry_roads; i++) {
+						file->rdwr_str(industry_roads[i].name, lengthof(industry_roads[i].name));
+						file->rdwr_short(industry_roads[i].intro);
+						file->rdwr_short(industry_roads[i].retire);
+					}
+				}
+				else
+				{
+					num_industry_roads = 0;
+				}
 			}
 			file->rdwr_long(max_route_steps );
 			file->rdwr_long(max_transfers );
@@ -822,7 +840,6 @@ void settings_t::rdwr(loadsave_t *file)
 			file->rdwr_str(language_code_names, lengthof(language_code_names) );
 
 			// restore AI state
-			//char password[16]; // unused
 			for(  int i=0;  i<15;  i++  ) {
 				file->rdwr_bool(player_active[i] );
 				file->rdwr_byte(player_type[i] );
@@ -1908,7 +1925,7 @@ void settings_t::rdwr(loadsave_t *file)
 
 
 // read the settings from this file
-void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16& disp_height, sint16 &fullscreen, std::string& objfilename )
+void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16& disp_height, bool &fullscreen, std::string& objfilename )
 {
 	tabfileobj_t contents;
 
@@ -1980,20 +1997,22 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	env_t::straight_way_without_control = contents.get_int( "straight_way_without_control", env_t::straight_way_without_control ) != 0;
 
 	env_t::road_user_info = contents.get_int( "pedes_and_car_info", env_t::road_user_info ) != 0;
-	env_t::tree_info = contents.get_int( "tree_info", env_t::tree_info ) != 0;
-	env_t::ground_info = contents.get_int( "ground_info", env_t::ground_info ) != 0;
-	env_t::townhall_info = contents.get_int( "townhall_info", env_t::townhall_info ) != 0;
-	env_t::single_info = contents.get_int( "only_single_info", env_t::single_info );
+	env_t::tree_info      = contents.get_int( "tree_info",          env_t::tree_info      ) != 0;
+	env_t::ground_info    = contents.get_int( "ground_info",        env_t::ground_info    ) != 0;
+	env_t::townhall_info  = contents.get_int( "townhall_info",      env_t::townhall_info  ) != 0;
+	env_t::single_info    = contents.get_int( "only_single_info",   env_t::single_info    ) != 0;
 
-	env_t::compass_map_position = contents.get_int( "compass_map_position", env_t::compass_map_position );
+	env_t::compass_map_position    = contents.get_int( "compass_map_position",    env_t::compass_map_position );
 	env_t::compass_screen_position = contents.get_int( "compass_screen_position", env_t::compass_screen_position );
 
-	env_t::window_snap_distance = contents.get_int( "window_snap_distance", env_t::window_snap_distance );
-	env_t::window_buttons_right = contents.get_int( "window_buttons_right", env_t::window_buttons_right );
-	env_t::left_to_right_graphs = contents.get_int( "left_to_right_graphs", env_t::left_to_right_graphs );
-	env_t::window_frame_active = contents.get_int( "window_frame_active", env_t::window_frame_active );
-	env_t::second_open_closes_win = contents.get_int( "second_open_closes_win", env_t::second_open_closes_win );
-	env_t::remember_window_positions = contents.get_int( "remember_window_positions", env_t::remember_window_positions );
+	env_t::window_snap_distance      = contents.get_int( "window_snap_distance",      env_t::window_snap_distance      );
+	env_t::window_buttons_right      = contents.get_int( "window_buttons_right",      env_t::window_buttons_right      ) != 0;
+	env_t::left_to_right_graphs      = contents.get_int( "left_to_right_graphs",      env_t::left_to_right_graphs      ) != 0;
+	env_t::window_frame_active       = contents.get_int( "window_frame_active",       env_t::window_frame_active       ) != 0;
+	env_t::second_open_closes_win    = contents.get_int( "second_open_closes_win",    env_t::second_open_closes_win    ) != 0;
+	env_t::remember_window_positions = contents.get_int( "remember_window_positions", env_t::remember_window_positions ) != 0;
+	env_t::menupos                   = contents.get_int( "menubar_position",          env_t::menupos);
+	env_t::reselect_closes_tool      = contents.get_int( "reselect_closes_tool",      env_t::reselect_closes_tool ) != 0;
 
 	env_t::show_tooltips = contents.get_int( "show_tooltips", env_t::show_tooltips );
 	env_t::tooltip_delay = contents.get_int( "tooltip_delay", env_t::tooltip_delay );
@@ -2007,6 +2026,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 
 	// display stuff
 	env_t::show_names = contents.get_int( "show_names", env_t::show_names );
+	env_t::show_depot_names = contents.get_int( "show_depot_names", env_t::show_depot_names );
 	env_t::show_month = contents.get_int( "show_month", env_t::show_month );
 	env_t::max_acceleration = contents.get_int( "fast_forward", env_t::max_acceleration );
 	env_t::fps = clamp( (uint32)contents.get_int( "frames_per_second", env_t::fps ), env_t::min_fps, env_t::max_fps );
@@ -2021,8 +2041,8 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	env_t::show_delete_buttons = contents.get_int( "show_delete_buttons", env_t::show_delete_buttons ) != 0;
 	env_t::chat_window_transparency = contents.get_int( "chat_transparency", env_t::chat_window_transparency );
 
-	env_t::hide_keyboard = contents.get_int( "hide_keyboard", env_t::hide_keyboard ) != 0;
-	env_t::numpad_always_moves_map = contents.get_int( "numpad_always_moves_map", env_t::numpad_always_moves_map );
+	env_t::hide_keyboard           = contents.get_int( "hide_keyboard", env_t::hide_keyboard ) != 0;
+	env_t::numpad_always_moves_map = contents.get_int( "numpad_always_moves_map", env_t::numpad_always_moves_map ) != 0;
 
 	env_t::player_finance_display_account = contents.get_int( "player_finance_display_account", env_t::player_finance_display_account ) != 0;
 
@@ -2197,7 +2217,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	if( num_city_roads == 0 ) {
 		// take fallback value: "city_road"
 		tstrncpy( city_roads[ 0 ].name, "city_road", lengthof( city_roads[ 0 ].name ) );
-		// default her: always available
+		// default: always available
 		city_roads[ 0 ].intro = 1;
 		city_roads[ 0 ].retire = NEVER;
 		num_city_roads = 1;
@@ -2210,7 +2230,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 		num_intercity_roads = 1;
 		tstrncpy( intercity_roads[ 0 ].name, str, lengthof( intercity_roads[ 0 ].name ) );
 		rtrim( intercity_roads[ 0 ].name );
-		// default her: always available
+		// default: always available
 		intercity_roads[ 0 ].intro = 1;
 		intercity_roads[ 0 ].retire = NEVER;
 	}
@@ -2230,7 +2250,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 					p++;
 				}
 				tstrncpy( intercity_roads[ num_intercity_roads ].name, test, (unsigned)(p - test) + 1 );
-				// default her: intro/retire=0 -> set later to intro/retire of way-desc
+				// default: intro/retire=0 -> set later to intro/retire of way-desc
 				intercity_roads[ num_intercity_roads ].intro = 0;
 				intercity_roads[ num_intercity_roads ].retire = 0;
 				if( *p == ',' ) {
@@ -2250,10 +2270,51 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	if( num_intercity_roads == 0 ) {
 		// take fallback value: "asphalt_road"
 		tstrncpy( intercity_roads[ 0 ].name, "asphalt_road", lengthof( intercity_roads[ 0 ].name ) );
-		// default her: always available
+		// default: always available
 		intercity_roads[ 0 ].intro = 1;
 		intercity_roads[ 0 ].retire = NEVER;
 		num_intercity_roads = 1;
+	}
+
+	// Up to 16 industry roads are available
+	if (*contents.get("industry_road[0]")) {
+		// renew them always when a table is encountered ...
+		num_industry_roads = 0;
+		for (int i = 0; i < 16; i++) {
+			char name[256];
+			sprintf(name, "industry_road[%i]", i);
+			// format is "industry_road[%i]=name_of_road,using from (year), using to (year)"
+			const char* test = ltrim(contents.get(name));
+			if (*test) {
+				const char* p = test;
+				while (*p && *p != ',') {
+					p++;
+				}
+				tstrncpy(industry_roads[num_industry_roads].name, test, (unsigned)(p - test) + 1);
+				// default: intro/retire=0 -> set later to intro/retire of way-desc
+				industry_roads[num_industry_roads].intro = 0;
+				industry_roads[num_industry_roads].retire = 0;
+				if (*p == ',') {
+					++p;
+					industry_roads[num_industry_roads].intro = atoi(p) * 12;
+					while (*p && *p != ',') {
+						p++;
+					}
+				}
+				if (*p == ',') {
+					industry_roads[num_industry_roads].retire = atoi(p + 1) * 12;
+				}
+				num_industry_roads++;
+			}
+		}
+	}
+	if (num_industry_roads == 0) {
+		// take fallback value: "asphalt_road"
+		tstrncpy(industry_roads[0].name, "asphalt_road", lengthof(industry_roads[0].name));
+		// default: always available
+		industry_roads[0].intro = 1;
+		industry_roads[0].retire = NEVER;
+		num_industry_roads = 1;
 	}
 
 	env_t::autosave = (contents.get_int( "autosave", env_t::autosave ));
@@ -3217,7 +3278,7 @@ sint64 settings_t::get_starting_money(sint16 const year) const
 
 /**
  * returns newest way-desc for road_timeline_t arrays
- * @param road_timeline_t must be an array with at least num_roads elements, no range checks!
+ * @param roads must be an array with at least @p num_roads elements, no range checks!
  */
 static const way_desc_t *get_timeline_road_type( uint16 year, uint16 num_roads, road_timeline_t* roads)
 {
@@ -3256,10 +3317,14 @@ way_desc_t const* settings_t::get_city_road_type(uint16 const year)
 	return get_timeline_road_type(year, num_city_roads, city_roads );
 }
 
-
 way_desc_t const* settings_t::get_intercity_road_type(uint16 const year)
 {
 	return get_timeline_road_type(year, num_intercity_roads, intercity_roads );
+}
+
+way_desc_t const* settings_t::get_industry_road_type(uint16 const year)
+{
+	return get_timeline_road_type(year, num_industry_roads, industry_roads);
 }
 
 
