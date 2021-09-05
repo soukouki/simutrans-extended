@@ -358,6 +358,7 @@ map_frame_t::map_frame_t() :
 
 	// directory container
 	directory_container.set_table_layout(4,0);
+	directory_container.set_spacing(scr_size(D_H_SPACE,1));
 	directory_container.set_visible(false);
 	add_component(&directory_container);
 
