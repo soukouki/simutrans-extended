@@ -291,9 +291,9 @@ map_frame_t::map_frame_t() :
 		viewable_freight_types.append(NULL);
 		freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate("All freight types"), SYSCOL_TEXT) ;
 		viewable_freight_types.append(goods_manager_t::passengers);
-		freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate("Passagiere"), SYSCOL_TEXT) ;
+		freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>( translator::translate("Passagiere"), SYSCOL_TEXT, skinverwaltung_t::passengers->get_image_id(0)) ;
 		viewable_freight_types.append(goods_manager_t::mail);
-		freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate("Post"), SYSCOL_TEXT) ;
+		freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>( translator::translate("Post"), SYSCOL_TEXT, skinverwaltung_t::mail->get_image_id(0)) ;
 		viewable_freight_types.append(goods_manager_t::none); // for all freight ...
 		freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate("Fracht"), SYSCOL_TEXT) ;
 		for(  int i = 0;  i < goods_manager_t::get_max_catg_index();  i++  ) {
