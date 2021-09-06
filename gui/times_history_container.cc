@@ -254,7 +254,7 @@ void gui_times_history_t::build_table()
 			new_component<gui_schedule_entry_number_t>(entry_index, halt.is_bound() ? halt->get_owner()->get_player_color1() : line_col_idx,
 				halt.is_bound() ? (is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt)
 					: gui_schedule_entry_number_t::number_style::waypoint,
-				scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT,D_ENTRY_NO_HEIGHT)));
+				scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT,D_ENTRY_NO_HEIGHT)), entry.pos);
 			// convoy location
 			if (convoy.is_bound()) {
 				if (stopped_here) {
@@ -267,7 +267,12 @@ void gui_times_history_t::build_table()
 
 			add_table(2,1); {
 				new_component<gui_label_t>(halt.is_bound() ? halt->get_name() : "Wegpunkt");
-				new_component<gui_label_t>(entry.reverse==1 ? "[<<]" : NULL, SYSCOL_TEXT_STRONG);
+				if (entry.reverse == 1) {
+					new_component<gui_label_t>("[<<]", SYSCOL_TEXT_STRONG);
+				}
+				else {
+					new_component<gui_empty_t>();
+				}
 			}
 			end_table();
 
