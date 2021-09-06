@@ -9578,6 +9578,12 @@ DBG_MESSAGE("karte_t::load()", "init player");
 	// so far, player 1 will be active (may change in future)
 	active_player = players[0];
 	active_player_nr = 0;
+	// rdwr tree ID mapping to restore tree IDs
+	if (file->is_version_atleast(122, 2)) {
+		DBG_MESSAGE("karte_t::rdwr_gamestate()", "rdwr tree IDs");
+		tree_builder_t::rdwr_tree_ids(file);
+	}
+
 
 	// rdwr cityrules for networkgames
 	if(file->is_version_atleast(102, 3) && (file->get_extended_version() == 0 || file->get_extended_version() >= 9)) {
