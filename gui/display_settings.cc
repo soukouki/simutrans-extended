@@ -542,7 +542,7 @@ label_settings_t::label_settings_t()
 	new_component<gui_divider_t>();
 	add_table(2,1);
 	{
-		new_component<gui_label_t>("Industry tooltip")->set_tooltip(translator::translate("Display bars above the industry building to show the storage status"));
+		new_component<gui_label_t>("Industry overlay")->set_tooltip(translator::translate("Display bars above the factory to show the status"));
 		factory_tooltip.set_focusable(false);
 		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("never show"), SYSCOL_TEXT);
 		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("mouseover"), SYSCOL_TEXT);
