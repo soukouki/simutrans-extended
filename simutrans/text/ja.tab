@@ -4131,6 +4131,12 @@ Private way
 都市へのルート(%u)：
 %u buildings
 ランドマーク／産業へのルート(%u)：
+The gradient does not fit a tunnel
+斜面がトンネルを建設するのに適していません
+Industry overlay
+産業在庫量ツールチップ
+Display bars above the factory to show the status
+産業建築物の上部に在庫量を示すバーを表示します
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month

@@ -3477,8 +3477,13 @@ const char *tool_build_tunnel_t::check_pos( player_t *player, koord3d pos)
 				win_set_static_tooltip( translator::translate("No suitable ground!") );
 
 				slope_t::type sl = gr->get_grund_hang();
-				if(  sl == slope_t::flat  ||  !slope_t::is_way( sl )  ||  (env_t::pak_height_conversion_factor == 1  &&  !is_one_high(sl))  ||  (env_t::pak_height_conversion_factor == 2  &&  is_one_high(sl))  ) {
+				if(  sl == slope_t::flat  ||  !slope_t::is_way( sl ) ) {
 					// cannot start a tunnel here, wrong slope
+					return "";
+				}
+
+				if(  env_t::pak_height_conversion_factor != slope_t::max_diff(sl)  ) {
+					win_set_static_tooltip( translator::translate("The gradient does not fit a tunnel") );
 					return "";
 				}
 
@@ -4013,12 +4018,13 @@ const char *tool_wayremover_t::do_work( player_t *player, const koord3d &start, 
 						{
 							weg->count_sign();
 						}
-					if (gr->get_typ() == grund_t::tunnelboden  &&  !gr->hat_wege()  ) {
-						// tunnel portal has been removed
-						grund_t* gr_new = new boden_t(gr->get_pos(), gr->get_grund_hang());
-						welt->access(gr->get_pos().get_2d())->kartenboden_setzen(gr_new);
-						gr = gr_new;
-					}}
+						if (gr->get_typ() == grund_t::tunnelboden  &&  !gr->hat_wege()  ) {
+							// tunnel portal has been removed
+							grund_t* gr_new = new boden_t(gr->get_pos(), gr->get_grund_hang());
+							welt->access(gr->get_pos().get_2d())->kartenboden_setzen(gr_new);
+							gr = gr_new;
+						}
+					}
 				}
 				else {
 					leitung_t *lt = gr->get_leitung();

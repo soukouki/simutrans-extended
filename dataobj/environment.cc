@@ -110,10 +110,12 @@ bool env_t::use_transparency_station_coverage;
 uint8 env_t::station_coverage_show;
 uint8 env_t::signalbox_coverage_show;
 sint32 env_t::show_names;
+bool env_t::show_depot_names;
 uint8 env_t::freight_waiting_bar_level;
 bool env_t::classes_waiting_bar;
 uint8 env_t::show_cnv_nameplates;
 uint8 env_t::show_cnv_loadingbar;
+uint8 env_t::show_factory_storage_bar;
 sint32 env_t::message_flags[4];
 uint32 env_t::water_animation;
 uint32 env_t::ground_object_probability;
@@ -224,10 +226,12 @@ void env_t::init()
 	signalbox_coverage_show = 0;
 
 	show_names = 3;
+	show_depot_names = false;
 	freight_waiting_bar_level = 2;
 	classes_waiting_bar = false;
 	show_cnv_nameplates = 0;
 	show_cnv_loadingbar = 0;
+	show_factory_storage_bar = 0;
 	player_finance_display_account = true;
 
 	water_animation = 250; // 250ms per wave stage
@@ -602,6 +606,10 @@ void env_t::rdwr(loadsave_t *file)
 		if(  file->is_loading()  ) {
 			soundfont_filename = str ? str.c_str() : "";
 		}
+	}
+	if( file->is_version_ex_atleast(14, 44) ) {
+		file->rdwr_bool( env_t::show_depot_names );
+		file->rdwr_byte( show_factory_storage_bar );
 	}
 
 	// server settings are not saved, since they are server specific
