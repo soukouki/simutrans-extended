@@ -48,6 +48,7 @@
 
 
 #include "minimap.h"
+#include "halt_info.h"
 
 uint16 schedule_list_gui_t::livery_scheme_index = 0;
 
@@ -148,18 +149,101 @@ const char *schedule_list_gui_t::sort_text[SORT_MODES] = {
 	"cl_btn_sort_range"
 };
 
+
+gui_line_wainting_status_t::gui_line_wainting_status_t(linehandle_t line_)
+{
+	line = line_;
+
+	set_table_layout(1, 0);
+	set_spacing(scr_size(1, 0));
+	init();
+}
+
+void gui_line_wainting_status_t::init()
+{
+	remove_all();
+	if (line.is_bound()) {
+		schedule = line->get_schedule();
+		uint8 cols; // table cols
+		cols = line->get_goods_catg_index().get_count()+show_name+1;
+
+		add_table(cols, 0);
+		{
+			// header
+			new_component<gui_empty_t>();
+			if (show_name) {
+				new_component<gui_label_t>("stations");
+			}
+			for (uint8 catg_index = 0; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
+				if (line->get_goods_catg_index().is_contained(catg_index) ) {
+					add_table(2,1);
+					{
+						new_component<gui_image_t>(goods_manager_t::get_info_catg_index(catg_index)->get_catg_symbol(), 0, ALIGN_NONE, true);
+						new_component<gui_label_t>(goods_manager_t::get_info_catg_index(catg_index)->get_catg_name());
+					}
+					end_table();
+				}
+			}
+
+			// border
+			new_component<gui_empty_t>();
+			for (uint8 i = 1; i < cols; ++i) {
+				new_component<gui_border_t>();
+			}
+
+			uint8 entry_idx = 0;
+			FORX(minivec_tpl<schedule_entry_t>, const& i, schedule->entries, ++entry_idx) {
+				halthandle_t const halt = haltestelle_t::get_halt(i.pos, line->get_owner());
+				if( !halt.is_bound() ) { continue; }
+
+				const bool is_interchange = (halt->registered_lines.get_count() + halt->registered_convoys.get_count()) > 1;
+				new_component<gui_schedule_entry_number_t>(entry_idx, halt->get_owner()->get_player_color1(),
+					is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt,
+					scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT, D_ENTRY_NO_HEIGHT)),
+					halt->get_basis_pos3d()
+				);
+
+				if (show_name) {
+					gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+					lb->buf().append(halt->get_name());
+					lb->update();
+				}
+
+				for (uint8 catg_index = 0; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
+					if (line->get_goods_catg_index().is_contained(catg_index)) {
+						new_component<gui_halt_waiting_catg_t>(halt, catg_index);
+					}
+				}
+			}
+		}
+		end_table();
+	}
+}
+
+void gui_line_wainting_status_t::draw(scr_coord offset)
+{
+	if (line.is_bound()) {
+		if (!line->get_schedule()->matches(world(), schedule)) {
+			init();
+		}
+	}
+	set_size(get_size());
+	gui_aligned_container_t::draw(offset);
+}
+
+
 schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	gui_frame_t(translator::translate("Line Management"), player_),
 	player(player_),
 	scrolly_convois(&cont),
-	scrolly_haltestellen(&cont_haltestellen, true, true),
+	cont_haltlist(linehandle_t()),
+	scrolly_haltestellen(&cont_tab_haltlist, true, true),
 	scroll_times_history(&cont_times_history, true, true),
 	scrolly_line_info(&cont_line_info, true, true),
 	scl(gui_scrolled_list_t::listskin, line_scrollitem_t::compare),
 	lbl_filter("Line Filter"),
 	cont_line_capacity_by_catg(linehandle_t(), convoihandle_t()),
 	convoy_infos(),
-	stop_infos(),
 	halt_entry_origin(-1), halt_entry_dest(-1),
 	routebar_middle(player_->get_player_color1(), gui_colored_route_bar_t::downward)
 {
@@ -168,6 +252,9 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	old_schedule_filter[0] = 0;
 	last_schedule = NULL;
 	old_player = NULL;
+	line_goods_catg_count = 0;
+	origin_halt = halthandle_t();
+	destination_halt = halthandle_t();
 
 	// init scrolled list
 	scl.set_pos(scr_coord(0,1));
@@ -399,13 +486,16 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	info_tabs.set_active_tab_index(selected_convoy_tab);
 
 	cont_times_history.set_table_layout(1,0);
-
 	info_tabs.add_tab(&scroll_times_history, translator::translate("times_history"));
 
-	cont_haltestellen.set_pos(scr_coord(0,D_MARGIN_TOP));
-	scrolly_haltestellen.set_scroll_amount_y(28);
-	scrolly_haltestellen.set_visible(false);
-	info_tabs.add_tab(&scrolly_haltestellen, translator::translate("halt_status")); // FIX ME
+	cont_tab_haltlist.set_table_layout(1,0);
+	bt_show_halt_name.init(button_t::square_state, "Show station names");
+	bt_show_halt_name.set_tooltip("helptxt_show_station_name");
+	bt_show_halt_name.pressed=true;
+	bt_show_halt_name.add_listener(this);
+	cont_tab_haltlist.add_component(&bt_show_halt_name);
+	cont_tab_haltlist.add_component(&cont_haltlist);
+	info_tabs.add_tab(&scrolly_haltestellen, translator::translate("waiting_status"));
 
 	// recover last selected line
 	int index = 0;
@@ -586,6 +676,9 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 	}
 	else if(comp == &info_tabs){
 		selected_convoy_tab = (uint8)info_tabs.get_active_tab_index();
+		if (selected_convoy_tab == 3) {
+			cont_haltlist.init();
+		}
 	}
 	else if (comp == &scl) {
 		if(  line_scrollitem_t *li=(line_scrollitem_t *)scl.get_element(v.i)  ) {
@@ -621,6 +714,10 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 		line_type_flags ^= (1 << simline_t::all_freight);
 		filter_btn_all_freights.pressed = line_type_flags & (1 << simline_t::all_freight);
 		build_line_list(tabs.get_active_tab_index());
+	}
+	else if (comp == &bt_show_halt_name) {
+		bt_show_halt_name.pressed = !bt_show_halt_name.pressed;
+		cont_haltlist.set_show_name( bt_show_halt_name.pressed );
 	}
 	else {
 		if (line.is_bound()) {
@@ -703,7 +800,7 @@ void schedule_list_gui_t::draw(scr_coord pos, scr_size size)
 	gui_frame_t::draw(pos, size);
 
 	if(  line.is_bound()  ) {
-		if(  (!line->get_schedule()->empty()  &&  !line->get_schedule()->matches( welt, last_schedule ))  ||  last_vehicle_count != line->count_convoys()  ) {
+		if(  (!line->get_schedule()->empty()  &&  !line->get_schedule()->matches( welt, last_schedule ))  ||  last_vehicle_count != line->count_convoys()  ||  line->get_goods_catg_index().get_count() != line_goods_catg_count  ) {
 			update_lineinfo( line );
 		}
 
@@ -741,26 +838,19 @@ void schedule_list_gui_t::display(scr_coord pos)
 		}
 	}
 
-	const uint8 last = stop_infos.get_count() - 1;
-
-	if (stop_infos.get_count() && last_schedule != line->get_schedule() && last>0) {
-		halthandle_t origin_halt = stop_infos.get_element(0)->get_halt();
-		halthandle_t destination_halt = stop_infos.get_element(last)->get_halt();
-
+	if (last_schedule != line->get_schedule() && origin_halt.is_bound()) {
 		uint8 halt_symbol_style = gui_schedule_entry_number_t::halt;
-		if (origin_halt.is_bound()) {
-			lb_line_origin.buf().append(origin_halt->get_name());
-			if ((origin_halt->registered_lines.get_count() + origin_halt->registered_convoys.get_count()) > 1) {
-				halt_symbol_style = gui_schedule_entry_number_t::interchange;
-			}
-			halt_entry_origin.init(halt_entry_idx[0], origin_halt->get_owner()->get_player_color1(), halt_symbol_style);
+		lb_line_origin.buf().append(origin_halt->get_name());
+		if ((origin_halt->registered_lines.get_count() + origin_halt->registered_convoys.get_count()) > 1) {
+			halt_symbol_style = gui_schedule_entry_number_t::interchange;
 		}
-		if (origin_halt.is_bound() && destination_halt.is_bound()) {
+		halt_entry_origin.init(halt_entry_idx[0], origin_halt->get_owner()->get_player_color1(), halt_symbol_style, origin_halt->get_basis_pos3d());
+		if (destination_halt.is_bound()) {
 			halt_symbol_style = gui_schedule_entry_number_t::halt;
 			if ((destination_halt->registered_lines.get_count() + destination_halt->registered_convoys.get_count()) > 1) {
 				halt_symbol_style = gui_schedule_entry_number_t::interchange;
 			}
-			halt_entry_dest.init(halt_entry_idx[1], destination_halt->get_owner()->get_player_color1(), halt_symbol_style);
+			halt_entry_dest.init(halt_entry_idx[1], destination_halt->get_owner()->get_player_color1(), halt_symbol_style, destination_halt->get_basis_pos3d());
 			if (line->get_schedule()->is_mirrored()) {
 				routebar_middle.set_line_style(gui_colored_route_bar_t::doubled);
 			}
@@ -936,6 +1026,10 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		if (!new_line->get_schedule()->is_mirrored()) {
 			cont_times_history.new_component<gui_times_history_t>(new_line, convoihandle_t(), true);
 		}
+
+		cont_haltlist.set_visible(true);
+		cont_haltlist.set_line(new_line);
+
 		resize(scr_size(0,0));
 		livery_selector.set_visible(true);
 
@@ -947,6 +1041,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		sort_list();
 
 		uint32 i, icnv = 0;
+		line_goods_catg_count = new_line->get_goods_catg_index().get_count();
 		icnv = new_line->count_convoys();
 		// display convoys of line
 		cont.remove_all();
@@ -1028,35 +1123,24 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		}
 
 
-		// fill haltestellen container with info of line's haltestellen
-		cont_haltestellen.remove_all();
-		while (!stop_infos.empty()) {
-			delete stop_infos.pop_back();
-		}
-		stop_infos.resize(new_line->get_schedule()->entries.get_count());
-		ypos = 0;
+		uint8 entry_idx = 0;
 		halt_entry_idx[0] = 255;
 		halt_entry_idx[1] = 255;
-		uint8 entry_idx=0;
+		origin_halt = halthandle_t();
+		destination_halt = halthandle_t();
 		FORX(minivec_tpl<schedule_entry_t>, const& i, new_line->get_schedule()->entries, ++entry_idx) {
 			halthandle_t const halt = haltestelle_t::get_halt(i.pos, player);
 			if (halt.is_bound()) {
 				if (halt_entry_idx[0] == 255) {
 					halt_entry_idx[0] = entry_idx;
+					origin_halt = halt;
 				}
 				else {
 					halt_entry_idx[1] = entry_idx;
+					destination_halt = halt;
 				}
-				halt_list_stats_t* cinfo = new halt_list_stats_t(halt);
-				cinfo->set_pos(scr_coord(0, ypos-D_MARGIN_TOP));
-				scr_size csize = cinfo->get_min_size();
-				cinfo->set_size(scr_size(500, csize.h-D_MARGINS_Y));
-				stop_infos.append(cinfo);
-				cont_haltestellen.add_component(cinfo);
-				ypos += csize.h - D_MARGIN_TOP - D_V_SPACE*2;
 			}
 		}
-		cont_haltestellen.set_size(scr_size(500, ypos));
 
 		// chart
 		chart.remove_curves();
@@ -1087,7 +1171,6 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		line_convoys.clear();
 		cont.remove_all();
 		cont_times_history.remove_all();
-		cont_haltestellen.remove_all();
 		cont_line_capacity_by_catg.set_line(linehandle_t());
 		scrolly_convois.set_visible(false);
 		scrolly_haltestellen.set_visible(false);
@@ -1095,6 +1178,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_line_info.set_visible(false);
 		inp_name.set_visible(false);
 		cont_times_history.set_visible(false);
+		cont_haltlist.set_visible(false);
 		scl.set_selection(-1);
 		bt_delete_line.disable();
 		bt_edit_line.disable();

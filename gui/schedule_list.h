@@ -18,7 +18,6 @@
 #include "components/gui_combobox.h"
 #include "components/gui_label.h"
 #include "components/gui_convoiinfo.h"
-#include "halt_list_stats.h"
 #include "../simline.h"
 
 #include "times_history_container.h"
@@ -26,6 +25,28 @@
 #include "components/gui_schedule_item.h"
 
 class player_t;
+
+
+class gui_line_wainting_status_t : public gui_aligned_container_t
+{
+	linehandle_t line;
+
+	schedule_t *schedule;
+
+	bool show_name=true;
+
+public:
+	gui_line_wainting_status_t(linehandle_t line);
+
+	void init();
+
+	// for reload from the save
+	void set_line(linehandle_t line_) { line = line_; init(); }
+	void set_show_name(bool yesno) { show_name = yesno; init(); }
+
+	void draw(scr_coord offset) OVERRIDE;
+};
+
 
 class schedule_list_gui_t : public gui_frame_t, public action_listener_t
 {
@@ -36,10 +57,11 @@ private:
 
 	static const char *sort_text[SORT_MODES];
 
-	button_t bt_new_line, bt_edit_line, bt_delete_line, bt_withdraw_line, bt_line_class_manager, bt_mode_convois;
+	button_t bt_new_line, bt_edit_line, bt_delete_line, bt_withdraw_line, bt_line_class_manager, bt_mode_convois, bt_show_halt_name;
 	button_t sort_order;
-	gui_container_t cont, cont_haltestellen, cont_charts, cont_convoys;
-	gui_aligned_container_t cont_times_history, cont_line_info;
+	gui_container_t cont, cont_charts, cont_convoys;
+	gui_aligned_container_t cont_times_history, cont_line_info, cont_tab_haltlist;
+	gui_line_wainting_status_t cont_haltlist;
 	gui_convoy_loading_info_t cont_line_capacity_by_catg;
 	gui_scrollpane_t scrolly_convois, scrolly_haltestellen, scroll_times_history, scrolly_line_info;
 	gui_scrolled_list_t scl;
@@ -55,13 +77,12 @@ private:
 	vector_tpl<gui_convoiinfo_t *> convoy_infos;
 	vector_tpl<convoihandle_t> line_convoys;
 
-	// vector of stop info objects that are being displayed
-	vector_tpl<halt_list_stats_t *> stop_infos;
-
 	// line info item
 	gui_schedule_entry_number_t halt_entry_origin, halt_entry_dest;
 	gui_colored_route_bar_t routebar_middle;
 	uint8 halt_entry_idx[2];
+	halthandle_t origin_halt, destination_halt;
+	uint8 line_goods_catg_count;
 
 	sint32 selection;
 
