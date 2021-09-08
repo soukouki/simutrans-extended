@@ -377,6 +377,25 @@ map_settings_t::map_settings_t()
 		add_component(&scrollspeed);
 	}
 	end_table();
+
+	// Set date format
+	new_component<gui_label_t>("Date format");
+	add_table(2,0);
+	{
+		new_component<gui_margin_t>(LINESPACE/2);
+		time_setting.set_focusable( false );
+		uint8 old_show_month = env_t::show_month;
+		sint32 current_tick = world()->get_ticks();
+		for( env_t::show_month = 0; env_t::show_month<10; env_t::show_month++ ) {
+			tstrncpy( time_str[env_t::show_month], tick_to_string( current_tick, true ), 64 );
+			time_setting.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( time_str[env_t::show_month], SYSCOL_TEXT );
+		}
+		env_t::show_month = old_show_month;
+		time_setting.set_selection( old_show_month );
+		add_component( &time_setting );
+		time_setting.add_listener( this );
+	}
+	end_table();
 	new_component<gui_divider_t>();
 
 	new_component<gui_label_t>("transparencies");
@@ -414,21 +433,6 @@ map_settings_t::map_settings_t()
 		cursor_hide_range.add_listener(this);
 		add_component(&cursor_hide_range);
 	}
-
-	// Set date format
-	new_component<gui_label_t>( "Date format" );
-	time_setting.set_focusable( false );
-	uint8 old_show_month = env_t::show_month;
-	sint32 current_tick = world()->get_ticks();
-	for( env_t::show_month = 0; env_t::show_month<10; env_t::show_month++ ) {
-		tstrncpy( time_str[env_t::show_month], tick_to_string( current_tick ), 64 );
-		time_setting.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( time_str[env_t::show_month], SYSCOL_TEXT );
-	}
-	env_t::show_month = old_show_month;
-	time_setting.set_selection( old_show_month );
-	add_component( &time_setting );
-	time_setting.add_listener( this );
-
 	end_table();
 }
 
