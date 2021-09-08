@@ -55,6 +55,8 @@ enum {
 	IDBTN_CLASSES_WAITING_BAR,
 	IDBTN_SHOW_DEPOT_NAME,
 	IDBTN_SHOW_FACTORY_STORAGE,
+	IDBTN_SHOW_PRIVATECAR_INFO,
+	IDBTN_SHOW_PEDESTRIAN_INFO,
 	COLORS_MAX_BUTTONS,
 };
 
@@ -729,6 +731,18 @@ traffic_settings_t::traffic_settings_t()
 	traffic_density.add_listener(this);
 	add_component(&traffic_density);
 
+	// Show private car info
+	buttons[IDBTN_SHOW_PRIVATECAR_INFO].init(button_t::square_state, "Show the private car information window");
+	buttons[IDBTN_SHOW_PRIVATECAR_INFO].set_tooltip("can open a dedicated window by clicking on a private car.");
+	buttons[IDBTN_SHOW_PRIVATECAR_INFO].pressed = env_t::road_user_info & 1;
+	add_component(buttons + IDBTN_SHOW_PRIVATECAR_INFO, 2);
+
+	// Show pedestrian info
+	buttons[IDBTN_SHOW_PEDESTRIAN_INFO].init(button_t::square_state, "Show the pedestrian information window");
+	buttons[IDBTN_SHOW_PEDESTRIAN_INFO].set_tooltip("can open a dedicated window by clicking on a pedestrian.");
+	buttons[IDBTN_SHOW_PEDESTRIAN_INFO].pressed = env_t::road_user_info & 2;
+	add_component(buttons + IDBTN_SHOW_PEDESTRIAN_INFO, 2);
+
 	// Convoy follow mode
 	new_component<gui_label_t>("Convoi following mode")->set_tooltip(translator::translate("Select the behavior of the camera when the following convoy enters the tunnel."));
 
@@ -857,6 +871,14 @@ bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t )
 		if( !env_t::networkmode || welt->get_active_player_nr() == 1 ) {
 			welt->set_tool( tool_t::simple_tool[ TOOL_TOOGLE_PEDESTRIANS & 0xFFF ], welt->get_active_player() );
 		}
+		break;
+	case IDBTN_SHOW_PRIVATECAR_INFO:
+		env_t::road_user_info = env_t::road_user_info ^ 1;
+		buttons[IDBTN_SHOW_PRIVATECAR_INFO].pressed = env_t::road_user_info&1;
+		break;
+	case IDBTN_SHOW_PEDESTRIAN_INFO:
+		env_t::road_user_info = env_t::road_user_info ^ 2;
+		buttons[IDBTN_SHOW_PEDESTRIAN_INFO].pressed = env_t::road_user_info&2;
 		break;
 	case IDBTN_HIDE_TREES:
 		env_t::hide_trees = !env_t::hide_trees;
