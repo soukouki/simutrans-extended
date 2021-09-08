@@ -46,6 +46,11 @@ public:
 
 	virtual ~pedestrian_t();
 
+	/**
+	 * Open a new observation window for the object.
+	 */
+	void show_info() OVERRIDE;
+
 	const pedestrian_desc_t *get_desc() const { return desc; }
 
 	const char *get_name() const OVERRIDE {return "Fussgaenger";}

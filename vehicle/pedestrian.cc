@@ -135,6 +135,14 @@ image_id pedestrian_t::get_image() const
 }
 
 
+void pedestrian_t::show_info()
+{
+	if (env_t::road_user_info & 2) {
+		obj_t::show_info();
+	}
+}
+
+
 void pedestrian_t::rdwr(loadsave_t *file)
 {
 	xml_tag_t f( file, "pedestrian_t" );
