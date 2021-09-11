@@ -303,7 +303,6 @@ add_executable(simutrans-extended
 	gui/scenario_info.cc
 	gui/schedule_gui.cc
 	gui/schedule_list.cc
-	gui/schiene_info.cc
 	gui/server_frame.cc
 	gui/settings_frame.cc
 	gui/settings_stats.cc
@@ -320,6 +319,7 @@ add_executable(simutrans-extended
 	gui/trafficlight_info.cc
 	gui/vehiclelist_frame.cc
 	gui/vehicle_class_manager.cc
+	gui/way_info.cc
 	gui/welt.cc
 	io/rdwr/bzip2_file_rdwr_stream.cc
 	io/rdwr/raw_file_rdwr_stream.cc
@@ -448,9 +448,13 @@ add_executable(simutrans-extended
 	utils/simstring.cc
 	utils/simthread.cc
 	vehicle/movingobj.cc
-	vehicle/simpeople.cc
+	vehicle/pedestrian.cc
 	vehicle/simroadtraffic.cc
-	vehicle/simvehicle.cc
+	vehicle/vehicle.cc
+	vehicle/air_vehicle.cc
+	vehicle/rail_vehicle.cc
+	vehicle/road_vehicle.cc
+	vehicle/water_vehicle.cc
 )
 
 if (WIN32)

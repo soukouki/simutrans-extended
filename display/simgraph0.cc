@@ -250,7 +250,7 @@ void display_colorbox_with_tooltip(scr_coord_val, scr_coord_val, scr_coord_val, 
 {
 }
 
-void display_veh_form_wh_clip_rgb(scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, bool, uint8, uint8, bool CLIP_NUM_DEF_NOUSE)
+void display_veh_form_wh_clip_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, bool, bool, uint8, uint8 CLIP_NUM_DEF_NOUSE)
 {
 }
 
@@ -434,12 +434,24 @@ void display_right_triangle_rgb(scr_coord_val, scr_coord_val, scr_coord_val, con
 {
 }
 
+void display_right_pointer_rgb(scr_coord_val, scr_coord_val, uint8, const PIXVAL, const bool)
+{
+}
+
 int display_fluctuation_triangle_rgb(scr_coord_val, scr_coord_val, uint8, const bool, sint64)
 {
 	return 0;
 }
 
 void draw_bezier_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, const PIXVAL, scr_coord_val, scr_coord_val)
+{
+}
+
+void display_signal_direction_rgb(scr_coord_val, scr_coord_val, scr_coord_val, uint8, uint8, uint8, bool, uint8, sint8)
+{
+}
+
+void display_depot_symbol(scr_coord_val, scr_coord_val, scr_coord_val, const uint8, const bool)
 {
 }
 

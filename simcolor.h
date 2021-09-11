@@ -20,7 +20,7 @@
 
 // pixels stored in system type (uint16)
 typedef unsigned short PIXVAL;
-// PIXVAL with above flas (eg. ransparent) (uint32)
+// PIXVAL with above flags (eg. transparent) (uint32)
 typedef unsigned int FLAGGED_PIXVAL;
 
 // Menu colours (they don't change between day and night)
@@ -37,7 +37,7 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define COL_RED             131
 #define COL_DARK_RED        128
 #define COL_LIGHT_RED       134
-#define COL_YELLOW          171
+#define COL_YELLOW          173
 #define COL_DARK_YELLOW     168
 #define COL_LIGHT_YELLOW    175
 #define COL_LEMON_YELLOW    31
@@ -52,7 +52,7 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define COL_DARK_GREEN      136
 #define COL_LIGHT_GREEN     143
 #define COL_APRICOT         95
-#define COL_ORANGE          155
+#define COL_ORANGE          156
 #define COL_DARK_ORANGE     153
 #define COL_LIGHT_ORANGE    158
 #define COL_BRIGHT_ORANGE   133

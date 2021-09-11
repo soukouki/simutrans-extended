@@ -65,7 +65,8 @@ public:
 class label_settings_t : public gui_aligned_container_t, public action_listener_t
 {
 private:
-	gui_combobox_t convoy_tooltip, money_booking, convoy_nameplate, convoy_loadingbar, freight_waiting_bar;
+	gui_combobox_t convoy_tooltip, money_booking, convoy_nameplate, convoy_loadingbar, freight_waiting_bar, factory_tooltip;
+	button_t bt_convoy_id_plate[2];
 public:
 	label_settings_t();
 	virtual bool action_triggered(gui_action_creator_t *comp, value_t v);

@@ -40,9 +40,10 @@
 #include "descriptor/roadsign_desc.h"
 #include "descriptor/tunnel_desc.h"
 
-#include "vehicle/simvehicle.h"
+#include "vehicle/air_vehicle.h"
+#include "vehicle/rail_vehicle.h"
 #include "vehicle/simroadtraffic.h"
-#include "vehicle/simpeople.h"
+#include "vehicle/pedestrian.h"
 
 #include "gui/line_management_gui.h"
 #include "gui/tool_selector.h"
@@ -559,14 +560,21 @@ DBG_MESSAGE("tool_remover()",  "removing roadsign at (%s)", pos.get_str());
 		if(  weg==NULL  &&  rs->get_desc()->get_wtyp()==tram_wt  ) {
 			weg = gr->get_weg(track_wt);
 		}
+
 		rs->cleanup(player);
 		delete rs;
-		assert( weg );
-		weg->count_sign();
-		if(weg->get_waytype() == road_wt)
-		{
-			welt->set_recheck_road_connexions();
+
+		// no need to update way if there is none
+		// may happen when public player builds a signal on a company track,
+		// the company goes bankrupt and the public player tries to remove the signal
+		if (weg) {
+			weg->count_sign();
+			if(weg->get_waytype() == road_wt)
+			{
+				welt->set_recheck_road_connexions();
+			}
 		}
+
 		return true;
 	}
 
@@ -3469,8 +3477,13 @@ const char *tool_build_tunnel_t::check_pos( player_t *player, koord3d pos)
 				win_set_static_tooltip( translator::translate("No suitable ground!") );
 
 				slope_t::type sl = gr->get_grund_hang();
-				if(  sl == slope_t::flat  ||  !slope_t::is_way( sl )  ||  (env_t::pak_height_conversion_factor == 1  &&  !is_one_high(sl))  ||  (env_t::pak_height_conversion_factor == 2  &&  is_one_high(sl))  ) {
+				if(  sl == slope_t::flat  ||  !slope_t::is_way( sl ) ) {
 					// cannot start a tunnel here, wrong slope
+					return "";
+				}
+
+				if(  env_t::pak_height_conversion_factor != slope_t::max_diff(sl)  ) {
+					win_set_static_tooltip( translator::translate("The gradient does not fit a tunnel") );
 					return "";
 				}
 
@@ -4005,12 +4018,13 @@ const char *tool_wayremover_t::do_work( player_t *player, const koord3d &start, 
 						{
 							weg->count_sign();
 						}
-					if (gr->get_typ() == grund_t::tunnelboden  &&  !gr->hat_wege()  ) {
-						// tunnel portal has been removed
-						grund_t* gr_new = new boden_t(gr->get_pos(), gr->get_grund_hang());
-						welt->access(gr->get_pos().get_2d())->kartenboden_setzen(gr_new);
-						gr = gr_new;
-					}}
+						if (gr->get_typ() == grund_t::tunnelboden  &&  !gr->hat_wege()  ) {
+							// tunnel portal has been removed
+							grund_t* gr_new = new boden_t(gr->get_pos(), gr->get_grund_hang());
+							welt->access(gr->get_pos().get_2d())->kartenboden_setzen(gr_new);
+							gr = gr_new;
+						}
+					}
 				}
 				else {
 					leitung_t *lt = gr->get_leitung();
@@ -7139,7 +7153,7 @@ bool tool_build_land_chain_t::init( player_t * )
  * factory_builder_t::build_factory() which returns a fabrik_t*.
  * These two routines (methods) should probably be merged, although I
  * am yet unsure how to combine the parts of the two classes
- * together. — WL
+ * together. ? WL
  */
 const char *tool_build_land_chain_t::work( player_t *player, koord3d pos )
 {
