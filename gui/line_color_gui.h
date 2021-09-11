@@ -10,7 +10,6 @@
 #include "../player/simplay.h"
 #include "components/gui_label.h"
 #include "components/gui_line_lettercode.h"
-#include "components/gui_line_lettercode.h"
 #include "components/gui_textinput.h"
 
 
