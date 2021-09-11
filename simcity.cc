@@ -266,7 +266,7 @@ static uint32 renovations_try = 3;
 * proportional_renovation_radius is equal to 1
 * @author catasteroid
 */
-static uint32 renovation_range = 10;
+static uint32 renovation_range = 3;
 
 /*
 * whether renovation_chance or renovation_count is influenced by city population density
@@ -293,7 +293,7 @@ static uint32 renovation_count_increase_every = 2500;
 /*
 * hard cap on renovation_count if the city has a really high population
 */
-static uint32 renovation_count_maximum = 5;
+static uint32 renovation_count_maximum = 25;
 
 /*
 * overrides default behaviour allowing very large cities to renovate buildings
@@ -301,7 +301,7 @@ static uint32 renovation_count_maximum = 5;
 * value based on the city's population status
 * @author catasteroid
 */
-static uint32 proportional_renovation_radius = 1;
+static uint32 proportional_renovation_radius = 0;
 
 /*
 * used with the above proportional_renovation_radius figure to use a value determined
@@ -309,7 +309,7 @@ static uint32 proportional_renovation_radius = 1;
 * respectively, they can be all set to the same value to use a generic proportional
 * percentage value for all city sizes
 */
-static uint16 renovation_range_proportions[] = { 50,50,50 };
+static uint16 renovation_range_proportions[] = { 80,60,40 };
 
 /*
 * whether residential, commercial and industrial buildings are renovated at different ranges
@@ -798,12 +798,7 @@ bool stadt_t::cityrules_init(const std::string &objfilename)
 	bridge_success_percentage = (uint32)contents.get_int("bridge_success_percentage", 25);
 	renovation_percentage = (uint32)contents.get_int("renovation_percentage", renovation_percentage);
 	renovations_count = (uint32)contents.get_int("renovations_count", renovations_count);
-	/*
-	* I erroneously assumed that the below values as defined in my changes to the cityrules.tab file would also be reflected with the changes merged in
-	* this actually was not the case and was causing a number of issues that went largely identified by me between late 2019 and mid/late 2021
-	* @author catasteroid
-	*/
-	renovations_try = (uint32)contents.get_int("renovations_try", renovations_try);
+	renovations_try   = (uint32)contents.get_int("renovations_try", renovations_try);
 	renovation_range = (uint32)contents.get_int("renovation_range", renovation_range);
 	renovation_influence_type = (uint32)contents.get_int("renovation_influence_type", renovation_influence_type);
 	renovation_city_size_count[0] = (uint16)contents.get_int("renovation_count_village", renovation_city_size_count[0]);
@@ -4510,11 +4505,8 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb, bool map_generation)
 	// Divide unemployed by 4, because it counts towards commercial and industrial,
 	// and both of those count 'double' for population relative to residential.
 	const int employment_wanted  = get_unemployed() / 4;
-	// const int housing_wanted = get_homeless() / 4;
-	// made a major error here and didn't test cases with pre-version 14 paksets
-	// i never discovered the issue until now - Catasteroid
-	const int housing_wanted = get_homeless();
-	
+	const int housing_wanted = get_homeless() / 4;
+
 	int industrial_suitability, commercial_suitability, residential_suitability;
 	bewerte_res_com_ind(k, industrial_suitability, commercial_suitability, residential_suitability );
 
@@ -4568,9 +4560,6 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb, bool map_generation)
 	vector_tpl<koord> available_sizes;
 	get_available_building_size(k, available_sizes);
 	const uint8 size_offset = simrand(available_sizes.get_count(), "bool stadt_t::renovate_city_building");
-
-	// it's important to note buildings of a higher "level" are not strictly better than what they'll be replaced with in this model
-	// this may be due to inconsistencies between level value and resident/job numbers and the classes thereof in individual buildings
 
 	// try to build
 	const building_desc_t* h = NULL;
