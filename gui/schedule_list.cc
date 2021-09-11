@@ -46,10 +46,10 @@
 
 #include "../unicode.h"
 
-
 #include "minimap.h"
 #include "map_frame.h"
 #include "halt_info.h"
+#include "line_color_gui.h"
 
 uint16 schedule_list_gui_t::livery_scheme_index = 0;
 
@@ -461,6 +461,10 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	bt_access_minimap.set_visible(false);
 	bt_access_minimap.add_listener(this);
 	add_component(&bt_access_minimap);
+	bt_line_color_editor.init(button_t::roundbox_state, "edit_line_color", scr_coord(LINE_NAME_COLUMN_WIDTH+ D_BUTTON_WIDTH, offset_y), D_BUTTON_SIZE);
+	bt_line_color_editor.set_visible(false);
+	bt_line_color_editor.add_listener(this);
+	add_component(&bt_line_color_editor);
 
 	offset_y += D_BUTTON_HEIGHT;
 	// Select livery
@@ -653,6 +657,10 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 		else {
 			minimap_t::get_instance()->set_selected_cnv(convoihandle_t());
 		}
+	}
+	else if (comp == &bt_line_color_editor && line.is_bound()) {
+		destroy_win( magic_line_color_gui_t );
+		create_win(20, 20, new line_color_gui_t(line), w_info, magic_line_color_gui_t);
 		return true;
 	}
 	else if (comp == &sortedby) {
@@ -1300,6 +1308,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 	line = new_line;
 	bt_line_class_manager.set_visible(line.is_bound());
 	bt_access_minimap.set_visible(line.is_bound());
+	bt_line_color_editor.set_visible(line.is_bound());
 
 	reset_line_name();
 }
