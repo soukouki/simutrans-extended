@@ -2316,6 +2316,7 @@
     <ClCompile Include="gui\gui_frame.cc" />
     <ClCompile Include="gui\components\gui_image_list.cc" />
     <ClCompile Include="gui\components\gui_label.cc" />
+    <ClCompile Include="gui\components\gui_line_lettercode.cc" />
     <ClCompile Include="gui\components\gui_numberinput.cc" />
     <ClCompile Include="gui\components\gui_scrollbar.cc" />
     <ClCompile Include="gui\components\gui_scrolled_list.cc" />
@@ -2783,6 +2784,7 @@
     <ClInclude Include="gui\components\gui_image.h" />
     <ClInclude Include="gui\components\gui_image_list.h" />
     <ClInclude Include="gui\components\gui_label.h" />
+    <ClInclude Include="gui\components\gui_line_lettercode.h" />
     <ClInclude Include="gui\components\gui_numberinput.h" />
     <ClInclude Include="gui\components\gui_scrollbar.h" />
     <ClInclude Include="gui\components\gui_scrolled_list.h" />
