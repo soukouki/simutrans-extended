@@ -748,6 +748,7 @@ void halt_info_t::update_components()
 				}
 				lb_pax_storage.set_color(SYSCOL_TEXT_INACTIVE);
 				lb_pax_storage.update();
+				lb_pax_storage.set_fixed_width(lb_pax_storage.get_min_size().w);
 			}
 			else {
 				// There are users
@@ -769,6 +770,8 @@ void halt_info_t::update_components()
 						else {
 							lb_pax_storage.buf().printf(translator::translate("Passengers %d %c, %d %c, %d no route, %d too slow"), halt->get_pax_happy(), 30, halt->get_pax_unhappy(), 31, halt->get_pax_no_route(), halt->haltestelle_t::get_pax_too_slow());
 						}
+						lb_pax_storage.update();
+						lb_pax_storage.set_fixed_width(lb_pax_storage.get_min_size().w);
 					}
 					else {
 						lb_pax_storage.buf().printf(":%5i", pax_sum);
@@ -791,12 +794,12 @@ void halt_info_t::update_components()
 						}
 						cont_pax_ev_detail.new_component<gui_label_t>(")");
 						cont_pax_ev_detail.new_component<gui_fill_t>();
+						lb_pax_storage.update();
+						lb_pax_storage.set_fixed_width(proportional_string_width(":888888 "));
 					}
 					lb_pax_storage.set_color(SYSCOL_TEXT);
-					lb_pax_storage.update();
 				}
 			}
-			lb_pax_storage.set_fixed_width(proportional_string_width(":888888 "));
 		}
 
 		// mail evaluation
@@ -819,6 +822,7 @@ void halt_info_t::update_components()
 				}
 				lb_mail_storage.set_color(SYSCOL_TEXT_INACTIVE);
 				lb_mail_storage.update();
+				lb_mail_storage.set_fixed_width(lb_mail_storage.get_min_size().w);
 			}
 			else {
 				// There are users
@@ -856,10 +860,10 @@ void halt_info_t::update_components()
 						cont_mail_ev_detail.new_component<gui_fill_t>();
 					}
 					lb_mail_storage.set_color(SYSCOL_TEXT);
-					lb_mail_storage.update();
 				}
+				lb_mail_storage.set_fixed_width(proportional_string_width(":888888 "));
+				lb_mail_storage.update();
 			}
-			lb_mail_storage.set_fixed_width(proportional_string_width(":888888 "));
 		}
 	}
 
