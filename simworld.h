@@ -59,6 +59,8 @@ class network_world_command_t;
 class goods_desc_t;
 class memory_rw_t;
 class viewport_t;
+class loadingscreen_t;
+
 
 #define CHK_RANDS 32
 #define CHK_DEBUG_SUMS 10
@@ -778,6 +780,8 @@ private:
 	 * Internal loading method.
 	 */
 	void load(loadsave_t *file);
+
+	void rdwr_gamestate(loadsave_t *file, loadingscreen_t *ls);
 
 	/**
 	 * Removes all objects, deletes all data structures and frees all accessible memory.

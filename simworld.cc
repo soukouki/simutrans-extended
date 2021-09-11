@@ -8553,135 +8553,7 @@ DBG_MESSAGE("karte_t::save(loadsave_t *file)", "start");
 
 	file->set_buffered(true);
 
-	// do not set value for empty player
-	uint8 old_players[MAX_PLAYER_COUNT];
-	for(  int i=0;  i<MAX_PLAYER_COUNT;  i++  ) {
-		old_players[i] = settings.get_player_type(i);
-		if(  players[i]==NULL  ) {
-			settings.set_player_type(i, player_t::EMPTY);
-		}
-	}
-	settings.rdwr(file);
-	for(  int i=0;  i<MAX_PLAYER_COUNT;  i++  ) {
-		settings.set_player_type(i, old_players[i]);
-	}
-
-	if(file->get_extended_version() <= 1)
-	{
-		uint32 old_ticks = (uint32)ticks;
-		file->rdwr_long(old_ticks);
-		ticks = old_ticks;
-	}
-	else
-	{
-		file->rdwr_longlong(ticks);
-	}
-	file->rdwr_long(last_month);
-	file->rdwr_long(last_year);
-
-	// rdwr cityrules (and associated settings) for networkgames
-	if(file->is_version_atleast(102, 3) && (file->get_extended_version() == 0 || file->get_extended_version() >= 9)) {
-		bool do_rdwr = env_t::networkmode;
-		file->rdwr_bool(do_rdwr);
-		if (do_rdwr)
-		{
-			if(file->get_extended_version() >= 9)
-			{
-				stadt_t::cityrules_rdwr(file);
-				privatecar_rdwr(file);
-			}
-			stadt_t::electricity_consumption_rdwr(file);
-			if(file->is_version_atleast(102, 4) && file->get_extended_version() < 13 && file->get_extended_revision() < 24 && (file->get_extended_version() == 0 || file->get_extended_version() >= 9)) {
-				vehicle_builder_t::rdwr_speedbonus(file);
-			}
-		}
-	}
-
-	FOR(weighted_vector_tpl<stadt_t*>, const i, stadt) {
-		i->rdwr(file);
-		if(silent) {
-			INT_CHECK("saving");
-		}
-	}
-DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved cities ok");
-
-	for(int j=0; j<get_size().y; j++) {
-		for(int i=0; i<get_size().x; i++) {
-			plan[i+j*cached_grid_size.x].rdwr(file, koord(i,j) );
-		}
-		if(silent) {
-			INT_CHECK("saving");
-		}
-		else {
-			ls->set_progress(j);
-		}
-	}
-DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved tiles");
-
-	if(  file->is_version_less(102, 2)  ) {
-		// not needed any more
-		for(int j=0; j<(get_size().y+1)*(sint32)(get_size().x+1); j++) {
-			file->rdwr_byte(grid_hgts[j]);
-		}
-	DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved hgt");
-	}
-
-	sint32 fabs = fab_list.get_count();
-	file->rdwr_long(fabs);
-	FOR(vector_tpl<fabrik_t*>, const f, fab_list) {
-		f->rdwr(file);
-		if(silent) {
-			INT_CHECK("saving");
-		}
-	}
-DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved fabs");
-
-	sint32 haltcount=haltestelle_t::get_alle_haltestellen().get_count();
-	file->rdwr_long(haltcount);
-	FOR(vector_tpl<halthandle_t>, const s, haltestelle_t::get_alle_haltestellen()) {
-		s->rdwr(file);
-	}
-DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved stops");
-
-	// save number of convois
-	if(  file->is_version_atleast(101, 0)  ) {
-		uint16 i=convoi_array.get_count();
-		file->rdwr_short(i);
-	}
-	FOR(vector_tpl<convoihandle_t>, const cnv, convoi_array) {
-		// one MUST NOT call INT_CHECK here or else the convoi will be broken during reloading!
-		cnv->rdwr(file);
-	}
-	if(  file->is_version_less(101, 0)  ) {
-		file->wr_obj_id("Ende Convois");
-	}
-	if(silent) {
-		INT_CHECK("saving");
-	}
-DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved %i convois",convoi_array.get_count());
-
-	for(int i=0; i<MAX_PLAYER_COUNT; i++) {
-// **** REMOVE IF SOON! *********
-		if(file->is_version_less(101, 0)) {
-			if(  i<8  ) {
-				if(  players[i]  ) {
-					players[i]->rdwr(file);
-				}
-				else {
-					// simulate old ones ...
-					player_t *player = new player_t( i );
-					player->rdwr(file);
-					delete player;
-				}
-			}
-		}
-		else {
-			if(  players[i]  ) {
-				players[i]->rdwr(file);
-			}
-		}
-	}
-DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved players");
+	rdwr_gamestate(file, ls);
 
 	// saving messages
 	if(  file->is_version_atleast(102, 5)  ) {
@@ -8950,6 +8822,142 @@ DBG_MESSAGE("karte_t::save(loadsave_t *file)", "motd filename %s", env_t::server
 	}
 }
 
+
+
+void karte_t::rdwr_gamestate(loadsave_t *file, loadingscreen_t *ls)
+{
+	assert(file->is_saving()); // TODO also allow loading
+
+	// do not set value for empty player
+	uint8 old_players[MAX_PLAYER_COUNT];
+	for(  int i=0;  i<MAX_PLAYER_COUNT;  i++  ) {
+		old_players[i] = settings.get_player_type(i);
+		if(  players[i]==NULL  ) {
+			settings.set_player_type(i, player_t::EMPTY);
+		}
+	}
+	settings.rdwr(file);
+	for(  int i=0;  i<MAX_PLAYER_COUNT;  i++  ) {
+		settings.set_player_type(i, old_players[i]);
+	}
+
+	if(file->get_extended_version() <= 1)
+	{
+		uint32 old_ticks = (uint32)ticks;
+		file->rdwr_long(old_ticks);
+		ticks = old_ticks;
+	}
+	else
+	{
+		file->rdwr_longlong(ticks);
+	}
+	file->rdwr_long(last_month);
+	file->rdwr_long(last_year);
+
+	// rdwr cityrules (and associated settings) for networkgames
+	if(file->is_version_atleast(102, 3) && (file->get_extended_version() == 0 || file->get_extended_version() >= 9)) {
+		bool do_rdwr = env_t::networkmode;
+		file->rdwr_bool(do_rdwr);
+		if (do_rdwr)
+		{
+			if(file->get_extended_version() >= 9)
+			{
+				stadt_t::cityrules_rdwr(file);
+				privatecar_rdwr(file);
+			}
+			stadt_t::electricity_consumption_rdwr(file);
+			if(file->is_version_atleast(102, 4) && file->get_extended_version() < 13 && file->get_extended_revision() < 24 && (file->get_extended_version() == 0 || file->get_extended_version() >= 9)) {
+				vehicle_builder_t::rdwr_speedbonus(file);
+			}
+		}
+	}
+
+	FOR(weighted_vector_tpl<stadt_t*>, const i, stadt) {
+		i->rdwr(file);
+		if(!ls) {
+			INT_CHECK("saving");
+		}
+	}
+DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved cities ok");
+
+	for(int j=0; j<get_size().y; j++) {
+		for(int i=0; i<get_size().x; i++) {
+			plan[i+j*cached_grid_size.x].rdwr(file, koord(i,j) );
+		}
+		if(!ls) {
+			INT_CHECK("saving");
+		}
+		else {
+			ls->set_progress(j);
+		}
+	}
+DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved tiles");
+
+	if(  file->is_version_less(102, 2)  ) {
+		// not needed any more
+		for(int j=0; j<(get_size().y+1)*(sint32)(get_size().x+1); j++) {
+			file->rdwr_byte(grid_hgts[j]);
+		}
+	DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved hgt");
+	}
+
+	sint32 fabs = fab_list.get_count();
+	file->rdwr_long(fabs);
+	FOR(vector_tpl<fabrik_t*>, const f, fab_list) {
+		f->rdwr(file);
+		if(!ls) {
+			INT_CHECK("saving");
+		}
+	}
+DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved fabs");
+
+	sint32 haltcount=haltestelle_t::get_alle_haltestellen().get_count();
+	file->rdwr_long(haltcount);
+	FOR(vector_tpl<halthandle_t>, const s, haltestelle_t::get_alle_haltestellen()) {
+		s->rdwr(file);
+	}
+DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved stops");
+
+	// save number of convois
+	if(  file->is_version_atleast(101, 0)  ) {
+		uint16 i=convoi_array.get_count();
+		file->rdwr_short(i);
+	}
+	FOR(vector_tpl<convoihandle_t>, const cnv, convoi_array) {
+		// one MUST NOT call INT_CHECK here or else the convoi will be broken during reloading!
+		cnv->rdwr(file);
+	}
+	if(  file->is_version_less(101, 0)  ) {
+		file->wr_obj_id("Ende Convois");
+	}
+	if(!ls) {
+		INT_CHECK("saving");
+	}
+DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved %i convois",convoi_array.get_count());
+
+	for(int i=0; i<MAX_PLAYER_COUNT; i++) {
+// **** REMOVE IF SOON! *********
+		if(file->is_version_less(101, 0)) {
+			if(  i<8  ) {
+				if(  players[i]  ) {
+					players[i]->rdwr(file);
+				}
+				else {
+					// simulate old ones ...
+					player_t *player = new player_t( i );
+					player->rdwr(file);
+					delete player;
+				}
+			}
+		}
+		else {
+			if(  players[i]  ) {
+				players[i]->rdwr(file);
+			}
+		}
+	}
+DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved players");
+}
 
 // store missing obj during load and their severity
 void karte_t::add_missing_paks( const char *name, missing_level_t level )
