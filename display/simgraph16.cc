@@ -691,6 +691,24 @@ static const uint8 special_pal[SPECIAL_COLOR_COUNT*3] =
 };
 
 
+// Line color palette
+static const uint32 line_pal[MAX_LINE_COLOR_PALETTE] =
+{
+	0xb52021, 0xe73839, 0xff8284, 0xc6697b,
+	0xb5517b, 0xef597b, 0xff61bd, 0xf738e5,
+	0xce2984, 0xad29ad, 0x7320e7, 0x9c41ff,
+	0xb579ff, 0x8c82ff, 0x6361ff, 0x0041c6,
+	0x0059e7, 0x0079ff, 0x429aff, 0x31cbff,
+	0x00aad6, 0x008ab5, 0x008284, 0x21c4c6,
+	0x52b294, 0x39c439, 0x429a42, 0x217121,
+	0x5a8200, 0x73aa00, 0x9ccb00, 0xe7e300,
+	0xcecb00, 0xa5a200, 0xb58200, 0xde9a00,
+	0xffc300, 0xffa22a, 0xef8a00, 0x946931,
+	0x84492a, 0xc65100, 0xff7900, 0xef9a63,
+	0xff795a, 0xff6131, 0x8c9aad, 0x7b797b
+};
+
+
 /*
  * tile raster width
  */
@@ -751,6 +769,14 @@ PIXVAL color_rgb_to_idx(PIXVAL color)
 	}
 	return 0;
 }
+
+PIXVAL get_line_color_rgb(uint8 idx) {
+	if (idx >= MAX_LINE_COLOR_PALETTE) {
+		return get_system_color(148, 146, 148); // gray
+	}
+	uint32 rgb = line_pal[idx];
+	return get_system_color(rgb>>16, (rgb>>8)&0xFF, rgb&0xFF);
+};
 
 
 /*

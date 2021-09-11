@@ -47,6 +47,8 @@ extern int default_font_linespace;
 #define D_ENTRY_NO_HEIGHT (LINESPACE+4)
 #define D_ENTRY_NO_WIDTH (proportional_string_width("188")+6)
 
+#define MAX_LINE_COLOR_PALETTE 48
+
 /**
 * Alignment enum to align controls against each other
 * Vertical and horizontal alignment can be masked together
@@ -112,6 +114,9 @@ PIXVAL color_rgb_to_idx(PIXVAL color);
  * Get 24bit RGB888 colour from an index of the old 8bit palette
  */
 uint32 get_color_rgb(uint8 idx);
+
+// Line color palette
+PIXVAL get_line_color_rgb(uint8 idx);
 
 /*
  * Environment colours from RGB888 to system format
