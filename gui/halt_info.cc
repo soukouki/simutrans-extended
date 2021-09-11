@@ -40,6 +40,8 @@
 #define L_BUTTON_WIDTH button_size.w
 #define L_CHART_INDENT (66)
 
+#define L_WAITING_CELL_WIDTH (proportional_string_width(" 0000000"))
+#define L_CAPACITY_CELL_WIDTH (proportional_string_width("000000"))
 
 static const char *sort_text[halt_info_t::SORT_MODES] = {
 	"Zielort",
@@ -235,8 +237,6 @@ void gui_halt_capacity_bar_t::draw(scr_coord offset)
 	gui_container_t::draw(offset);
 }
 
-#define L_WAITING_CELL_WIDTH (proportional_string_width(" 0000000"))
-#define L_CAPACITY_CELL_WIDTH (proportional_string_width("000000"))
 gui_halt_waiting_indicator_t::gui_halt_waiting_indicator_t(halthandle_t h, bool yesno)
 {
 	halt = h;
@@ -795,7 +795,7 @@ void halt_info_t::update_components()
 						cont_pax_ev_detail.new_component<gui_label_t>(")");
 						cont_pax_ev_detail.new_component<gui_fill_t>();
 						lb_pax_storage.update();
-						lb_pax_storage.set_fixed_width(proportional_string_width(":888888 "));
+						lb_pax_storage.set_fixed_width(L_WAITING_CELL_WIDTH);
 					}
 					lb_pax_storage.set_color(SYSCOL_TEXT);
 				}
@@ -861,7 +861,7 @@ void halt_info_t::update_components()
 					}
 					lb_mail_storage.set_color(SYSCOL_TEXT);
 				}
-				lb_mail_storage.set_fixed_width(proportional_string_width(":888888 "));
+				lb_mail_storage.set_fixed_width(L_WAITING_CELL_WIDTH);
 				lb_mail_storage.update();
 			}
 		}
