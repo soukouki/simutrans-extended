@@ -772,7 +772,7 @@ PIXVAL color_rgb_to_idx(PIXVAL color)
 	return 0;
 }
 
-PIXVAL get_line_color_rgb(uint8 idx) {
+PIXVAL line_color_idx_to_rgb(uint8 idx) {
 	if (idx >= MAX_LINE_COLOR_PALETTE) {
 		return 0; // black
 	}

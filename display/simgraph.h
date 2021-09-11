@@ -116,7 +116,7 @@ PIXVAL color_rgb_to_idx(PIXVAL color);
 uint32 get_color_rgb(uint8 idx);
 
 // Line color palette
-PIXVAL get_line_color_rgb(uint8 idx);
+PIXVAL line_color_idx_to_rgb(uint8 idx);
 
 /*
  * Environment colours from RGB888 to system format
