@@ -839,6 +839,7 @@ void schedule_list_gui_t::draw(scr_coord pos, scr_size size)
 		bt_new_line.enable( activate   &&  tabs.get_active_tab_index() > 0);
 		bt_withdraw_line.set_visible( activate );
 		livery_selector.enable( activate );
+		bt_line_color_editor.enable( activate );
 	}
 
 	// if search string changed, update line selection
@@ -1070,6 +1071,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_line_info.set_visible(new_line->get_schedule()->get_count()>0);
 		inp_name.set_visible(true);
 		livery_selector.set_visible(true);
+		bt_line_color_editor.set_visible(true);
 
 		cont_line_capacity_by_catg.set_line(new_line);
 
@@ -1285,6 +1287,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_convois.set_visible(false);
 		scrolly_haltestellen.set_visible(false);
 		livery_selector.set_visible(false);
+		bt_line_color_editor.set_visible(false);
 		scrolly_line_info.set_visible(false);
 		inp_name.set_visible(false);
 		cont_times_history.set_visible(false);
