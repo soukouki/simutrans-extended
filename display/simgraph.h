@@ -387,6 +387,8 @@ int display_text_proportional_len_clip_rgb(scr_coord_val x, scr_coord_val y, con
 #define display_proportional_rgb(               x, y, txt, align, color, dirty)       display_text_proportional_len_clip_rgb( x, y, txt, align,           color, dirty, -1 )
 #define display_proportional_clip_rgb(          x, y, txt, align, color, dirty)       display_text_proportional_len_clip_rgb( x, y, txt, align | DT_CLIP, color, dirty, -1 )
 
+int display_line_lettercode_rgb(scr_coord_val xpos, scr_coord_val ypos, PIXVAL line_color, uint8 style, const char *text1, const char *text2, bool dirty = true);
+
 
 /// Display a string that is abbreviated by the (language specific) ellipsis character if too wide
 /// If enough space is given, it just display the full string

@@ -5042,6 +5042,85 @@ void display_heading_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, sc
 }
 
 
+int display_line_lettercode_rgb(scr_coord_val xpos, scr_coord_val ypos, PIXVAL line_color, uint8 style, const char *text1, const char *text2, bool dirty)
+{
+	if( (style==0 && line_color==0) && text1[0]=='\0' && text2[0]=='\0') {
+		return 0;
+	}
+	scr_coord_val h = (text1[0]!='\0' || text2[0]!='\0') ? LINEASCENT+6 : LINEASCENT-2;
+	ypos += D_GET_CENTER_ALIGN_OFFSET(h, LINEASCENT+6);
+	// calculate width
+	uint8 width = 4;
+	uint8 width_left  = text1[0]=='\0' ? 0 : proportional_string_width(text1)+2;
+	uint8 width_right = text2[0]=='\0' ? 0 : proportional_string_width(text2)+2;
+	width += width_left + width_right;
+	width = max(LINEASCENT,width);
+
+	PIXVAL col_on_white = is_dark_color(line_color) ? line_color : display_blend_colors(line_color, color_idx_to_rgb(COL_BLACK), 15);
+	PIXVAL col_on_colored = is_dark_color(line_color) ? color_idx_to_rgb(COL_WHITE) : color_idx_to_rgb(COL_BLACK);
+
+	// background
+	display_filled_roundbox_clip(xpos, ypos, width, h, style&2 ? color_idx_to_rgb(COL_WHITE) : line_color, dirty);
+
+	// frame
+	if( style&1 ) {
+		const PIXVAL frame_col = (style&2 || (style&4 && style&8))? col_on_white : 0;
+		display_ddd_box_clip_rgb(xpos, ypos, width, h, frame_col, frame_col);
+	}
+
+	bool combined_sub_bg = (width_left || width_right) && style&4 && style&8;
+	if( combined_sub_bg ) {
+		if( style&1 ) {
+			display_fillbox_wh_clip_rgb( xpos+2, ypos+2, width-4, h-4, style&2 ? line_color : color_idx_to_rgb(COL_WHITE), dirty);
+		}
+		else{
+			display_filled_roundbox_clip(xpos+2, ypos+2, width-4, h-4, style&2 ? line_color : color_idx_to_rgb(COL_WHITE), dirty);
+		}
+	}
+
+	if (width_left) {
+		PIXVAL textcol;
+		if(combined_sub_bg){
+			textcol = style&2 ? col_on_colored : col_on_white;
+		}
+		else if (style&4 && !combined_sub_bg) {
+			if( style&1 ) {
+				display_fillbox_wh_clip_rgb( xpos+2, ypos+2, width_left, h-4, style&2 ? line_color : color_idx_to_rgb(COL_WHITE), dirty);
+			}
+			else {
+				display_filled_roundbox_clip(xpos+2, ypos+2, width_left, h-4, style&2 ? line_color : color_idx_to_rgb(COL_WHITE), dirty);
+			}
+			textcol = style&2 ? col_on_colored : color_idx_to_rgb(COL_BLACK);
+		}
+		else {
+			textcol = style&2 ? col_on_white : col_on_colored;
+		}
+		display_proportional_clip_rgb(xpos+3, ypos+2, text1, ALIGN_LEFT, textcol, dirty);
+	}
+
+	if (width_right) {
+		PIXVAL textcol;
+		if (combined_sub_bg) {
+			textcol = style&2 ? col_on_colored : col_on_white;
+		}
+		else if (style&8 && !combined_sub_bg) {
+			if( style&1 ) {
+				display_fillbox_wh_clip_rgb( xpos+width-width_right-2, ypos+2, width_right, h-4, style&2 ? line_color : color_idx_to_rgb(COL_WHITE), dirty);
+			}
+			else {
+				display_filled_roundbox_clip(xpos+width-width_right-2, ypos+2, width_right, h-4, style&2 ? line_color : color_idx_to_rgb(COL_WHITE), dirty);
+			}
+			textcol = style&2 ? col_on_colored : color_idx_to_rgb(COL_BLACK);
+		}
+		else {
+			textcol = style&2 ? col_on_white : col_on_colored;
+		}
+		display_proportional_clip_rgb(xpos+width-width_right-1, ypos+2, text2, ALIGN_LEFT, textcol, dirty);
+	}
+	return width;
+}
+
+
 /**
  * Draw shaded rectangle using direct color values
  */
