@@ -654,6 +654,34 @@ void simline_t::renew_stops()
 	}
 }
 
+void simline_t::set_schedule(schedule_t* schedule)
+{
+	if (this->schedule)
+	{
+		haltestelle_t::refresh_routing(schedule, goods_catg_index, NULL, NULL, player);
+		unregister_stops();
+		delete this->schedule;
+	}
+	this->schedule = schedule;
+	financial_history[0][LINE_DEPARTURES_SCHEDULED] = calc_departures_scheduled();
+}
+
+void simline_t::set_linecode_l(const char *new_name)
+{
+	tstrncpy(linecode_l, new_name, lengthof(linecode_l));
+}
+
+void simline_t::set_linecode_r(const char *new_name)
+{
+	tstrncpy(linecode_r, new_name, lengthof(linecode_r));
+}
+
+void simline_t::init_linecode(const char *str1, const char *str2, uint8 color_idx, uint8 style)
+{
+	set_linecode_l(str1);
+	set_linecode_r(str2);
+	line_color_index = color_idx; line_lettercode_style = style;
+}
 
 void simline_t::check_freight()
 {
@@ -1049,6 +1077,11 @@ void simline_t::propogate_livery_scheme()
 		line_managed_convoys[i]->set_livery_scheme_index(livery_scheme_index);
 		line_managed_convoys[i]->apply_livery_scheme();
 	}
+}
+
+PIXVAL simline_t::get_line_color() const
+{
+	return get_line_color_rgb(line_color_index);
 }
 
 sint64 simline_t::calc_departures_scheduled()

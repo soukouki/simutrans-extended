@@ -70,6 +70,15 @@ public:
 
 	static const uint linetype_to_stationtype[simline_t::MAX_LINE_TYPE];
 
+	enum line_lettercode_style_t
+	{
+		no_letter_code      = 0,
+		frame_flag          = 1<<0,
+		white_bg_flag       = 1<<1,
+		left_roundbox_flag  = 1<<2,
+		right_roundbox_flag = 1<<3
+	};
+
 protected:
 	schedule_t * schedule;
 	player_t *player;
@@ -80,6 +89,10 @@ protected:
 private:
 	static karte_ptr_t welt;
 	plainstring name;
+
+	// letter code
+	char linecode_l[4] = {};
+	char linecode_r[4] = {};
 
 	/**
 	 * Handle for ourselves. Can be used like the 'this' pointer
@@ -129,6 +142,9 @@ private:
 	bool start_reversed;
 
 	uint16 livery_scheme_index;
+
+	uint8 line_lettercode_style=no_letter_code;
+	uint8 line_color_index=255;
 
 	/**
 	* The table of point-to-point average speeds.
@@ -190,6 +206,14 @@ public:
 	 */
 	char const* get_name() const { return name; }
 	void set_name(const char *str);
+
+	/**
+	 * line letter code
+	 */
+	char const* get_linecode_l() const { return linecode_l; }
+	void set_linecode_l(const char *str);
+	char const* get_linecode_r() const { return linecode_r; }
+	void set_linecode_r(const char *str);
 
 	/*
 	 * load or save the line
@@ -297,6 +321,11 @@ public:
 	void set_livery_scheme_index (uint16 index) { livery_scheme_index = index; }
 	uint16 get_livery_scheme_index() const { return livery_scheme_index; }
 	void propogate_livery_scheme();
+
+	void init_linecode(const char *str1, const char *str2, uint8 color_idx = -255, uint8 style = no_letter_code);
+	uint8 get_line_lettercode_style() const { return line_lettercode_style; }
+	PIXVAL get_line_color() const;
+	uint8 get_line_color_index() const { return line_color_index; }
 
 	inline journey_times_map& get_average_journey_times() { return average_journey_times; }
 
