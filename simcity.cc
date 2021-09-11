@@ -275,7 +275,7 @@ static uint32 renovation_range = 3;
 * is divided by this number to provide the renovation_count
 * @author catasteroid
 */
-static uint32 renovation_influence_type = 2;
+static uint32 renovation_influence_type = 0;
 
 /*
 * the numbers used if renovation_influence_type is 1, the first value is used if the city
@@ -293,7 +293,7 @@ static uint32 renovation_count_increase_every = 2500;
 /*
 * hard cap on renovation_count if the city has a really high population
 */
-static uint32 renovation_count_maximum = 5;
+static uint32 renovation_count_maximum = 25;
 
 /*
 * overrides default behaviour allowing very large cities to renovate buildings
@@ -301,7 +301,7 @@ static uint32 renovation_count_maximum = 5;
 * value based on the city's population status
 * @author catasteroid
 */
-static uint32 proportional_renovation_radius = 1;
+static uint32 proportional_renovation_radius = 0;
 
 /*
 * used with the above proportional_renovation_radius figure to use a value determined
@@ -334,7 +334,7 @@ static uint16 renovation_ranges_by_type[] = { 100,150,200 };
 * equally likely to be renovated regardless of the distance from the city centre
 * @author catasteroid
 */
-static uint32 renovation_distance_chance = 0;
+static uint32 renovation_distance_chance = 1;
 
 /*
  * minimum ratio of city area to building area to allow expansion
