@@ -5003,7 +5003,8 @@ void display_shadow_proportional_rgb(scr_coord_val xpos, scr_coord_val ypos, PIX
 
 
 // If want to set the background color in some styles, use it together with display_fillbox_wh_clip
-// style: 0=roundbox back ground, 1=left box + bottom line with shadow, 2=only left box
+// This is like <h1> <h2> <h3> ... in html
+// style: 0=Surrounded by a double border, 1=roundbox back ground, 2=left box + bottom line with shadow, 3=only left box
 void display_heading_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL text_color, PIXVAL frame_color, const char *text, int dirty, uint8 style)
 {
 	if (h < LINESPACE) { h = LINESPACE; }
@@ -5013,20 +5014,25 @@ void display_heading_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, sc
 	switch (style)
 	{
 		case 0:
+			display_ddd_box_clip_rgb(   xp,   yp,   w,   h,   frame_color, frame_color);
+			display_fillbox_wh_clip_rgb(xp+1, yp+1, w-2, h-2, color_idx_to_rgb(COL_WHITE), dirty);
+			display_ddd_box_clip_rgb(   xp+2, yp+2, w-4, h-4, frame_color, frame_color);
+			break;
+		case 1:
 			display_fillbox_wh_clip_rgb(xp, yp + 1, w, h - 2, frame_color, dirty);
 			display_fillbox_wh_clip_rgb(xp + 1, yp, w - 2, 1, frame_color, dirty);
 			display_fillbox_wh_clip_rgb(xp + 1, yp + h - 1, w - 2, 1, frame_color, dirty);
 			break;
-		case 1:
+		case 2:
 			border_left_width = h / 2;
 			display_fillbox_wh_clip_rgb(xp, yp + h, w-1, 1, frame_color, dirty);
-			display_blend_wh_rgb(xp + 1, yp + h+1, w-1, 1, COL_BLACK, 15);
+			display_blend_wh_rgb(xp + 1, yp + h+1, w-1, 1, color_idx_to_rgb(COL_BLACK), 15);
 			break;
-		case 2:
+		case 3:
 			border_left_width = h / 3;
 			padding_left = border_left_width*2;
 			break;
-		case 3:
+		case 4:
 			display_right_triangle_rgb(xp+1, yp + (h-LINEASCENT*2/3)/2+1, (LINEASCENT*2/3), SYSCOL_TEXT_SHADOW, dirty);
 			display_right_triangle_rgb(xp,   yp + (h-LINEASCENT*2/3)/2,   (LINEASCENT*2/3), frame_color, dirty);
 			padding_left = (uint8)(h-LINEASCENT*2/3) + D_V_SPACE;
