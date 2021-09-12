@@ -461,16 +461,22 @@ random_wildlife_probability = 1000
 # costs some time for the additional redraw (~1-3%)
 water_animation_ms = 250
 
-# Show info windows for private cars and pedestrians?
-# (1=on, 0=off)
-#pedes_and_car_info = 0
-
 # How much citycars will be generated
 citycar_level = 5
 
 # After how many month a citycar breaks (and will be forever gone) ...
 # default is ten years
 default_citycar_life = 36
+
+# The following two options replace the pedes_and_car_info, allowing both information windows to be enabled independently of each other.
+# Use with care. Defining these will enforce 
+# Show info windows for private cars?
+# (1=on, 0=off)
+#car_info = 1
+
+# Show info windows for pedestrians?
+# (1=on, 0=off)
+#pedes_info = 0
 
 # Show infos on trees?
 # (1=on, 0=off)
@@ -590,7 +596,7 @@ compass_map_position = 13
 # if set to 0, it will always produce numbers
 numpad_always_moves_map = 1
 
-# Position of the main menu bar (0=top, 1=left, 2=bottom, 3=right)
+# Position of the main menu bar (0=left, 1=top, 2=right, 3=bottom)
 #menubar_position = 0
 
 # 1=selecting a tool again will close it (0=will be topped/reinit)
@@ -1008,7 +1014,7 @@ starting_month = 1
 # (0=no, 1=yes, 2>=show day in japan format=2, us format=3, german=4, japanese no season=5, us no season=6, german no season = 7, hours/minutes scale = 8, japan hours/minutes scale = 9)
 # This is most useful, if you use longer months than the default length (see below)
 # The hours/minutes scale shows the time in hours/minutes as used for determining journey times and other short times. It is the recommended setting. 
-show_month = 8
+#show_month = 8
 
 # Global time multiplier (will be save with new games)
 # 2^bits_per_month = duration of a game month in milliseconds real time
