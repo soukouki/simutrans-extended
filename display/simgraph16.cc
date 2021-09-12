@@ -772,7 +772,7 @@ PIXVAL color_rgb_to_idx(PIXVAL color)
 
 PIXVAL get_line_color_rgb(uint8 idx) {
 	if (idx >= MAX_LINE_COLOR_PALETTE) {
-		return get_system_color(148, 146, 148); // gray
+		return 0; // black
 	}
 	uint32 rgb = line_pal[idx];
 	return get_system_color(rgb>>16, (rgb>>8)&0xFF, rgb&0xFF);
