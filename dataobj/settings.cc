@@ -2001,8 +2001,8 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	int car_info = contents.get_int("car_info", -1);
 	int pedes_info = contents.get_int("pedes_info", -1);
 	if(car_info != -1 || pedes_info != -1){
-		if(car_info != -1) env_t::road_user_info = (env_t::road_user_info & ~1) | (car_info!=0);
-		if(pedes_info != -1) env_t::road_user_info = (env_t::road_user_info & ~2) | ((pedes_info!=0) << 1);
+		if(car_info != -1) set_bits_to<uint8>(env_t::road_user_info, 0b1, car_info!=0);
+		if(pedes_info != -1) set_bits_to<uint8>(env_t::road_user_info, 0b10, (pedes_info!=0) << 1);
 	}
 	else {
 		//re-defines semantics of pedes_and_car_info=1 to car_info=1, pedes_info=0, previously was car_info=1, pedes_info=1
@@ -2036,7 +2036,21 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	env_t::draw_outside_tile = contents.get_int( "draw_outside_tile", env_t::draw_outside_tile ) != 0;
 
 	// display stuff
-	env_t::show_names = contents.get_int( "show_names", env_t::show_names );
+	int show_station_names = contents.get_int( "show_station_names", -1);
+	int show_station_statistics = contents.get_int( "show_station_statistics", -1 );
+	int station_label_style = contents.get_int( "station_label_style", -1 );
+	if(show_station_names != -1 || show_station_statistics != -1 || station_label_style != -1){
+		if(show_station_names != -1) set_bits_to<int>(env_t::show_names,0b1, show_station_names!=0);
+		if(show_station_statistics != -1) set_bits_to(env_t::show_names,0b10, (show_station_statistics !=0) << 1);
+		if(station_label_style) set_bits_to(env_t::show_names,0b1100, station_label_style << 2);
+	}
+	else{
+		env_t::show_names = contents.get_int( "show_names", env_t::show_names );
+	}
+
+
+
+
 	env_t::show_depot_names = contents.get_int( "show_depot_names", env_t::show_depot_names );
 	env_t::show_month = contents.get_int( "show_month", env_t::show_month );
 	env_t::max_acceleration = contents.get_int( "fast_forward", env_t::max_acceleration );
