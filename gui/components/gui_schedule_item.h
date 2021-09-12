@@ -32,6 +32,7 @@ public:
 	};
 
 	gui_colored_route_bar_t(uint8 p_color_idx, uint8 style_ = line_style::solid);
+	gui_colored_route_bar_t(PIXVAL line_color, uint8 style_ = line_style::solid);
 
 	void draw(scr_coord offset) OVERRIDE;
 

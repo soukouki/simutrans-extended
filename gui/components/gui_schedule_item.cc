@@ -20,6 +20,13 @@ gui_colored_route_bar_t::gui_colored_route_bar_t(uint8 p_col, uint8 style_)
 	size = scr_size(D_ENTRY_NO_WIDTH, LINESPACE);
 }
 
+gui_colored_route_bar_t::gui_colored_route_bar_t(PIXVAL line_color, uint8 style_)
+{
+	style = style_;
+	base_color = line_color;
+	size = scr_size(D_ENTRY_NO_WIDTH, LINESPACE);
+}
+
 void gui_colored_route_bar_t::draw(scr_coord offset)
 {
 	offset += pos + scr_coord(2,0);
