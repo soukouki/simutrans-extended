@@ -27,7 +27,7 @@
 class player_t;
 
 
-class gui_line_wainting_status_t : public gui_aligned_container_t
+class gui_line_waiting_status_t : public gui_aligned_container_t
 {
 	linehandle_t line;
 
@@ -36,7 +36,7 @@ class gui_line_wainting_status_t : public gui_aligned_container_t
 	bool show_name=true;
 
 public:
-	gui_line_wainting_status_t(linehandle_t line);
+	gui_line_waiting_status_t(linehandle_t line);
 
 	void init();
 
@@ -61,7 +61,7 @@ private:
 	button_t sort_order;
 	gui_container_t cont, cont_charts, cont_convoys;
 	gui_aligned_container_t cont_times_history, cont_line_info, cont_tab_haltlist;
-	gui_line_wainting_status_t cont_haltlist;
+	gui_line_waiting_status_t cont_haltlist;
 	gui_convoy_loading_info_t cont_line_capacity_by_catg;
 	gui_scrollpane_t scrolly_convois, scrolly_haltestellen, scroll_times_history, scrolly_line_info;
 	gui_scrolled_list_t scl;

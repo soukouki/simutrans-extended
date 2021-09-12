@@ -150,7 +150,7 @@ const char *schedule_list_gui_t::sort_text[SORT_MODES] = {
 };
 
 
-gui_line_wainting_status_t::gui_line_wainting_status_t(linehandle_t line_)
+gui_line_waiting_status_t::gui_line_waiting_status_t(linehandle_t line_)
 {
 	line = line_;
 
@@ -159,7 +159,7 @@ gui_line_wainting_status_t::gui_line_wainting_status_t(linehandle_t line_)
 	init();
 }
 
-void gui_line_wainting_status_t::init()
+void gui_line_waiting_status_t::init()
 {
 	remove_all();
 	if (line.is_bound()) {
@@ -220,7 +220,7 @@ void gui_line_wainting_status_t::init()
 	}
 }
 
-void gui_line_wainting_status_t::draw(scr_coord offset)
+void gui_line_waiting_status_t::draw(scr_coord offset)
 {
 	if (line.is_bound()) {
 		if (!line->get_schedule()->matches(world(), schedule)) {
