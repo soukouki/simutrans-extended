@@ -463,7 +463,7 @@ water_animation_ms = 250
 
 # Show info windows for private cars and pedestrians?
 # (1=on, 0=off)
-pedes_and_car_info = 0
+#pedes_and_car_info = 0
 
 # How much citycars will be generated
 citycar_level = 5
