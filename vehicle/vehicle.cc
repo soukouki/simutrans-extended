@@ -3246,7 +3246,7 @@ void vehicle_t::display_after(int xpos, int ypos, bool is_global) const
 				// line letter code
 				if (lh.is_bound() && lh->get_line_color_index()!=255) {
 					const PIXVAL linecol = lh->get_line_color_index()==254 ? col_val : lh->get_line_color();
-					xpos += display_line_lettercode_rgb(xpos, ypos-yoff-LINESPACE/2, linecol, lh->get_line_lettercode_style(), lh->get_linecode_l(), lh->get_linecode_r(), true);
+					xpos += display_line_lettercode_rgb(xpos, ypos-yoff-(LINEASCENT+6)/2, linecol, lh->get_line_lettercode_style(), lh->get_linecode_l(), lh->get_linecode_r(), true);
 					xpos += 2;
 				}
 
