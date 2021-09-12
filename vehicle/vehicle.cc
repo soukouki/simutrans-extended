@@ -3243,6 +3243,13 @@ void vehicle_t::display_after(int xpos, int ypos, bool is_global) const
 			const int width = proportional_string_width(nameplate_text)+7;
 			if (ypos > LINESPACE + 32 && ypos + LINESPACE < display_get_clip_wh().yy) {
 				const scr_coord_val yoff = LOADINGBAR_HEIGHT + WAITINGBAR_HEIGHT + LINESPACE/2 + 2;
+				// line letter code
+				if (lh.is_bound() && lh->get_line_color_index()!=255) {
+					const PIXVAL linecol = lh->get_line_color_index()==254 ? col_val : lh->get_line_color();
+					xpos += display_line_lettercode_rgb(xpos, ypos-yoff-LINESPACE/2, linecol, lh->get_line_lettercode_style(), lh->get_linecode_l(), lh->get_linecode_r(), true);
+					xpos += 2;
+				}
+
 				if (env_t::show_cnv_nameplates & 4) {
 					const int bar_height     = LINEASCENT+4;
 					const int bar_width_half = (width+bar_height)/4*2+2;
