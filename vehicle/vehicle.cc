@@ -3306,16 +3306,16 @@ void vehicle_t::display_after(int xpos, int ypos, bool is_global) const
 					break;
 			}
 
-			display_ddd_box_clip_rgb(xpos-2, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT + extra_y, LOADINGBAR_WIDTH+2, LOADINGBAR_HEIGHT, color_idx_to_rgb(MN_GREY2), color_idx_to_rgb(MN_GREY0));
+			display_ddd_box_clip_rgb(xpos-2, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT, LOADINGBAR_WIDTH+2, LOADINGBAR_HEIGHT, color_idx_to_rgb(MN_GREY2), color_idx_to_rgb(MN_GREY0));
 			sint32 colored_width = cnv->get_loading_level() > 100 ? 100 : cnv->get_loading_level();
 			if (cnv->get_loading_limit() && cnv->get_state() == convoi_t::LOADING) {
-				display_fillbox_wh_clip_rgb(xpos - 1, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT + extra_y + 1, cnv->get_loading_limit(), LOADINGBAR_HEIGHT - 2, COL_IN_TRANSIT, true);
+				display_fillbox_wh_clip_rgb(xpos - 1, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT + 1, cnv->get_loading_limit(), LOADINGBAR_HEIGHT-2, COL_IN_TRANSIT, true);
 			}
 			else if (cnv->get_loading_limit()) {
-				display_blend_wh_rgb(xpos-1, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT + extra_y + 1, cnv->get_loading_limit(), LOADINGBAR_HEIGHT - 2, COL_IN_TRANSIT, 60);
+				display_blend_wh_rgb(xpos-1, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT + 1, cnv->get_loading_limit(), LOADINGBAR_HEIGHT-2, COL_IN_TRANSIT, 60);
 			}
 			else {
-				display_blend_wh_rgb(xpos-1, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT + extra_y + 1, LOADINGBAR_WIDTH, LOADINGBAR_HEIGHT - 2, color_idx_to_rgb(MN_GREY2), colored_width ? 65 : 40);
+				display_blend_wh_rgb(xpos-1, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT + 1, LOADINGBAR_WIDTH, LOADINGBAR_HEIGHT-2, color_idx_to_rgb(MN_GREY2), colored_width ? 65 : 40);
 			}
 			display_cylinderbar_wh_clip_rgb(xpos-1, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT + extra_y + 1, colored_width, LOADINGBAR_HEIGHT-2, color_idx_to_rgb(COL_GREEN-1), true);
 
