@@ -1693,7 +1693,7 @@ void win_poll_event(event_t* const ev)
 		simgraph_resize( ev->new_window_size );
 		ticker::redraw();
 		tool_t::update_toolbars();
-		for( int i = 0; i<wins.get_count(); i++ ) {
+		for( uint i = 0; i<wins.get_count(); i++ ) {
 			scr_coord_val x = wins[i].pos.x;
 			scr_coord_val y = wins[i].pos.y;
 			win_clamp_xywh_position( x, y, wins[i].gui->get_min_windowsize(), true );
