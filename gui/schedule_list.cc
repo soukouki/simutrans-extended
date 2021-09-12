@@ -663,6 +663,12 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 		create_win(20, 20, new line_color_gui_t(line), w_info, magic_line_color_gui_t);
 		return true;
 	}
+	else if (comp == &bt_line_color_editor) {
+		if (line.is_bound()) {
+			destroy_win( magic_line_color_gui_t );
+			create_win(20, 20, new line_color_gui_t(line), w_info, magic_line_color_gui_t);
+		}
+	}
 	else if (comp == &sortedby) {
 		int tmp = sortedby.get_selection();
 		if (tmp >= 0 && tmp < sortedby.count_elements())
@@ -907,6 +913,12 @@ void schedule_list_gui_t::display(scr_coord pos)
 			}
 			else {
 				routebar_middle.set_line_style(gui_colored_route_bar_t::downward);
+			}
+			if ( line->get_line_color()==0 ) {
+				routebar_middle.set_color( player->get_player_color1() ); // uint8
+			}
+			else {
+				routebar_middle.set_color( line->get_line_color() ); // PIXVAL
 			}
 			lb_line_destination.buf().append(destination_halt->get_name());
 			lb_travel_distance.buf().printf("%s: %.1fkm ", translator::translate("travel_distance"), (float)(line->get_travel_distance()*world()->get_settings().get_meters_per_tile()/1000.0));
