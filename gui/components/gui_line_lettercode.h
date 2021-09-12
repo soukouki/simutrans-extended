@@ -29,11 +29,9 @@ public:
 	void set_linecode_l(const char *str);
 	void set_linecode_r(const char *str);
 
-	void set_line(linehandle_t line) {
-		style = line->get_line_lettercode_style();
-		set_linecode_l(line->get_linecode_l());
-		set_linecode_r(line->get_linecode_r());
-	}
+	void set_line(linehandle_t line);
+
+	void init_size(scr_coord_val width);
 
 	inline void clear_text()
 	{
