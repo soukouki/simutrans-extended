@@ -253,7 +253,8 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	cont_line_capacity_by_catg(linehandle_t(), convoihandle_t()),
 	convoy_infos(),
 	halt_entry_origin(-1), halt_entry_dest(-1),
-	routebar_middle(player_->get_player_color1(), gui_colored_route_bar_t::downward)
+	routebar_middle(player_->get_player_color1(), gui_colored_route_bar_t::downward),
+	lc_preview(0)
 {
 	selection = -1;
 	schedule_filter[0] = 0;
@@ -313,9 +314,13 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	tabs.add_listener(this);
 	add_component(&tabs);
 
+	lc_preview.set_visible(false);
+	lc_preview.set_pos(scr_coord(LINE_NAME_COLUMN_WIDTH+23, D_MARGIN_TOP+(D_EDIT_HEIGHT-LINEASCENT-6)/2));
+	add_component(&lc_preview);
+
 	// editable line name
 	inp_name.add_listener(this);
-	inp_name.set_pos(scr_coord(LINE_NAME_COLUMN_WIDTH+23, D_MARGIN_TOP));
+	inp_name.set_pos(scr_coord(LINE_NAME_COLUMN_WIDTH+23+lc_preview.get_size().w, D_MARGIN_TOP));
 	inp_name.set_visible(false);
 	add_component(&inp_name);
 
@@ -1034,7 +1039,7 @@ void schedule_list_gui_t::set_windowsize(scr_size size)
 	info_tabs.set_size( scr_size(rest_width+2, get_windowsize().h-info_tabs.get_pos().y-D_TITLEBAR_HEIGHT-1) );
 	scrolly_convois.set_size( scr_size(info_tabs.get_size().w+1, info_tabs.get_size().h - scrolly_convois.get_pos().y - D_H_SPACE-1) );
 	chart.set_size(scr_size(rest_width-68-D_MARGIN_RIGHT, SCL_HEIGHT-14-(button_rows*(D_BUTTON_HEIGHT+D_H_SPACE))));
-	inp_name.set_size(scr_size(rest_width - 31, D_EDIT_HEIGHT));
+	inp_name.set_size(scr_size(rest_width-31-lc_preview.get_size().w, D_EDIT_HEIGHT));
 
 	int y=SCL_HEIGHT-(button_rows*(D_BUTTON_HEIGHT+D_H_SPACE))+18;
 	for (int i=0; i<MAX_LINE_COST; i++) {
@@ -1082,6 +1087,10 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_haltestellen.set_visible(true);
 		scrolly_line_info.set_visible(new_line->get_schedule()->get_count()>0);
 		inp_name.set_visible(true);
+		lc_preview.set_line(new_line);
+		lc_preview.set_base_color(new_line->get_line_color_index()==254 ? color_idx_to_rgb(new_line->get_owner()->get_player_color1()+4) : new_line->get_line_color());
+		lc_preview.set_visible(new_line->get_line_color_index()!=255);
+		inp_name.set_pos(scr_coord(lc_preview.get_pos().x+lc_preview.is_visible()*(lc_preview.get_size().w+2), inp_name.get_pos().y));
 		livery_selector.set_visible(true);
 		bt_line_color_editor.set_visible(true);
 
@@ -1302,6 +1311,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		bt_line_color_editor.set_visible(false);
 		scrolly_line_info.set_visible(false);
 		inp_name.set_visible(false);
+		lc_preview.set_visible(false);
 		cont_times_history.set_visible(false);
 		cont_transport_density.set_visible(false);
 		cont_haltlist.set_visible(false);
