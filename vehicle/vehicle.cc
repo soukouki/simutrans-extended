@@ -3326,7 +3326,7 @@ void vehicle_t::display_after(int xpos, int ypos, bool is_global) const
 
 			extra_y += LOADINGBAR_HEIGHT;
 
-			// winting gauge
+			// waiting gauge
 			if (waiting_time_per_month) {
 				colored_width = waiting_time_per_month > 100 ? 100 : waiting_time_per_month;
 				display_ddd_box_clip_rgb(xpos - 2, ypos - LOADINGBAR_HEIGHT - WAITINGBAR_HEIGHT + extra_y, colored_width + 2, WAITINGBAR_HEIGHT, color_idx_to_rgb(MN_GREY2), color_idx_to_rgb(MN_GREY0));
