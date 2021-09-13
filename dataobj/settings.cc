@@ -1997,15 +1997,15 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 
 	env_t::straight_way_without_control = contents.get_int( "straight_way_without_control", env_t::straight_way_without_control ) != 0;
 
-	// try to read pedes_info and car_info. If neither is found, try to fallback to pedes_and_car_info. If not found, do not override the existing value.
-	int car_info = contents.get_int("car_info", -1);
-	int pedes_info = contents.get_int("pedes_info", -1);
-	if(car_info != -1 || pedes_info != -1){
-		if(car_info != -1) set_bits_to<uint8>(env_t::road_user_info, 0b1, car_info!=0);
-		if(pedes_info != -1) set_bits_to<uint8>(env_t::road_user_info, 0b10, (pedes_info!=0) << 1);
+	// try to read pedestrian_info and privatecar_info. If neither is found, try to fallback to pedes_and_car_info. If not found, do not override the existing value.
+	int privatecar_info = contents.get_int("privatecar_info", -1);
+	int pedestrian_info = contents.get_int("pedestrian_info", -1);
+	if(privatecar_info != -1 || pedestrian_info != -1){
+		if(privatecar_info != -1) set_bits_to<uint8>(env_t::road_user_info, 0b1, privatecar_info!=0);
+		if(pedestrian_info != -1) set_bits_to<uint8>(env_t::road_user_info, 0b10, (pedestrian_info!=0) << 1);
 	}
 	else {
-		//re-defines semantics of pedes_and_car_info=1 to car_info=1, pedes_info=0, previously was car_info=1, pedes_info=1
+		//re-defines semantics of pedes_and_car_info=1 to privatecar_info=1, pedestrian_info=0, previously was privatecar_info=1, pedestrian_info=1
 		env_t::road_user_info = (contents.get_int( "pedes_and_car_info", env_t::road_user_info )!=0);
 	}
 	env_t::tree_info      = contents.get_int( "tree_info",          env_t::tree_info      ) != 0;

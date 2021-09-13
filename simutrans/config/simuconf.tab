@@ -419,9 +419,9 @@ auto_connect_industries_and_attractions_by_road = 4
 
 ################################# Display settings  ################################
 # Use with care
-# Settings made here will override player preferences set via the Display settings UI
-# For that reason it is not recommended for pakset authors to override these.
-# Do not set those in simuconf unless you know exactly what you are doing!
+# These settings can and should be meade in the Display settings dialogue in game.
+# Settings made here will override player preferences set in the Display settings UI.
+# Do not set these parameters in simuconf unless you know exactly what you are doing!
 
 ### GUI settings ###
 # show graphs old style (right to left) or rather left to right (default)
@@ -451,8 +451,11 @@ auto_connect_industries_and_attractions_by_road = 4
 
 
 ### Tooltips/overlays ###
-#Station name, statistics and style of the label:
-# The following three atributes replace the show_names atribute.
+
+# show_names has been deprecated. Use show_station_names, show_station_statistics and station_label_style instead
+# show_names will be ignored if either show_station_names, show_station_statistics or station_label_style is defined within the same file.
+# Across different simuconfs, show_station_names, show_station_statistics and station_label_style can override show_names as well as the other way round. 
+#
 # Show station names?
 # (1=on, 0=off)
 #show_station_names = 1
@@ -478,13 +481,18 @@ auto_connect_industries_and_attractions_by_road = 4
 
 
 ### Vehicle display settings ###
+
+# pedes_and_car_info has been deprecated. Use pedestrian_info and car_info instead
+# pedes_and_car_info will be ignored if either pedestrian_info or car_info is defined within the same file.
+# Across different simuconfs, car_info and pedestrian_info can override pedes_and_car_info as well as the other way round. 
+#
 # Show info windows for private cars?
 # (1=on, 0=off)
-#car_info = 1
+#privatecar_info = 1
 
 # Show info windows for pedestrians?
 # (1=on, 0=off)
-#pedes_info = 0
+#pedestrian_info = 0
 
 # If a convoi which you are following enters a tunnel, what to do
 # 0=do not change view, 1=switch to underground mode and back, 2=switch to sliced underground mode
