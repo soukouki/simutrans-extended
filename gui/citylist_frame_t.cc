@@ -52,7 +52,9 @@ const char *citylist_frame_t::display_mode_text[citylist_stats_t::CITYLIST_MODES
 	"Visitor demand",
 	"pax_traffic",
 	"mail_traffic",
-	"goods_traffic"
+	"goods_traffic",
+	"Needed",
+	"Products"
 #ifdef DEBUG
 	, "DBG_demands"
 #endif // DEBUG

@@ -9,6 +9,7 @@
 #include "../simcity.h"
 #include "../simevent.h"
 #include "../simworld.h"
+#include "../simfab.h"
 
 #include "../display/viewport.h"
 #include "../utils/cbuffer_t.h"
@@ -229,6 +230,43 @@ void gui_city_stats_t::update_table()
 			}
 			end_table();
 			break;
+		case citylist_stats_t::goods_demand:
+		case citylist_stats_t::goods_product:
+			if (!city->get_city_factories().get_count()) {
+				new_component<gui_empty_t>();
+				break;
+			}
+			else {
+				slist_tpl<const goods_desc_t*> city_goods;
+				FOR(vector_tpl<fabrik_t*>, city_fab, city->get_city_factories()) {
+					FOR(array_tpl<ware_production_t>, const& goods, mode == citylist_stats_t::goods_demand ? city_fab->get_input(): city_fab->get_output()) {
+						city_goods.append_unique(goods.get_typ());
+					}
+				}
+
+				if (city_goods.get_count()) {
+					add_table(city_goods.get_count()+1,1);
+					{
+						new_component<gui_image_t>(skinverwaltung_t::input_output->get_image_id(citylist_stats_t::goods_demand ? 0:1), 0, ALIGN_CENTER_V, true);
+						FOR(slist_tpl<const goods_desc_t*>, &goods, city_goods) {
+							add_table(3,1);
+							{
+								new_component<gui_colorbox_t>(goods->get_color())->set_size(scr_size(LINESPACE/2+2, LINESPACE/2+2));;
+								new_component<gui_label_t>(goods->get_name());
+								new_component<gui_margin_t>(D_H_SPACE);
+							}
+							end_table();
+						}
+					}
+					end_table();
+				}
+				else {
+					new_component<gui_empty_t>();
+				}
+
+				city_goods.clear();
+			}
+			break;
 		default:
 			break;
 	}
@@ -303,6 +341,9 @@ void citylist_stats_t::draw( scr_coord pos)
 	update_label();
 	lb_name.set_fixed_width(name_width);
 	gui_aligned_container_t::draw(pos);
+	if (win_get_magic((ptrdiff_t)city)) {
+		display_blend_wh_rgb(pos.x + get_pos().x, pos.y+get_pos().y, get_size().w, get_size().h, SYSCOL_TEXT, 20);
+	}
 }
 
 

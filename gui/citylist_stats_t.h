@@ -85,6 +85,8 @@ public:
 		pax_traffic,
 		mail_traffic,
 		goods_traffic,
+		goods_demand,
+		goods_product,
 #ifdef DEBUG
 		dbg_demands,
 #endif // DEBUG
