@@ -134,7 +134,7 @@ road_user_t::road_user_t(grund_t* bd, uint16 random) :
  */
 void road_user_t::show_info()
 {
-	if(env_t::road_user_info) {
+	if(env_t::road_user_info&1) {
 		obj_t::show_info();
 	}
 }
