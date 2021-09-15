@@ -13,10 +13,10 @@
 
 
 pedestrian_info_t::pedestrian_info_t(const pedestrian_t* obj) :
-	base_infowin_t(translator::translate(obj->get_name()), NULL),
+	gui_frame_t(translator::translate(obj->get_name()), NULL),
 	view(obj, scr_size(max(64, get_base_tile_raster_width()), max(56, (get_base_tile_raster_width() * 7) / 8)))
 {
-	remove_all();
+	set_table_layout(1, 0);
 	add_component(&view);
 	if (char const* const maker = obj->get_desc()->get_copyright()) {
 		add_table(2, 2)->set_spacing(scr_size(0, 0)); {
@@ -31,7 +31,7 @@ pedestrian_info_t::pedestrian_info_t(const pedestrian_t* obj) :
 
 void pedestrian_info_t::draw(scr_coord pos, scr_size size)
 {
-	base_infowin_t::draw(pos, size);
+	gui_frame_t::draw(pos, size);
 	pos += scr_size(D_V_SPACE + D_MARGIN_LEFT + 2, D_TITLEBAR_HEIGHT + D_MARGIN_TOP + 2);
 	display_proportional_clip_rgb(pos.x, pos.y, view.get_obj()->get_pos().get_2d().get_fullstr(), ALIGN_LEFT, color_idx_to_rgb(COL_WHITE), true);
 }

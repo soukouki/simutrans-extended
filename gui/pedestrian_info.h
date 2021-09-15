@@ -7,15 +7,14 @@
 #define GUI_PEDESTRIAN_INFO_H
 
 
-//#include "../obj/simobj.h"
-#include "base_info.h"
+#include "gui_frame.h"
 #include "components/gui_obj_view_t.h"
 #include "../vehicle/pedestrian.h"
 
 /**
  * An adapter class to display info windows for things (objects)
  */
-class pedestrian_info_t : public base_infowin_t
+class pedestrian_info_t : public gui_frame_t
 {
 	obj_view_t view;
 public:
