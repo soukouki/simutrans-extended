@@ -4510,7 +4510,7 @@ bool stadt_t::renovate_city_building(gebaeude_t* gb, bool map_generation)
 	// made a major error here and didn't test cases with pre-version 14 paksets
 	// i never discovered the issue until now - Catasteroid
 	const int housing_wanted = get_homeless();
-	
+
 	int industrial_suitability, commercial_suitability, residential_suitability;
 	bewerte_res_com_ind(k, industrial_suitability, commercial_suitability, residential_suitability );
 
