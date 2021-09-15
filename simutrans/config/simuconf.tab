@@ -447,7 +447,7 @@ auto_connect_industries_and_attractions_by_road = 4
 # (0=no, 1=yes, 2>=show day in japan format=2, us format=3, german=4, japanese no season=5, us no season=6, german no season = 7, hours/minutes scale = 8, japan hours/minutes scale = 9)
 # This is most useful, if you use longer months than the default length (see below)
 # The hours/minutes scale shows the time in hours/minutes as used for determining journey times and other short times. It is the recommended setting. 
-#show_month = 8
+show_month = 8
 
 
 ### Tooltips/overlays ###
