@@ -485,6 +485,7 @@ SOURCES += gui/vehiclelist_frame.cc
 SOURCES += gui/obj_info.cc
 SOURCES += gui/pedestrian_info.cc
 SOURCES += gui/vehicle_class_manager.cc
+SOURCES += gui/water_info.cc
 SOURCES += gui/way_info.cc
 SOURCES += gui/welt.cc
 SOURCES += io/classify_file.cc

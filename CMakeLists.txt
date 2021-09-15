@@ -320,6 +320,7 @@ add_executable(simutrans-extended
 	gui/trafficlight_info.cc
 	gui/vehiclelist_frame.cc
 	gui/vehicle_class_manager.cc
+	gui/water_info.cc
 	gui/way_info.cc
 	gui/welt.cc
 	io/rdwr/bzip2_file_rdwr_stream.cc
