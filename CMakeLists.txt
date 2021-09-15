@@ -295,7 +295,6 @@ add_executable(simutrans-extended
 	gui/overtaking_mode.cc
 	gui/pakselector.cc
 	gui/password_frame.cc
-	gui/pedestrian_info.cc
 	gui/player_frame_t.cc
 	gui/privatesign_info.cc
 	gui/replace_frame.cc
@@ -311,6 +310,7 @@ add_executable(simutrans-extended
 	gui/signal_spacing.cc
 	gui/signalboxlist_frame.cc
 	gui/simwin.cc
+	gui/slim_obj_info.cc
 	gui/sound_frame.cc
 	gui/sprachen.cc
 	gui/station_building_select.cc

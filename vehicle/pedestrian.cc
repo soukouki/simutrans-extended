@@ -19,7 +19,7 @@
 #include "../descriptor/pedestrian_desc.h"
 
 #include "../gui/simwin.h"
-#include "../gui/pedestrian_info.h"
+#include "../gui/slim_obj_info.h"
 
 #include <cstdio>
 
@@ -141,7 +141,7 @@ image_id pedestrian_t::get_image() const
 void pedestrian_t::show_info()
 {
 	if (env_t::road_user_info & 2) {
-		create_win(new pedestrian_info_t(this), w_info, (ptrdiff_t)this);
+		create_win(new slim_obj_info_t(this), w_info, (ptrdiff_t)this);
 	}
 }
 

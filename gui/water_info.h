@@ -19,15 +19,13 @@ class water_info_t : public gui_frame_t
 {
 	koord3d k;
 	gui_image_t img_intown;
+	gui_label_buf_t label;
 	location_view_t view;
 
 	bool inside_city = false;
 	char old_name[256]; ///< Name and old name of the city.
 
 	void update();
-
-protected:
-	gui_label_buf_t label;
 
 public:
 	water_info_t(const char *name, const koord3d &pos);
