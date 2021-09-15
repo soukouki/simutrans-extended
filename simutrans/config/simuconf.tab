@@ -450,7 +450,7 @@ auto_connect_industries_and_attractions_by_road = 4
 show_month = 8
 
 
-### Tooltips/overlays ###
+################################# Tooltips/overlays #################################
 
 # show_names has been deprecated. Use show_station_names, show_station_statistics and station_label_style instead
 # show_names will be ignored if either show_station_names, show_station_statistics or station_label_style is defined within the same file.
@@ -480,7 +480,7 @@ show_month = 8
 #show_vehicle_states = 1
 
 
-### Vehicle display settings ###
+################################# Vehicle display settings #################################
 
 # pedes_and_car_info has been deprecated. Use pedestrian_info and car_info instead
 # pedes_and_car_info will be ignored if either pedestrian_info or car_info is defined within the same file.
