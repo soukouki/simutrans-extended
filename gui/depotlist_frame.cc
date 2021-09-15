@@ -381,8 +381,6 @@ bool depotlist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 	}
 	else {
 		for (int i = 1; i < TT_MAX_VEH; i++) {
-			const waytype_t wt = finance_t::translate_tt_to_waytype((transport_type)i);
-
 			if (comp == filter_buttons + i) {
 				filter_buttons[0].pressed = false;
 				filter_buttons[i].pressed ^= 1;

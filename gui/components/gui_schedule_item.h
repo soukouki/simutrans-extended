@@ -31,7 +31,7 @@ public:
 
 	gui_colored_route_bar_t(uint8 p_color_idx, uint8 style_ = line_style::solid);
 
-	void draw(scr_coord offset);
+	void draw(scr_coord offset) OVERRIDE;
 
 	void set_line_style(uint8 style_) { style = style_; };
 	void set_color(uint8 color_idx) { p_color_idx = color_idx; };
@@ -60,7 +60,7 @@ public:
 
 	gui_schedule_entry_number_t(uint8 number, uint8 p_color_idx = 8, uint8 style_ = number_style::halt, scr_size size = scr_size(D_ENTRY_NO_WIDTH, D_ENTRY_NO_HEIGHT));
 
-	void draw(scr_coord offset);
+	void draw(scr_coord offset) OVERRIDE;
 
 	void init(uint8 number_, uint8 color_idx, uint8 style_ = number_style::halt) { number = number_+1; p_color_idx = color_idx; style = style_; };
 
@@ -79,7 +79,7 @@ public:
 
 	gui_convoy_arrow_t(PIXVAL color=COL_SAFETY, scr_size size = scr_size(LINESPACE*0.7, LINESPACE));
 
-	void draw(scr_coord offset);
+	void draw(scr_coord offset) OVERRIDE;
 
 	scr_size get_min_size() const OVERRIDE { return size; }
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }

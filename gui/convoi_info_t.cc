@@ -117,10 +117,10 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv) :
 	text(&freight_info),
 	view(scr_size(max(64, get_base_tile_raster_width()), max(56, (get_base_tile_raster_width() * 7) / 8))),
 	loading_bar(cnv),
-	scroll_freight(&container_freight, true, true),
+	next_halt_number(-1),
 	cont_times_history(linehandle_t(), cnv),
-	scroll_times_history(&cont_times_history, true),
-	next_halt_number(-1)
+	scroll_freight(&container_freight, true, true),
+	scroll_times_history(&cont_times_history, true)
 {
 	if (cnv.is_bound()) {
 		init(cnv);
