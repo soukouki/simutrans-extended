@@ -55,6 +55,8 @@ enum {
 	IDBTN_CLASSES_WAITING_BAR,
 	IDBTN_SHOW_DEPOT_NAME,
 	IDBTN_SHOW_FACTORY_STORAGE,
+	IDBTN_SHOW_PRIVATECAR_INFO,
+	IDBTN_SHOW_PEDESTRIAN_INFO,
 	COLORS_MAX_BUTTONS,
 };
 
@@ -323,8 +325,8 @@ map_settings_t::map_settings_t()
 		inp_underground_level.add_listener(this);
 		add_component(&inp_underground_level);
 
-		// Toggle simple drawing for debugging
 #ifdef DEBUG
+		// Toggle simple drawing for debugging
 		new_component<gui_margin_t>(LINESPACE/2);
 		buttons[IDBTN_SIMPLE_DRAWING].init(button_t::square_state, "Simple drawing");
 		add_component(buttons + IDBTN_SIMPLE_DRAWING, 2);
@@ -377,6 +379,25 @@ map_settings_t::map_settings_t()
 		add_component(&scrollspeed);
 	}
 	end_table();
+
+	// Set date format
+	new_component<gui_label_t>("Date format");
+	add_table(2,0);
+	{
+		new_component<gui_margin_t>(LINESPACE/2);
+		time_setting.set_focusable( false );
+		uint8 old_show_month = env_t::show_month;
+		sint32 current_tick = world()->get_ticks();
+		for( env_t::show_month = 0; env_t::show_month<10; env_t::show_month++ ) {
+			tstrncpy( time_str[env_t::show_month], tick_to_string( current_tick, true ), 64 );
+			time_setting.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( time_str[env_t::show_month], SYSCOL_TEXT );
+		}
+		env_t::show_month = old_show_month;
+		time_setting.set_selection( old_show_month );
+		add_component( &time_setting );
+		time_setting.add_listener( this );
+	}
+	end_table();
 	new_component<gui_divider_t>();
 
 	new_component<gui_label_t>("transparencies");
@@ -424,11 +445,11 @@ bool map_settings_t::action_triggered( gui_action_creator_t *comp, value_t v )
 		env_t::daynight_level = (sint8)v.i;
 	}
 	// Scroll speed edit
-	if( &scrollspeed == comp ) {
+	else if( &scrollspeed == comp ) {
 		env_t::scroll_multi = (sint16)(buttons[ IDBTN_SCROLL_INVERSE ].pressed ? -v.i : v.i);
 	}
 	// underground slice edit
-	if( comp == &inp_underground_level ) {
+	else if( comp == &inp_underground_level ) {
 		if( grund_t::underground_mode == grund_t::ugm_level ) {
 			grund_t::underground_level = inp_underground_level.get_value();
 
@@ -436,6 +457,11 @@ bool map_settings_t::action_triggered( gui_action_creator_t *comp, value_t v )
 			world()->update_underground();
 		}
 	}
+	else if( comp == &time_setting ) {
+		env_t::show_month = v.i;
+		return true;
+	}
+
 	// Smart hide objects edit
 	if( &cursor_hide_range == comp ) {
 		env_t::cursor_hide_range = cursor_hide_range.get_value();
@@ -705,6 +731,18 @@ traffic_settings_t::traffic_settings_t()
 	traffic_density.add_listener(this);
 	add_component(&traffic_density);
 
+	// Show private car info
+	buttons[IDBTN_SHOW_PRIVATECAR_INFO].init(button_t::square_state, "Show the private car information window");
+	buttons[IDBTN_SHOW_PRIVATECAR_INFO].set_tooltip("can open a dedicated window by clicking on a private car.");
+	buttons[IDBTN_SHOW_PRIVATECAR_INFO].pressed = env_t::road_user_info & 1;
+	add_component(buttons + IDBTN_SHOW_PRIVATECAR_INFO, 2);
+
+	// Show pedestrian info
+	buttons[IDBTN_SHOW_PEDESTRIAN_INFO].init(button_t::square_state, "Show the pedestrian information window");
+	buttons[IDBTN_SHOW_PEDESTRIAN_INFO].set_tooltip("can open a dedicated window by clicking on a pedestrian.");
+	buttons[IDBTN_SHOW_PEDESTRIAN_INFO].pressed = env_t::road_user_info & 2;
+	add_component(buttons + IDBTN_SHOW_PEDESTRIAN_INFO, 2);
+
 	// Convoy follow mode
 	new_component<gui_label_t>("Convoi following mode")->set_tooltip(translator::translate("Select the behavior of the camera when the following convoy enters the tunnel."));
 
@@ -833,6 +871,14 @@ bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t )
 		if( !env_t::networkmode || welt->get_active_player_nr() == 1 ) {
 			welt->set_tool( tool_t::simple_tool[ TOOL_TOOGLE_PEDESTRIANS & 0xFFF ], welt->get_active_player() );
 		}
+		break;
+	case IDBTN_SHOW_PRIVATECAR_INFO:
+		env_t::road_user_info = env_t::road_user_info ^ 1;
+		buttons[IDBTN_SHOW_PRIVATECAR_INFO].pressed = env_t::road_user_info&1;
+		break;
+	case IDBTN_SHOW_PEDESTRIAN_INFO:
+		env_t::road_user_info = env_t::road_user_info ^ 2;
+		buttons[IDBTN_SHOW_PEDESTRIAN_INFO].pressed = env_t::road_user_info&2;
 		break;
 	case IDBTN_HIDE_TREES:
 		env_t::hide_trees = !env_t::hide_trees;

@@ -5281,7 +5281,6 @@ void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val 
 
 void display_right_pointer_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const PIXVAL colval, const bool dirty)
 {
-	uint8 width = height - height % 2;
 	for (uint16 i = 0; i < height; i++)
 	{
 		uint8 xoff = (height/2 - abs(i-height/2))/2;

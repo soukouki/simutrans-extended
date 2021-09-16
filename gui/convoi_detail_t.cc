@@ -248,8 +248,8 @@ void gui_acceleration_dist_label_t::draw(scr_coord offset)
 // main class
 convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	gui_frame_t(""),
-	formation(cnv),
 	veh_info(cnv),
+	formation(cnv),
 	payload_info(cnv),
 	maintenance(cnv),
 	scrolly_formation(&formation),

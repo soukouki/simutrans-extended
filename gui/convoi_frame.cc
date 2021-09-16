@@ -404,8 +404,6 @@ void convoi_frame_t::draw(scr_coord pos, scr_size size)
 
 void convoi_frame_t::rdwr(loadsave_t *file)
 {
-	sint32 cont_xoff = scrolly->get_scroll_x();
-	sint32 cont_yoff = scrolly->get_scroll_y();
 	scr_size size = get_windowsize();
 	uint8 player_nr = owner->get_player_nr();
 

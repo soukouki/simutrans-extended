@@ -1719,8 +1719,6 @@ void weg_t::delete_all_routes_from_here(bool reading_set)
 //never called
 void weg_t::delete_route_to(koord destination, bool reading_set)
 {
-	const uint32 routes_index = reading_set ? private_car_routes_currently_reading_element : get_private_car_routes_currently_writing_element();
-
 	koord3d next_tile = get_pos();
 	koord3d this_tile = next_tile;
 	while (next_tile != koord3d::invalid && next_tile != koord3d(0, 0, 0))
