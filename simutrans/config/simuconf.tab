@@ -431,6 +431,12 @@ auto_connect_industries_and_attractions_by_road = 4
 # This can be only set in the user defined simuconf.tab
 #fontname=C:\Windows\fonts\arial.ttf
 
+# if run on a mobile device, setting hide_keyboard=1 will only show the keyboard
+# when there is text to input in a dialoge. Other than that textinput will not
+# be possible (no keyboard short cuts).
+# Currently only supported with SDL2
+hide_keyboard = 0
+
 # Position of the main menu bar (0=top, 1=left, 2=bottom, 3=right)
 #menubar_position = 0
 
@@ -439,6 +445,15 @@ auto_connect_industries_and_attractions_by_road = 4
 
 
 ### Map view ###
+# Draw the earth slope to mark the border (default 1 on)
+draw_earth_border = 1
+
+# Tile the outside with the ground.ouside.pak (default 0 off)
+draw_outside_tile = 0
+
+# Color of background default: COL_GREY2 (210)
+#background_color = 210
+
 # If set to 1 (default) the numpad will always move the map.
 # if set to 0, it will always produce numbers
 #numpad_always_moves_map = 1
@@ -479,6 +494,12 @@ show_month = 8
 # loading and waiting at signals too
 #show_vehicle_states = 1
 
+# If and where to display a compass
+# 0=off (default for main screen)
+# 1=top, 2=vertical centre, 3=bottom, 4=left, 8=horizontal centre, 12=right
+# default for minimap is 1+12=13
+compass_screen_position = 0
+compass_map_position = 13
 
 ################################# Vehicle display settings #################################
 
@@ -577,23 +598,6 @@ show_delete_buttons = 1
 
 # Should stations get numbered names? (1=yes, 0=no)
 #numbered_stations = 0
-
-
-# Color of background default: COL_GREY2 (210)
-#background_color = 210
-
-# if run on a mobile device, setting hide_keyboard=1 will only show the keyboard
-# when there is text to input in a dialoge. Other than that textinput will not
-# be possible (no keyboard short cuts).
-# Currently only supported with SDL2
-hide_keyboard = 0
-
-# If and where to display a compass
-# 0=off (default for main screen)
-# 1=top, 2=vertical centre, 3=bottom, 4=left, 8=horizontal centre, 12=right
-# default for minimap is 1+12=13
-compass_screen_position = 0
-compass_map_position = 13
 
 # Should either account (default) or net wealth be shown below the screen?
 player_finance_display_account = 1
