@@ -55,7 +55,7 @@ class schedule_t
 	}
 
 protected:
-	schedule_t() : editing_finished(false), bidirectional(false), mirrored(false), same_spacing_shift(true), current_stop(0), spacing(0) {}
+	schedule_t() : editing_finished(false), current_stop(0), bidirectional(false), mirrored(false), same_spacing_shift(true), spacing(0) {}
 
 public:
 	enum schedule_type {

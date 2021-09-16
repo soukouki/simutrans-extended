@@ -18,6 +18,9 @@
 #include "../utils/cbuffer_t.h"
 #include "../descriptor/pedestrian_desc.h"
 
+#include "../gui/simwin.h"
+#include "../gui/pedestrian_info.h"
+
 #include <cstdio>
 
 
@@ -131,6 +134,14 @@ image_id pedestrian_t::get_image() const
 	}
 	else {
 		return image;
+	}
+}
+
+
+void pedestrian_t::show_info()
+{
+	if (env_t::road_user_info & 2) {
+		create_win(new pedestrian_info_t(this), w_info, (ptrdiff_t)this);
 	}
 }
 
@@ -371,16 +382,5 @@ void pedestrian_t::check_timeline_pedestrians()
 		{
 			current_pedestrians.append(fd, fd->get_distribution_weight());
 		}
-	}
-}
-
-
-void pedestrian_t::info(cbuffer_t & buf) const
-{
-	char const* const owner = translator::translate("Kein Besitzer\n");
-	buf.append(owner);
-
-	if (char const* const maker = get_desc()->get_copyright()) {
-		buf.printf(translator::translate("Constructed by %s"), maker);
 	}
 }

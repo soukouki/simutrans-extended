@@ -7,7 +7,7 @@
 #define GUI_WAY_INFO_H
 
 
-#include "base_info.h"
+#include "gui_frame.h"
 #include "../boden/grund.h"
 #include "components/gui_image.h"
 #include "components/gui_label.h"

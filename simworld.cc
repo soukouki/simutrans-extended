@@ -6958,7 +6958,6 @@ sint32 karte_t::generate_passengers_or_mail(const goods_desc_t * wtyp)
 
 				uint32 best_start_halt = 0;
 				uint32 best_journey_time_including_crowded_halts = UINT32_MAX_VALUE;
-				uint32 current_stop_transfer_time = 0;
 
 				sint32 i = 0;
 
@@ -9412,7 +9411,6 @@ void karte_t::load(loadsave_t *file)
 		bool read_pak_simuconf = env_t::default_settings.get_pak_overrides_savegame_settings();
 		bool read_userdir_simuconf = env_t::default_settings.get_userdir_overrides_savegame_settings();
 		tabfile_t simuconf;
-		sint16 idummy;
 		string dummy;
 
 		if (read_progdir_simuconf) {

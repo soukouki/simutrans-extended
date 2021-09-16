@@ -322,7 +322,7 @@ public:
 	dialog_list_halt_t() : tool_t(DIALOG_LIST_HALT | DIALOG_TOOL) {}
 	char const* get_tooltip(player_t const*) const OVERRIDE{ return translator::translate("hl_title"); }
 	bool is_selected() const OVERRIDE{ return win_get_magic(magic_halt_list); }
-	bool init(player_t* player) OVERRIDE{
+	bool init(player_t* /*player*/) OVERRIDE{
 		create_win(new halt_list_frame_t(), w_info, magic_halt_list);
 		return false;
 	}

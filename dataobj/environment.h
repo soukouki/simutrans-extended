@@ -166,7 +166,7 @@ public:
 	static bool numpad_always_moves_map;
 
 	/// open info windows for pedestrian and private cars
-	static bool road_user_info;
+	static uint8 road_user_info;
 
 	/// open info windows for trees
 	static bool tree_info;

@@ -2005,6 +2005,7 @@
     <ClCompile Include="gui\onewaysign_info.cc" />
     <ClCompile Include="gui\overtaking_mode.cc" />
     <ClCompile Include="gui\obj_info.cc" />
+    <ClCompile Include="gui\pedestrian_info.cc" />
     <ClCompile Include="gui\privatesign_info.cc" />
     <ClCompile Include="gui\scenario_info.cc" />
     <ClCompile Include="gui\server_frame.cc" />
@@ -2576,6 +2577,7 @@
     <ClInclude Include="gui\onewaysign_info.h" />
     <ClInclude Include="gui\overtaking_mode.h" />
     <ClInclude Include="gui\obj_info.h" />
+    <ClInclude Include="gui\pedestrian_info.h" />
     <ClInclude Include="gui\privatesign_info.h" />
     <ClInclude Include="gui\scenario_info.h" />
     <ClInclude Include="gui\server_frame.h" />
