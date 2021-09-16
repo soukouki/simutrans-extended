@@ -570,18 +570,15 @@ void settings_general_stats_t::init(settings_t const* const sets)
 	INIT_NUM( "fast_forward", env_t::max_acceleration, 1, 1000, gui_numberinput_t::AUTOLINEAR, false );
 	SEPERATOR
 	INIT_BOOL( "numbered_stations", sets->get_numbered_stations() );
-	INIT_NUM( "show_names", env_t::show_names, 0, 7, gui_numberinput_t::AUTOLINEAR, true );
 	SEPERATOR
 	INIT_NUM( "bits_per_month", sets->get_bits_per_month(), 16, 48, gui_numberinput_t::AUTOLINEAR, false );
 	INIT_NUM( "use_timeline", sets->get_use_timeline(), 0, 3, gui_numberinput_t::AUTOLINEAR, false );
 	INIT_NUM_NEW( "starting_year", sets->get_starting_year(), 0, 2999, gui_numberinput_t::AUTOLINEAR, false );
 	INIT_NUM_NEW( "starting_month", sets->get_starting_month(), 0, 11, gui_numberinput_t::AUTOLINEAR, false );
-	INIT_NUM( "show_month", env_t::show_month, 0, 9, gui_numberinput_t::AUTOLINEAR, true );
 	SEPERATOR
 	INIT_NUM( "random_grounds_probability", env_t::ground_object_probability, 0, 0x7FFFFFFFul, gui_numberinput_t::POWER2, false );
 	INIT_NUM( "random_wildlife_probability", env_t::moving_object_probability, 0, 0x7FFFFFFFul, gui_numberinput_t::POWER2, false );
 	SEPERATOR
-	INIT_NUM(  "pedes_and_car_info", env_t::road_user_info, 0, 3, gui_numberinput_t::AUTOLINEAR, false);
 	INIT_BOOL( "tree_info", env_t::tree_info );
 	INIT_BOOL( "ground_info", env_t::ground_info );
 	INIT_BOOL( "townhall_info", env_t::townhall_info );
@@ -663,18 +660,15 @@ void settings_general_stats_t::read(settings_t* const sets)
 	READ_NUM_VALUE( env_t::max_acceleration );
 
 	READ_BOOL_VALUE( sets->numbered_stations );
-	READ_NUM_VALUE( env_t::show_names );
 
 	READ_NUM_VALUE( sets->bits_per_month );
 	READ_NUM_VALUE( sets->use_timeline );
 	READ_NUM_VALUE_NEW( sets->starting_year );
 	READ_NUM_VALUE_NEW( sets->starting_month );
-	READ_NUM_VALUE( env_t::show_month );
 
 	READ_NUM_VALUE( env_t::ground_object_probability );
 	READ_NUM_VALUE( env_t::moving_object_probability );
 
-	READ_NUM_VALUE( env_t::road_user_info );
 	READ_BOOL_VALUE( env_t::tree_info );
 	READ_BOOL_VALUE( env_t::ground_info );
 	READ_BOOL_VALUE( env_t::townhall_info );
@@ -707,7 +701,6 @@ void settings_display_stats_t::init(settings_t const* const)
 	INIT_NUM( "simple_drawing_tile_size",env_t::simple_drawing_default, 2, 256, gui_numberinput_t::POWER2, false );
 	INIT_BOOL( "simple_drawing_fast_forward",env_t::simple_drawing_fast_forward );
 	INIT_NUM( "water_animation_ms", env_t::water_animation, 0, 1000, 25, false );
-	INIT_NUM( "follow_convoi_underground", env_t::follow_convoi_underground, 0, 2, 1, true );
 	SEPERATOR
 	INIT_BOOL( "window_buttons_right", env_t::window_buttons_right );
 	INIT_BOOL( "window_frame_active", env_t::window_frame_active );
@@ -723,7 +716,6 @@ void settings_display_stats_t::init(settings_t const* const)
 	INIT_NUM( "tooltip_duration", env_t::tooltip_duration, 0, 30000, gui_numberinput_t::AUTOLINEAR, 0 );
 	SEPERATOR
 	INIT_NUM( "cursor_overlay_color", env_t::cursor_overlay_color_rgb, 0, 16777215, gui_numberinput_t::AUTOLINEAR, 0 );
-	INIT_BOOL( "left_to_right_graphs", env_t::left_to_right_graphs );
 	SEPERATOR
 	INIT_BOOL( "player_finance_display_account", env_t::player_finance_display_account );
 
@@ -739,7 +731,6 @@ void settings_display_stats_t::read(settings_t* const)
 	READ_NUM_VALUE( env_t::simple_drawing_default );
 	READ_BOOL_VALUE( env_t::simple_drawing_fast_forward );
 	READ_NUM_VALUE( env_t::water_animation );
-	READ_NUM_VALUE( env_t::follow_convoi_underground );
 
 	READ_BOOL_VALUE( env_t::window_buttons_right );
 	READ_BOOL_VALUE( env_t::window_frame_active );
@@ -755,7 +746,6 @@ void settings_display_stats_t::read(settings_t* const)
 	READ_NUM_VALUE( env_t::tooltip_duration );
 
 	READ_NUM_VALUE( env_t::cursor_overlay_color_rgb );
-	READ_BOOL_VALUE( env_t::left_to_right_graphs );
 
 	READ_BOOL_VALUE( env_t::player_finance_display_account );
 }

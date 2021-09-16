@@ -240,7 +240,7 @@ void env_t::init()
 
 	follow_convoi_underground = 2;  // slice through map
 
-	road_user_info = 0;
+	road_user_info = 1;
 	tree_info = true;
 	ground_info = false;
 	townhall_info = false;
@@ -261,7 +261,7 @@ void env_t::init()
 	savegame_ex_version_str = EXTENDED_VER_NR;
 	savegame_ex_revision_str = EXTENDED_REVISION_NR;
 
-	show_month = DATE_FMT_US;
+	show_month = DATE_FMT_INTERNAL_MINUTE;
 
 	intercity_road_length = 512;
 

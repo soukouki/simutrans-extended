@@ -86,8 +86,8 @@ void gui_way_detail_info_t::draw(scr_coord offset)
 		add_table(5,0);
 		{
 			const slope_t::type hang = gr ? gr->get_weg_hang() : slope_t::flat;
-			const uint8 slope_height = hang == slope_t::flat ? 0:(hang & 7) ? 1 : 2;
 			const sint32 potential_way_speed = !hang ? way->get_desc()->get_topspeed() : hang == 1 ? way->get_desc()->get_topspeed_gradient_1() : way->get_desc()->get_topspeed_gradient_2();
+
 			if( bridge ) {
 				new_component<gui_margin_t>(10);
 				new_component<gui_label_t>(bridge->get_desc()->get_name(), bridge->get_owner() ? color_idx_to_rgb(bridge->get_owner()->get_player_color1() + env_t::gui_player_color_dark) : color_idx_to_rgb(COL_ORANGE));
