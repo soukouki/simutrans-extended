@@ -315,7 +315,11 @@ void pedestrian_t::hop(grund_t *gr)
 	// all possible directions
 	ribi_t::ribi ribi = weg->get_ribi_unmasked() & (~reverse_direction);
 	// randomized offset
-	const uint8 offset = (ribi > 0 && ribi_t::is_single(ribi)) ? 0 : simrand(4, "void pedestrian_t::hop(grund_t *gr)");
+	const bool randomise_offset = !(ribi > 0 && ribi_t::is_single(ribi));
+	const uint8 offset = randomise_offset ? simrand(4, "void pedestrian_t::hop(grund_t *gr)") : 0;
+	if(randomise_offset) {
+		welt->add_to_debug_sums(8,1);
+	}
 
 	ribi_t::ribi new_direction = ribi_t::none;
 	for(uint r = 0; r < 4; r++) {

@@ -4901,8 +4901,8 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 	debug_sums[5] = 0; // Passengers/mail generated this step
 	debug_sums[6] = 0; // Transferring cargoes before passenger generation
 	debug_sums[7] = 0; // Transferring cargoes after passenger generation
-	debug_sums[8] = 0; // Sync objects before sync list step
-	debug_sums[9] = 0; // Sync objects after sync list step
+	debug_sums[8] = 0; // Number of randomised pedestrian hops this sync_step
+	debug_sums[9] = 0; // Number of randomised private car directions this sync_step
 
 	set_random_mode( SYNC_STEP_RANDOM );
 	haltestelle_t::pedestrian_limit = 0;
@@ -4935,9 +4935,7 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 
 		clear_random_mode( INTERACTIVE_RANDOM );
 
-		debug_sums[8] = sync.list.get_count();
 		sync.sync_step( delta_t );
-		debug_sums[9] = sync.list.get_count();
 
 		rands[4] = get_random_seed();
 
