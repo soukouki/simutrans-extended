@@ -771,6 +771,11 @@ void simline_t::recalc_status()
 				// obsolete has priority over upgradeable (only for color)
 				state_color = COL_OBSOLETE;
 			}
+
+			if (i->get_state() == convoi_t::NO_ROUTE || i->get_state() == convoi_t::NO_ROUTE_TOO_COMPLEX || i->get_state() == convoi_t::OUT_OF_RANGE)
+			{
+				state |= line_has_stuck_convoy;
+			}
 		}
 	}
 

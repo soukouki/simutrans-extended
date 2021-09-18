@@ -97,3 +97,39 @@ bool line_scrollitem_t::compare(const gui_component_t *aa, const gui_component_t
 	// otherwise: sort by name
 	return strcmp(atxt, btxt)<0;
 }
+
+
+void line_scrollitem_t::draw(scr_coord pos)
+{
+	pos += get_pos();
+	scr_coord_val left = D_H_SPACE*2;
+	if (selected) {
+		// selected element
+		display_fillbox_wh_clip_rgb(pos.x + D_H_SPACE / 2, pos.y - 1, get_size().w - D_H_SPACE, get_size().h + 1, (focused ? SYSCOL_LIST_BACKGROUND_SELECTED_F : SYSCOL_LIST_BACKGROUND_SELECTED_NF), true);
+		left += display_proportional_clip_rgb(pos.x + D_H_SPACE, pos.y, get_text(), ALIGN_LEFT, (focused ? SYSCOL_LIST_TEXT_SELECTED_FOCUS : SYSCOL_LIST_TEXT_SELECTED_NOFOCUS), true);
+	}
+	else {
+		// normal text
+		left += display_proportional_clip_rgb(pos.x + D_H_SPACE, pos.y, get_text(), ALIGN_LEFT, get_color(), true);
+	}
+
+	if (line->get_state() & simline_t::line_has_stuck_convoy && skinverwaltung_t::pax_evaluation_icons) {
+		left = max(left,get_size().w - 56);
+		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(4), pos.x + left, pos.y + FIXED_SYMBOL_YOFF, 0, false, false);
+		left += 14;
+	}
+	if (line->get_state() & simline_t::line_overcrowded && skinverwaltung_t::pax_evaluation_icons) {
+		left = max(left,get_size().w - 42);
+		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(1), pos.x + left, pos.y + FIXED_SYMBOL_YOFF, 0, false, false);
+		left += 14;
+	}
+	if (line->get_state() & simline_t::line_missing_scheduled_slots && skinverwaltung_t::missing_scheduled_slot) {
+		left = max(left,get_size().w - 28);
+		display_color_img(skinverwaltung_t::missing_scheduled_slot->get_image_id(0), pos.x + left, pos.y + FIXED_SYMBOL_YOFF, 0, false, false);
+		left += 14;
+	}
+	if (line->get_state() & simline_t::line_has_upgradeable_vehicles && skinverwaltung_t::upgradable) {
+		left = max(left,get_size().w - 14);
+		display_color_img(skinverwaltung_t::upgradable->get_image_id(1), pos.x + left, pos.y + FIXED_SYMBOL_YOFF, 0, false, false);
+	}
+}

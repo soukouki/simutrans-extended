@@ -66,7 +66,7 @@ public:
 
 	enum line_fireight_group { all_ftype = 0, all_pas = 1, all_mail = 2, all_freight = 3 };
 
-	enum states { line_normal_state = 0, line_no_convoys = 1, line_loss_making = 2, line_nothing_moved = 4, line_overcrowded = 8, line_missing_scheduled_slots = 16, line_has_obsolete_vehicles = 32, line_has_upgradeable_vehicles = 64	};
+	enum states { line_normal_state = 0, line_no_convoys = 1, line_loss_making = 2, line_nothing_moved = 4, line_overcrowded = 8, line_missing_scheduled_slots = 16, line_has_obsolete_vehicles = 32, line_has_upgradeable_vehicles = 64, line_has_stuck_convoy = 128	};
 
 	static const uint linetype_to_stationtype[simline_t::MAX_LINE_TYPE];
 
@@ -193,6 +193,7 @@ public:
 	PIXVAL get_state_color() const { return state_color; }
 	// This has multiple flags
 	uint8 get_state() const { return state; }
+	void set_state(uint8 s) { state |= s; }
 
 	/**
 	 * return the schedule of the line

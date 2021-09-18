@@ -38,6 +38,8 @@ public:
 	bool is_valid() const OVERRIDE { return line.is_bound(); } //  can be used to indicate invalid entries
 	bool is_editable() const OVERRIDE { return true; }
 	static bool compare(const gui_component_t *a, const gui_component_t *b );
+
+	void draw(scr_coord pos) OVERRIDE;
 };
 
 #endif
