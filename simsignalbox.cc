@@ -181,6 +181,9 @@ bool signalbox_t::can_add_signal(const signal_t* s) const
 	{
 		return false;
 	}
+	if (get_tile()->get_desc()->get_radius() && get_tile()->get_desc()->get_radius() < shortest_distance(s->get_pos().get_2d(), get_pos().get_2d()) * welt->get_settings().get_meters_per_tile()) {
+		return false; // out of range
+	}
 
 	return can_add_signal(s->get_desc());
 }
@@ -195,6 +198,10 @@ bool signalbox_t::transfer_signal(signal_t* s, signalbox_t* sb)
 	if(sb == this)
 	{
 		return false;
+	}
+
+	if (get_tile()->get_desc()->get_radius() && get_tile()->get_desc()->get_radius() < shortest_distance(s->get_pos().get_2d(), get_pos().get_2d()) * welt->get_settings().get_meters_per_tile()) {
+		return false; // out of range
 	}
 
 	if(s->get_desc()->get_working_method() == moving_block)

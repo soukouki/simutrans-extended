@@ -9,6 +9,7 @@
 
 #include "signal_info.h"
 #include "simwin.h"
+#include "signal_connector_gui.h"
 
 #include "../obj/signal.h" // The rest of the dialog
 #include "../obj/gebaeude.h"
@@ -25,7 +26,7 @@ signal_info_t::signal_info_t(signal_t* const s) :
 	sig(s)
 {
 	new_component<gui_label_t>("Controlled from");
-	add_table(3,2);
+	add_table(3,3);
 	{
 		bt_goto_signalbox.init(button_t::posbutton, NULL);
 		bt_goto_signalbox.set_visible(false);
@@ -46,6 +47,14 @@ signal_info_t::signal_info_t(signal_t* const s) :
 
 		new_component<gui_empty_t>();
 		add_component(&lb_sb_distance);
+
+		bt_switch_signalbox.init(button_t::roundbox, "switch_sb");
+		bt_switch_signalbox.set_size(scr_size(D_BUTTON_WIDTH * 2 / 3, D_BUTTON_HEIGHT));
+		bt_switch_signalbox.set_visible(false);
+		bt_switch_signalbox.set_tooltip(translator::translate("open_signal_connector_gui"));
+		bt_switch_signalbox.add_listener(this);
+		bt_switch_signalbox.set_rigid(true);
+		add_component(&bt_switch_signalbox);
 
 		new_component<gui_margin_t>(D_H_SPACE,D_V_SPACE);
 	}
@@ -200,6 +209,7 @@ void signal_info_t::update_data()
 			if (gb) {
 				bt_goto_signalbox.set_visible(true);
 				bt_info_signalbox.set_visible(true);
+				bt_switch_signalbox.set_visible(sig->get_player_nr() == welt->get_active_player()->get_player_nr());
 			}
 		}
 	}
@@ -245,6 +255,11 @@ bool signal_info_t::action_triggered(gui_action_creator_t *comp, value_t)
 			}
 			return true;
 		}
+	}
+	if(  comp==&bt_switch_signalbox && sig->get_player_nr()==welt->get_active_player()->get_player_nr()  ) {
+		destroy_win( magic_signal_connector_gui_t );
+		create_win( new signal_connector_gui_t(sig), w_info, magic_signal_connector_gui_t );
+		return true;
 	}
 
 	return false;
