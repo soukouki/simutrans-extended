@@ -175,8 +175,8 @@ bool win_is_top(const gui_frame_t *ig);
 
 
 // return true if actually window was destroyed (or marked for destruction)
-bool destroy_win(const gui_frame_t *ig);
-bool destroy_win(const ptrdiff_t magic);
+bool destroy_win(const gui_frame_t *ig, bool destroy_locked = true);
+bool destroy_win(const ptrdiff_t magic, bool destroy_locked = true);
 
 void destroy_all_win(bool destroy_sticky);
 
