@@ -53,6 +53,10 @@ enum {
 	IDBTN_LEFT_TO_RIGHT_GRAPHS,
 	IDBTN_SHOW_SIGNALBOX_COVERAGE,
 	IDBTN_CLASSES_WAITING_BAR,
+	IDBTN_SHOW_DEPOT_NAME,
+	IDBTN_SHOW_FACTORY_STORAGE,
+	IDBTN_SHOW_PRIVATECAR_INFO,
+	IDBTN_SHOW_PEDESTRIAN_INFO,
 	COLORS_MAX_BUTTONS,
 };
 
@@ -321,8 +325,8 @@ map_settings_t::map_settings_t()
 		inp_underground_level.add_listener(this);
 		add_component(&inp_underground_level);
 
-		// Toggle simple drawing for debugging
 #ifdef DEBUG
+		// Toggle simple drawing for debugging
 		new_component<gui_margin_t>(LINESPACE/2);
 		buttons[IDBTN_SIMPLE_DRAWING].init(button_t::square_state, "Simple drawing");
 		add_component(buttons + IDBTN_SIMPLE_DRAWING, 2);
@@ -375,6 +379,25 @@ map_settings_t::map_settings_t()
 		add_component(&scrollspeed);
 	}
 	end_table();
+
+	// Set date format
+	new_component<gui_label_t>("Date format");
+	add_table(2,0);
+	{
+		new_component<gui_margin_t>(LINESPACE/2);
+		time_setting.set_focusable( false );
+		uint8 old_show_month = env_t::show_month;
+		sint32 current_tick = world()->get_ticks();
+		for( env_t::show_month = 0; env_t::show_month<10; env_t::show_month++ ) {
+			tstrncpy( time_str[env_t::show_month], tick_to_string( current_tick, true ), 64 );
+			time_setting.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( time_str[env_t::show_month], SYSCOL_TEXT );
+		}
+		env_t::show_month = old_show_month;
+		time_setting.set_selection( old_show_month );
+		add_component( &time_setting );
+		time_setting.add_listener( this );
+	}
+	end_table();
 	new_component<gui_divider_t>();
 
 	new_component<gui_label_t>("transparencies");
@@ -422,11 +445,11 @@ bool map_settings_t::action_triggered( gui_action_creator_t *comp, value_t v )
 		env_t::daynight_level = (sint8)v.i;
 	}
 	// Scroll speed edit
-	if( &scrollspeed == comp ) {
+	else if( &scrollspeed == comp ) {
 		env_t::scroll_multi = (sint16)(buttons[ IDBTN_SCROLL_INVERSE ].pressed ? -v.i : v.i);
 	}
 	// underground slice edit
-	if( comp == &inp_underground_level ) {
+	else if( comp == &inp_underground_level ) {
 		if( grund_t::underground_mode == grund_t::ugm_level ) {
 			grund_t::underground_level = inp_underground_level.get_value();
 
@@ -434,6 +457,11 @@ bool map_settings_t::action_triggered( gui_action_creator_t *comp, value_t v )
 			world()->update_underground();
 		}
 	}
+	else if( comp == &time_setting ) {
+		env_t::show_month = v.i;
+		return true;
+	}
+
 	// Smart hide objects edit
 	if( &cursor_hide_range == comp ) {
 		env_t::cursor_hide_range = cursor_hide_range.get_value();
@@ -531,6 +559,27 @@ label_settings_t::label_settings_t()
 	}
 	end_table();
 
+	// Show own depot name
+	buttons[IDBTN_SHOW_DEPOT_NAME].init(button_t::square_state, "Show own depot names");
+	buttons[IDBTN_SHOW_DEPOT_NAME].pressed = env_t::show_depot_names;
+	buttons[IDBTN_SHOW_DEPOT_NAME].set_tooltip("Show the name of own depots in the main game window.");
+	add_component(buttons + IDBTN_SHOW_DEPOT_NAME);
+
+	new_component<gui_divider_t>();
+	add_table(2,1);
+	{
+		new_component<gui_label_t>("Industry overlay")->set_tooltip(translator::translate("Display bars above the factory to show the status"));
+		factory_tooltip.set_focusable(false);
+		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("never show"), SYSCOL_TEXT);
+		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("mouseover"), SYSCOL_TEXT);
+		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Within own network"), SYSCOL_TEXT);
+		factory_tooltip.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("always show all"), SYSCOL_TEXT);
+		factory_tooltip.set_selection(env_t::show_factory_storage_bar);
+		add_component(&factory_tooltip);
+		factory_tooltip.add_listener(this);
+	}
+	end_table();
+
 	new_component<gui_divider_t>();
 
 	new_component<gui_label_t>("Convoy tooltips");
@@ -547,6 +596,24 @@ label_settings_t::label_settings_t()
 		convoy_nameplate.set_selection(env_t::show_cnv_nameplates);
 		add_component(&convoy_nameplate);
 		convoy_nameplate.add_listener(this);
+
+		new_component<gui_empty_t>();
+		new_component<gui_empty_t>();
+		add_table(4,1)->set_spacing(scr_size(0,0));
+		{
+			new_component<gui_margin_t>( D_ARROW_LEFT_WIDTH+D_H_SPACE );
+			// UI TODO: radio button is better
+			bt_convoy_id_plate[0].init(button_t::roundbox_left_state  | button_t::flexible, "name_plate");
+			bt_convoy_id_plate[1].init(button_t::roundbox_right_state | button_t::flexible, "Convoy ID");
+			bt_convoy_id_plate[0].set_tooltip("help_text_btn_line_name_plate");
+			bt_convoy_id_plate[1].set_tooltip("Shows the convoy unique ID");
+			bt_convoy_id_plate[0].add_listener(this);
+			bt_convoy_id_plate[1].add_listener(this);
+			add_component(&bt_convoy_id_plate[0]);
+			add_component(&bt_convoy_id_plate[1]);
+			new_component<gui_margin_t>( D_ARROW_LEFT_WIDTH+D_H_SPACE );
+		}
+		end_table();
 
 		// Convoy loading bar
 		new_component<gui_margin_t>(LINESPACE/2);
@@ -589,6 +656,10 @@ label_settings_t::label_settings_t()
 
 bool label_settings_t::action_triggered(gui_action_creator_t *comp, value_t v)
 {
+	// Factory tooltip
+	if(&factory_tooltip == comp){
+		env_t::show_factory_storage_bar = v.i;
+	}
 	// Convoy tooltip
 	if (&convoy_tooltip == comp) {
 		env_t::show_vehicle_states = (uint8)v.i;
@@ -596,6 +667,15 @@ bool label_settings_t::action_triggered(gui_action_creator_t *comp, value_t v)
 	// Convoy nameplate
 	if (&convoy_nameplate == comp) {
 		env_t::show_cnv_nameplates = v.i;
+		if (bt_convoy_id_plate[1].pressed) {
+			env_t::show_cnv_nameplates |= 4;
+		}
+	}
+	else if (&bt_convoy_id_plate[0] == comp) {
+		env_t::show_cnv_nameplates &= ~4;
+	}
+	else if (&bt_convoy_id_plate[1] == comp) {
+		env_t::show_cnv_nameplates |= 4;
 	}
 	// Convoy loading bar
 	if (&convoy_loadingbar == comp) {
@@ -613,11 +693,14 @@ bool label_settings_t::action_triggered(gui_action_creator_t *comp, value_t v)
 
 void label_settings_t::draw(scr_coord offset)
 {
-	convoy_nameplate.set_selection(env_t::show_cnv_nameplates);
+	convoy_nameplate.set_selection(env_t::show_cnv_nameplates % 4);
+	bt_convoy_id_plate[1].pressed = env_t::show_cnv_nameplates & 4;
+	bt_convoy_id_plate[0].pressed = !(env_t::show_cnv_nameplates & 4);
 	convoy_loadingbar.set_selection(env_t::show_cnv_loadingbar);
 	convoy_tooltip.set_selection(env_t::show_vehicle_states);
 	freight_waiting_bar.set_selection(env_t::freight_waiting_bar_level);
 	freight_waiting_bar.enable(env_t::show_names & 2);
+	factory_tooltip.set_selection(env_t::show_factory_storage_bar % 4);
 
 	gui_aligned_container_t::draw(offset);
 }
@@ -647,6 +730,18 @@ traffic_settings_t::traffic_settings_t()
 	traffic_density.set_limits( 0, 16 );
 	traffic_density.add_listener(this);
 	add_component(&traffic_density);
+
+	// Show private car info
+	buttons[IDBTN_SHOW_PRIVATECAR_INFO].init(button_t::square_state, "Show the private car information window");
+	buttons[IDBTN_SHOW_PRIVATECAR_INFO].set_tooltip("can open a dedicated window by clicking on a private car.");
+	buttons[IDBTN_SHOW_PRIVATECAR_INFO].pressed = env_t::road_user_info & 1;
+	add_component(buttons + IDBTN_SHOW_PRIVATECAR_INFO, 2);
+
+	// Show pedestrian info
+	buttons[IDBTN_SHOW_PEDESTRIAN_INFO].init(button_t::square_state, "Show the pedestrian information window");
+	buttons[IDBTN_SHOW_PEDESTRIAN_INFO].set_tooltip("can open a dedicated window by clicking on a pedestrian.");
+	buttons[IDBTN_SHOW_PEDESTRIAN_INFO].pressed = env_t::road_user_info & 2;
+	add_component(buttons + IDBTN_SHOW_PEDESTRIAN_INFO, 2);
 
 	// Convoy follow mode
 	new_component<gui_label_t>("Convoi following mode")->set_tooltip(translator::translate("Select the behavior of the camera when the following convoy enters the tunnel."));
@@ -777,6 +872,14 @@ bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t )
 			welt->set_tool( tool_t::simple_tool[ TOOL_TOOGLE_PEDESTRIANS & 0xFFF ], welt->get_active_player() );
 		}
 		break;
+	case IDBTN_SHOW_PRIVATECAR_INFO:
+		env_t::road_user_info = env_t::road_user_info ^ 1;
+		buttons[IDBTN_SHOW_PRIVATECAR_INFO].pressed = env_t::road_user_info&1;
+		break;
+	case IDBTN_SHOW_PEDESTRIAN_INFO:
+		env_t::road_user_info = env_t::road_user_info ^ 2;
+		buttons[IDBTN_SHOW_PEDESTRIAN_INFO].pressed = env_t::road_user_info&2;
+		break;
 	case IDBTN_HIDE_TREES:
 		env_t::hide_trees = !env_t::hide_trees;
 		baum_t::recalc_outline_color();
@@ -793,6 +896,9 @@ bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t )
 		break;
 	case IDBTN_SHOW_STATION_COVERAGE:
 		env_t::station_coverage_show = env_t::station_coverage_show == 0 ? 0xFF : 0;
+		break;
+	case IDBTN_SHOW_DEPOT_NAME:
+		env_t::show_depot_names = !env_t::show_depot_names;
 		break;
 	case IDBTN_UNDERGROUND_VIEW:
 		// see simtool.cc::tool_show_underground_t::init
@@ -886,6 +992,7 @@ void color_gui_t::draw(scr_coord pos, scr_size size)
 	buttons[IDBTN_UNDERGROUND_VIEW].pressed = grund_t::underground_mode == grund_t::ugm_all;
 	buttons[IDBTN_SHOW_GRID].pressed = grund_t::show_grid;
 	buttons[IDBTN_SHOW_WAITING_BARS].pressed = (env_t::show_names&2)!=0;
+	buttons[IDBTN_SHOW_DEPOT_NAME].pressed = env_t::show_depot_names;
 	buttons[IDBTN_SHOW_SLICE_MAP_VIEW].pressed = grund_t::underground_mode == grund_t::ugm_level;
 	buttons[IDBTN_SHOW_SCHEDULES_STOP].pressed = env_t::visualize_schedule;
 	buttons[IDBTN_SIMPLE_DRAWING].pressed = env_t::simple_drawing;

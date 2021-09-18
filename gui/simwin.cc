@@ -1020,7 +1020,7 @@ bool destroy_win(const gui_frame_t *gui)
 void destroy_all_win(bool destroy_sticky)
 {
 	for(  sint32 curWin = 0;  curWin < (sint32)wins.get_count();  curWin++  ) {
-		if(  !wins[curWin].locked  &&  (  destroy_sticky  ||  !wins[curWin].sticky  )  ) {
+		if(  destroy_sticky  ||  (!wins[curWin].sticky  &&  !wins[curWin].locked)  ) {
 			if(  inside_event_handling == wins[curWin].gui  ) {
 				// only add this, if not already added
 				kill_list.append_unique(wins[curWin]);
@@ -1751,16 +1751,16 @@ void win_display_flush(double konto)
 	case MENU_BOTTOM:
 		menu_pos = scr_coord(0, disp_height - env_t::iconsize.h);
 		// size default
-		clip_rr = scr_rect(0, win_get_statusbar_height(), disp_width, disp_height - env_t::iconsize.h);
+		clip_rr.y = 0;
 		break;
 	case MENU_LEFT:
 		// pos default (see above)
-		menu_size = scr_size(env_t::iconsize.w, disp_height-win_get_statusbar_height() - show_ticker*TICKER_HEIGHT);
+		menu_size = scr_size(env_t::iconsize.w, disp_height-win_get_statusbar_height()-show_ticker*TICKER_HEIGHT);
 		clip_rr = scr_rect(env_t::iconsize.h, 0, disp_width - env_t::iconsize.w, disp_height);
 		break;
 	case MENU_RIGHT:
 		menu_pos.x = disp_width - env_t::iconsize.w;
-		menu_size = scr_size(env_t::iconsize.w, disp_height - win_get_statusbar_height() - show_ticker*TICKER_HEIGHT);
+		menu_size = scr_size(env_t::iconsize.w, disp_height - win_get_statusbar_height()-show_ticker*TICKER_HEIGHT );
 		clip_rr = scr_rect(0, 0, disp_width - env_t::iconsize.w, disp_height);
 		break;
 	}
@@ -1815,7 +1815,7 @@ void win_display_flush(double konto)
 
 	{
 		// clip windows to avoid drawing into menu, ticker, or status-bar
-		PUSH_CLIP(clip_rr.x, clip_rr.y, clip_rr.w, clip_rr.h - (TICKER_HEIGHT)*show_ticker - win_get_statusbar_height() );
+		PUSH_CLIP(clip_rr.x, clip_rr.y+(env_t::menupos==MENU_BOTTOM ? win_get_statusbar_height() + show_ticker*TICKER_HEIGHT:0), clip_rr.w, clip_rr.h - (TICKER_HEIGHT)*show_ticker - win_get_statusbar_height() );
 
 		display_all_win();
 		remove_old_win();

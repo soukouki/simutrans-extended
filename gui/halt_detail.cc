@@ -32,8 +32,6 @@
 #define BARCOL_TRANSFER_IN color_idx_to_rgb(10)
 #define MAX_CATEGORY_COLS 16
 
-static uint16 routelist_default_pos_y = 0;
-
 sint16 halt_detail_t::tabstate = -1;
 
 halt_detail_t::halt_detail_t(halthandle_t halt_) :
@@ -43,12 +41,12 @@ halt_detail_t::halt_detail_t(halthandle_t halt_) :
 	pas(halt_),
 	goods(halt_),
 	cont_service(halt_),
-	destinations(halt_, selected_route_catg_index),
 	scrolly_pas(&pas),
 	scrolly_goods(&cont_goods),
 	scrolly_service(&cont_service),
 	scrolly_route(&cont_desinations),
-	nearby_factory(halt_)
+	nearby_factory(halt_),
+	destinations(halt_, selected_route_catg_index)
 {
 	if (halt.is_bound()) {
 		init();
@@ -78,7 +76,7 @@ void halt_detail_t::init()
 	old_factory_count = 0;
 	old_catg_count = 0;
 	cached_active_player=NULL;
-	cashed_size_y = 0;
+	cached_size_y = 0;
 	show_pas_info = false;
 	show_freight_info = false;
 
@@ -100,19 +98,20 @@ void halt_detail_t::init()
 
 	// route tab components
 	cont_route.set_table_layout(1,0);
-	cont_route.add_table(3, 1);
+	cont_route.add_table(4,1)->set_spacing(scr_size(0,0));
 	{
 		cont_route.set_margin(scr_size(D_H_SPACE, D_V_SPACE), scr_size(0, 0));
 
-		bt_by_station.init(button_t::roundbox_state, "hd_btn_by_station", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
-		bt_by_category.init(button_t::roundbox_state, "hd_btn_by_category", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+		bt_by_station.init(button_t::roundbox_left_state, "hd_btn_by_station", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+		bt_by_category.init(button_t::roundbox_right_state, "hd_btn_by_category", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
 		bt_by_station.add_listener(this);
 		bt_by_category.add_listener(this);
 		bt_by_station.pressed = false;
 		bt_by_category.pressed = true;
+		cont_route.new_component<gui_fill_t>();
 		cont_route.add_component(&bt_by_station);
 		cont_route.add_component(&bt_by_category);
-		cont_route.new_component<gui_fill_t>();
+		cont_route.new_component<gui_margin_t>(D_MARGIN_RIGHT);
 	}
 	cont_route.end_table();
 	lb_serve_catg.init("lb_served_goods_and_classes", scr_coord(0, 0),
@@ -141,13 +140,12 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				char *class_name = new char[32]();
-				if (class_name != nullptr)
-				{
-					sprintf(class_name, "p_class[%u]", c);
-					pass_class_name_untranslated[c] = class_name;
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_PAS, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				if (classes>1) {
+					if (c == 0) { cb->set_typ(button_t::roundbox_left_state);  }
+					else if(c == classes-1) { cb->set_typ(button_t::roundbox_right_state); }
+					else { cb->set_typ(button_t::roundbox_middle_state); }
 				}
-				cb->init(button_t::roundbox_state, class_name, scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				cb->disable();
 				cb->add_listener(this);
 				cont_route.add_component(cb);
@@ -177,13 +175,12 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				char *class_name = new char[32]();
-				if (class_name != nullptr)
-				{
-					sprintf(class_name, "m_class[%u]", c);
-					mail_class_name_untranslated[c] = class_name;
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_MAIL, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				if (classes > 1) {
+					if (c == 0) { cb->set_typ(button_t::roundbox_left_state); }
+					else if (c == classes - 1) { cb->set_typ(button_t::roundbox_right_state); }
+					else { cb->set_typ(button_t::roundbox_middle_state); }
 				}
-				cb->init(button_t::roundbox_state, class_name, scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				cb->disable();
 				cb->add_listener(this);
 				cont_route.add_component(cb);
@@ -338,8 +335,8 @@ void halt_detail_t::update_components()
 	}
 
 	// tab1
-	if (cashed_size_y != pas.get_size().h) {
-		cashed_size_y = pas.get_size().h;
+	if (cached_size_y != pas.get_size().h) {
+		cached_size_y = pas.get_size().h;
 		if (tabstate==0) {
 			set_tab_opened();
 		}
@@ -452,7 +449,7 @@ void halt_detail_t::update_components()
 
 
 
-bool halt_detail_t::action_triggered( gui_action_creator_t *comp, value_t extra)
+bool halt_detail_t::action_triggered( gui_action_creator_t *comp, value_t /*extra*/)
 {
 	if (tabstate != tabs.get_active_tab_index() || get_windowsize().h == get_min_windowsize().h) {
 		set_tab_opened();
@@ -589,7 +586,7 @@ void halt_detail_t::set_tab_opened()
 	{
 		case 0: // pas
 		default:
-			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cashed_size_y)));
+			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cached_size_y)));
 			break;
 		case 1: // goods
 			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cont_goods.get_size().h)));
@@ -713,8 +710,6 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 		pas_info.clear();
 
 		// color bar
-		PIXVAL overlay_color = i < good_category->get_number_of_classes() / 2 ? COL_BLACK : COL_WHITE;
-		uint8 overlay_transparency = abs(good_category->get_number_of_classes() / 2 - i) * 7;
 		uint bar_width = ((waiting_sum_by_class*GOODS_WAITING_BAR_BASE_WIDTH) + (base_capacity-1)) / base_capacity;
 		// transferring bar
 		display_fillbox_wh_clip_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 10, y + GOODS_COLOR_BOX_YOFF + 1, (transfers_in * GOODS_WAITING_BAR_BASE_WIDTH / base_capacity) + bar_width, 6, BARCOL_TRANSFER_IN, true);
@@ -1026,8 +1021,6 @@ void halt_detail_goods_t::draw(scr_coord offset)
 			display_direct_line_rgb(offset.x + GOODS_SYMBOL_CELL_WIDTH + D_BUTTON_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 5 + 4, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + D_BUTTON_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 5 + GOODS_WAITING_BAR_BASE_WIDTH, offset.y + top, color_idx_to_rgb(MN_GREY1));
 			top += 4;
 
-			uint32 max_capacity = halt->get_capacity(2);
-			const uint8 max_classes = max(goods_manager_t::passengers->get_number_of_classes(), goods_manager_t::mail->get_number_of_classes());
 			for (uint8 i = 0; i < goods_manager_t::get_max_catg_index(); i++) {
 				if (i == goods_manager_t::INDEX_PAS || i == goods_manager_t::INDEX_MAIL)
 				{
@@ -1382,7 +1375,7 @@ void gui_halt_service_info_t::draw(scr_coord offset)
 	gui_aligned_container_t::draw(offset);
 }
 
-void gui_halt_service_info_t::update_connections(halthandle_t h)
+void gui_halt_service_info_t::update_connections(halthandle_t /*h*/)
 {
 	if (!halt.is_bound()) {
 		// first call, or invalid handle
@@ -1828,10 +1821,6 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 
 void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 {
-	clip_dimension const cd = display_get_clip_wh();
-	const int start = cd.y - LINESPACE - 1;
-	const int end = cd.yy + LINESPACE + 1;
-
 	static cbuffer_t buf;
 	int xoff = pos.x;
 	int yoff = pos.y;
@@ -1839,7 +1828,6 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 
 	uint8 g_class = goods_manager_t::get_classes_catg_index(selected_route_catg_index) - 1;
 
-	uint32 sel = line_selected;
 	FORX(const vector_tpl<halthandle_t>, const dest, halt_list, yoff += LINESPACE + 1)
 	{
 		if (!dest.is_bound())

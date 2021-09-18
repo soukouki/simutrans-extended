@@ -184,8 +184,8 @@ void factory_edit_frame_t::fill_list()
 				&&  ( desc->get_building()->get_allowed_climate_bits() & get_climate()) ) {
 				// timeline allows for this, and so does climates setting
 
-				if( ( city_chain  &&  (desc->get_placement() == factory_desc_t::City && desc->is_consumer_only() ) )
-				||  ( land_chain  &&  (desc->get_placement() != factory_desc_t::City && desc->is_consumer_only() ) )
+				if( ( city_chain  &&  ((desc->get_placement() == factory_desc_t::City || desc->get_placement() == factory_desc_t::shore_city || desc->get_placement() == factory_desc_t::river_city) && desc->is_consumer_only() ) )
+				||  ( land_chain  &&  ((desc->get_placement() == factory_desc_t::City || desc->get_placement() == factory_desc_t::shore_city || desc->get_placement() == factory_desc_t::river_city) && desc->is_consumer_only() ) )
 				||  (!city_chain  &&  !land_chain) ) {
 					switch(sortedby) {
 						case gui_sorting_item_t::BY_NAME_TRANSLATED:     factory_list.insert_ordered( desc, compare_factory_desc_name );           break;
@@ -328,12 +328,11 @@ void factory_edit_frame_t::change_item_info(sint32 entry)
 				const uint16 allowed_region_bits = desc->get_allowed_region_bits();
 				if (allowed_region_bits < 65535) {
 					uint32 region_idx = 0;
-					FORX(vector_tpl<region_definition_t>, region, welt->get_settings().regions, region_idx) {
+					FORX(vector_tpl<region_definition_t>, region, welt->get_settings().regions, region_idx++) {
 						if (allowed_region_bits & (1 << region_idx))
 						{
 							buf.printf(" - %s\n", translator::translate(region.name.c_str()));
 						}
-						region_idx++;
 					}
 				}
 				else {
@@ -402,7 +401,7 @@ void factory_edit_frame_t::change_item_info(sint32 entry)
 
 		// the tools will be always updated, even though the data up there might be still current
 		param_str.clear();
-		param_str.printf("%i%c%i,%s", bt_climates.pressed, rotation>253 ? (rotation==254 ? 'A' : '#') : '0'+rotation, production, fac_desc->get_name() );
+		param_str.printf("%i%i%c%i,%s", bt_climates.pressed, bt_ignore_regions.pressed, rotation>253 ? (rotation==254 ? 'A' : '#') : '0'+rotation, production, fac_desc->get_name() );
 		if(bt_land_chain.pressed) {
 			land_chain_tool.set_default_param(param_str);
 			welt->set_tool( &land_chain_tool, player );

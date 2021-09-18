@@ -13,7 +13,7 @@
 #include "../simcolor.h"
 #include "../ifc/sync_steppable.h"
 
-#include "simvehicle.h"
+#include "vehicle.h"
 
 
 /**
@@ -61,7 +61,7 @@ public:
 	virtual bool can_enter_tile() { return 1; }
 	grund_t* hop_check() OVERRIDE;
 	void hop(grund_t* gr) OVERRIDE;
-	virtual void update_bookkeeping(uint32) {};
+	virtual void update_bookkeeping(uint32) OVERRIDE {};
 
 	waytype_t get_waytype() const OVERRIDE { return get_desc()->get_waytype(); }
 

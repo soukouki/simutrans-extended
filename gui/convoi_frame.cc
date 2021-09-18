@@ -20,7 +20,7 @@
 #include "../dataobj/translator.h"
 #include "../player/simplay.h"
 #include "../utils/simstring.h"
-#include "../vehicle/simvehicle.h"
+#include "../vehicle/vehicle.h"
 #include "../simline.h"
 
  /**
@@ -276,7 +276,7 @@ convoi_frame_t::convoi_frame_t() :
 
 	add_table(4,2);
 	{
-		new_component_span<gui_label_t>("cl_txt_sort", 2);
+		new_component_span<gui_label_t>("hl_txt_sort", 2);
 		new_component<gui_label_t>("cl_txt_mode");
 		filter_on.init(button_t::square, "cl_txt_filter");
 		filter_on.set_tooltip(translator::translate("cl_btn_filter_tooltip"));
@@ -404,8 +404,6 @@ void convoi_frame_t::draw(scr_coord pos, scr_size size)
 
 void convoi_frame_t::rdwr(loadsave_t *file)
 {
-	sint32 cont_xoff = scrolly->get_scroll_x();
-	sint32 cont_yoff = scrolly->get_scroll_y();
 	scr_size size = get_windowsize();
 	uint8 player_nr = owner->get_player_nr();
 

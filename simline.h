@@ -186,7 +186,7 @@ public:
 	 * get name of line
 	 */
 	char const* get_name() const { return name; }
-	void set_name(const char *str) { name = str; }
+	void set_name(const char *str);
 
 	/*
 	 * load or save the line
@@ -275,6 +275,10 @@ public:
 
 	//@author: jamespetts
 	bool has_overcrowded() const;
+
+	bool needs_electrification() const;
+
+	uint16 get_min_range() const;
 
 	void set_withdraw( bool yes_no );
 

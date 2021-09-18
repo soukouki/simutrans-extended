@@ -170,6 +170,9 @@ public:
 	void set_lane_affinity(uint8 lf) { lane_affinity = lf; }
 	const koord3d get_intersection() const;
 
+	koord3d get_next_pos_nw(uint8 dir, sint8 slope = slope_t::flat) const;
+	koord3d get_next_pos_se(uint8 dir, sint8 slope = slope_t::flat) const;
+
 	inline void set_image( image_id b ) { image = b; }
 	image_id get_image() const OVERRIDE { return image; }
 
@@ -188,6 +191,9 @@ public:
 #else
 	void display_after(int xpos, int ypos, bool dirty) const OVERRIDE;
 #endif
+
+	void display_overlay(int xpos, int ypos) const;
+	inline bool is_bidirectional() const { return ((dir & ribi_t::east) && (dir & ribi_t::west)) || ((dir & ribi_t::south) && (dir & ribi_t::north)) || ((dir & ribi_t::northeast) && (dir & ribi_t::southwest)) || ((dir & ribi_t::northwest) && (dir & ribi_t::southeast)); }
 
 	void rdwr(loadsave_t *file) OVERRIDE;
 
