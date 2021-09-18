@@ -2643,6 +2643,7 @@
     <ClInclude Include="script\script.h" />
     <ClInclude Include="siminteraction.h" />
     <ClInclude Include="simloadingscreen.h" />
+    <ClInclude Include="simsignalbox.h" />
     <ClInclude Include="simtool-dialogs.h" />
     <ClInclude Include="simunits.h" />
     <ClInclude Include="squirrel\sqstdaux.h" />

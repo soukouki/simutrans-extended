@@ -132,6 +132,11 @@ void signalbox_t::rotate90()
 	signals.append_list(temp_list);
 }
 
+uint16 signalbox_t::get_capacity() const
+{
+	return get_first_tile()->get_tile()->get_desc()->get_capacity();
+}
+
 void signalbox_t::remove_signal(signal_t* s)
 {
 	koord3d k = s->get_pos();
@@ -182,7 +187,7 @@ bool signalbox_t::can_add_signal(const signal_t* s) const
 
 bool signalbox_t::can_add_more_signals() const
 {
-	return signals.get_count() < get_first_tile()->get_tile()->get_desc()->get_capacity();
+	return signals.get_count() < get_capacity();
 }
 
 bool signalbox_t::transfer_signal(signal_t* s, signalbox_t* sb)
