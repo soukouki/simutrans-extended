@@ -364,8 +364,9 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	cont_line_info.add_table(2,1);
 	{
 		cont_line_info.add_component(&lb_convoy_count);
-		bt_withdraw_line.init(button_t::box_state, "Withdraw All", scr_coord(0, 0), D_BUTTON_SIZE);
+		bt_withdraw_line.init(button_t::box_state, "Withdraw All", scr_coord(0, 0), scr_size(D_BUTTON_WIDTH+18,D_BUTTON_HEIGHT));
 		bt_withdraw_line.set_tooltip("Convoi is sold when all wagons are empty.");
+		bt_withdraw_line.set_image(skinverwaltung_t::alerts->get_image_id(2));
 		bt_withdraw_line.add_listener(this);
 		cont_line_info.add_component(&bt_withdraw_line);
 	}
@@ -1074,7 +1075,8 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		bt_edit_line.enable( activate );
 
 		bt_withdraw_line.pressed = new_line->get_withdraw();
-		bt_withdraw_line.background_color = color_idx_to_rgb( bt_withdraw_line.pressed ? COL_DARK_YELLOW-1 : COL_YELLOW+1 );
+		bt_withdraw_line.background_color = color_idx_to_rgb( bt_withdraw_line.pressed ? COL_DARK_YELLOW-1 : COL_YELLOW );
+		bt_withdraw_line.text_color = color_idx_to_rgb(bt_withdraw_line.pressed ? COL_WHITE : COL_BLACK);
 
 		livery_selector.set_focusable(true);
 		livery_selector.clear_elements();
