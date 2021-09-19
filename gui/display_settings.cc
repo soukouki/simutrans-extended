@@ -98,10 +98,16 @@ gui_settings_t::gui_settings_t()
 
 	// Show thememanager
 	buttons[ IDBTN_SHOW_THEMEMANAGER ].init( button_t::roundbox_state | button_t::flexible, "Select a theme for display" );
+	if (skinverwaltung_t::open_window) {
+		buttons[ IDBTN_SHOW_THEMEMANAGER ].set_image(skinverwaltung_t::open_window->get_image_id(0));
+	}
 	add_component( buttons + IDBTN_SHOW_THEMEMANAGER );
 
 	// Change font
 	buttons[ IDBTN_CHANGE_FONT ].init( button_t::roundbox_state | button_t::flexible, "Select display font" );
+	if (skinverwaltung_t::open_window) {
+		buttons[ IDBTN_CHANGE_FONT ].set_image(skinverwaltung_t::open_window->get_image_id(0));
+	}
 	add_component( buttons + IDBTN_CHANGE_FONT );
 
 	// position of menu

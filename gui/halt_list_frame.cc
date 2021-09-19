@@ -325,6 +325,9 @@ halt_list_frame_t::halt_list_frame_t() :
 		end_table();
 
 		filter_details.init(button_t::roundbox, "hl_btn_filter_settings");
+		if (skinverwaltung_t::open_window) {
+			filter_details.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		}
 		filter_details.set_size(D_BUTTON_SIZE);
 		filter_details.add_listener(this);
 		add_component(&filter_details);
