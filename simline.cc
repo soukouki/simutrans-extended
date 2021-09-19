@@ -1074,7 +1074,7 @@ void simline_t::propogate_livery_scheme()
 
 PIXVAL simline_t::get_line_color() const
 {
-	return line_color_idx_to_rgb(line_color_index);
+	return line_color_index==254 ? color_idx_to_rgb(player->get_player_color1()+4) : line_color_idx_to_rgb(line_color_index);
 }
 
 sint64 simline_t::calc_departures_scheduled()

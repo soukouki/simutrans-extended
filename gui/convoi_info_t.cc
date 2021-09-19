@@ -600,7 +600,7 @@ void convoi_info_t::update_labels()
 		}
 		else {
 			lc_preview.set_line( cnv->get_line() );
-			lc_preview.set_base_color(cnv->get_line()->get_line_color_index()==254 ? color_idx_to_rgb(cnv->get_line()->get_owner()->get_player_color1()+4) : cnv->get_line()->get_line_color());
+			lc_preview.set_base_color( cnv->get_line()->get_line_color() );
 			lc_preview.set_visible(true);
 		}
 	}

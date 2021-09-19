@@ -1285,7 +1285,7 @@ void halt_info_t::update_cont_departure()
 								cont_departure.new_component<gui_empty_t>();
 							}
 							else {
-								cont_departure.new_component<gui_line_lettercode_t>(hi.cnv->get_line()->get_line_color_index()==254 ? color_idx_to_rgb(hi.cnv->get_line()->get_owner()->get_player_color1()+4): hi.cnv->get_line()->get_line_color())->set_line(hi.cnv->get_line());
+								cont_departure.new_component<gui_line_lettercode_t>( hi.cnv->get_line()->get_line_color() )->set_line(hi.cnv->get_line());
 							}
 						}
 						cont_departure.new_component<gui_label_t>(hi.cnv->get_line()->get_name(), color_idx_to_rgb(hi.cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark), gui_label_t::left);

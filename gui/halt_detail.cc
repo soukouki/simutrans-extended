@@ -1442,7 +1442,7 @@ void gui_halt_service_info_t::update_connections(halthandle_t /*h*/)
 						new_component<gui_empty_t>();
 					}
 					else {
-						new_component<gui_line_lettercode_t>(line->get_line_color_index()==254 ? color_idx_to_rgb(line->get_owner()->get_player_color1()+4): line->get_line_color())->set_line(line);
+						new_component<gui_line_lettercode_t>( line->get_line_color() )->set_line(line);
 					}
 					gui_label_buf_t *lb = new_component<gui_label_buf_t>(PLAYER_FLAG | color_idx_to_rgb(line->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
 					lb->buf().append(line->get_name());

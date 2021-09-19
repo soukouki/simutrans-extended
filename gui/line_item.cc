@@ -124,7 +124,7 @@ void line_scrollitem_t::draw(scr_coord pos)
 
 	// line color
 	if (line->get_line_color_index()!=255) {
-		PIXVAL line_color= line->get_line_color_index() == 254 ? color_idx_to_rgb(line->get_owner()->get_player_color1()+4) : line->get_line_color();
+		PIXVAL line_color= line->get_line_color();
 		left+=display_line_lettercode_rgb(pos.x, pos.y, line_color, line->get_line_lettercode_style(), line->get_linecode_l(), line->get_linecode_r());
 	}
 

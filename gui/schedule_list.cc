@@ -1099,7 +1099,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_line_info.set_visible(new_line->get_schedule()->get_count()>0);
 		inp_name.set_visible(true);
 		lc_preview.set_line(new_line);
-		lc_preview.set_base_color(new_line->get_line_color_index()==254 ? color_idx_to_rgb(new_line->get_owner()->get_player_color1()+4) : new_line->get_line_color());
+		lc_preview.set_base_color( new_line->get_line_color() );
 		lc_preview.set_visible(new_line->get_line_color_index()!=255);
 		inp_name.set_pos(scr_coord(lc_preview.get_pos().x+lc_preview.is_visible()*(lc_preview.get_size().w+2), inp_name.get_pos().y));
 		livery_selector.set_visible(true);
