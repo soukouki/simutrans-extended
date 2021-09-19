@@ -30,7 +30,11 @@ public:
 	};
 	static sort_modes_t sort_mode;
 	// normal items
-	line_scrollitem_t( linehandle_t l ) : gui_scrolled_list_t::const_text_scrollitem_t( NULL, color_idx_to_rgb(COL_ORANGE) ) { line = l; }
+	line_scrollitem_t(linehandle_t l) : gui_scrolled_list_t::const_text_scrollitem_t(NULL, color_idx_to_rgb(COL_ORANGE)) {
+		line = l;
+		gui_component_t::size.h=LINEASCENT+6;
+		const_text_scrollitem_t::size.h = LINEASCENT+6;
+	}
 	PIXVAL get_color() const OVERRIDE;
 	linehandle_t get_line() const { return line; }
 	char const* get_text() const OVERRIDE;
@@ -40,6 +44,9 @@ public:
 	static bool compare(const gui_component_t *a, const gui_component_t *b );
 
 	void draw(scr_coord pos) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE;
+	scr_size get_max_size() const OVERRIDE;
 };
 
 #endif

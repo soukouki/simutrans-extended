@@ -11,6 +11,8 @@
 #include "../simworld.h"
 #include "../utils/cbuffer_t.h"
 
+#include "../player/simplay.h" // for line color
+
 
 const char* line_scrollitem_t::get_text() const
 {
@@ -102,34 +104,50 @@ bool line_scrollitem_t::compare(const gui_component_t *aa, const gui_component_t
 void line_scrollitem_t::draw(scr_coord pos)
 {
 	pos += get_pos();
-	scr_coord_val left = D_H_SPACE*2;
+	scr_coord_val left = D_H_SPACE;
 	if (selected) {
 		// selected element
-		display_fillbox_wh_clip_rgb(pos.x + D_H_SPACE / 2, pos.y - 1, get_size().w - D_H_SPACE, get_size().h + 1, (focused ? SYSCOL_LIST_BACKGROUND_SELECTED_F : SYSCOL_LIST_BACKGROUND_SELECTED_NF), true);
-		left += display_proportional_clip_rgb(pos.x + D_H_SPACE, pos.y, get_text(), ALIGN_LEFT, (focused ? SYSCOL_LIST_TEXT_SELECTED_FOCUS : SYSCOL_LIST_TEXT_SELECTED_NOFOCUS), true);
-	}
-	else {
-		// normal text
-		left += display_proportional_clip_rgb(pos.x + D_H_SPACE, pos.y, get_text(), ALIGN_LEFT, get_color(), true);
+		display_fillbox_wh_clip_rgb(pos.x, pos.y - 1, get_size().w, get_size().h + 1, (focused ? SYSCOL_LIST_BACKGROUND_SELECTED_F : SYSCOL_LIST_BACKGROUND_SELECTED_NF), true);
 	}
 
+	// line color
+	if (line->get_line_color_index()!=255) {
+		PIXVAL line_color= line->get_line_color_index() == 254 ? color_idx_to_rgb(line->get_owner()->get_player_color1()+4) : line->get_line_color();
+		left+=display_line_lettercode_rgb(pos.x, pos.y, line_color, line->get_line_lettercode_style(), line->get_linecode_l(), line->get_linecode_r());
+	}
+
+	// text
+	left += display_proportional_clip_rgb(pos.x + left, pos.y+D_GET_CENTER_ALIGN_OFFSET(LINEASCENT, size.h), get_text(), ALIGN_LEFT, selected ? (focused ? SYSCOL_LIST_TEXT_SELECTED_FOCUS : SYSCOL_LIST_TEXT_SELECTED_NOFOCUS) : get_color(), true);
+
+	// symbols
+	pos.y += D_GET_CENTER_ALIGN_OFFSET(D_FIXED_SYMBOL_WIDTH, size.h)+1;
 	if (line->get_state() & simline_t::line_has_stuck_convoy && skinverwaltung_t::pax_evaluation_icons) {
 		left = max(left,get_size().w - 56);
-		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(4), pos.x + left, pos.y + FIXED_SYMBOL_YOFF, 0, false, false);
+		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(4), pos.x + left, pos.y, 0, false, false);
 		left += 14;
 	}
 	if (line->get_state() & simline_t::line_overcrowded && skinverwaltung_t::pax_evaluation_icons) {
 		left = max(left,get_size().w - 42);
-		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(1), pos.x + left, pos.y + FIXED_SYMBOL_YOFF, 0, false, false);
+		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(1), pos.x + left, pos.y, 0, false, false);
 		left += 14;
 	}
 	if (line->get_state() & simline_t::line_missing_scheduled_slots && skinverwaltung_t::missing_scheduled_slot) {
 		left = max(left,get_size().w - 28);
-		display_color_img(skinverwaltung_t::missing_scheduled_slot->get_image_id(0), pos.x + left, pos.y + FIXED_SYMBOL_YOFF, 0, false, false);
+		display_color_img(skinverwaltung_t::missing_scheduled_slot->get_image_id(0), pos.x + left, pos.y, 0, false, false);
 		left += 14;
 	}
 	if (line->get_state() & simline_t::line_has_upgradeable_vehicles && skinverwaltung_t::upgradable) {
 		left = max(left,get_size().w - 14);
-		display_color_img(skinverwaltung_t::upgradable->get_image_id(1), pos.x + left, pos.y + FIXED_SYMBOL_YOFF, 0, false, false);
+		display_color_img(skinverwaltung_t::upgradable->get_image_id(1), pos.x + left, pos.y, 0, false, false);
 	}
+}
+
+scr_size line_scrollitem_t::get_min_size() const
+{
+	return scr_size(size.w, size.h);
+}
+
+scr_size line_scrollitem_t::get_max_size() const
+{
+	return scr_size(scr_size::inf.w, size.h);
 }
