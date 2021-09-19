@@ -130,6 +130,7 @@ void line_color_gui_t::init()
 	}
 	else if (new_color_idx<MAX_LINE_COLOR_PALETTE) {
 		line_colors[new_color_idx]->pressed = true;
+		line_colors[new_color_idx]->set_text("X");
 	}
 	lc_preview.set_base_color( get_line_colorval(new_color_idx) );
 	bt_colored_bg.background_color = get_line_colorval(new_color_idx);
