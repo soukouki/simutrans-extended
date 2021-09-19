@@ -970,17 +970,17 @@ static bool destroy_framed_win(simwin_t *wins)
 }
 
 
-bool destroy_win(const ptrdiff_t magic)
+bool destroy_win(const ptrdiff_t magic, bool destroy_locked)
 {
 	const gui_frame_t *gui = win_get_magic(magic);
 	if(gui) {
-		return destroy_win( gui );
+		return destroy_win( gui, destroy_locked );
 	}
 	return false;
 }
 
 
-bool destroy_win(const gui_frame_t *gui)
+bool destroy_win(const gui_frame_t *gui, bool destroy_locked)
 {
 	if(wins.get_count() > 1  &&  wins.back().gui == gui) {
 		// destroy topped window, top the next window before removing
@@ -990,7 +990,7 @@ bool destroy_win(const gui_frame_t *gui)
 
 	for(  uint i=0;  i<wins.get_count();  i++  ) {
 		if(wins[i].gui == gui) {
-			if ( wins[i].locked ) {
+			if ( wins[i].locked && !destroy_locked ) {
 				continue;
 			}
 			if(inside_event_handling==wins[i].gui) {

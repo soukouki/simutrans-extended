@@ -2632,7 +2632,6 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 			for (auto const gr : neighbouring_grounds)
 			{
 				bool intersection_or_end_found_this_direction = false;
-				uint32 impassible_points_this_direction = 0;
 				grund_t* to = gr;
 				grund_t* from = way_gr;
 				grund_t* to_check;
@@ -2856,7 +2855,6 @@ const way_desc_t* grund_t::get_default_road(weg_t* w) const
 			for (uint32 j = 0; j < w->private_car_routes[w->private_car_routes_currently_reading_element][i].get_count(); j++)
 			{
 				const koord dest = w->private_car_routes[w->private_car_routes_currently_reading_element][i][j];
-				const grund_t* gr = welt->lookup_kartenboden(dest);
 
 				const stadt_t* city = welt->get_city(dest);
 				if (city && dest == city->get_townhall_road())

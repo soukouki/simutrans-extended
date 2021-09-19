@@ -19,6 +19,9 @@
 #include "simconvoi.h"
 #include "convoihandle_t.h"
 #include "simlinemgmt.h"
+#include "gui/simwin.h"
+#include "gui/gui_frame.h"
+
 
 line_cost_t convoi_to_line_catgory_[convoi_t::MAX_CONVOI_COST] =
 {
@@ -144,6 +147,32 @@ waytype_t simline_t::linetype_to_waytype(const linetype lt)
 {
 	static const waytype_t wt2lt[MAX_LINE_TYPE] = { invalid_wt, road_wt, track_wt, water_wt, air_wt, monorail_wt, tram_wt, maglev_wt, narrowgauge_wt };
 	return wt2lt[lt];
+}
+
+
+void simline_t::set_schedule(schedule_t* schedule)
+{
+	if (this->schedule)
+	{
+		haltestelle_t::refresh_routing(schedule, goods_catg_index, NULL, NULL, player);
+		unregister_stops();
+		delete this->schedule;
+	}
+	this->schedule = schedule;
+	financial_history[0][LINE_DEPARTURES_SCHEDULED] = calc_departures_scheduled();
+}
+
+
+void simline_t::set_name(const char *new_name)
+{
+	name = new_name;
+
+	/// Update window title if window is open
+	gui_frame_t *line_info = win_get_magic((ptrdiff_t)self.get_rep());
+
+	if (line_info) {
+		line_info->set_name(name);
+	}
 }
 
 
@@ -617,18 +646,6 @@ void simline_t::renew_stops()
 	{
 		financial_history[0][LINE_DEPARTURES_SCHEDULED] = calc_departures_scheduled();
 	}
-}
-
-void simline_t::set_schedule(schedule_t* schedule)
-{
-	if (this->schedule)
-	{
-		haltestelle_t::refresh_routing(schedule, goods_catg_index, NULL, NULL, player);
-		unregister_stops();
-		delete this->schedule;
-	}
-	this->schedule = schedule;
-	financial_history[0][LINE_DEPARTURES_SCHEDULED] = calc_departures_scheduled();
 }
 
 

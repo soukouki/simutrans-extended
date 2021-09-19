@@ -126,7 +126,7 @@ class gui_vehicle_number_t : public gui_vehicle_bar_t
 	void init();
 
 public:
-	gui_vehicle_number_t(const char* text_=NULL, PIXVAL bgcol = COL_SAFETY, PIXVAL textcol = color_idx_to_rgb(COL_WHITE), bool show_frame_ = true) :
+	gui_vehicle_number_t(const char* text_=NULL, PIXVAL bgcol = COL_SAFETY, PIXVAL /*textcol*/ = color_idx_to_rgb(COL_WHITE), bool show_frame_ = true) :
 		gui_vehicle_bar_t(bgcol) {
 		show_frame = show_frame_;
 		set_flags(vehicle_desc_t::can_be_head, vehicle_desc_t::can_be_head|vehicle_desc_t::can_be_tail, HAS_POWER | BIDIRECTIONAL);

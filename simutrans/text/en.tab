@@ -3716,6 +3716,8 @@ Clear block reservation
 Show/clear block reservations
 COLOR_CHOOSE\n
 Please choose a\ncolour from the\ntable:\n
+Constructed by
+Author:
 Constructed by %s
 Author: %s
 Construction_Btn

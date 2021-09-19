@@ -577,12 +577,12 @@ void gui_halt_waiting_indicator_t::draw(scr_coord offset)
 // main class
 halt_info_t::halt_info_t(halthandle_t halt) :
 		gui_frame_t("", NULL),
+		lb_evaluation("Evaluation:"),
+		scrolly_departure_board(&cont_departure, true, true),
 		text_freight(&freight_info),
 		scrolly_freight(&container_freight, true, true),
-		scrolly_departure_board(&cont_departure, true, true),
-		view(koord3d::invalid, scr_size(max(64, get_base_tile_raster_width()), max(56, get_base_tile_raster_width() * 7 / 8))),
 		waiting_bar(halt, false),
-		lb_evaluation("Evaluation:")
+		view(koord3d::invalid, scr_size(max(64, get_base_tile_raster_width()), max(56, get_base_tile_raster_width() * 7 / 8)))
 {
 	if (halt.is_bound()) {
 		init(halt);
