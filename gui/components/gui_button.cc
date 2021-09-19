@@ -397,17 +397,33 @@ void button_t::draw(scr_coord offset)
 						break;
 				}
 
+				scr_coord_val x=0, y=0, w=0, h=0;
+				if(  img  ) {
+					display_get_image_offset(img, &x, &y, &w, &h);
+				}
+				scr_rect area_img  = scr_rect(area.x, area.y, w>0?w+4:0, area.h);
+				scr_rect area_text = scr_rect(area.x, area.y, 0, 0);
 				if(  text  ) {
+					area_text = area - gui_theme_t::gui_button_text_offset_right - scr_size(area_img.get_width(),0);
 					// move the text to leave evt. space for a colored box top left or bottom right of it
-					scr_rect area_text = area - gui_theme_t::gui_button_text_offset_right;
-					area_text.set_pos( gui_theme_t::gui_button_text_offset + area.get_pos() );
-					if (pressed && gui_theme_t::pressed_button_sinks) { area_text.y++; }
+					area_text.set_pos( gui_theme_t::gui_button_text_offset + area.get_pos() + scr_size(area_img.w,0) );
+					if( pressed && gui_theme_t::pressed_button_sinks ) area_text.y++;
 					display_proportional_ellipsis_rgb( area_text, translated_text, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, text_color, true );
 				}
-				else if(  img  ) {
-					const scr_rect img_area = (pressed && gui_theme_t::pressed_button_sinks) ? scr_rect(area.x, area.y+1, area.w, area.h) : area;
-					display_img_aligned(img, img_area, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true);
+				if(  img  ) {
+					//const scr_rect img_area = (pressed && gui_theme_t::pressed_button_sinks) ? scr_rect(area.x, area.y + 1, area.w, area.h) : area;
+					if(  text  ) {
+						area_img.set_pos( area.get_pos() + gui_theme_t::gui_button_text_offset );
+					}
+					else {
+						// draw on center
+						area_img=area;
+						area_img.set_pos( area.get_pos() );
+					}
+					if( pressed && gui_theme_t::pressed_button_sinks ) area_img.y++;
+					display_img_aligned(img, area_img, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true);
 				}
+
 				if(  win_get_focus()==this  ) {
 					draw_focus_rect( area );
 				}
