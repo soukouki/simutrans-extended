@@ -1368,20 +1368,20 @@ void gui_halt_service_info_t::init(halthandle_t halt)
 	bt_access_minimap.set_tooltip("helptxt_access_minimap");
 	bt_access_minimap.add_listener(this);
 
-	update_connections(halt);
+	update_connections();
 }
 
 void gui_halt_service_info_t::draw(scr_coord offset)
 {
 
-	update_connections(halt);
+	update_connections();
 
 	scrolly.set_size(scrolly.get_size());
 
 	gui_aligned_container_t::draw(offset);
 }
 
-void gui_halt_service_info_t::update_connections(halthandle_t /*h*/)
+void gui_halt_service_info_t::update_connections()
 {
 	if (!halt.is_bound()) {
 		// first call, or invalid handle

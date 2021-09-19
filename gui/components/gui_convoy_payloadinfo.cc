@@ -87,7 +87,6 @@ void gui_convoy_payloadinfo_t::draw(scr_coord offset)
 	}
 }
 
-static karte_ptr_t welt;
 
 gui_loadingbar_t::gui_loadingbar_t(convoihandle_t cnv)
 {
