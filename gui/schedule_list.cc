@@ -1422,9 +1422,10 @@ void schedule_list_gui_t::update_data(linehandle_t changed_line)
 			build_line_list(i);
 		}
 
-		// change text input of selected line
+		// change text input of selected line and line letter code
 		if (changed_line.get_id() == line.get_id()) {
-			reset_line_name();
+			update_lineinfo(line);
+			//reset_line_name();
 		}
 	}
 }
