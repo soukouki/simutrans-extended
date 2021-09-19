@@ -11,8 +11,6 @@
 #include "../simworld.h"
 #include "../utils/cbuffer_t.h"
 
-#include "../player/simplay.h" // for line color
-
 
 const char* line_scrollitem_t::get_text() const
 {
