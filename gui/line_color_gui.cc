@@ -9,7 +9,7 @@
 #include "components/gui_divider.h"
 #include "../utils/simstring.h"
 #include "messagebox.h"
-
+#include "schedule_list.h"
 
 class choose_color_button_t : public button_t
 {
@@ -340,6 +340,10 @@ bool line_color_gui_t::action_triggered(gui_action_creator_t *comp, value_t)
 			if (has_changed()) {
 				line->init_linecode(tmp_linecode_l, tmp_linecode_r, new_color_idx, new_style);
 				destroy_win(this);
+				schedule_list_gui_t *sl = dynamic_cast<schedule_list_gui_t *>(win_get_magic(magic_line_management_t + line->get_owner()->get_player_nr()));
+				if (sl) {
+					sl->update_data(line);
+				}
 			}
 		}
 		else {

@@ -75,7 +75,19 @@ bool line_scrollitem_t::compare(const gui_component_t *aa, const gui_component_t
 		// default sorting ...
 	}
 
-	// first: try to sort by number
+	// first: try to sort by line letter code
+	const char *alcl = a->get_line()->get_linecode_l();
+	const char *blcl = b->get_line()->get_linecode_l();
+	if (strcmp(alcl, blcl)) {
+		return strcmp(alcl, blcl)<0;
+	}
+	const char *alcr = a->get_line()->get_linecode_r();
+	const char *blcr = b->get_line()->get_linecode_r();
+	if (strcmp(alcr, blcr)) {
+		return strcmp(alcr, blcr)<0;
+	}
+
+	// second: try to sort by number
 	const char *atxt = a->get_text();
 	int aint = 0;
 	// isdigit produces with UTF8 assertions ...
