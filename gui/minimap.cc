@@ -1643,17 +1643,21 @@ void minimap_t::draw(scr_coord pos)
 		scr_coord k1,k2;
 		// DISPLAY STATIONS AND AIRPORTS: moved here so station spots are not overwritten by lines drawn
 		FOR(  vector_tpl<line_segment_t>, seg, schedule_cache  ) {
-
-			uint8 color = seg.colorcount;
+			PIXVAL colval = color_idx_to_rgb(seg.colorcount);
 			if(  event_get_last_control_shift()==2  ||  current_cnv.is_bound()  ) {
 				// on control / single convoi use only player colors
-				static uint8 last_color = color;
-				color = seg.player->get_player_color1()+1;
+				static PIXVAL last_color = colval;
+				if (current_cnv.get_rep()->get_line().is_bound() && current_cnv.get_rep()->get_line()->get_line_color()!=0) {
+					colval = current_cnv.get_rep()->get_line()->get_line_color();
+				}
+				else {
+					colval = color_idx_to_rgb(seg.player->get_player_color1()+1);
+				}
 				// all lines same thickness if same color
-				if(  color == last_color  ) {
+				if(  colval == last_color  ) {
 					offset = 0;
 				}
-				last_color = color;
+				last_color = colval;
 			}
 			if(  seg.start != last_start  ||  seg.end != last_end  ) {
 				last_start = seg.start;
@@ -1666,7 +1670,7 @@ void minimap_t::draw(scr_coord pos)
 				diagonal = seg.start_diagonal;
 			}
 			// and finally draw ...
-			line_segment_draw( seg.wtyp, k1, seg.start_offset*offset, k2, seg.end_offset*offset, diagonal, color_idx_to_rgb(color) );
+			line_segment_draw( seg.wtyp, k1, seg.start_offset*offset, k2, seg.end_offset*offset, diagonal, colval );
 		}
 	}
 
