@@ -118,6 +118,8 @@ private:
 	// pas=1, mail=2, freight=3
 	uint8 line_type_flags = 0;
 
+	static bool compare_line(linehandle_t const& l1, linehandle_t const& l2);
+
 protected:
 	schedule_t *schedule;
 	schedule_t* old_schedule;

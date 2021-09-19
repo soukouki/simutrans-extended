@@ -3,6 +3,8 @@
  * (see LICENSE.txt)
  */
 
+#include <algorithm>
+
 #include "../simline.h"
 #include "../simcolor.h"
 #include "../simdepot.h"
@@ -40,6 +42,46 @@
 //#include "components/gui_textarea.h"
 
 
+bool schedule_gui_t::compare_line(linehandle_t const& a, linehandle_t const& b)
+{
+	// first: try to sort by line letter code
+	const char *alcl = a->get_linecode_l();
+	const char *blcl = b->get_linecode_l();
+	if (strcmp(alcl, blcl)) {
+		return strcmp(alcl, blcl) < 0;
+	}
+	const char *alcr = a->get_linecode_r();
+	const char *blcr = b->get_linecode_r();
+	if (strcmp(alcr, blcr)) {
+		return strcmp(alcr, blcr) < 0;
+	}
+
+	// second: try to sort by number
+	const char *atxt = a->get_name();
+	int aint = 0;
+	// isdigit produces with UTF8 assertions ...
+	if (atxt[0] >= '0'  &&  atxt[0] <= '9') {
+		aint = atoi(atxt);
+	}
+	else if (atxt[0] == '('  &&  atxt[1] >= '0'  &&  atxt[1] <= '9') {
+		aint = atoi(atxt + 1);
+	}
+	const char *btxt = b->get_name();
+	int bint = 0;
+	if (btxt[0] >= '0'  &&  btxt[0] <= '9') {
+		bint = atoi(btxt);
+	}
+	else if (btxt[0] == '('  &&  btxt[1] >= '0'  &&  btxt[1] <= '9') {
+		bint = atoi(btxt + 1);
+	}
+	if (aint != bint) {
+		return (aint - bint) < 0;
+	}
+	// otherwise: sort by name
+	return strcmp(atxt, btxt) < 0;
+
+	return false;
+}
 
 // shows/deletes highlighting of tiles
 void schedule_gui_stats_t::highlight_schedule( schedule_t *markschedule, bool marking )
@@ -828,6 +870,7 @@ void schedule_gui_t::init_line_selector()
 		line_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate("<no line>"), SYSCOL_TEXT );
 	}
 
+	std::sort(lines.begin(), lines.end(), compare_line);
 	FOR(  vector_tpl<linehandle_t>,  line,  lines  ) {
 		line_selector.new_component<line_scrollitem_t>(line);
 		if(  !new_line.is_bound()  ) {
@@ -843,8 +886,6 @@ void schedule_gui_t::init_line_selector()
 	}
 
 	line_selector.set_selection( selection );
-	line_scrollitem_t::sort_mode = line_scrollitem_t::SORT_BY_NAME;
-	line_selector.sort( offset );
 	old_line_count = player->simlinemgmt.get_line_count();
 	last_schedule_count = schedule->get_count();
 }
