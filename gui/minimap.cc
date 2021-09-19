@@ -1648,7 +1648,7 @@ void minimap_t::draw(scr_coord pos)
 			if(  event_get_last_control_shift()==2  ||  current_cnv.is_bound()  ) {
 				// on control / single convoi use only player colors
 				static PIXVAL last_color = colval;
-				if (current_cnv.get_rep()->get_line().is_bound() && current_cnv.get_rep()->get_line()->get_line_color()!=0) {
+				if (current_cnv.is_bound() && current_cnv.get_rep()->get_line().is_bound() && current_cnv.get_rep()->get_line()->get_line_color()!=0) {
 					// Since white is mixed in the background, it is easier to see in slightly darker.
 					colval = display_blend_colors(current_cnv.get_rep()->get_line()->get_line_color(), color_idx_to_rgb(COL_BLACK), 10);
 				}
