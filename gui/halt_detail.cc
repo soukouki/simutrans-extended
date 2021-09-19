@@ -1451,32 +1451,37 @@ void gui_halt_service_info_t::update_connections(halthandle_t /*h*/)
 				end_table();
 
 				new_component<gui_empty_t>();
-				if (!skinverwaltung_t::service_frequency) {
-					new_component<gui_empty_t>();
+
+				image_id schedule_symbol = skinverwaltung_t::service_frequency ? skinverwaltung_t::service_frequency->get_image_id(0):IMG_EMPTY;
+				PIXVAL time_txtcol=SYSCOL_TEXT;
+				if (line->get_state() & simline_t::line_has_stuck_convoy) {
+					// has stucked convoy
+					time_txtcol = color_idx_to_rgb(COL_DANGER);
+					if (skinverwaltung_t::pax_evaluation_icons) schedule_symbol = skinverwaltung_t::pax_evaluation_icons->get_image_id(4);
 				}
-				else {
-					new_component<gui_image_t>()->set_image(skinverwaltung_t::service_frequency->get_image_id(0), true);
+				else if (line->get_state() & simline_t::line_missing_scheduled_slots) {
+					time_txtcol = color_idx_to_rgb(COL_DARK_TURQUOISE); // FIXME for dark theme
+					if(skinverwaltung_t::missing_scheduled_slot) schedule_symbol = skinverwaltung_t::missing_scheduled_slot->get_image_id(0);
 				}
+				new_component<gui_image_t>(schedule_symbol, 0, ALIGN_CENTER_V, true);
+
 				const sint64 service_frequency = line->get_service_frequency();
-				gui_label_buf_t *lb_frequency = new_component<gui_label_buf_t>();
+				gui_label_buf_t *lb_frequency = new_component<gui_label_buf_t>(time_txtcol, gui_label_t::right);
 				if (service_frequency) {
 					char as_clock[32];
 					world()->sprintf_ticks(as_clock, sizeof(as_clock), service_frequency);
 					lb_frequency->buf().printf(" %s", as_clock);
-					if (line->get_state() & simline_t::line_missing_scheduled_slots) {
-						lb_frequency->set_color(color_idx_to_rgb(COL_DARK_TURQUOISE));
-					}
 				}
 				else {
 					lb_frequency->buf().append("--:--:--");
 					lb_frequency->set_color(COL_INACTIVE);
 				}
-				lb_frequency->set_align(gui_label_t::right);
 				lb_frequency->update();
 				lb_frequency->set_fixed_width( D_TIME_6_DIGITS_WIDTH );
 
 				// convoy count
-				gui_label_buf_t *lb_convoy_count = new_component<gui_label_buf_t>();
+				gui_label_buf_t *lb_convoy_count = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+				lb_convoy_count->buf().append(" ");
 				if (line->get_convoys().get_count() == 1) {
 					lb_convoy_count->buf().append(translator::translate("1 convoi"));
 				}
@@ -1527,14 +1532,18 @@ void gui_halt_service_info_t::update_connections(halthandle_t /*h*/)
 				lb->update();
 
 				new_component<gui_empty_t>();
-				if (!skinverwaltung_t::service_frequency) {
-					new_component<gui_empty_t>();
+
+				image_id schedule_symbol = skinverwaltung_t::service_frequency ? skinverwaltung_t::service_frequency->get_image_id(0) : IMG_EMPTY;
+				PIXVAL time_txtcol = SYSCOL_TEXT;
+				if (cnv->get_state() == convoi_t::NO_ROUTE || cnv->get_state() == convoi_t::NO_ROUTE_TOO_COMPLEX || cnv->get_state() == convoi_t::OUT_OF_RANGE) {
+					// convoy is stuck
+					time_txtcol = color_idx_to_rgb(COL_DANGER);
+					if (skinverwaltung_t::pax_evaluation_icons) schedule_symbol = skinverwaltung_t::pax_evaluation_icons->get_image_id(4);
 				}
-				else {
-					new_component<gui_image_t>()->set_image(skinverwaltung_t::service_frequency->get_image_id(0), true);
-				}
+				new_component<gui_image_t>(schedule_symbol, 0, ALIGN_CENTER_V, true);
+
 				const sint64 average_round_trip_time = cnv->get_average_round_trip_time();
-				gui_label_buf_t *lb_triptime = new_component<gui_label_buf_t>();
+				gui_label_buf_t *lb_triptime = new_component<gui_label_buf_t>(time_txtcol,gui_label_t::right);
 				if (average_round_trip_time) {
 					char as_clock[32];
 					world()->sprintf_ticks(as_clock, sizeof(as_clock), average_round_trip_time);
@@ -1544,7 +1553,6 @@ void gui_halt_service_info_t::update_connections(halthandle_t /*h*/)
 					lb_triptime->buf().append("--:--:--");
 					lb_triptime->set_color(COL_INACTIVE);
 				}
-				lb_triptime->set_align(gui_label_t::right);
 				lb_triptime->update();
 				lb_triptime->set_fixed_width( D_TIME_6_DIGITS_WIDTH );
 
