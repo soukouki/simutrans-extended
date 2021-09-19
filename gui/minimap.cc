@@ -1641,6 +1641,7 @@ void minimap_t::draw(scr_coord pos)
 		}
 
 		scr_coord k1,k2;
+		bool already_show_lettercode=false;
 		// DISPLAY STATIONS AND AIRPORTS: moved here so station spots are not overwritten by lines drawn
 		FOR(  vector_tpl<line_segment_t>, seg, schedule_cache  ) {
 			PIXVAL colval = color_idx_to_rgb(seg.colorcount);
@@ -1648,7 +1649,8 @@ void minimap_t::draw(scr_coord pos)
 				// on control / single convoi use only player colors
 				static PIXVAL last_color = colval;
 				if (current_cnv.get_rep()->get_line().is_bound() && current_cnv.get_rep()->get_line()->get_line_color()!=0) {
-					colval = current_cnv.get_rep()->get_line()->get_line_color();
+					// Since white is mixed in the background, it is easier to see in slightly darker.
+					colval = display_blend_colors(current_cnv.get_rep()->get_line()->get_line_color(), color_idx_to_rgb(COL_BLACK), 10);
 				}
 				else {
 					colval = color_idx_to_rgb(seg.player->get_player_color1()+1);
@@ -1671,6 +1673,15 @@ void minimap_t::draw(scr_coord pos)
 			}
 			// and finally draw ...
 			line_segment_draw( seg.wtyp, k1, seg.start_offset*offset, k2, seg.end_offset*offset, diagonal, colval );
+			if (current_cnv.is_bound() && !already_show_lettercode) {
+				linehandle_t tmp_line = current_cnv.get_rep()->get_line();
+				if (tmp_line.is_bound() && tmp_line->has_letter_code()) {
+					scr_coord_val lc_offset_x = (k1.x-k2.x)>0 ? LINEASCENT+6 : -LINEASCENT*2-6;
+					scr_coord_val lc_offset_y = (k1.y-k2.y)>0 ? LINEASCENT : -LINEASCENT-15;
+					display_line_lettercode_rgb(k1.x+ lc_offset_x, max(0,k1.y+lc_offset_y), tmp_line->get_line_color(), tmp_line->get_line_lettercode_style(), tmp_line->get_linecode_l(), tmp_line->get_linecode_r(), true);
+					already_show_lettercode = true;
+				}
+			}
 		}
 	}
 

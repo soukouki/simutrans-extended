@@ -215,6 +215,10 @@ public:
 	void set_linecode_l(const char *str);
 	char const* get_linecode_r() const { return linecode_r; }
 	void set_linecode_r(const char *str);
+	inline bool has_letter_code() const
+	{
+		return (line_color_index != 255 && !(linecode_l[0]=='\0' && linecode_r[0]=='\0'));
+	}
 
 	/*
 	 * load or save the line
