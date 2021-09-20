@@ -131,23 +131,24 @@ void line_scrollitem_t::draw(scr_coord pos)
 
 	// symbols
 	pos.y += D_GET_CENTER_ALIGN_OFFSET(D_FIXED_SYMBOL_WIDTH, size.h)+1;
+	const uint8 symbol_interval = D_FIXED_SYMBOL_WIDTH+2;
 	if (line->get_state() & simline_t::line_has_stuck_convoy && skinverwaltung_t::pax_evaluation_icons) {
-		left = max(left,get_size().w - 56);
+		left = max(left,get_size().w - symbol_interval*4);
 		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(4), pos.x + left, pos.y, 0, false, false);
-		left += 14;
+		left += symbol_interval;
 	}
 	if (line->get_state() & simline_t::line_overcrowded && skinverwaltung_t::pax_evaluation_icons) {
-		left = max(left,get_size().w - 42);
+		left = max(left,get_size().w - symbol_interval*3);
 		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(1), pos.x + left, pos.y, 0, false, false);
-		left += 14;
+		left += symbol_interval;
 	}
 	if (line->get_state() & simline_t::line_missing_scheduled_slots && skinverwaltung_t::missing_scheduled_slot) {
-		left = max(left,get_size().w - 28);
+		left = max(left,get_size().w - symbol_interval*2);
 		display_color_img(skinverwaltung_t::missing_scheduled_slot->get_image_id(0), pos.x + left, pos.y, 0, false, false);
-		left += 14;
+		left += symbol_interval;
 	}
 	if (line->get_state() & simline_t::line_has_upgradeable_vehicles && skinverwaltung_t::upgradable) {
-		left = max(left,get_size().w - 14);
+		left = max(left,get_size().w - symbol_interval);
 		display_color_img(skinverwaltung_t::upgradable->get_image_id(1), pos.x + left, pos.y, 0, false, false);
 	}
 }
