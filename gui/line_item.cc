@@ -137,6 +137,16 @@ void line_scrollitem_t::draw(scr_coord pos)
 		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(4), pos.x + left, pos.y, 0, false, false);
 		left += symbol_interval;
 	}
+	else if (line->get_state() & simline_t::line_nothing_moved && skinverwaltung_t::alerts) {
+		left = max(left,get_size().w - symbol_interval*4);
+		display_color_img(skinverwaltung_t::alerts->get_image_id(2), pos.x + left, pos.y, 0, false, false);
+		left += symbol_interval;
+	}
+	else if (line->get_state() & simline_t::line_no_convoys && skinverwaltung_t::alerts) {
+		left = max(left,get_size().w - symbol_interval*4);
+		display_color_img(skinverwaltung_t::alerts->get_image_id(1), pos.x + left, pos.y, 0, false, false);
+		left += symbol_interval;
+	}
 	if (line->get_state() & simline_t::line_overcrowded && skinverwaltung_t::pax_evaluation_icons) {
 		left = max(left,get_size().w - symbol_interval*3);
 		display_color_img(skinverwaltung_t::pax_evaluation_icons->get_image_id(1), pos.x + left, pos.y, 0, false, false);
