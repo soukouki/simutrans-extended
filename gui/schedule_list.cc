@@ -164,6 +164,8 @@ void gui_line_waiting_status_t::init()
 	remove_all();
 	if (line.is_bound()) {
 		schedule = line->get_schedule();
+		if( !schedule->get_count() ) return; // nothing to show
+
 		uint8 cols; // table cols
 		cols = line->get_goods_catg_index().get_count()+show_name+1;
 
