@@ -736,7 +736,7 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 
 	// total
 	PIXVAL color;
-	color = halt->is_overcrowded(good_category->get_catg_index()) ? COL_DARK_PURPLE : SYSCOL_TEXT;
+	color = halt->is_overcrowded(good_category->get_catg_index()) ? color_idx_to_rgb(COL_DARK_PURPLE) : SYSCOL_TEXT;
 	pas_info.append(halt->get_ware_summe(good_category));
 	display_proportional_clip_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH, y, pas_info, ALIGN_RIGHT, color, true);
 	pas_info.clear();
@@ -1116,7 +1116,7 @@ void halt_detail_goods_t::draw(scr_coord offset)
 
 			// total
 			PIXVAL color;
-			color = halt->is_overcrowded(2) ? COL_DARK_PURPLE : SYSCOL_TEXT;
+			color = halt->is_overcrowded(2) ? color_idx_to_rgb(COL_DARK_PURPLE) : SYSCOL_TEXT;
 			goods_info.append(waiting_sum);
 			display_proportional_clip_rgb(offset.x + D_BUTTON_WIDTH + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH, offset.y + top, goods_info, ALIGN_RIGHT, color, true);
 			goods_info.clear();
@@ -1851,7 +1851,7 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 			buf.printf("%ukm", (uint)km_to_halt);
 		}
 		xoff += proportional_string_width("000.00km");
-		display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_RIGHT, is_walking ? MN_GREY0 : SYSCOL_TEXT, true);
+		display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_RIGHT, is_walking ? SYSCOL_TEXT_WEAK : SYSCOL_TEXT, true);
 		if (is_walking && skinverwaltung_t::on_foot) {
 			display_color_img(skinverwaltung_t::on_foot->get_image_id(0), offset.x + D_MARGIN_LEFT, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false);
 		}
