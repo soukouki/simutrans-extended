@@ -759,7 +759,7 @@ void simline_t::recalc_status()
 						if (v->get_desc()->get_upgrades(k) && !v->get_desc()->get_upgrades(k)->is_future(month_now))
 						{
 							state |= line_has_upgradeable_vehicles;
-							state_color = COL_UPGRADEABLE;
+							if (!skinverwaltung_t::upgradable) state_color = COL_UPGRADEABLE;
 						}
 					}
 				}
@@ -788,8 +788,8 @@ void simline_t::recalc_status()
 	if (has_overcrowded())
 	{
 		// Overcrowded
-		state_color = color_idx_to_rgb(COL_DARK_PURPLE);
 		state |= line_overcrowded;
+		if (!skinverwaltung_t::upgradable) state_color = color_idx_to_rgb(COL_DARK_PURPLE);
 	}
 	if((financial_history[0][LINE_DISTANCE]|financial_history[1][LINE_DISTANCE]|financial_history[2][LINE_DISTANCE]) ==0)
 	{
