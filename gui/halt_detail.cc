@@ -832,7 +832,7 @@ void halt_detail_pas_t::draw(scr_coord offset)
 		if (halt->get_pax_enabled()) {
 			top += LINESPACE;
 			display_heading_rgb(offset.x, offset.y + top, D_DEFAULT_WIDTH - D_MARGINS_X, D_HEADING_HEIGHT,
-				color_idx_to_rgb(halt->get_owner()->get_player_color1()), color_idx_to_rgb(halt->get_owner()->get_player_color1()+2), translator::translate("Around passenger demands"), true, 2);
+				color_idx_to_rgb(halt->get_owner()->get_player_color1()+env_t::gui_player_color_dark), color_idx_to_rgb(halt->get_owner()->get_player_color1()+env_t::gui_player_color_bright), translator::translate("Around passenger demands"), true, 2);
 			top += D_HEADING_HEIGHT + D_V_SPACE*2;
 			display_proportional_clip_rgb(offset.x + GOODS_SYMBOL_CELL_WIDTH, offset.y + top, translator::translate("hd_wealth"), ALIGN_LEFT, SYSCOL_TEXT, true);
 			display_proportional_clip_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 4, offset.y + top, translator::translate("Population"), ALIGN_LEFT, SYSCOL_TEXT, true);
@@ -903,7 +903,7 @@ void halt_detail_pas_t::draw(scr_coord offset)
 		if ((halt->get_pax_enabled() && arround_population) || halt->get_mail_enabled()) {
 			top += LINESPACE;
 			display_heading_rgb(offset.x, offset.y + top, D_DEFAULT_WIDTH - D_MARGINS_X, D_HEADING_HEIGHT,
-				color_idx_to_rgb(halt->get_owner()->get_player_color1()), color_idx_to_rgb(halt->get_owner()->get_player_color1()+2), translator::translate("Transportation status around this stop"), true, 2);
+				color_idx_to_rgb(halt->get_owner()->get_player_color1()+env_t::gui_player_color_dark), color_idx_to_rgb(halt->get_owner()->get_player_color1()+env_t::gui_player_color_bright), translator::translate("Transportation status around this stop"), true, 2);
 			top += D_HEADING_HEIGHT + D_V_SPACE * 2;
 			// header
 			display_proportional_clip_rgb(offset.x + D_BUTTON_WIDTH + GOODS_SYMBOL_CELL_WIDTH + 4, offset.y + top, translator::translate("hd_generated"), ALIGN_LEFT, SYSCOL_TEXT, true);
