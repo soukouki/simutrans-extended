@@ -5677,7 +5677,7 @@ void karte_t::step()
 		// For this reason, multi-threading is disabled when using network mode with clients connected until the problem can be solved.
 		if (cities_to_process <= 0 || cities_awaiting_private_car_route_check.get_count() > parallel_operations - 1)
 		{
-			cities_to_process = env_t::networkmode ? 1 : min(cities_awaiting_private_car_route_check.get_count(), parallel_operations - 1);
+			cities_to_process = env_t::networkmode ? min(1, cities_awaiting_private_car_route_check.get_count()) : min(cities_awaiting_private_car_route_check.get_count(), parallel_operations - 1);
 		}
 		start_private_car_threads();
 #else
