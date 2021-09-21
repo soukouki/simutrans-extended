@@ -102,6 +102,7 @@ set_target_properties( simutrans-extended PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${
 #
 
 target_link_libraries(simutrans-extended PRIVATE PNG::PNG)
+	utils/checklist.cc
 
 if (WIN32)
 	target_sources(simutrans-extended PRIVATE simres.rc)
