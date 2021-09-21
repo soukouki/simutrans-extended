@@ -31,7 +31,7 @@ boden_t::boden_t(loadsave_t *file, koord pos ) : grund_t( koord3d(pos,0) )
 			}
 
 			uint16 age;
-			if (file->is_version_atleast(122, 2)) {
+			if (file->is_version_atleast(122, 2) || file->is_version_ex_atleast(14, 46)) {
 				file->rdwr_short(age);
 				age &= 0xFFF;
 			}
@@ -83,14 +83,14 @@ void boden_t::rdwr(loadsave_t *file)
 
 	if(  file->is_version_atleast(110, 1)  ) {
 		// a server sends the smallest possible savegames to clients, i.e. saves only types and age of trees
-		if(  (env_t::server  ||  file->is_version_atleast(122, 2))  &&  !hat_wege()  ) {
+		if(  (env_t::server  ||  file->is_version_atleast(122, 2) || file->is_version_ex_atleast(14, 46))  &&  !hat_wege()  ) {
 			for(  uint8 i=0;  i<objlist.get_top();  i++  ) {
 				obj_t *obj = objlist.bei(i);
 				if(  obj->get_typ()==obj_t::baum  ) {
 					baum_t *tree = (baum_t *)obj;
 					file->wr_obj_id( tree->get_desc_id() );
 
-					if (file->is_version_atleast(122, 2)) {
+					if (file->is_version_atleast(122, 2) || file->is_version_ex_atleast(14, 46)) {
 						uint16 age = tree->get_age();
 						file->rdwr_short( age );
 					}
