@@ -22,9 +22,9 @@ uint32 sim_async_rand(const uint32 max);
 
 /* generates a random number on [0,max-1]-interval */
 #ifdef DEBUG_SIMRAND_CALLS
-uint32 simrand(const uint32 max, const char* caller);
+uint32 simrand(const uint32 max, const char* caller = "");
 #else
-uint32 simrand(const uint32 max, const char*);
+uint32 simrand(const uint32 max, const char* = "");
 #endif
 
 /* Generates a random number on [0,max-1] interval with a normal distribution*/

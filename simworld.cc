@@ -1484,7 +1484,7 @@ DBG_DEBUG("karte_t::init()","init_tiles");
 
 DBG_DEBUG("karte_t::init()","distributing trees");
 	if (!settings.get_no_trees()) {
-		baum_t::distribute_trees(3);
+		baum_t::distribute_trees(3, 0, 0, get_size().x, get_size().x);
 	}
 
 DBG_DEBUG("karte_t::init()","built timeline");

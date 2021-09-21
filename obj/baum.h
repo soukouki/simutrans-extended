@@ -18,8 +18,6 @@
 
 #include <string>
 
-#define TREE_MAX_RANDOM_AGE (703)
-#define TREE_MIN_PROBABILITY (38)
 
 /**
  * Simulated trees for Simutrans.
@@ -30,7 +28,7 @@ private:
 	static FLAGGED_PIXVAL outline_color;
 
 	/** month of birth */
-	uint16 purchase_time;
+	uint16 geburt;
 
 	/** type of tree (was 9 but for more compact saves now only 254 different tree types are allowed) */
 	uint8 tree_id;
@@ -43,22 +41,18 @@ private:
 	// one bit free ;)
 
 	// static for administration
-	static stringhashtable_tpl<const tree_desc_t *, N_BAGS_SMALL> desc_names;
+	static stringhashtable_tpl<const tree_desc_t *, N_BAGS_SMALL> desc_table;
 	static vector_tpl<const tree_desc_t *> tree_list;
 	static weighted_vector_tpl<uint32>* tree_list_per_climate;
 
-	bool plant_tree();
+	bool saee_baum();
 
 	/**
 	 * calculate offsets for new trees
 	 */
 	void calc_off(uint8 slope, sint8 x=-128, sint8 y=-128);
 
-	static const uint8 invalid_tree_id = 0xFF;
-
-	static uint8 random_tree_for_climate_intern(climate cl);
-
-	static uint8 plant_tree_on_coordinate(koord pos, const uint8 maximum_count, const uint8 count);
+	static uint16 random_tree_for_climate_intern(climate cl);
 
 public:
 	/**
@@ -103,10 +97,7 @@ public:
 	void recalc_off();
 
 	const char *get_name() const OVERRIDE {return "Baum";}
-#ifdef INLINE_OBJ_TYPE
-#else
-	typ get_typ() const OVERRIDE { return baum; }
-#endif
+	typ get_typ() const { return baum; }
 
 	void show_info() OVERRIDE;
 
@@ -124,22 +115,25 @@ public:
 	// static functions to handle trees
 
 	// distributes trees on a map
-	static void distribute_trees(int density);
+	static void distribute_trees(int dichte,  sint16 xtop, sint16 ytop, sint16 xbottom, sint16 ybottom );
+
+	static void fill_trees(int dichte, sint16 xtop, sint16 ytop, sint16 xbottom, sint16 ybottom );
+
+	static uint32 create_forest(koord center, koord size, sint16 xtop, sint16 ytop, sint16 xbottom, sint16 ybottom );
 
 	static bool plant_tree_on_coordinate(koord pos, const tree_desc_t *desc, const bool check_climate, const bool random_age );
+
+	static uint8 plant_tree_on_coordinate(koord pos, const uint8 maximum_count, const uint8 count);
 
 	static bool register_desc(tree_desc_t *desc);
 	static bool successfully_loaded();
 
-	static uint32 create_forest(koord center, koord size );
-	static void fill_trees(int density);
-
 	// return list to descriptors
 	static vector_tpl<tree_desc_t const*> const& get_all_desc() { return tree_list; }
 
-	static const tree_desc_t *random_tree_for_climate(climate cl) { uint8 b = random_tree_for_climate_intern(cl);  return b!=invalid_tree_id ? tree_list[b] : NULL; }
+	static const tree_desc_t *random_tree_for_climate(climate cl) { uint16 b = random_tree_for_climate_intern(cl);  return b!=0xFFFF ? tree_list[b] : NULL; }
 
-	static const tree_desc_t *find_tree( const char *tree_name ) { return tree_list.empty() ? NULL : desc_names.get(tree_name); }
+	static const tree_desc_t *find_tree( const char *tree_name ) { return tree_list.empty() ? NULL : desc_table.get(tree_name); }
 
 	static int get_count() { return tree_list.get_count()-1; }
 	static int get_count(climate cl);
