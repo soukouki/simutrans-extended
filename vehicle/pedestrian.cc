@@ -384,6 +384,6 @@ void pedestrian_t::check_timeline_pedestrians()
 void pedestrian_t::show_info()
 {
 	if (env_t::road_user_info & 2) {
-		create_win(new slim_obj_info_t(this), w_info, (ptrdiff_t)this);
+		create_win(new pedestrian_info_t(this), w_info, (ptrdiff_t)this);
 	}
 }
