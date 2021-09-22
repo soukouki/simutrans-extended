@@ -275,8 +275,6 @@ public:
 
 	halthandle_t get_halt_within_walking_distance(uint32 index) const { return halts_within_walking_distance[index]; }
 
-	static uint8 pedestrian_limit;
-
 	/**
 	 * List of all tiles (grund_t) that belong to this halt.
 	 */

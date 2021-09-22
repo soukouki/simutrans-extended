@@ -4905,7 +4905,6 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 	debug_sums[9] = 0; // Number of randomised private car directions this sync_step
 
 	set_random_mode( SYNC_STEP_RANDOM );
-	haltestelle_t::pedestrian_limit = 0;
 	if(do_sync_step) {
 		// Only omitted when called to display a new frame during fast forward
 
