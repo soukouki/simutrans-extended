@@ -1062,7 +1062,7 @@ grund_t* private_car_t::hop_check()
 		if (found_route)
 		{
 			pos_next_next = weg->get_next_on_private_car_route_to(check_target,true,simrand(4,"private_car_t::hop_check"));
-			welt->add_to_debug_sums(9,1);
+			welt->add_to_debug_sums(8,1);
 
 			// Check whether we are at the end of the route (i.e. the destination)
 			if ((current_city == destination_city) && pos_next_next == koord3d::invalid)
@@ -1269,6 +1269,7 @@ grund_t* private_car_t::hop_check()
 		if (!poslist.empty())
 		{
 			pos_next_next = pick_any_weighted(poslist);
+			welt->add_to_debug_sums(9,1);
 		}
 		else
 		{
