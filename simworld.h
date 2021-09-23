@@ -858,7 +858,7 @@ private:
 	sint32 next_step_passenger;
 	sint32 next_step_mail;
 
-	sint32 passenger_step_interval;
+	sint32 passenger_step_interval = 1;
 	sint32 mail_step_interval;
 
 	// Signals in the time interval working method that need
