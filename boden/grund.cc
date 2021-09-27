@@ -622,7 +622,7 @@ void grund_t::take_obj_from(grund_t* other_gr)
 
 void grund_t::show_info()
 {
-	int old_count = win_get_open_count();
+	const uint32 old_count = win_get_open_count();
 	if(get_halt().is_bound()) {
 		get_halt()->show_info();
 		if(env_t::single_info  &&  old_count!=win_get_open_count()  ) {
