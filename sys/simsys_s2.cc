@@ -110,7 +110,6 @@ static SDL_Cursor *arrow;
 static SDL_Cursor *hourglass;
 static SDL_Cursor *blank;
 
-
 // Number of fractional bits for screen scaling
 #define SCALE_SHIFT_X 5
 #define SCALE_SHIFT_Y 5
@@ -326,6 +325,10 @@ int dr_os_open(int screen_width, int screen_height, bool fullscreen)
 	hourglass = SDL_CreateCursor( hourglass_cursor, hourglass_cursor_mask, 16, 22, 8, 11 );
 	blank = SDL_CreateCursor( blank_cursor, blank_cursor, 8, 2, 0, 0 );
 	SDL_ShowCursor(1);
+
+#if SDL_VERSION_ATLEAST(2, 0, 10)
+	SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0"); // no mouse emulation for touch
+#endif
 
 	if(  !env_t::hide_keyboard  ) {
 		// enable keyboard input at all times unless requested otherwise
