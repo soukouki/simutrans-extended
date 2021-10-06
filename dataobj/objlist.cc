@@ -27,6 +27,7 @@
 #include "../obj/wayobj.h"
 #include "../obj/roadsign.h"
 #include "../obj/groundobj.h"
+#include "../obj/pier.h"
 
 #include "../simtypes.h"
 #include "../simdepot.h"
@@ -884,6 +885,10 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 							delete p;
 						}
 					}
+					break;
+
+				case obj_t::pier:
+					new_obj = new pier_t(file);
 					break;
 
 				case obj_t::baum:

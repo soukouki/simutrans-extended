@@ -54,6 +54,7 @@
 #include "../obj/leitung2.h"
 #include "../obj/groundobj.h"
 #include "../obj/wayobj.h"
+#include "../obj/pier.h"
 
 #include "../ifc/simtestdriver.h"
 
@@ -898,6 +899,64 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 	if ((bautyp&bautyp_mask)!=leitung) {
 		if (!check_powerline(zv,to)  ||  !check_powerline(-zv,from)) {
 			return false;
+		}
+	}
+
+	// universal check for piers
+	// TODO handle sloped ways under piers
+	if(zv.x!=0 || zv.y!=0){
+		ribi_t::ribi ribimask;
+		ribi_t::ribi zvribi=zv.to_ribi();
+		ribimask = pier_t::get_below_ribi_total(to);
+		if( (ribimask|ribi_t::backward(zvribi))!=ribimask){
+				return false;
+		}
+		ribimask = pier_t::get_below_ribi_total(from);
+		if( (ribimask|zvribi)!=ribimask){
+				return false;
+		}
+		if(welt->get_settings().get_way_height_clearance()==2){
+			if(grund_t *to2 = welt->lookup( to->get_pos() + koord3d(0, 0, 1) ) ){
+				if((desc->get_topspeed() > 0 && desc->get_waytype() != water_wt && desc->get_waytype() != road_wt && desc->get_waytype() != tram_wt) || (bautyp&bautyp_mask)==leitung){
+					ribimask = pier_t::get_below_ribi_total(to);
+					if( (ribimask|ribi_t::backward(zvribi))!=ribimask){
+							return false;
+					}
+
+				}
+			}
+			if(grund_t *from2 = welt->lookup( from->get_pos() + koord3d(0, 0, 1) ) ){
+				if((desc->get_topspeed() > 0 && desc->get_waytype() != water_wt && desc->get_waytype() != road_wt && desc->get_waytype() != tram_wt) || (bautyp&bautyp_mask)==leitung){
+					ribimask = pier_t::get_below_ribi_total(to);
+					if( (ribimask|zvribi)!=ribimask){
+							return false;
+					}
+				}
+			}
+		}
+		if(to->get_typ()==grund_t::pierdeck){
+			grund_t *to2=welt->lookup(to->get_pos() + koord3d(0,0,-1));
+			if(to2==NULL){
+				to2=welt->lookup(to->get_pos() + koord3d(0,0,-2));
+			}
+			if(to2){
+				ribimask=pier_t::get_above_ribi_total(to2);
+				if((ribimask&zv.to_ribi())!=zv.to_ribi()){
+					return false;
+				}
+			}
+		}
+		if(from->get_typ()==grund_t::pierdeck){
+			grund_t *from2=welt->lookup(from->get_pos() + koord3d(0,0,-1));
+			if(from2==NULL){
+				from2=welt->lookup(from->get_pos() + koord3d(0,0,-2));
+			}
+			if(from2){
+				ribimask=pier_t::get_above_ribi_total(from2);
+				if((ribimask&ribi_t::backward(zv.to_ribi()))!=ribi_t::backward(zv.to_ribi())){
+					return false;
+				}
+			}
 		}
 	}
 
