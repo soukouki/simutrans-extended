@@ -3,8 +3,9 @@
  * (see LICENSE.txt)
  */
 
-#ifndef PIER_H
-#define PIER_H
+#ifndef OBJ_PIER_H
+#define OBJ_PIER_H
+
 
 class karte_t;
 

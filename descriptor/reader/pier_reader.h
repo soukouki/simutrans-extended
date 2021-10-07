@@ -2,7 +2,7 @@
  * This file is part of the Simutrans-Extended project under the Artistic License.
  * (see LICENSE.txt)
  */
- 
+
 #ifndef PIER_READER_T_H
 #define PIER_READER_T_H
 

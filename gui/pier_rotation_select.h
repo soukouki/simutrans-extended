@@ -3,8 +3,9 @@
  * (see LICENSE.txt)
  */
 
-#ifndef PIER_ROTATION_SELECT_H
-#define PIER_ROTATION_SELECT_H
+#ifndef GUI_PIER_ROTATION_SELECT_H
+#define GUI_PIER_ROTATION_SELECT_H
+
 
 #include "components/action_listener.h"
 #include "gui_frame.h"

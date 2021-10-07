@@ -3,8 +3,9 @@
  * (see LICENSE.txt)
  */
 
-#ifndef PIER_BUILDER_H
-#define PIER_BUILDER_H
+#ifndef BAUER_PIER_BUILDER_H
+#define BAUER_PIER_BUILDER_H
+
 
 #include "../tpl/stringhashtable_tpl.h"
 #include "../dataobj/koord3d.h"
@@ -17,7 +18,7 @@ class tool_selector_t;
 
 class pier_builder_t {
 private:
-    pier_builder_t() {} 
+    pier_builder_t() {}
 
     static karte_ptr_t welt;
 

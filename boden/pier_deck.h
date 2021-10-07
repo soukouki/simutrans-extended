@@ -3,8 +3,9 @@
  * (see LICENSE.txt)
  */
 
-#ifndef PIER_DECK_H
-#define PIER_DECK_H
+#ifndef BODEN_PIER_DECK_H
+#define BODEN_PIER_DECK_H
+
 
 #include "grund.h"
 #include "../dataobj/ribi.h"
