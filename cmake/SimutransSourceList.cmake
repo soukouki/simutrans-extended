@@ -6,6 +6,7 @@ target_sources(simutrans-extended PRIVATE
 	bauer/tunnelbauer.cc
 	bauer/vehikelbauer.cc
 	bauer/wegbauer.cc
+	bauer/pier_builder.cc
 	boden/boden.cc
 	boden/brueckenboden.cc
 	boden/fundament.cc
@@ -21,6 +22,7 @@ target_sources(simutrans-extended PRIVATE
 	boden/wege/schiene.cc
 	boden/wege/strasse.cc
 	boden/wege/weg.cc
+	boden/pier_deck.cc
 	convoy.cc
 	dataobj/crossing_logic.cc
 	dataobj/environment.cc
@@ -80,6 +82,8 @@ target_sources(simutrans-extended PRIVATE
 	descriptor/tunnel_desc.cc
 	descriptor/vehicle_desc.cc
 	descriptor/way_desc.cc
+	descriptor/reader/pier_reader.cc
+	descriptor/pier_desc.cc
 	display/font.cc
 	display/simview.cc
 	display/viewport.cc
@@ -214,6 +218,7 @@ target_sources(simutrans-extended PRIVATE
 	gui/vehicle_class_manager.cc
 	gui/way_info.cc
 	gui/welt.cc
+	gui/pier_rotation_select.cc
 	io/raw_image.cc
 	io/raw_image_bmp.cc
 	io/raw_image_png.cc
@@ -252,6 +257,7 @@ target_sources(simutrans-extended PRIVATE
 	obj/wayobj.cc
 	obj/wolke.cc
 	obj/zeiger.cc
+	obj/pier.cc
 
 	old_blockmanager.cc
 	path_explorer.cc
