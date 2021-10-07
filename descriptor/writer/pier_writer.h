@@ -3,8 +3,9 @@
  * (see LICENSE.txt)
  */
 
-#ifndef PIER_WRITER_T_H
-#define PIER_WRITER_T_H
+#ifndef DESCRIPTOR_WRITER_PIER_WRITER_H
+#define DESCRIPTOR_WRITER_PIER_WRITER_H
+
 
 #include <string>
 #include "obj_writer.h"

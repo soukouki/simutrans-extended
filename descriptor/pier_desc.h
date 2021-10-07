@@ -3,8 +3,9 @@
  * (see LICENSE.txt)
  */
 
-#ifndef PIER_DESC_H
-#define PIER_DESC_H
+#ifndef DESCRIPTOR_PIER_DESC_H
+#define DESCRIPTOR_PIER_DESC_H
+
 
 #include "way_desc.h"
 #include "../dataobj/ribi.h"
