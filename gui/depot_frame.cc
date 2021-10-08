@@ -55,7 +55,7 @@ depot_frame_t::depot_frame_t(depot_t* depot) :
 	icnv(depot->convoi_count()-1),
 	lb_convois(NULL, SYSCOL_TEXT, gui_label_t::left),
 	lb_convoi_line("Serves Line:", SYSCOL_TEXT, gui_label_t::left),
-	convoy_assembler(depot->get_wegtyp(), depot->get_player_nr(), check_way_electrified(true) )
+	convoy_assembler(depot->get_wegtyp(), depot->get_owner_nr(), check_way_electrified(true) )
 {
 DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->get_max_convoi_length());
 	last_selected_line = depot->get_last_selected_line();
@@ -503,11 +503,11 @@ void depot_frame_t::build_line_list()
 		// if still nothing, resort to line management dialoge
 		if(  !last_selected_line.is_bound()  ) {
 			// try last specific line
-			last_selected_line = schedule_list_gui_t::selected_line[ depot->get_owner()->get_player_nr() ][ depot->get_line_type() ];
+			last_selected_line = schedule_list_gui_t::selected_line[ depot->get_owner()->get_owner_nr() ][ depot->get_line_type() ];
 		}
 		if(  !last_selected_line.is_bound()  ) {
 			// try last general line
-			last_selected_line = schedule_list_gui_t::selected_line[ depot->get_owner()->get_player_nr() ][ 0 ];
+			last_selected_line = schedule_list_gui_t::selected_line[ depot->get_owner()->get_owner_nr() ][ 0 ];
 			if(  last_selected_line.is_bound()  &&  last_selected_line->get_linetype() != depot->get_line_type()  ) {
 				last_selected_line = linehandle_t();
 			}
