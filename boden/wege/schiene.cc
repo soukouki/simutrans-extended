@@ -291,3 +291,30 @@ void schiene_t::rdwr(loadsave_t *file)
 		direction = (ribi_t::ribi)d;
 	}
 }
+
+
+FLAGGED_PIXVAL schiene_t::get_outline_colour() const
+{
+		uint8 reservation_colour;
+		switch(type)
+		{
+		case block:
+		default:
+			reservation_colour = COL_RED;
+			break;
+
+		case directional:
+			reservation_colour = COL_BLUE;
+			break;
+
+		case priority:
+			reservation_colour = COL_YELLOW;
+			break;
+#ifdef DEBUG
+		case stale_block:
+			reservation_colour = COL_DARK_RED;
+			break;
+#endif
+		};
+		return (show_reservations  &&  reserved.is_bound()) ? TRANSPARENT75_FLAG | OUTLINE_FLAG | color_idx_to_rgb(reservation_colour) : 0;
+}
