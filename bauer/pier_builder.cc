@@ -127,6 +127,22 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         if(msg){
             return msg;
         }
+        if(desc->get_above_way_ribi()){
+            if(weg_t *w0 = gr->get_weg_nr(0)){
+                if(!(w0->is_deletable(player) && ( w0->get_waytype()==waytype_t::road_wt
+                                                 || w0->get_waytype()==waytype_t::tram_wt
+                                                 || w0->get_waytype()==waytype_t::water_wt))){
+                    return "Placing a pier here would block way(s)";
+                }
+            }
+            if(weg_t *w1 = gr->get_weg_nr(1)){
+                if(!(w1->is_deletable(player) && ( w1->get_waytype()==waytype_t::road_wt
+                                                 || w1->get_waytype()==waytype_t::tram_wt
+                                                 || w1->get_waytype()==waytype_t::water_wt))){
+                    return "Placing a pier here would block way(s)";
+                }
+            }
+        }
     }
 
     //check for buildings
