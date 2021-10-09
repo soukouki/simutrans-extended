@@ -24,6 +24,12 @@ private:
 
     static stringhashtable_tpl<pier_desc_t *, N_BAGS_MEDIUM> desc_table;
 
+    /**
+     * @brief lookup_deck_pos find the position of the deck on a given ground
+     * @param gr ground to check
+     * @param pos position of ground to check
+     * @return position of pier deck
+     */
     static koord3d lookup_deck_pos(const grund_t *gr, koord3d pos);
 
     static const char * check_below_ways(player_t *player, koord3d pos, const pier_desc_t *desc, const uint8 rotation, bool halfheight);
