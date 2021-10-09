@@ -70,7 +70,7 @@ public:
 	//accessors
 	ribi_t::ribi get_above_way_ribi(uint8 rotation=0) const {return rotate_ribi(above_way_ribi,rotation);}
 	ribi_t::ribi get_below_way_ribi(uint8 rotation=0) const {return rotate_ribi(below_way_ribi, rotation);}
-	slope_t::type get_above_slope(uint8 rotation=0) const {return above_slope;}
+	slope_t::type get_above_slope(uint8 rotation=0) const;
 	uint8 get_auto_group() const {return auto_group;}
 	uint32 get_base_mask(uint8 rotation=0) const {return rotate_mask(base_mask,rotation);}
 	uint32 get_middle_mask(uint8 rotation=0) const {return rotate_mask(middle_mask,rotation);}

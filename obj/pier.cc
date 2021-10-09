@@ -34,7 +34,7 @@ pier_t::pier_t(koord3d pos, player_t *player, const pier_desc_t *desc, uint8 rot
 
 void pier_t::calc_image(){
 	grund_t *gr=welt->lookup(get_pos());
-	if(gr){
+	if(gr && gr->get_typ()!=grund_t::pierdeck){
 		//ignoring snow for now TODO
 		back_image=desc->get_background(gr->get_grund_hang(),rotation,0);
 		front_image=desc->get_foreground(gr->get_grund_hang(), rotation, 0);

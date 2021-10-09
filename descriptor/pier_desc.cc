@@ -6,6 +6,15 @@
 #include "pier_desc.h"
 #include "../network/checksum.h"
 
+slope_t::type pier_desc_t::get_above_slope(uint8 rotation) const{
+    switch (rotation&3) {
+    case 0: return above_slope;
+    case 1: return slope_t::rotate270(above_slope);
+    case 2: return slope_t::rotate180(above_slope);
+    case 3: return slope_t::rotate90(above_slope);
+    }
+}
+
 image_id pier_desc_t::get_background(slope_t::type slope, uint8 rotation, uint8 season) const{
 	const image_t *image = NULL;
 	rotation=img_rotation(rotation);

@@ -171,10 +171,11 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
     //make ground on top (if needed)
     koord3d gpos=lookup_deck_pos(gr, pos);
     if(!welt->lookup(gpos)){
-        pier_deck_t *deck = new pier_deck_t(gpos,desc->get_above_slope(),desc->get_above_slope());
+        pier_deck_t *deck = new pier_deck_t(gpos,desc->get_above_slope(rotation),desc->get_above_slope(rotation));
         welt->access(pos.get_2d())->boden_hinzufuegen(deck);
         deck->calc_image();
     }
+
 
     //create pier
     pier_t *p = new pier_t(pos,player,desc,rotation);
