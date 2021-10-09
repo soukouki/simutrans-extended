@@ -15,6 +15,7 @@
 #include "../dataobj/scenario.h"
 #include "../gui/tool_selector.h"
 #include "../obj/gebaeude.h"
+#include "../descriptor/building_desc.h"
 
 karte_ptr_t pier_builder_t::welt;
 
@@ -38,15 +39,14 @@ const char * pier_builder_t::check_below_ways(player_t *player, koord3d pos, con
     const grund_t *gr = welt->lookup(pos);
     if(gr){
         if(weg_t *w0 = gr->get_weg_nr(0)){
+            if(desc->get_above_way_ribi() && gr->get_weg_hang()){
+                return "Placing a pier here would block way(s)";
+            }
             if( ( w0->get_ribi_unmasked() & desc->get_below_way_ribi(rotation) ) == w0->get_ribi_unmasked()
-                    || ( (halfheight) && w0->is_deletable(player) && ( w0->get_waytype()==waytype_t::road_wt
-                                                                       || w0->get_waytype()==waytype_t::tram_wt
-                                                                       || w0->get_waytype()==waytype_t::water_wt) ) ){
+                    || ( (halfheight) && w0->is_low_clearence(player) ) ){
                 if(weg_t *w1  = gr->get_weg_nr(1)){
                     if( ( w1->get_ribi_unmasked() & desc->get_below_way_ribi(rotation) ) != w1->get_ribi_unmasked()
-                            || ( (halfheight) && w1->is_deletable(player) && ( w1->get_waytype()==waytype_t::road_wt
-                                                                               || w1->get_waytype()==waytype_t::tram_wt
-                                                                               || w1->get_waytype()==waytype_t::water_wt) ) ){
+                            || ( (halfheight) && w1->is_low_clearence(player) ) ){
                         return NULL;
                     }
                 }else{
@@ -65,9 +65,16 @@ const char * pier_builder_t::check_below_ways(player_t *player, koord3d pos, con
 const char * pier_builder_t::check_for_buildings(const grund_t *gr, const pier_desc_t *desc, const uint8 rotation){
     gebaeude_t *gb = gr->get_building();
     if(gb) {
+        //same general restrictions as existing elevated ways
         if(gb->is_attraction() || gb->is_townhall()){
             return "Cannot build piers on attractions or townhalls";
         }
+
+		const building_tile_desc_t* tile = gb->get_tile();
+		if (tile->get_desc()->get_level() > welt->get_settings().get_max_elevated_way_building_level())
+		{
+			return "Cannot build piers on large buildings";
+		}
 
         //mask allows any buildings
         if(desc->get_sub_obj_mask(rotation)==0xFFFFFFFF){
@@ -75,7 +82,7 @@ const char * pier_builder_t::check_for_buildings(const grund_t *gr, const pier_d
         }else if(desc->get_sub_obj_mask(rotation)==0){
             return "Cannot build this type of pier on buildings";
         }else{
-            //TODO filter buildings
+            //(future work) filter buildings
 
             return "Cannot build this type of pier on this type of building";
         }
@@ -129,16 +136,12 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         }
         if(desc->get_above_way_ribi()){
             if(weg_t *w0 = gr->get_weg_nr(0)){
-                if(!(w0->is_deletable(player) && ( w0->get_waytype()==waytype_t::road_wt
-                                                 || w0->get_waytype()==waytype_t::tram_wt
-                                                 || w0->get_waytype()==waytype_t::water_wt))){
+                if(!w0->is_low_clearence(player)){
                     return "Placing a pier here would block way(s)";
                 }
             }
             if(weg_t *w1 = gr->get_weg_nr(1)){
-                if(!(w1->is_deletable(player) && ( w1->get_waytype()==waytype_t::road_wt
-                                                 || w1->get_waytype()==waytype_t::tram_wt
-                                                 || w1->get_waytype()==waytype_t::water_wt))){
+                if(!w1->is_low_clearence(player)){
                     return "Placing a pier here would block way(s)";
                 }
             }

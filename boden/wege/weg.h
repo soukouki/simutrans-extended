@@ -422,6 +422,10 @@ public:
 	 */
 	const char *is_deletable(const player_t *player) OVERRIDE;
 
+	bool is_low_clearence(const player_t* player){
+		return (!this->is_deletable(player) && (this->desc->is_low_clearence()));
+	}
+
 	waytype_t get_waytype() const OVERRIDE { return wtyp; }
 
 	inline bool is_rail_type() const { return wtyp == track_wt || wtyp == maglev_wt || wtyp == tram_wt || wtyp == narrowgauge_wt || wtyp == monorail_wt;  }
