@@ -903,7 +903,6 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 	}
 
 	// universal check for piers
-	// TODO handle sloped ways under piers
 	if(zv.x!=0 || zv.y!=0){
 		ribi_t::ribi ribimask;
 		ribi_t::ribi zvribi=zv.to_ribi();
@@ -915,16 +914,22 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 		if( (ribimask|zvribi)!=ribimask){
 				return false;
 		}
+		if(to->get_weg_hang() && pier_t::get_above_ribi_total(to)){
+			return false;
+		}
+		if(from->get_weg_hang() && pier_t::get_above_ribi_total(from)){
+			return false;
+		}
 		if(welt->get_settings().get_way_height_clearance()==2){
 			//check above mask of pier on bottom
-			if((desc->get_topspeed() > 0 && desc->get_waytype() != water_wt && desc->get_waytype() != road_wt && desc->get_waytype() != tram_wt) || (bautyp&bautyp_mask)==leitung){
+			if(!(desc->is_low_clearence()) || (bautyp&bautyp_mask)==leitung){
 				if(pier_t::get_above_ribi_total(to) || pier_t::get_above_ribi_total(from)){
 					return false;
 				}
 			}
 			//check for below mask of pier on top
 			if(grund_t *to2 = welt->lookup( to->get_pos() + koord3d(0, 0, 1) ) ){
-				if((desc->get_topspeed() > 0 && desc->get_waytype() != water_wt && desc->get_waytype() != road_wt && desc->get_waytype() != tram_wt) || (bautyp&bautyp_mask)==leitung){
+				if((!desc->is_low_clearence()) || (bautyp&bautyp_mask)==leitung){
 					ribimask = pier_t::get_below_ribi_total(to);
 					if( (ribimask|ribi_t::backward(zvribi))!=ribimask){
 							return false;
