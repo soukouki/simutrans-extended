@@ -49,7 +49,7 @@ obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
     desc->rotational_symmetry=decode_uint8(p);
     desc->middle_mask=decode_uint32(p);
     desc->pier_weight=decode_uint32(p);
-    desc->below_way_sloped=decode_uint8(p);
+    desc->drag_ribi=decode_uint8(p);
     desc->above_way_supplement=decode_uint8(p);
 
     return desc;

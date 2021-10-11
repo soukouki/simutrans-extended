@@ -54,6 +54,6 @@ void pier_desc_t::calc_checksum(checksum_t *chk) const{
 	chk->input(number_of_seasons);
 	chk->input(middle_mask);
 	chk->input(pier_weight);
-	chk->input(below_way_sloped);
+	chk->input(drag_ribi);
 	chk->input(above_way_supplement);
 }
