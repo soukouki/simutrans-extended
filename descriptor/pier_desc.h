@@ -41,7 +41,7 @@ private:
     uint8 number_of_seasons : 2;
     uint8 rotational_symmetry : 3;
 
-    uint8 below_way_sloped : 1; //(future use) allow sloped ways in pier
+    uint8 drag_ribi : 4; //direction for dragging
     uint8 above_way_supplement : 1; //(future use) only allow above_way_ribi if not only pier
 
     static uint32 rotate_mask(uint32 m,uint8 r){
@@ -76,6 +76,8 @@ public:
 	uint32 get_middle_mask(uint8 rotation=0) const {return rotate_mask(middle_mask,rotation);}
 	uint32 get_support_mask(uint8 rotation=0) const {return rotate_mask(support_mask, rotation);}
 	uint32 get_sub_obj_mask(uint8 rotation=0) const {return rotate_mask(sub_obj_mask, rotation);}
+	ribi_t::ribi get_drag_ribi(uint8 rotation=0) const {return rotate_ribi(drag_ribi, rotation);}
+
 
 	image_id get_background(slope_t::type slope, uint8 rotation, uint8 season) const;
 

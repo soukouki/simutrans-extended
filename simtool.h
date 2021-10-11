@@ -456,7 +456,10 @@ public:
 
 class tool_build_pier_t : public tool_t {
 private:
-	const pier_desc_t *get_desc(uint8 *rotation = 0);
+	bool is_dragging;
+	const char *oldparam;
+	char parambuf[256];
+	const pier_desc_t *get_desc(uint8 *rotation = 0, koord3d *startdrag = 0);
 public:
 	tool_build_pier_t() : tool_t(TOOL_BUILD_PIER | GENERAL_TOOL) {}
 	image_id get_icon(player_t *) const override;
@@ -464,10 +467,13 @@ public:
 	bool init(player_t *) override;
 	char const* check_pos(player_t *, koord3d) override;
 	char const* move(player_t *, uint16, koord3d) override;
+	void begin_move(player_t *, koord3d) override;
+	void end_move(player_t*, koord3d) override;
 	bool move_has_effects() const override {return true;}
 	char const* work(player_t*, koord3d) override;
 	bool is_init_network_safe() const override {return true;}
 	waytype_t get_waytype() const override {return any_wt;}
+	bool exit(player_t *) override {is_dragging=false; return true;}
 };
 
 

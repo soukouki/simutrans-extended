@@ -639,7 +639,7 @@ DBG_MESSAGE("tool_remover()",  "removing bridge from %d,%d,%d",gr->get_pos().x, 
 		return msg == NULL;
 	}
 
-	//TODO delete after ways
+	//delete pier
 	if(gr->find<pier_t>()){
 		msg = pier_builder_t::remove(player,pos);
 		return msg==NULL;
@@ -5806,13 +5806,24 @@ const char *tool_build_station_t::work( player_t *player, koord3d pos )
 }
 
 //Pier tools
-const pier_desc_t *tool_build_pier_t::get_desc(uint8 *rotation){
+const pier_desc_t *tool_build_pier_t::get_desc(uint8 *rotation, koord3d *startkoord){
 	char *building = strdup( default_param );
 	const pier_desc_t *tdsc = NULL;
 	if(  building  ) {
-		char *p = strrchr( building, ',' );
+		char *p = strchr( building, ',' );
 		if(  p  ) {
 			*p++ = 0;
+			char *q = strchr(p,',');
+			if(q){
+				*q++=0;
+				if(startkoord){
+					int tx,ty,tz;
+					sscanf(q,"%d,%d,%d",&tx,&ty,&tz);
+					startkoord->x = tx;
+					startkoord->y = ty;
+					startkoord->z = tz;
+				}
+			}
 			if(rotation) *rotation = atoi( p );
 		}
 		else {
@@ -5838,6 +5849,7 @@ const char *tool_build_pier_t::get_tooltip(const player_t *) const{
 
 bool tool_build_pier_t::init(player_t *){
 	uint8 rotation=0;
+	is_dragging=false;
 	const pier_desc_t *pdsc = get_desc(&rotation);
 	if( ! pdsc ) {
 		return false;
@@ -5864,8 +5876,25 @@ const char* tool_build_pier_t::check_pos(player_t *, koord3d pos){
 	return "Missing ground (fatal!)";
 }
 
+void tool_build_pier_t::begin_move(player_t *, koord3d pos) {
+	is_dragging=true;
+	uint8 rotation;
+	oldparam = default_param;
+	const char *name = get_desc(&rotation)->get_name();
+	sprintf(parambuf,"%s,%d,%d,%d,%d",name,rotation,pos.x,pos.y,pos.z);
+	default_param=parambuf;
+}
+
+void tool_build_pier_t::end_move(player_t *, koord3d){
+	if(is_dragging){
+		default_param=oldparam;
+		is_dragging=false;
+	}
+}
+
 const char* tool_build_pier_t::move(player_t *player, uint16 buttonstate, koord3d pos){
 
+	const char* result=NULL;
 	if(buttonstate==1){
 		if(  env_t::networkmode  ) {
 			// queue tool for network
@@ -5873,10 +5902,12 @@ const char* tool_build_pier_t::move(player_t *player, uint16 buttonstate, koord3
 			network_send_server(nwc);
 		}
 		else {
-			return work( player, pos );
+			result= work( player, pos );
 		}
 	}
+	return result;
 }
+
 
 const char *tool_build_pier_t::work(player_t *player, koord3d pos){
 
@@ -5892,9 +5923,58 @@ const char *tool_build_pier_t::work(player_t *player, koord3d pos){
 	}
 
 	uint8 rotation;
-	const pier_desc_t *pdsc = get_desc(&rotation);
+	koord3d dragbegin=koord3d::invalid;
+	const pier_desc_t *pdsc = get_desc(&rotation, &dragbegin);
 
-	//TODO check for obstacles
+	if(is_dragging && dragbegin==koord3d::invalid){
+		end_move(player,pos);
+	}
+
+	if(is_dragging && pos!=dragbegin){
+		if(pos.z > dragbegin.z){
+			return NULL;
+		}
+		ribi_t::ribi workingribi=pdsc->get_above_way_ribi(rotation);
+		koord3d kdiff=pos-dragbegin;
+		ribi_t::ribi diffribi=ribi_type(kdiff);
+		if(!ribi_t::is_twoway(workingribi) && workingribi!=ribi_t::all){
+			workingribi=pdsc->get_drag_ribi(rotation);
+
+		}
+		if(workingribi!=ribi_t::all){
+			if(!ribi_t::is_twoway(workingribi)){
+				return NULL;
+			}
+			if(ribi_t::is_straight(workingribi)){
+				if(!ribi_t::is_single(diffribi)){
+					return NULL;
+				}
+				if(!(diffribi & workingribi)){
+					return NULL;
+				}
+			}else{
+				if(workingribi==ribi_t::northeast || workingribi==ribi_t::southwest){
+					if(kdiff.x!=kdiff.y){
+						if( (workingribi==ribi_t::northeast && kdiff.x==kdiff.y-1)
+							|| (workingribi==ribi_t::southwest && kdiff.x==kdiff.y+1)){
+							rotation^=2;
+						}else{
+							return NULL;
+						}
+					}
+				}else{
+					if(-kdiff.x!=kdiff.y){
+						if( (workingribi==ribi_t::northwest && -kdiff.x==kdiff.y-1)
+							|| (workingribi==ribi_t::southeast && -kdiff.x==kdiff.y+1)){
+							rotation^=2;
+						}else{
+							return NULL;
+						}
+					}
+				}
+			}
+		}
+	}
 
 	return pier_builder_t::build(player,pos,pdsc,rotation);
 }
