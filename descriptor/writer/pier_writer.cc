@@ -46,7 +46,7 @@ void pier_writer_t::write_obj(FILE * outfp, obj_node_t& parent, tabfileobj_t& ob
 	uint32 deck_obj_mask	 = obj.get_int("deck_obj_mask",0xFFFFFFFF);
 
 	uint8 above_slope		 = obj.get_int("above_slope",0);
-	uint8 drag_ribi			   = obj.get_int("below_way_sloped",0);
+	uint8 drag_ribi			   = obj.get_int("drag_ribi",0);
 	uint8 above_way_supplement = obj.get_int("above_way_supplement",0);
 
 	uint16 version = 0x8009;
