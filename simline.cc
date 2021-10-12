@@ -1083,7 +1083,7 @@ sint64 simline_t::get_service_frequency()
 {
 	sint64 total_trip_times = 0;
 	sint64 convoys_with_trip_data = 0;
-	for (int i = 0; i < line_managed_convoys.get_count(); i++) {
+	for (uint32 i = 0; i < line_managed_convoys.get_count(); i++) {
 		convoihandle_t const cnv = line_managed_convoys[i];
 		if (!cnv->in_depot()) {
 			total_trip_times += cnv->get_average_round_trip_time();
