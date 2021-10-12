@@ -410,7 +410,7 @@ void display_show_load_pointer(int)
 {
 }
 
-bool simgraph_init(scr_size, bool)
+bool simgraph_init(scr_size, sint16)
 {
 	return true;
 }

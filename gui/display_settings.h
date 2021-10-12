@@ -43,6 +43,7 @@ public:
 	button_t toolbar_pos[4];
 	button_t reselect_closes_tool;
 	button_t info_window_toggler[8];
+	button_t fullscreen, borderless;
 
 	gui_settings_t();
 	void draw( scr_coord offset ) OVERRIDE;

@@ -18,6 +18,7 @@
 #include "../simmenu.h"
 #include "../player/simplay.h"
 #include "../utils/simstring.h"
+#include "../sys/simsys.h"
 
 #include "gui_theme.h"
 #include "themeselector.h"
@@ -132,6 +133,15 @@ gui_settings_t::gui_settings_t()
 		add_component( &toolbar_pos[MENU_RIGHT] );
 	}
 	end_table();
+
+	fullscreen.init( button_t::square_state, "Fullscreen (changed after restart)" );
+	fullscreen.pressed = ( dr_get_fullscreen() == FULLSCREEN );
+	add_component( &fullscreen, 2 );
+
+	borderless.init( button_t::square_state, "Borderless (disabled on fullscreen)" );
+	borderless.enable ( dr_get_fullscreen() != FULLSCREEN );
+	borderless.pressed = ( dr_get_fullscreen() == BORDERLESS );
+	add_component( &borderless, 2 );
 
 	reselect_closes_tool.init( button_t::square_state, "Reselect closes tools" );
 	reselect_closes_tool.pressed = env_t::reselect_closes_tool;
@@ -861,6 +871,9 @@ color_gui_t::color_gui_t() :
 	for (uint8 i = 0; i < 8; i++) {
 		gui_settings.info_window_toggler[i].add_listener(this);
 	}
+	gui_settings.toolbar_pos.add_listener( this );
+	gui_settings.fullscreen.add_listener( this );
+	gui_settings.borderless.add_listener( this );
 	gui_settings.reselect_closes_tool.add_listener(this);
 
 	set_resizemode(diagonal_resize);
@@ -870,7 +883,7 @@ color_gui_t::color_gui_t() :
 	resize( scr_coord( 0, 0 ) );
 }
 
-bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t)
+bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t p)
 {
 	bool reflesh_toolbar_pos_btn = false;
 	for(  uint8 i=0; i<4; i++  ) {
@@ -891,6 +904,20 @@ bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t)
 		for(  uint8 i=0; i<4; i++  ) {
 			gui_settings.toolbar_pos[i].pressed = (env_t::menupos == i);
 		}
+		return true;
+	}
+
+	if(  comp == &gui_settings.fullscreen  ) {
+		env_t::fullscreen = p.i==0 && dr_get_fullscreen()!=2 ? dr_get_fullscreen() : FULLSCREEN;
+		gui_settings.fullscreen.pressed = !gui_settings.fullscreen.pressed;
+		gui_settings.borderless.pressed = false;
+		return true;
+	}
+
+	if(  comp == &gui_settings.borderless  ) {
+		env_t::fullscreen = dr_toggle_borderless();
+		gui_settings.borderless.pressed = dr_get_fullscreen();
+		gui_settings.fullscreen.pressed = false;
 		return true;
 	}
 
