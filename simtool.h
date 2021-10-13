@@ -459,7 +459,7 @@ private:
 	bool is_dragging;
 	const char *oldparam;
 	char parambuf[256];
-	const pier_desc_t *get_desc(uint8 *rotation = 0, koord3d *startdrag = 0);
+	const pier_desc_t *get_desc(uint8 *rotation = 0, koord3d *startdrag = 0) const;
 public:
 	tool_build_pier_t() : tool_t(TOOL_BUILD_PIER | GENERAL_TOOL) {}
 	image_id get_icon(player_t *) const override;
