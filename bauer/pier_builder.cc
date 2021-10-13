@@ -123,6 +123,18 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         return "Invalid ground for this type of pier";
     }
 
+    if(welt->lookup_hgt(pos.get_2d()) < welt->get_water_hgt(pos.get_2d())){
+        return "Cannot build in deep water";
+    }
+
+    if(gr->is_water() && desc->get_above_way_ribi()){
+        return "Pier could block shipping lanes";
+    }
+
+    if(gr->get_typ()==grund_t::brueckenboden || gr->get_typ()==grund_t::monorailboden){
+        return "Pier can not be built on bridges";
+    }
+
     //check for ways
     const char *msg;
     msg = check_below_ways(player,pos,desc,rotation,false);
