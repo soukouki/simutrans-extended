@@ -5805,7 +5805,7 @@ const char *tool_build_station_t::work( player_t *player, koord3d pos )
 }
 
 //Pier tools
-const pier_desc_t *tool_build_pier_t::get_desc(uint8 *rotation, koord3d *startkoord){
+const pier_desc_t *tool_build_pier_t::get_desc(uint8 *rotation, koord3d *startkoord) const {
 	char *building = strdup( default_param );
 	const pier_desc_t *tdsc = NULL;
 	if(  building  ) {
@@ -5842,8 +5842,10 @@ image_id tool_build_pier_t::get_icon(player_t *) const {
 }
 
 const char *tool_build_pier_t::get_tooltip(const player_t *) const{
-	//TODO
-	return "TODO";
+	if(const pier_desc_t *desc = get_desc()){
+		return tooltip_with_price_maintenance(welt,desc->get_name(),-desc->get_value(),desc->get_maintenance());
+	}
+	return "Invalid Pier";
 }
 
 bool tool_build_pier_t::init(player_t *){
