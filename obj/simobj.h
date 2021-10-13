@@ -180,7 +180,8 @@ public:
 		// Extended specific objects (e.g. signalboxes)
 		// Should be negative numbers <= -10
 
-		signalbox = -10
+		signalbox = -10,
+		pier = -11
 	};
 
 	inline sint8 get_xoff() const {return xoff;}

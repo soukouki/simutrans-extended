@@ -39,6 +39,7 @@
 #include "descriptor/building_desc.h"
 #include "descriptor/roadsign_desc.h"
 #include "descriptor/tunnel_desc.h"
+#include "descriptor/pier_desc.h"
 
 #include "vehicle/air_vehicle.h"
 #include "vehicle/rail_vehicle.h"
@@ -60,6 +61,7 @@
 #include "gui/trafficlight_info.h"
 #include "gui/privatesign_info.h"
 #include "gui/messagebox.h"
+#include "gui/pier_rotation_select.h"
 
 #include "obj/zeiger.h"
 #include "obj/bruecke.h"
@@ -73,6 +75,7 @@
 #include "obj/baum.h"
 #include "obj/field.h"
 #include "obj/label.h"
+#include "obj/pier.h"
 
 #include "dataobj/koord.h"
 #include "dataobj/settings.h"
@@ -87,6 +90,7 @@
 #include "bauer/brueckenbauer.h"
 #include "bauer/wegbauer.h"
 #include "bauer/hausbauer.h"
+#include "bauer/pier_builder.h"
 
 #include "descriptor/way_desc.h"
 #include "descriptor/roadsign_desc.h"
@@ -634,6 +638,12 @@ DBG_MESSAGE("tool_remover()",  "removing bridge from %d,%d,%d",gr->get_pos().x, 
 		return msg == NULL;
 	}
 
+	//delete pier
+	if(gr->find<pier_t>()){
+		msg = pier_builder_t::remove(player,pos);
+		return msg==NULL;
+	}
+
 	// beginning/end of tunnel
 	if(gr->ist_tunnel()  &&  gr->ist_karten_boden()  &&  (type == obj_t::tunnel  ||  type == obj_t::undefined)) {
 DBG_MESSAGE("tool_remover()",  "removing tunnel  from %d,%d,%d",gr->get_pos().x, gr->get_pos().y, gr->get_pos().z);
@@ -905,7 +915,7 @@ DBG_MESSAGE("tool_remover()", "removing way");
 	}
 
 	// remove empty tile
-	if(  !gr->ist_karten_boden()  &&  gr->get_top()==0  ) {
+	if(  !gr->ist_karten_boden()  &&  gr->get_top()==0  && gr->get_typ()!=grund_t::typ::pierdeck) {
 		// unmark kartenboden (is marked during underground mode deletion)
 		welt->lookup_kartenboden(k)->clear_flag(grund_t::marked);
 		// remove upper or lower ground
@@ -3308,7 +3318,8 @@ uint8 tool_build_bridge_t::is_valid_pos(  player_t *player, const koord3d &pos, 
 			}
 
 			if(  gr->get_typ() != grund_t::monorailboden  &&
-			     gr->get_typ() != grund_t::tunnelboden  ) {
+				 gr->get_typ() != grund_t::tunnelboden  &&
+				 gr->get_typ() != grund_t::pierdeck) {
 				return 0;
 			}
 
@@ -5791,6 +5802,180 @@ const char *tool_build_station_t::work( player_t *player, koord3d pos )
 			msg = "Illegal station tool";
 	}
 	return msg;
+}
+
+//Pier tools
+const pier_desc_t *tool_build_pier_t::get_desc(uint8 *rotation, koord3d *startkoord){
+	char *building = strdup( default_param );
+	const pier_desc_t *tdsc = NULL;
+	if(  building  ) {
+		char *p = strchr( building, ',' );
+		if(  p  ) {
+			*p++ = 0;
+			char *q = strchr(p,',');
+			if(q){
+				*q++=0;
+				if(startkoord){
+					int tx,ty,tz;
+					sscanf(q,"%d,%d,%d",&tx,&ty,&tz);
+					startkoord->x = tx;
+					startkoord->y = ty;
+					startkoord->z = tz;
+				}
+			}
+			if(rotation) *rotation = atoi( p );
+		}
+		else {
+			if(rotation) *rotation = 0;
+		}
+		tdsc=pier_builder_t::get_desc(building);
+		free( building );
+	}
+	if(  tdsc==NULL  ) {
+		return NULL;
+	}
+	return tdsc;
+}
+
+image_id tool_build_pier_t::get_icon(player_t *) const {
+	return icon;
+}
+
+const char *tool_build_pier_t::get_tooltip(const player_t *) const{
+	//TODO
+	return "TODO";
+}
+
+bool tool_build_pier_t::init(player_t *){
+	uint8 rotation=0;
+	is_dragging=false;
+	const pier_desc_t *pdsc = get_desc(&rotation);
+	if( ! pdsc ) {
+		return false;
+	}
+	cursor = pdsc->get_cursor()->get_image_id(0);
+	if( !is_local_execution() ){
+		return true;
+	}
+	if(is_ctrl_pressed()){
+		destroy_win( magic_pier_rotation_select );
+		create_win( new pier_rotation_select_t(pdsc), w_info, magic_pier_rotation_select);
+
+		return false;
+	}
+
+	return true;
+}
+
+
+const char* tool_build_pier_t::check_pos(player_t *, koord3d pos){
+	if( grund_t *gr = welt->lookup( pos )){
+		return NULL;
+	}
+	return "Missing ground (fatal!)";
+}
+
+void tool_build_pier_t::begin_move(player_t *, koord3d pos) {
+	is_dragging=true;
+	uint8 rotation;
+	oldparam = default_param;
+	const char *name = get_desc(&rotation)->get_name();
+	sprintf(parambuf,"%s,%d,%d,%d,%d",name,rotation,pos.x,pos.y,pos.z);
+	default_param=parambuf;
+}
+
+void tool_build_pier_t::end_move(player_t *, koord3d){
+	if(is_dragging){
+		default_param=oldparam;
+		is_dragging=false;
+	}
+}
+
+const char* tool_build_pier_t::move(player_t *player, uint16 buttonstate, koord3d pos){
+
+	const char* result=NULL;
+	if(buttonstate==1){
+		if(  env_t::networkmode  ) {
+			// queue tool for network
+			nwc_tool_t *nwc = new nwc_tool_t(player, this, pos, welt->get_steps(), welt->get_map_counter(), false);
+			network_send_server(nwc);
+		}
+		else {
+			result= work( player, pos );
+		}
+	}
+	return result;
+}
+
+
+const char *tool_build_pier_t::work(player_t *player, koord3d pos){
+
+	//TODO make so buildable under runway height
+	const koord& k = pos.get_2d();
+
+	karte_t::runway_info ri = welt->check_nearby_runways(k);
+	const uint8 height = welt->lookup_hgt(pos.get_2d());
+
+	if (pos.z >= height && ri.pos != koord::invalid)
+	{
+		return "This cannot be built next to a runway.";
+	}
+
+	uint8 rotation;
+	koord3d dragbegin=koord3d::invalid;
+	const pier_desc_t *pdsc = get_desc(&rotation, &dragbegin);
+
+	if(is_dragging && dragbegin==koord3d::invalid){
+		end_move(player,pos);
+	}
+
+	if(is_dragging && pos!=dragbegin){
+		if(pos.z > dragbegin.z){
+			return NULL;
+		}
+		ribi_t::ribi workingribi=pdsc->get_above_way_ribi(rotation);
+		koord3d kdiff=pos-dragbegin;
+		ribi_t::ribi diffribi=ribi_type(kdiff);
+		if(!ribi_t::is_twoway(workingribi) && workingribi!=ribi_t::all){
+			workingribi=pdsc->get_drag_ribi(rotation);
+
+		}
+		if(workingribi!=ribi_t::all){
+			if(!ribi_t::is_twoway(workingribi)){
+				return NULL;
+			}
+			if(ribi_t::is_straight(workingribi)){
+				if(!ribi_t::is_single(diffribi)){
+					return NULL;
+				}
+				if(!(diffribi & workingribi)){
+					return NULL;
+				}
+			}else{
+				if(workingribi==ribi_t::northeast || workingribi==ribi_t::southwest){
+					if(kdiff.x!=kdiff.y){
+						if( (workingribi==ribi_t::northeast && kdiff.x==kdiff.y-1)
+							|| (workingribi==ribi_t::southwest && kdiff.x==kdiff.y+1)){
+							rotation^=2;
+						}else{
+							return NULL;
+						}
+					}
+				}else{
+					if(-kdiff.x!=kdiff.y){
+						if( (workingribi==ribi_t::northwest && -kdiff.x==kdiff.y-1)
+							|| (workingribi==ribi_t::southeast && -kdiff.x==kdiff.y+1)){
+							rotation^=2;
+						}else{
+							return NULL;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return pier_builder_t::build(player,pos,pdsc,rotation);
 }
 
 uint16 tool_build_roadsign_t::signal_info::spacing = 16;
