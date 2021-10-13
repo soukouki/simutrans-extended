@@ -430,7 +430,7 @@ const char *tool_query_t::work( player_t *player, koord3d pos )
 		}
 
 		if(gr->get_depot()  &&  gr->get_depot()->get_owner()==player) {
-			int old_count = win_get_open_count();
+			const uint32 old_count = win_get_open_count();
 			gr->get_depot()->show_info();
 			// did some new window open?
 			if(env_t::single_info  &&  old_count!=win_get_open_count()) {

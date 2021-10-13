@@ -748,10 +748,7 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 */
 /*
 #ifdef DEBUG_PHYSICS
-		/*
-		 * Show braking distance
-		 */
-/*
+		// Show braking distance
 		{
 			const int pos_y = pos_y0 + 6 * LINESPACE; // line 7
 			const sint32 brk_meters = convoy.calc_min_braking_distance(convoy.get_weight_summary(), speed_to_v(cnv->get_akt_speed()));
