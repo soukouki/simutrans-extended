@@ -654,10 +654,13 @@ DBG_MESSAGE("tool_remover()",  "removing bridge from %d,%d,%d",gr->get_pos().x, 
 		return msg == NULL;
 	}
 
-	//delete pier
+	//try to delete pier, continue if unsucessfull
+	const char *pier_msg;
 	if(gr->find<pier_t>()){
-		msg = pier_builder_t::remove(player,pos);
-		return msg==NULL;
+		pier_msg = pier_builder_t::remove(player,pos);
+		if(pier_msg==NULL){
+			return true;
+		}
 	}
 
 	// beginning/end of tunnel
@@ -801,7 +804,30 @@ DBG_MESSAGE("tool_remover()",  "took out powerline");
 	uint8 num_obj = gr->obj_count();
 	if(num_obj>0) {
 		msg = gr->kann_alle_obj_entfernen(player);
-		return_ok = (msg==NULL  &&  !(gr->get_typ()==grund_t::brueckenboden  ||  gr->get_typ()==grund_t::tunnelboden)  &&  gr->obj_loesche_alle(player));
+		if(return_ok = ((msg==NULL  &&  !(gr->get_typ()==grund_t::brueckenboden  ||  gr->get_typ()==grund_t::tunnelboden)))){
+			if(gr->find<pier_t>()){
+				//there is a pier here, try to remove everything else
+				return_ok=false;
+				uint8 objcnt=0;
+				while(objcnt<gr->get_top()){
+					const obj_t* obj = gr->obj_bei(objcnt);
+					if(obj->get_typ()==obj_t::pier || obj->get_typ()==obj_t::way){
+						objcnt++;
+					}else if(gr->obj_remove(obj)){
+						return_ok=true;
+					}else{
+						objcnt++;
+					}
+				}
+				num_obj=gr->obj_count();
+				if(!return_ok && !gr->get_weg_nr(0)){
+					msg=pier_msg;
+					return false;
+				}
+			}else{
+				return_ok = gr->obj_loesche_alle(player);
+			}
+		}
 		DBG_MESSAGE("tool_remover()",  "removing everything from %d,%d,%d",gr->get_pos().x, gr->get_pos().y, gr->get_pos().z);
 	}
 
