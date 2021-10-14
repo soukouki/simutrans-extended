@@ -191,6 +191,10 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         deck->calc_image();
     }
 
+    //remove trees
+    if(gr->ist_natur()) {
+        player_t::book_construction_costs(player, -gr->remove_trees(), gr->get_pos().get_2d());
+    }
 
     //create pier
     pier_t *p = new pier_t(pos,player,desc,rotation);
