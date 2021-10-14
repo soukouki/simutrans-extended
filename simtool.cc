@@ -984,6 +984,14 @@ const char *tool_remover_t::work( player_t *player, koord3d pos )
 {
 	DBG_MESSAGE("tool_remover()","at %d,%d", pos.x, pos.y);
 
+	if(is_ctrl_pressed() && welt->lookup(pos) && welt->lookup(pos)->get_typ()==grund_t::pierdeck){
+		bool sucess=false;
+		for(sint8 i=pos.z-1; i >= welt->lookup_hgt(pos.get_2d()); i--){
+			while(!pier_builder_t::remove(player,koord3d(pos.get_2d(),i))){sucess=true;}
+		}
+		return sucess ? NULL : "Could not remove any piers";
+	}
+
 	obj_t::typ type = obj_t::undefined;
 
 	if (default_param) {

@@ -215,6 +215,10 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
         }
     }
 
+    if(pier_cnt==0){
+        return "No piers here";
+    }
+
     if(pier_cnt==1){
         koord3d gpos=lookup_deck_pos(gr,pos);
         grund_t *bd = welt->lookup(gpos);
@@ -254,7 +258,7 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
                     }
                     continue;
                 }
-                //TODO check that we are not supporting a way
+
                 gr->obj_remove(p);
                 delete p;
 
