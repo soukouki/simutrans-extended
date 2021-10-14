@@ -451,7 +451,22 @@ bool tool_remover_t::tool_remover_intern(player_t *player, koord3d pos, sint8 ty
 DBG_MESSAGE("tool_remover_intern()","at (%s)", pos.get_str());
 	// check if there is something to remove from here ...
 	grund_t *gr = welt->lookup(pos);
-	if (!gr  ||  gr->get_top()==0) {
+	if (!gr) {
+		msg = "";
+		return false;
+	}
+
+	if (gr->get_top()==0) {
+		if(gr->get_typ()==grund_t::pierdeck){
+			gr=welt->lookup(pos+koord3d(0,0,-1));
+			if(!gr){
+				gr=welt->lookup(pos+koord3d(0,0,-2));
+			}
+			if(gr && gr->find<pier_t>()){
+				msg = pier_builder_t::remove(player,gr->get_pos());
+				return msg==NULL;
+			}
+		}
 		msg = "";
 		return false;
 	}
