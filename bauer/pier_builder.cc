@@ -226,13 +226,17 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
     if(pier_cnt==1){
         koord3d gpos=lookup_deck_pos(gr,pos);
         grund_t *bd = welt->lookup(gpos);
-        if(bd->obj_count() || bd->get_weg_nr(0)){
-            return "Cannot remove sole load bearing pier";
+        if(bd){
+            if(bd->obj_count() || bd->get_weg_nr(0)){
+                return "Cannot remove sole load bearing pier";
+            }
         }
         gr->obj_remove(p);
         delete p;
-        welt->access(gpos.get_2d())->boden_entfernen(bd);
-        delete bd;
+        if(bd){
+            welt->access(gpos.get_2d())->boden_entfernen(bd);
+            delete bd;
+        }
         return NULL;
     }
 
