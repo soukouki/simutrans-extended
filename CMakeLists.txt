@@ -295,6 +295,10 @@ if (SIMUTRANS_DEBUG_SIMRAND)
 	target_compile_definitions(simutrans-extended PRIVATE DEBUG_SIMRAND_CALLS=1)
 endif ()
 
+if (SIMUTRANS_HEAVY_MODE)
+	target_compile_definitions(simutrans PRIVATE HEAVY_MODE=${SIMUTRANS_HEAVY_MODE})
+endif ()
+
 if (APPLE)
 	target_compile_definitions(simutrans-extended PRIVATE ALT_SDL_DIR=1)
 endif (APPLE)

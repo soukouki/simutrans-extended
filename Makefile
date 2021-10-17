@@ -223,7 +223,9 @@ ifdef USE_FLUIDSYNTH_MIDI
     SOURCES += gui/loadsoundfont_frame.cc
     LDFLAGS += -lfluidsynth
     ifeq ($(OSTYPE),mingw)
-      # fluidsynth.pc doesn't properly list dependant libraries, unable to use pkg-config. Manually listed below. Only valid for fluidsynth built with options: "-DBUILD_SHARED_LIBS=0 -Denable-aufile=0 -Denable-dbus=0 -Denable-ipv6=0 -Denable-jack=0 -Denable-ladspa=0 -Denable-midishare=0 -Denable-opensles=0 -Denable-oboe=0 -Denable-oss=0 -Denable-readline=0 -Denable-winmidi=0 -Denable-waveout=0 -Denable-libsndfile=0 -Denable-network=0 -Denable-pulseaudio=0 Denable-dsound=1 -Denable-sdl2=0"
+      # fluidsynth.pc doesn't properly list dependant libraries, unable to use pkg-config. Manually listed below.
+      # Only valid for fluidsynth built with options:
+      # "-DBUILD_SHARED_LIBS=0 -Denable-aufile=0 -Denable-dbus=0 -Denable-ipv6=0 -Denable-jack=0 -Denable-ladspa=0 -Denable-midishare=0 -Denable-opensles=0 -Denable-oboe=0 -Denable-oss=0 -Denable-readline=0 -Denable-winmidi=0 -Denable-waveout=0 -Denable-libsndfile=0 -Denable-network=0 -Denable-pulseaudio=0 Denable-dsound=1 -Denable-sdl2=0"
       LDFLAGS += -lglib-2.0 -lintl -liconv -ldsound -lole32
     endif
   endif
@@ -232,6 +234,10 @@ else
 endif
 
 ifneq ($(MULTI_THREAD),)
+endif
+
+ifdef HEAVY_MODE
+  CFLAGS += -DHEAVY_MODE=$(HEAVY_MODE)
   ifeq ($(shell expr $(MULTI_THREAD) \>= 1), 1)
     CFLAGS += -DMULTI_THREAD
     ifeq ($(OSTYPE),mingw32 mingw64)

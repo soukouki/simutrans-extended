@@ -38,8 +38,7 @@ private:
 
 public:
 	checklist_t();
-
-#if HEAVY_MODE
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 	explicit checklist_t(const uint32 &hash);
 #else
 	checklist_t(uint32 _ss, uint32 _st, uint8 _nfc, uint32 _random_seed, uint16 _halt_entry, uint16 _line_entry, uint16 _convoy_entry, uint32 *_rands, uint32 *_debug_sums);

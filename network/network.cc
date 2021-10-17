@@ -760,7 +760,12 @@ bool network_receive_data(SOCKET sender, void *dest, const uint16 len, uint16 &r
 		}
 		if (res == 0) {
 			// connection closed
-			dbg->warning("network_receive_data", "connection [%d] already closed", sender);
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 2
+			dbg->fatal(
+#else
+			dbg->warning(
+#endif
+				"network_receive_data", "Connection [%d] already closed", sender);
 			return false;
 		}
 		received += res;

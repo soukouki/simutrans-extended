@@ -2611,7 +2611,7 @@ public:
 	 */
 	uint32 generate_new_map_counter() const;
 
-#if HEAVY_MODE
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 	uint32 get_gamestate_hash();
 #endif
 

@@ -121,6 +121,8 @@
 #include "io/rdwr/adler32_stream.h"
 #include "dataobj/tabfile.h" // For reload of simuconf.tab to override savegames
 
+#include "pathes.h"
+
 
 #ifdef MULTI_THREAD
 #include "utils/simthread.h"
@@ -11157,6 +11159,13 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 			network_disconnect();
 		} else {
 			dbg->message("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf);
+
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 2
+			dbg->fatal(
+#else
+			dbg->warning(
+#endif
+				"karte_t:::do_network_world_command", "Disconnected due to checklist mismatch" );
 		}
 	}
 	else {
@@ -11215,6 +11224,23 @@ sint16 karte_t::get_sound_id(grund_t *gr)
 	}
 	return NO_SOUND;
 }
+
+
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 2
+static void heavy_rotate_saves(const char *prefix, uint32 sync_steps, uint32 num_to_keep)
+{
+	dr_mkdir( SAVE_PATH_X "heavy");
+
+	char name[128];
+	sprintf(name, SAVE_PATH_X "heavy/heavy-%s-%04d.sve", prefix, sync_steps);
+	world()->save(name, false, SERVER_SAVEGAME_VER_NR, true);
+
+	if (sync_steps >= num_to_keep) {
+		sprintf(name, SAVE_PATH_X "heavy/heavy-%s-%04d.sve", prefix, sync_steps - num_to_keep);
+		dr_remove(name);
+	}
+}
+#endif
 
 
 bool karte_t::interactive(uint32 quit_month)
@@ -11352,8 +11378,13 @@ bool karte_t::interactive(uint32 quit_month)
 						network_frame_count = 0;
 					}
 					sync_steps = steps * settings.get_frames_per_step() + network_frame_count;
-#if HEAVY_MODE
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 					LCHKLST(sync_steps) = checklist_t(get_gamestate_hash());
+
+#if HEAVY_MODE >= 2
+					heavy_rotate_saves(env_t::server ? "server" : "client", sync_steps, 10);
+#endif
+
 #else
 					LCHKLST(sync_steps) = checklist_t(sync_steps, (uint32)steps, network_frame_count, get_random_seed(), halthandle_t::get_next_check(), linehandle_t::get_next_check(), convoihandle_t::get_next_check(),
 						rands, debug_sums
@@ -12458,7 +12489,7 @@ uint32 karte_t::get_cities_awaiting_private_car_route_check_count() const
 }
 
 
-#if HEAVY_MODE
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 uint32 karte_t::get_gamestate_hash()
 {
 	adler32_stream_t *stream = new adler32_stream_t;

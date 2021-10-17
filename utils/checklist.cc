@@ -33,7 +33,7 @@ checklist_t::checklist_t() :
 #endif
 
 
-#if HEAVY_MODE
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 checklist_t::checklist_t(const uint32 &hash) :
 	hash(hash)
 {
@@ -55,7 +55,7 @@ checklist_t::checklist_t(uint32 _ss, uint32 _st, uint8 _nfc, uint32 _random_seed
 
 bool checklist_t::operator==(const checklist_t& other) const
 {
-#if HEAVY_MODE
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 	return hash == other.hash;
 #else
 	bool rands_equal = true;
@@ -86,7 +86,7 @@ bool checklist_t::operator==(const checklist_t& other) const
 
 void checklist_t::rdwr(memory_rw_t *buffer)
 {
-#if HEAVY_MODE
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 	buffer->rdwr_long(hash);
 #else
 	buffer->rdwr_long(ss);
@@ -96,7 +96,6 @@ void checklist_t::rdwr(memory_rw_t *buffer)
 	buffer->rdwr_short(halt_entry);
 	buffer->rdwr_short(line_entry);
 	buffer->rdwr_short(convoy_entry);
-
 	// desync debug
 	for(  uint8 i = 0;  i < CHK_RANDS;  i++  ) {
 		buffer->rdwr_long(rand[i]);
@@ -111,8 +110,8 @@ void checklist_t::rdwr(memory_rw_t *buffer)
 
 int checklist_t::print(char *buffer, const char *entity) const
 {
-#if HEAVY_MODE
-	return sprintf(buffer, "%s=[adler32=%u] ", entity, hash);
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
+	return sprintf(buffer, "%s=[adler32=%08x] ", entity, hash);
 #else
 	return sprintf(buffer, "%s=[ss=%u st=%u nfc=%u rand=%u halt=%u line=%u cnvy=%u\n\tssr=%u,%u,%u,%u,%u,%u,%u,%u\n\tstr=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n\texr=%u,%u,%u,%u,%u,%u,%u,%u\n\tsums=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u]\n",
 		entity, ss, st, nfc, random_seed, halt_entry, line_entry, convoy_entry,
