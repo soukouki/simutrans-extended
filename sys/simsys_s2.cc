@@ -146,6 +146,7 @@ bool dr_auto_scale(bool on_off )
 		if(  SDL_GetDisplayDPI( 0, NULL, &hdpi, &vdpi )==0  ) {
 			x_scale = ((sint64)hdpi * SCALE_NEUTRAL_X + 1) / TARGET_DPI;
 			y_scale = ((sint64)vdpi * SCALE_NEUTRAL_Y + 1) / TARGET_DPI;
+			DBG_MESSAGE("auto_dpi_scaling","x=%i, y=%i", x_scale, y_scale);
 			return true;
 		}
 		return false;
@@ -212,8 +213,8 @@ resolution dr_query_screen_resolution()
 	SDL_DisplayMode mode;
 	SDL_GetCurrentDisplayMode( 0, &mode );
 	DBG_MESSAGE("dr_query_screen_resolution(SDL2)", "screen resolution width=%d, height=%d", mode.w, mode.h );
-	res.w = mode.w;
-	res.h = mode.h;
+	res.w = SCREEN_TO_TEX_X(mode.w);
+	res.h = SCREEN_TO_TEX_Y(mode.h);
 	return res;
 }
 
@@ -296,8 +297,11 @@ bool internal_create_surfaces(int tex_width, int tex_height)
 int dr_os_open(int screen_width, int screen_height, bool fullscreen)
 {
 	// scale up
-	const int tex_w = SCREEN_TO_TEX_X(screen_width);
-	const int tex_h = SCREEN_TO_TEX_Y(screen_height);
+	resolution res = dr_query_screen_resolution();
+	const int tex_w = max( res.w, SCREEN_TO_TEX_X(screen_width) );
+	const int tex_h = max( res.h, SCREEN_TO_TEX_Y(screen_height) );
+
+	DBG_MESSAGE("dr_os_open()", "Screen requested %i,%i, available max %i,%i", tex_w, tex_h, res.w, res.h);
 
 	// some cards need those alignments
 	// especially 64bit want a border of 8bytes
