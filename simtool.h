@@ -457,6 +457,7 @@ public:
 class tool_build_pier_t : public tool_t {
 private:
 	bool is_dragging;
+	bool end_drag;
 	const char *oldparam;
 	char parambuf[256];
 	const pier_desc_t *get_desc(uint8 *rotation = 0, koord3d *startdrag = 0) const;
