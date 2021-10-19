@@ -1334,6 +1334,10 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 			}
 		}
 
+		if(gr1->get_typ()==grund_t::pierdeck){
+			return "Cannot adjust slope of pier deck";
+		}
+
 		koord k(pos.get_2d());
 
 		sint8 water_hgt = welt->get_water_hgt( k );
