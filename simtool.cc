@@ -5904,6 +5904,7 @@ const char *tool_build_pier_t::get_tooltip(const player_t *) const{
 bool tool_build_pier_t::init(player_t *){
 	uint8 rotation=0;
 	is_dragging=false;
+	end_drag=false;
 	const pier_desc_t *pdsc = get_desc(&rotation);
 	if( ! pdsc ) {
 		return false;
@@ -5943,6 +5944,7 @@ void tool_build_pier_t::end_move(player_t *, koord3d){
 	if(is_dragging){
 		default_param=oldparam;
 		is_dragging=false;
+		end_drag=true;
 	}
 }
 
@@ -5965,6 +5967,12 @@ const char* tool_build_pier_t::move(player_t *player, uint16 buttonstate, koord3
 
 const char *tool_build_pier_t::work(player_t *player, koord3d pos){
 
+	//avoid extra work at end of dragging
+	if(end_drag){
+		end_drag=false;
+		return NULL;
+	}
+
 	//TODO make so buildable under runway height
 	const koord& k = pos.get_2d();
 
@@ -5982,6 +5990,7 @@ const char *tool_build_pier_t::work(player_t *player, koord3d pos){
 
 	if(is_dragging && dragbegin==koord3d::invalid){
 		end_move(player,pos);
+		return NULL;
 	}
 
 	if(is_dragging && pos!=dragbegin){
