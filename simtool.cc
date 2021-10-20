@@ -1335,10 +1335,6 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 			}
 		}
 
-		if(gr1->get_typ()==grund_t::pierdeck){
-			return "Cannot adjust slope of pier deck";
-		}
-
 		koord k(pos.get_2d());
 
 		sint8 water_hgt = welt->get_water_hgt( k );
@@ -1359,8 +1355,10 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 		}
 
 		// finally: empty enough
-		if(  gr1->get_grund_hang()!=gr1->get_weg_hang()  ||  gr1->get_halt().is_bound()  ||  gr1->kann_alle_obj_entfernen(player)  ||
-			gr1->find<gebaeude_t>()  ||  gr1->get_depot() || gr1->get_signalbox()  ||  (gr1->get_leitung() && gr1->hat_wege())  ||  gr1->get_weg(air_wt)  ||  gr1->find<label_t>()  ||  gr1->get_typ()==grund_t::brueckenboden) {
+		if(  gr1->get_grund_hang()!=gr1->get_weg_hang()  ||  gr1->get_halt().is_bound()  ||  gr1->kann_alle_obj_entfernen(player)
+			 || gr1->find<gebaeude_t>()  ||  gr1->get_depot() || gr1->get_signalbox()
+			 || (gr1->get_leitung() && gr1->hat_wege())  ||  gr1->get_weg(air_wt)  ||  gr1->find<label_t>()
+			 ||  gr1->get_typ()==grund_t::brueckenboden || gr1->find<pier_t>() || gr1->get_typ()==grund_t::pierdeck) {
 			return NOTICE_TILE_FULL;
 		}
 
