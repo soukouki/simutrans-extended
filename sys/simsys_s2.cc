@@ -519,10 +519,10 @@ static void internal_GetEvents()
 	}
 
 	static char textinput[SDL_TEXTINPUTEVENT_TEXT_SIZE];
+	dbg->message("SDL_EVENT", "0x%X", event.type);
 	switch(  event.type  ) {
 
-		case SDL_WINDOWEVENT: {
-			dbg->message("SDL_WINDOWEVENT", "%i", event.window.event);
+		case SDL_WINDOWEVENT:
 			if(  event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED  ) {
 				sys_event.new_window_size.w = SCREEN_TO_TEX_X(event.window.data1);
 				sys_event.new_window_size.h = SCREEN_TO_TEX_Y(event.window.data2);
@@ -565,7 +565,148 @@ static void internal_GetEvents()
 			sys_event.code    = event.wheel.y > 0 ? SIM_MOUSE_WHEELUP : SIM_MOUSE_WHEELDOWN;
 			sys_event.key_mod = ModifierKeys();
 			break;
-		}
+
+		case SDL_MOUSEMOTION:
+			if (!in_finger_handling) {
+				sys_event.type = SIM_MOUSE_MOVE;
+				sys_event.code = SIM_MOUSE_MOVED;
+				sys_event.mx = SCREEN_TO_TEX_X(event.motion.x);
+				sys_event.my = SCREEN_TO_TEX_Y(event.motion.y);
+				sys_event.mb = conv_mouse_buttons(event.motion.state);
+				sys_event.key_mod = ModifierKeys();
+			}
+			break;
+
+		case SDL_FINGERDOWN:
+			/* just reset scroll state, since another finger may touch down next
+			 * The button down events will be from fingr move and the coordinate will be set from mouse up: enough
+			 */
+	DBG_MESSAGE("SDL_FINGERDOWN", "fingerID=%x FirstFingerId=%x Finger %i", (int)event.tfinger.fingerId, (int)FirstFingerId, SDL_GetNumTouchFingers(event.tfinger.touchId));
+			{
+				int mx = SCREEN_TO_TEX_X((event.tfinger.x) * screen->w);
+				int my = SCREEN_TO_TEX_Y((event.tfinger.y) * screen->h);
+				int tx = event.tfinger.x * display_get_width();
+				int ty = event.tfinger.y * display_get_height();
+			}
+			if (!in_finger_handling) {
+				dLastDist = 0.0;
+				FirstFingerId = event.tfinger.fingerId;
+				DBG_MESSAGE("SDL_FINGERDOWN", "FirstfingerID=%x", FirstFingerId);
+				in_finger_handling = true;
+			}
+			else if (FirstFingerId != event.tfinger.fingerId) {
+				previous_multifinger_touch = 2;
+			}
+			previous_mouse_down = false;
+			break;
+
+		case SDL_FINGERMOTION:
+			// move whatever
+			if(  screen  &&  previous_multifinger_touch==0  &&  FirstFingerId==event.tfinger.fingerId) {
+				if (dLastDist == 0.0) {
+					// not yet a finger down event before => we send one
+					dLastDist = 1e-99;
+					sys_event.type = SIM_MOUSE_BUTTONS;
+					sys_event.code = SIM_MOUSE_LEFTBUTTON;
+					sys_event.mx = event.tfinger.x * display_get_width();
+					sys_event.my = event.tfinger.y * display_get_height();
+	DBG_MESSAGE("SDL_FINGERMOTION", "SIM_MOUSE_LEFTBUTTON at %i,%i", sys_event.mx, sys_event.my);
+				}
+				else {
+					sys_event.type = SIM_MOUSE_MOVE;
+					sys_event.code = SIM_MOUSE_MOVED;
+					sys_event.mx = event.tfinger.x * display_get_width();
+					sys_event.my = event.tfinger.y * display_get_height();
+	DBG_MESSAGE("SDL_FINGERMOTION", "SIM_MOUSE_MOVED at %i,%i", sys_event.mx, sys_event.my);
+				}
+				sys_event.mb = 1;
+				sys_event.key_mod = ModifierKeys();
+			}
+			in_finger_handling = true;
+			break;
+
+		case SDL_FINGERUP:
+			if (screen  &&  in_finger_handling) {
+				if (FirstFingerId==event.tfinger.fingerId  ||  SDL_GetNumTouchFingers(event.tfinger.touchId)==0) {
+					if(!previous_multifinger_touch) {
+						if (dLastDist == 0.0) {
+							dLastDist = 1e-99;
+#if 0
+							// return a press event
+							sys_event.type = SIM_MOUSE_BUTTONS;
+							sys_event.code = SIM_MOUSE_LEFTBUTTON;
+							sys_event.mb = 1;
+							sys_event.key_mod = ModifierKeys();
+#endif
+							sys_event.mx = event.tfinger.x * display_get_width();
+							sys_event.my = event.tfinger.y * display_get_height();
+							// not yet moved -> set click origin or click will be at last position ...
+							set_click_xy(sys_event.mx, sys_event.my);
+#if 0
+							// and queue the relese event
+							event_t* nev = new event_t(EVENT_RELEASE);
+							nev->ev_code = MOUSE_LEFTBUTTON;
+							nev->mx = sys_event.mx;
+							nev->my = sys_event.my;
+							nev->button_state = 0;
+							nev->ev_key_mod = ModifierKeys();
+							queue_event(nev);
+		DBG_MESSAGE("SDL_FINGERUP", "SIM_MOUSE_LEFTDOWN+UP at %i,%i", sys_event.mx, sys_event.my);
+#endif
+						}
+						else {
+							sys_event.type = SIM_MOUSE_BUTTONS;
+							sys_event.code = SIM_MOUSE_LEFTUP;
+							sys_event.mb = 0;
+							sys_event.mx = (event.tfinger.x + event.tfinger.dx) * display_get_width();
+							sys_event.my = (event.tfinger.y + event.tfinger.dy) * display_get_height();
+							sys_event.key_mod = ModifierKeys();
+		DBG_MESSAGE("SDL_FINGERUP", "SIM_MOUSE_LEFTUP at %i,%i", sys_event.mx, sys_event.my);
+						}
+					}
+					previous_multifinger_touch = 0;
+					in_finger_handling = 0;
+					FirstFingerId = 0xFFFF;
+				}
+			}
+			break;
+
+		case SDL_MULTIGESTURE:
+			DBG_MESSAGE("SDL_FINGERUP", "Finger %i", SDL_GetNumTouchFingers(event.tfinger.touchId));
+			in_finger_handling = true;
+			if( event.mgesture.numFingers == 2 ) {
+				// any multitouch is intepreted as pinch zoom
+				dLastDist += event.mgesture.dDist;
+				if( dLastDist<-DELTA_PINCH ) {
+					sys_event.type = SIM_MOUSE_BUTTONS;
+					sys_event.code = SIM_MOUSE_WHEELDOWN;
+					sys_event.key_mod = ModifierKeys();
+					dLastDist += DELTA_PINCH;
+				}
+				else if( dLastDist>DELTA_PINCH ) {
+					sys_event.type = SIM_MOUSE_BUTTONS;
+					sys_event.code = SIM_MOUSE_WHEELUP;
+					sys_event.key_mod = ModifierKeys();
+					dLastDist -= DELTA_PINCH;
+				}
+				previous_multifinger_touch = 2;
+			}
+			else if (event.mgesture.numFingers == 3  &&  screen) {
+				// any three finger touch is scrolling the map
+				sys_event.type = SIM_MOUSE_MOVE;
+				sys_event.code = SIM_MOUSE_MOVED;
+				sys_event.mb = 2;
+				sys_event.mx = SCREEN_TO_TEX_X(event.mgesture.x * screen->w);
+				sys_event.my = SCREEN_TO_TEX_Y(event.mgesture.y * screen->h);
+				sys_event.key_mod = ModifierKeys();
+				if (previous_multifinger_touch != 3) {
+					// just started scrolling
+					set_click_xy(sys_event.mx, sys_event.my);
+				}
+				previous_multifinger_touch = 3;
+			}
+			break;
+
 		case SDL_KEYDOWN: {
 			// Hack: when 2 byte character composition is under way, we have to leave the key processing with the IME
 			// BUT: if not, we have to do it ourselves, or the cursor or return will not be recognised
