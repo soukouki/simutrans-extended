@@ -649,18 +649,27 @@ static void internal_GetEvents()
 							sys_event.mx = event.tfinger.x * display_get_width();
 							sys_event.my = event.tfinger.y * display_get_height();
 							// not yet moved -> set click origin or click will be at last position ...
-							set_click_xy(sys_event.mx, sys_event.my);
-#if 0
+							set_click_xy(
+								(event.tfinger.x + event.tfinger.dx) * display_get_width(),
+								(event.tfinger.y + event.tfinger.dy) * display_get_height()
+							);
+							dLastDist = 1e-99;
+							// return a press event
+							sys_event.type = SIM_MOUSE_BUTTONS;
+							sys_event.code = SIM_MOUSE_LEFTBUTTON;
+							sys_event.mb = 1;
+							sys_event.mx = event.tfinger.x * display_get_width();
+							sys_event.my = event.tfinger.y * display_get_height();
+							sys_event.key_mod = ModifierKeys();
 							// and queue the relese event
 							event_t* nev = new event_t(EVENT_RELEASE);
 							nev->ev_code = MOUSE_LEFTBUTTON;
-							nev->mx = sys_event.mx;
-							nev->my = sys_event.my;
+							nev->mx = event.tfinger.x * display_get_width();
+							nev->my = event.tfinger.y * display_get_height();
 							nev->button_state = 0;
 							nev->ev_key_mod = ModifierKeys();
 							queue_event(nev);
 		DBG_MESSAGE("SDL_FINGERUP", "SIM_MOUSE_LEFTDOWN+UP at %i,%i", sys_event.mx, sys_event.my);
-#endif
 						}
 						else {
 							sys_event.type = SIM_MOUSE_BUTTONS;
