@@ -45,7 +45,7 @@ const char * pier_builder_t::check_below_ways(player_t *player, koord3d pos, con
             if( ( w0->get_ribi_unmasked() & desc->get_below_way_ribi(rotation) ) == w0->get_ribi_unmasked()
                     || ( (halfheight) && w0->is_low_clearence(player) ) ){
                 if(weg_t *w1  = gr->get_weg_nr(1)){
-                    if( ( w1->get_ribi_unmasked() & desc->get_below_way_ribi(rotation) ) != w1->get_ribi_unmasked()
+                    if( ( w1->get_ribi_unmasked() & desc->get_below_way_ribi(rotation) ) == w1->get_ribi_unmasked()
                             || ( (halfheight) && w1->is_low_clearence(player) ) ){
                         return NULL;
                     }
