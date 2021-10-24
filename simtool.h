@@ -33,6 +33,7 @@ class koord3d;
 class koord;
 class way_builder_t;
 class building_desc_t;
+class pier_desc_t;
 class roadsign_desc_t;
 class way_desc_t;
 class route_t;
@@ -452,6 +453,30 @@ public:
 	bool is_init_network_safe() const OVERRIDE { return true; }
 	waytype_t get_waytype() const OVERRIDE;
 };
+
+class tool_build_pier_t : public tool_t {
+private:
+	bool is_dragging;
+	bool end_drag;
+	const char *oldparam;
+	char parambuf[256];
+	const pier_desc_t *get_desc(uint8 *rotation = 0, koord3d *startdrag = 0) const;
+public:
+	tool_build_pier_t() : tool_t(TOOL_BUILD_PIER | GENERAL_TOOL) {}
+	image_id get_icon(player_t *) const override;
+	const char * get_tooltip(const player_t *) const override;
+	bool init(player_t *) override;
+	char const* check_pos(player_t *, koord3d) override;
+	char const* move(player_t *, uint16, koord3d) override;
+	void begin_move(player_t *, koord3d) override;
+	void end_move(player_t*, koord3d) override;
+	bool move_has_effects() const override {return true;}
+	char const* work(player_t*, koord3d) override;
+	bool is_init_network_safe() const override {return true;}
+	waytype_t get_waytype() const override {return any_wt;}
+	bool exit(player_t *) override {is_dragging=false; return true;}
+};
+
 
 class tool_rotate_building_t : public tool_t {
 private:

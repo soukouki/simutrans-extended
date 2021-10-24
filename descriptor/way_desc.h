@@ -88,6 +88,13 @@ private:
 	}
 public:
 
+	bool is_low_clearence() const{
+		return this->get_waytype() == waytype_t::road_wt ||
+				this->get_waytype() == waytype_t::tram_wt ||
+				this->get_waytype() == waytype_t::water_wt ||
+				this->get_topspeed()==0;
+	}
+
 	// Returns maximum axle load
 	uint32 get_max_axle_load() const { return axle_load; }
 
