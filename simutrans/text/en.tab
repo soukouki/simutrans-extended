@@ -6213,6 +6213,8 @@ local visitor demand
 by_surrounding_jobs
 local jobs
 waiting_status
-Currently waiting
+Stops
 show_mutual_use
 Include other companies' stops
+travel_distance
+Line service distance
