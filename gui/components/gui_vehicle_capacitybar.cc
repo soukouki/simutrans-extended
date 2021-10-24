@@ -56,7 +56,7 @@ void gui_convoy_loading_info_t::update_list()
 					gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
 					if (g_classes==1) {
 						// no classes => show the category name
-						lb->buf().printf("%s", ware->get_catg_name());
+						lb->buf().printf("%s", translator::translate(ware->get_catg_name()));
 					}
 					else {
 						// "fare" class name
