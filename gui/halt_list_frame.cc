@@ -108,12 +108,10 @@ const char *halt_list_frame_t::sort_text[SORT_MODES] = {
 	"by_mail_delivered_last_month",
 	"by_convoy_arrivals_last_month",
 	"by_region"
-/*#ifdef DEBUG
 	, "by_surrounding_population"
 	, "by_surrounding_mail_demand"
 	, "by_surrounding_visitor_demand"
 	, "by_surrounding_jobs"
-#endif*/
 };
 
 
@@ -237,7 +235,7 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 				}
 			}
 			break;
-/*#ifdef DEBUG
+
 		case by_surrounding_population:
 		{
 			const int a = halt1->get_pax_enabled() ? halt1->get_around_visitor_demand() : -1;
@@ -266,7 +264,7 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 			order = (int)(a - b);
 			break;
 		}
-#endif*/
+
 	}
 	/**
 	 * use name as an additional sort, to make sort more stable.
