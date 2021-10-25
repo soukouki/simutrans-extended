@@ -75,12 +75,10 @@ public:
 		hl_mail_evaluation,
 		hl_goods_needed,
 		hl_products,
-#ifdef DEBUG
 		coverage_output_pax,
 		coverage_output_mail,
 		coverage_visitor_demands,
 		coverage_job_demands,
-#endif
 		HALTLIST_MODES
 	};
 
