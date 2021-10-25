@@ -123,7 +123,6 @@ void gui_halt_stats_t::update_table()
 				const uint32 waiting_sum = freight_type==0 ? halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) :
 				                           freight_type==1 ? halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)) :
 				                        /* freight_type==2*/ halt->get_finance_history(0, HALT_WAITING) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
-				const scr_coord_val h = D_LABEL_HEIGHT*2/3;
 
 				num[0] = (sint32)min(waiting_sum, capacity);
 				num[1] = (sint64)waiting_sum - num[0];
@@ -264,7 +263,6 @@ void gui_halt_stats_t::update_table()
 				new_component<gui_halt_goods_demand_t>(halt, true);
 			}
 			break;
-#ifdef DEBUG
 		case halt_list_stats_t::coverage_visitor_demands:
 			if (halt->get_pax_enabled()) {
 				add_table(3,1);
@@ -358,7 +356,6 @@ void gui_halt_stats_t::update_table()
 			}
 			break;
 		}
-#endif
 		default:
 #ifdef DEBUG
 			new_component<gui_label_t>("(debug)default", COL_DANGER);
@@ -406,7 +403,6 @@ void gui_halt_stats_t::draw(scr_coord offset)
 					update_seed = (sint32)world()->get_current_month();
 				}
 				break;
-#ifdef DEBUG
 			// These have a high processing load, so please do not update them frequently.
 			case halt_list_stats_t::coverage_output_pax:
 			case halt_list_stats_t::coverage_output_mail:
@@ -414,7 +410,6 @@ void gui_halt_stats_t::draw(scr_coord offset)
 			case halt_list_stats_t::coverage_job_demands:
 				update_flag = false; // Only when reselect or reopen.
 				break;
-#endif
 			case halt_list_stats_t::hl_waiting_detail:
 			case halt_list_stats_t::hl_location:
 			case halt_list_stats_t::hl_goods_needed:
