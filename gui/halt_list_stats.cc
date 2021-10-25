@@ -123,7 +123,6 @@ void gui_halt_stats_t::update_table()
 				const uint32 waiting_sum = freight_type==0 ? halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) :
 				                           freight_type==1 ? halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL)) :
 				                        /* freight_type==2*/ halt->get_finance_history(0, HALT_WAITING) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
-				const scr_coord_val h = D_LABEL_HEIGHT*2/3;
 
 				num[0] = (sint32)min(waiting_sum, capacity);
 				num[1] = (sint64)waiting_sum - num[0];
