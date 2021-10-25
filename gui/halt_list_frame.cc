@@ -127,10 +127,12 @@ const char *halt_list_frame_t::display_mode_text[halt_list_stats_t::HALTLIST_MOD
 	"hl_mail_evaluation",
 	"hl_goods_needed",
 	"hl_products"
+#ifdef DEBUG
 	, "coverage_population"
 	, "coverage_mail_demands"
 	, "coverage_visitor_demands"
 	, "coverage_jobs"
+#endif
 };
 
 
