@@ -28,8 +28,9 @@ obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
     char * p = desc_buf;
 
     //read version (not used yet, only one version)
-    decode_uint16(p);
-
+    uint16 sub_version = decode_uint16(p);
+    sub_version &=  0x3FFF;
+    sub_version >>= 8;
     desc->price = decode_uint32(p);
     desc->maintenance = decode_uint32(p);
     desc->intro_date = decode_uint16(p);
@@ -51,6 +52,19 @@ obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
     desc->pier_weight=decode_uint32(p);
     desc->drag_ribi=decode_uint8(p);
     desc->above_way_supplement=decode_uint8(p);
+
+    desc->topspeed = -1;
+    desc->axle_load = -1;
+
+    if(sub_version>=2){
+        //not used yet
+        decode_uint32(p);
+        decode_uint32(p);
+        decode_uint32(p);
+
+        desc->topspeed = decode_uint16(p);
+        desc->axle_load = decode_uint16(p);
+    }
 
     return desc;
 }

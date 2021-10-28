@@ -132,7 +132,7 @@ ribi_t::ribi pier_t::get_below_ribi_total(const grund_t *gr){
 
 uint32 pier_t::get_base_mask_total(const grund_t *gr){
 	uint32 ret=0;
-	for(uint i = 0; i < gr->get_top(); i++){
+	for(uint8 i = 0; i < gr->get_top(); i++){
 		obj_t *ob = gr->obj_bei(i);
 		if(ob->get_typ()==obj_t::pier){
 			ret |= ((pier_t*)ob)->get_base_mask();
@@ -143,7 +143,7 @@ uint32 pier_t::get_base_mask_total(const grund_t *gr){
 
 uint32 pier_t::get_middle_mask_total(const grund_t *gr){
 	uint32 ret=0;
-	for(uint i = 0; i < gr->get_top(); i++){
+	for(uint8 i = 0; i < gr->get_top(); i++){
 		obj_t *ob = gr->obj_bei(i);
 		if(ob->get_typ()==obj_t::pier){
 			ret |= ((pier_t*)ob)->get_middle_mask();
@@ -154,11 +154,47 @@ uint32 pier_t::get_middle_mask_total(const grund_t *gr){
 
 uint32 pier_t::get_support_mask_total(const grund_t *gr){
 	uint32 ret=0;
-	for(uint i = 0; i < gr->get_top(); i++){
+	for(uint8 i = 0; i < gr->get_top(); i++){
 		obj_t *ob = gr->obj_bei(i);
 		if(ob->get_typ()==obj_t::pier){
 			ret |= ((pier_t*)ob)->get_support_mask();
 		}
 	}
 	return ret;
+}
+
+uint16 pier_t::get_speed_limit_deck_total(const grund_t *gr, uint16 maxspeed){
+	koord3d pos=gr->get_pos();
+	gr = welt->lookup(gr->get_pos() - koord3d(0,0,1));
+	if(!gr){
+		gr = welt->lookup(pos - koord3d(0,0,2));
+	}
+	if(gr){
+		for(uint8 i = 0; i < gr->get_top(); i++){
+			obj_t *ob = gr->obj_bei(i);
+			if(ob->get_typ()==obj_t::pier){
+				if(maxspeed > ((pier_t*)ob)->get_maxspeed()){
+					maxspeed = ((pier_t*)ob)->get_maxspeed();
+				}
+			}
+		}
+	}
+	return maxspeed;
+}
+
+uint16 pier_t::get_max_axle_load_deck_total(const grund_t *gr, uint16 maxload){
+	koord3d pos=gr->get_pos();
+	gr = welt->lookup(gr->get_pos() - koord3d(0,0,1));
+	if(!gr){
+		gr = welt->lookup(pos - koord3d(0,0,2));
+	}
+	if(gr){
+		for(uint8 i = 0; i < gr->get_top(); i++){
+			obj_t *ob = gr->obj_bei(i);
+			if(maxload > ((pier_t*)ob)->get_axle_load()){
+				maxload = ((pier_t*)ob)->get_axle_load();
+			}
+		}
+	}
+	return maxload;
 }

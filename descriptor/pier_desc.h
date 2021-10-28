@@ -79,6 +79,7 @@ public:
 	uint32 get_sub_obj_mask(uint8 rotation=0) const {return rotate_mask(sub_obj_mask, rotation);}
 	ribi_t::ribi get_drag_ribi(uint8 rotation=0) const {return rotate_ribi(drag_ribi, rotation);}
 
+	uint16 get_max_axle_load() const {return axle_load;}
 
 	image_id get_background(slope_t::type slope, uint8 rotation, uint8 season) const;
 
