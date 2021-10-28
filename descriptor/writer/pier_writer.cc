@@ -16,7 +16,7 @@ using std::string;
 
 void pier_writer_t::write_obj(FILE * outfp, obj_node_t& parent, tabfileobj_t& obj)
 {
-	obj_node_t node(this, 52, &parent);
+	obj_node_t node(this, 68, &parent);
 	write_head(outfp, node,obj);
 
 	uint32 price					= obj.get_int("cost", 0);
@@ -49,11 +49,18 @@ void pier_writer_t::write_obj(FILE * outfp, obj_node_t& parent, tabfileobj_t& ob
 	uint8 drag_ribi			   = obj.get_int("drag_ribi",0);
 	uint8 above_way_supplement = obj.get_int("above_way_supplement",0);
 
+	uint32 base_mask_2 = 0;
+	uint32 middle_mask_2 = 0;
+	uint32 support_mask_2 = 0;
+
+	uint16 max_speed			= obj.get_int("topspeed",0xFFFF);
+	uint16 max_axle_load		= obj.get_int("max_weight",0xFFFF);
+
 	uint16 version = 0x8009;
 
 	version |= EX_VER;
 
-	version += 0x100; //Version number of node times 0x100
+	version += 0x200; //Version number of node times 0x100
 
 	node.write_uint16(outfp, version,					0);
 	node.write_uint32(outfp, price,						2);
@@ -91,6 +98,12 @@ void pier_writer_t::write_obj(FILE * outfp, obj_node_t& parent, tabfileobj_t& ob
 	node.write_uint8(outfp, drag_ribi,					50);
 	node.write_uint8(outfp, above_way_supplement,		51);
 
+	node.write_uint32(outfp, support_mask_2, 52);
+	node.write_uint32(outfp, middle_mask_2,  56);
+	node.write_uint32(outfp, base_mask_2,    60);
+
+	node.write_uint16(outfp, max_speed,      64);
+	node.write_uint16(outfp, max_axle_load,  66);
 
 	slist_tpl<string> backkeys;
 	slist_tpl<string> frontkeys;

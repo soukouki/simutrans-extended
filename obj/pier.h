@@ -42,6 +42,8 @@ public:
     uint32 get_base_mask() const {return desc->get_base_mask(rotation);}
     uint32 get_middle_mask() const {return desc->get_middle_mask(rotation);}
     uint32 get_support_mask() const {return desc->get_support_mask(rotation);}
+    uint32 get_maxspeed() const {return desc->get_topspeed();}
+    uint32 get_axle_load() const {return desc->get_max_axle_load();}
 
     //get the total for entire tile
     static ribi_t::ribi get_above_ribi_total(const grund_t* gr);
@@ -50,7 +52,8 @@ public:
     static uint32 get_base_mask_total(const grund_t* gr);
     static uint32 get_middle_mask_total(const grund_t* gr);
     static uint32 get_support_mask_total(const grund_t* gr);
-
+    static uint16 get_speed_limit_deck_total(const grund_t* gr, uint16 maxspeed=-1);
+    static uint16 get_max_axle_load_deck_total(const grund_t* gr, uint16 maxload=-1);
     image_id get_image() const override;
     image_id get_front_image() const override;
 
