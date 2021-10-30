@@ -923,7 +923,7 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 		if(welt->get_settings().get_way_height_clearance()==2){
 			//check above mask of pier on bottom
 			if(!(desc->is_low_clearence()) || (bautyp&bautyp_mask)==leitung){
-				if(pier_t::get_above_ribi_total(to) || pier_t::get_above_ribi_total(from)){
+				if(pier_t::get_above_ribi_total(to,true) || pier_t::get_above_ribi_total(from,true)){
 					return false;
 				}
 			}
@@ -947,27 +947,23 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 			}
 		}
 		if(to->get_typ()==grund_t::pierdeck){
-			grund_t *to2=welt->lookup(to->get_pos() + koord3d(0,0,-1));
-			if(to2==NULL){
-				to2=welt->lookup(to->get_pos() + koord3d(0,0,-2));
+			ribimask=pier_t::get_above_ribi_total(to);
+			if((ribimask&zv.to_ribi())!=zv.to_ribi()){
+				return false;
 			}
-			if(to2){
-				ribimask=pier_t::get_above_ribi_total(to2);
-				if((ribimask&zv.to_ribi())!=zv.to_ribi()){
-					return false;
-				}
+			uint32 deckmask=pier_t::get_deck_obj_mask_total(to);
+			if((deckmask&desc->get_deckmask())!=desc->get_deckmask()){
+				return false;
 			}
 		}
 		if(from->get_typ()==grund_t::pierdeck){
-			grund_t *from2=welt->lookup(from->get_pos() + koord3d(0,0,-1));
-			if(from2==NULL){
-				from2=welt->lookup(from->get_pos() + koord3d(0,0,-2));
+			ribimask=pier_t::get_above_ribi_total(from);
+			if((ribimask&ribi_t::backward(zv.to_ribi()))!=ribi_t::backward(zv.to_ribi())){
+				return false;
 			}
-			if(from2){
-				ribimask=pier_t::get_above_ribi_total(from2);
-				if((ribimask&ribi_t::backward(zv.to_ribi()))!=ribi_t::backward(zv.to_ribi())){
-					return false;
-				}
+			uint32 deckmask=pier_t::get_deck_obj_mask_total(from);
+			if((deckmask&desc->get_deckmask())!=desc->get_deckmask()){
+				return false;
 			}
 		}
 	}
@@ -2730,6 +2726,13 @@ void way_builder_t::build_road()
 				if (build_sidewalk) {
 					str->set_gehweg(build_sidewalk);
 					str->set_public_right_of_way();
+				}
+				if(gr->get_typ()==grund_t::pierdeck){  //position not yet determined in set_desc, handle here
+					uint16 pier_max_load = pier_t::get_max_axle_load_deck_total(gr) / 2;
+					if(pier_max_load < str->get_max_axle_load()){
+						str->set_max_axle_load(pier_max_load);
+					}
+					str->set_max_speed(pier_t::get_speed_limit_deck_total(gr,str->get_max_speed()));
 				}
 				cost += gr->neuen_weg_bauen(str, route.get_short_ribi(i), player_builder, &route) - desc->get_value();
 				// respect speed limit of crossing

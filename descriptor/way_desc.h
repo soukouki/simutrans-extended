@@ -58,6 +58,11 @@ private:
 	* @author: jamespetts*/
 	way_constraints_of_way_t way_constraints;
 
+	/**
+	 * @brief way_mask mask used for pier system
+	 */
+	uint32 deck_mask;
+
 	// this is the defualt tools for building this way ...
 	// if true front_images lists exists as nodes
 	bool front_images;
@@ -114,6 +119,12 @@ public:
 	//systemtype_t get_styp() const { return (systemtype_t)styp; }
 
 	bool is_tram() const { return wtyp == track_wt  &&  styp == type_tram; }
+
+	/**
+	 * @brief get_waymask
+	 * @return may mask
+	 */
+	uint32 get_deckmask() const {return deck_mask;};
 
 	image_id get_image_id(ribi_t::ribi ribi, uint8 season, bool front = false) const
 	{

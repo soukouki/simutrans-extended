@@ -276,7 +276,14 @@ void weg_t::set_desc(const way_desc_t *b, bool from_saved_game)
 
 	max_axle_load = desc->get_max_axle_load();
 	if(on_pier){
-		max_axle_load = pier_t::get_max_axle_load_deck_total(gr, max_axle_load);
+		if(desc->get_wtyp() == road_wt){ //roads can have one vehicle in each direction
+			uint16 pier_max_load = pier_t::get_max_axle_load_deck_total(gr) / 2;
+			if(pier_max_load < max_axle_load){
+				max_axle_load = pier_max_load;
+			}
+		}else{
+			max_axle_load = pier_t::get_max_axle_load_deck_total(gr, max_axle_load);
+		}
 	}
 
 	// Clear the old constraints then add all sources of constraints again.

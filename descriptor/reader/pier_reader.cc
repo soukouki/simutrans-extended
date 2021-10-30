@@ -18,6 +18,17 @@ void pier_reader_t::register_obj(obj_desc_t *&data){
     pakset_info_t::append(desc->get_name(), get_type(),chk);
 }
 
+void pier_reader_t::shufflemask(uint64 &mask){
+    uint64 tmp=mask;
+    mask&=        0xFF000000000000FF;
+    mask|= (tmp & 0x000000000000FF00) << 8;
+    mask|= (tmp & 0x0000000000FF0000) << 16;
+    mask|= (tmp & 0x00000000FF000000) << 24;
+    mask|= (tmp & 0x000000FF00000000) >> 24;
+    mask|= (tmp & 0x0000FF0000000000) >> 16;
+    mask|= (tmp & 0x00FF000000000000) >> 8;
+}
+
 obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
     ALLOCA(char, desc_buf, node.size);
 
@@ -58,13 +69,17 @@ obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
 
     if(sub_version>=2){
         //not used yet
-        decode_uint32(p);
-        decode_uint32(p);
-        decode_uint32(p);
+        desc->support_mask |= (uint64)decode_uint32(p) << 32;
+        desc->middle_mask |= (uint64)decode_uint32(p) << 32;
+        desc->base_mask |= (uint64)decode_uint32(p) << 32;
 
         desc->topspeed = decode_uint16(p);
         desc->axle_load = decode_uint16(p);
     }
+
+    shufflemask(desc->support_mask);
+    shufflemask(desc->middle_mask);
+    shufflemask(desc->base_mask);
 
     return desc;
 }
