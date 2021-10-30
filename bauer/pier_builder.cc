@@ -172,7 +172,7 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         if(gr2==NULL){
             gr2=welt->lookup(gr->get_pos() + koord3d(0,0,-2));
         }
-        uint32 supportmask=pier_t::get_support_mask_total(gr2);
+        uint64 supportmask=pier_t::get_support_mask_total(gr2);
         if((supportmask & desc->get_base_mask(rotation))!=desc->get_base_mask(rotation)){
             return "Cannot build pier.  Lower pier does not provide sufficient footing";
         }

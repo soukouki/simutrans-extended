@@ -29,9 +29,9 @@ private:
                                       //(future use) MSB to LSB: Reserved; Reserved; Only 1 pier; Top Peir; Upper third; Middle; lower Third; Bottom;
 
     //masks are rotated by 8 bits during rotation;
-    uint32 base_mask;           //bit field for where foundation is needed (up to pakset designer)
-    uint32 middle_mask;         //bit field to prevend piers occupying the same physical space (up to pakset designer)
-    uint32 support_mask;        //bit field for locations on deck (or lack thereof) where columns can be supported (up to packset designer)
+    uint64 base_mask;           //bit field for where foundation is needed (up to pakset designer)
+    uint64 middle_mask;         //bit field to prevend piers occupying the same physical space (up to pakset designer)
+    uint64 support_mask;        //bit field for locations on deck (or lack thereof) where columns can be supported (up to packset designer)
     uint32 sub_obj_mask;        //(future use) restrict buildings and waytypes coninsiding with
     uint32 deck_obj_mask;       //(future use) restrict objects and buildings on deck
 
@@ -43,9 +43,16 @@ private:
 
     uint8 drag_ribi : 4; //direction for dragging
     uint8 above_way_supplement : 1; //(future use) only allow above_way_ribi if not only pier
+    uint8 bottom_only : 1; //(future use) restrict pier to nature tiles
+    uint8 keep_dry : 1; //(future use) restict pier to dry land
+    uint8 low_waydeck : 1; //(future use) pier supports ways in pier, not on top
 
     static uint32 rotate_mask(uint32 m,uint8 r){
         return (m << (8*r)) | (m >> (32 - 8*r));
+    }
+
+    static uint64 rotate_mask(uint64 m,uint8 r){
+        return (m << (16*r)) | (m >> (64 - 16*r));
     }
 
     //TODO maybe move this into ribi.h
@@ -73,10 +80,12 @@ public:
 	ribi_t::ribi get_below_way_ribi(uint8 rotation=0) const {return rotate_ribi(below_way_ribi, rotation);}
 	slope_t::type get_above_slope(uint8 rotation=0) const;
 	uint8 get_auto_group() const {return auto_group;}
-	uint32 get_base_mask(uint8 rotation=0) const {return rotate_mask(base_mask,rotation);}
-	uint32 get_middle_mask(uint8 rotation=0) const {return rotate_mask(middle_mask,rotation);}
-	uint32 get_support_mask(uint8 rotation=0) const {return rotate_mask(support_mask, rotation);}
+	uint64 get_base_mask(uint8 rotation=0) const {return rotate_mask(base_mask,rotation);}
+	uint64 get_middle_mask(uint8 rotation=0) const {return rotate_mask(middle_mask,rotation);}
+	uint64 get_support_mask(uint8 rotation=0) const {return rotate_mask(support_mask, rotation);}
 	uint32 get_sub_obj_mask(uint8 rotation=0) const {return rotate_mask(sub_obj_mask, rotation);}
+	uint32 get_deck_obj_mask() const {return deck_obj_mask;}
+
 	ribi_t::ribi get_drag_ribi(uint8 rotation=0) const {return rotate_ribi(drag_ribi, rotation);}
 
 	uint16 get_max_axle_load() const {return axle_load;}

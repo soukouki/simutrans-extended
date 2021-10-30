@@ -46,14 +46,25 @@ void pier_desc_t::calc_checksum(checksum_t *chk) const{
 	chk->input(above_slope);
 	chk->input(auto_group);
 	chk->input(auto_height);
-	chk->input(base_mask);
-	chk->input(support_mask);
+	chk->input((uint32)(base_mask & 0xFFFFFFFF));
+	chk->input((uint32)(base_mask >> 32));
+	chk->input((uint32)(support_mask & 0xFFFFFFFF));
+	chk->input((uint32)(support_mask >> 32));
+	chk->input((uint32)(middle_mask & 0xFFFFFFFF));
+	chk->input((uint32)(middle_mask >> 32));
 	chk->input(sub_obj_mask);
 	chk->input(deck_obj_mask);
 	chk->input(max_weight);
 	chk->input(number_of_seasons);
-	chk->input(middle_mask);
 	chk->input(pier_weight);
 	chk->input(drag_ribi);
 	chk->input(above_way_supplement);
+	chk->input(rotational_symmetry);
+	chk->input(topspeed);
+	chk->input(axle_load);
+	for(uint8 slope=0; slope<81; slope++){
+		for(uint8 rotation = 0; rotation < 4; rotation++){
+			chk->input(get_background(slope,rotation,0)!=IMG_EMPTY);
+		}
+	}
 }

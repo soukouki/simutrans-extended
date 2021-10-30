@@ -14,6 +14,9 @@ class pier_reader_t : public obj_reader_t
     static pier_reader_t the_instance;
 
     pier_reader_t() {register_reader(); }
+
+    void shufflemask(uint64 &mask);
+
 protected:
     void register_obj(obj_desc_t *&) override;
 public:

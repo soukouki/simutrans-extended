@@ -108,12 +108,26 @@ const char *pier_t::is_deletable(const player_t *player){
 	return obj_t::is_deletable(player);
 }
 
-ribi_t::ribi pier_t::get_above_ribi_total(const grund_t *gr){
+const grund_t* pier_t::ground_below(const grund_t *gr){
+	koord3d pos=gr->get_pos();
+	gr = welt->lookup(gr->get_pos() - koord3d(0,0,1));
+	if(!gr){
+		gr = welt->lookup(pos - koord3d(0,0,2));
+	}
+	return gr;
+}
+
+ribi_t::ribi pier_t::get_above_ribi_total(const grund_t *gr, bool gr_is_base){
 	ribi_t::ribi ret=ribi_t::none;
-	for(uint8 i = 0; i < gr->get_top(); i++){
-		obj_t *ob = gr->obj_bei(i);
-		if(ob->get_typ()==obj_t::pier){
-			ret |= ((pier_t*)ob)->get_above_ribi();
+	if(!gr_is_base){
+		gr=ground_below(gr);
+	}
+	if(gr){
+		for(uint8 i = 0; i < gr->get_top(); i++){
+			obj_t *ob = gr->obj_bei(i);
+			if(ob->get_typ()==obj_t::pier){
+				ret |= ((pier_t*)ob)->get_above_ribi();
+			}
 		}
 	}
 	return ret;
@@ -130,8 +144,8 @@ ribi_t::ribi pier_t::get_below_ribi_total(const grund_t *gr){
 	return ret;
 }
 
-uint32 pier_t::get_base_mask_total(const grund_t *gr){
-	uint32 ret=0;
+uint64 pier_t::get_base_mask_total(const grund_t *gr){
+	uint64 ret=0;
 	for(uint8 i = 0; i < gr->get_top(); i++){
 		obj_t *ob = gr->obj_bei(i);
 		if(ob->get_typ()==obj_t::pier){
@@ -141,8 +155,8 @@ uint32 pier_t::get_base_mask_total(const grund_t *gr){
 	return ret;
 }
 
-uint32 pier_t::get_middle_mask_total(const grund_t *gr){
-	uint32 ret=0;
+uint64 pier_t::get_middle_mask_total(const grund_t *gr){
+	uint64 ret=0;
 	for(uint8 i = 0; i < gr->get_top(); i++){
 		obj_t *ob = gr->obj_bei(i);
 		if(ob->get_typ()==obj_t::pier){
@@ -152,8 +166,8 @@ uint32 pier_t::get_middle_mask_total(const grund_t *gr){
 	return ret;
 }
 
-uint32 pier_t::get_support_mask_total(const grund_t *gr){
-	uint32 ret=0;
+uint64 pier_t::get_support_mask_total(const grund_t *gr){
+	uint64 ret=0;
 	for(uint8 i = 0; i < gr->get_top(); i++){
 		obj_t *ob = gr->obj_bei(i);
 		if(ob->get_typ()==obj_t::pier){
@@ -164,11 +178,7 @@ uint32 pier_t::get_support_mask_total(const grund_t *gr){
 }
 
 uint16 pier_t::get_speed_limit_deck_total(const grund_t *gr, uint16 maxspeed){
-	koord3d pos=gr->get_pos();
-	gr = welt->lookup(gr->get_pos() - koord3d(0,0,1));
-	if(!gr){
-		gr = welt->lookup(pos - koord3d(0,0,2));
-	}
+	gr=ground_below(gr);
 	if(gr){
 		for(uint8 i = 0; i < gr->get_top(); i++){
 			obj_t *ob = gr->obj_bei(i);
@@ -182,17 +192,29 @@ uint16 pier_t::get_speed_limit_deck_total(const grund_t *gr, uint16 maxspeed){
 	return maxspeed;
 }
 
-uint16 pier_t::get_max_axle_load_deck_total(const grund_t *gr, uint16 maxload){
-	koord3d pos=gr->get_pos();
-	gr = welt->lookup(gr->get_pos() - koord3d(0,0,1));
-	if(!gr){
-		gr = welt->lookup(pos - koord3d(0,0,2));
-	}
+uint32 pier_t::get_deck_obj_mask_total(const grund_t *gr){
+	gr=ground_below(gr);
+	uint32 ret=0x0;
 	if(gr){
 		for(uint8 i = 0; i < gr->get_top(); i++){
 			obj_t *ob = gr->obj_bei(i);
-			if(maxload > ((pier_t*)ob)->get_axle_load()){
-				maxload = ((pier_t*)ob)->get_axle_load();
+			if(ob->get_typ()==obj_t::pier){
+				ret |= ((pier_t*)ob)->get_deck_obj_mask();
+			}
+		}
+	}
+	return ret;
+}
+
+uint16 pier_t::get_max_axle_load_deck_total(const grund_t *gr, uint16 maxload){
+	gr=ground_below(gr);
+	if(gr){
+		for(uint8 i = 0; i < gr->get_top(); i++){
+			obj_t *ob = gr->obj_bei(i);
+			if(ob->get_typ()==obj_t::pier){
+				if(maxload > ((pier_t*)ob)->get_axle_load()){
+					maxload = ((pier_t*)ob)->get_axle_load();
+				}
 			}
 		}
 	}
