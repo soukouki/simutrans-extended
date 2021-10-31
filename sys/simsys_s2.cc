@@ -169,7 +169,7 @@ bool dr_auto_scale(bool on_off )
 	}
 }
 
-static int SDLCALL my_event_filter(void* userdata, SDL_Event* event)
+static int SDLCALL my_event_filter(void* /*userdata*/, SDL_Event* event)
 {
 	if (event->type == SDL_APP_TERMINATING) {
 		// quitting immediate, save settings and game without visual feedback
@@ -572,7 +572,8 @@ static void internal_GetEvents()
 	}
 
 	static char textinput[SDL_TEXTINPUTEVENT_TEXT_SIZE];
-	dbg->message("SDL_EVENT", "0x%X", event.type);
+	DBG_MESSAGE("SDL_EVENT", "0x%X", event.type);
+
 	switch(  event.type  ) {
 
 		case SDL_WINDOWEVENT:
@@ -642,6 +643,7 @@ static void internal_GetEvents()
 			 * The button down events will be from fingr move and the coordinate will be set from mouse up: enough
 			 */
 	DBG_MESSAGE("SDL_FINGERDOWN", "fingerID=%x FirstFingerId=%x Finger %i", (int)event.tfinger.fingerId, (int)FirstFingerId, SDL_GetNumTouchFingers(event.tfinger.touchId));
+
 			if (!in_finger_handling) {
 				dLastDist = 0.0;
 				FirstFingerId = event.tfinger.fingerId;
