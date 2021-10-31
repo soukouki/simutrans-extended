@@ -102,7 +102,7 @@ set_target_properties( simutrans-extended PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${
 #
 
 target_link_libraries(simutrans-extended PRIVATE PNG::PNG)
-	utils/checklist.cc
+
 
 if (WIN32)
 	target_sources(simutrans-extended PRIVATE simres.rc)
@@ -297,6 +297,7 @@ endif ()
 
 if (SIMUTRANS_HEAVY_MODE)
 	target_compile_definitions(simutrans PRIVATE HEAVY_MODE=${SIMUTRANS_HEAVY_MODE})
+	target_sources(simutrans PRIVATE io/rdwr/adler32_stream.cc)
 endif ()
 
 if (APPLE)

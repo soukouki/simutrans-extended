@@ -10,7 +10,7 @@
 #include "rdwr_stream.h"
 
 
-// Computes the adler32 checksum over a range of data
+/// Computes the adler32 checksum over some data
 class adler32_stream_t : public rdwr_stream_t
 {
 public:

@@ -254,7 +254,6 @@ target_sources(simutrans-extended PRIVATE
 	obj/wayobj.cc
 	obj/wolke.cc
 	obj/zeiger.cc
-
 	old_blockmanager.cc
 	path_explorer.cc
 	player/ai.cc
@@ -339,6 +338,7 @@ target_sources(simutrans-extended PRIVATE
 	squirrel/squirrel/sqvm.cc
 	unicode.cc
 	utils/cbuffer_t.cc
+	utils/checklist.cc
 	utils/csv.cc
 	utils/float32e8_t.cc
 	utils/log.cc

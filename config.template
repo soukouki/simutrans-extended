@@ -45,7 +45,7 @@ WITH_REVISION = 1 # adds the commit number (truncated) from Github; important fo
 #WIN32_CONSOLE = 1 # adds a console for windows debugging
 
 MULTI_THREAD = 1 # Enable multithreading
-# Network desync debugging mode. Compares game state hash of client and server for every sync_step.
+# Network desync debugging mode. Stores game state hash of client and server for every sync_step for comparison.
 # VERY SLOW! Do not enable for normal builds.
 # 0 = disabled (default)
 # 1 = enabled

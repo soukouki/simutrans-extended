@@ -201,12 +201,13 @@ public:
 };
 
 
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 class stream_loadsave_t : public loadsave_t
 {
 public:
 	stream_loadsave_t(rdwr_stream_t *stream);
 };
-
+#endif
 
 // this produces semi-automatic hierarchies
 class xml_tag_t

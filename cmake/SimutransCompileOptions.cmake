@@ -9,16 +9,14 @@ if (CCache_FOUND)
 		set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK    "${CCache_EXECUTABLE}")
 	endif (SIMUTRANS_USE_CCACHE)
 endif (CCache_FOUND)
-if (NOT SIMUTRANS_HEAVY_MODE_DEFINED)
-	set(SIMUTRANS_HEAVY_MODE 0 CACHE STRING "\
-		Network desync debugging mode. Compares game state hash of client and server for every sync_step.\
-		VERY SLOW! Do not enable for normal builds.\
-		0 = disabled (default)\
-		1 = enabled\
-		2 = enabled; Additionally saves the game every sync_step to save/heavy/ and aborts on connection loss/desync.\
-		             Using a ramdisk is recommended.")
-	set(SIMUTRANS_HEAVY_MODE_DEFINED 1 INTERNAL)
-endif ()
+set(SIMUTRANS_HEAVY_MODE 0 CACHE STRING "\
+	Network desync debugging mode. Stores game state hash of client and server for every sync_step for comparison.\
+	VERY SLOW! Do not enable for normal builds.\
+	0 = disabled (default)\
+	1 = enabled\
+	2 = enabled; Additionally saves the game every sync_step to save/heavy/ and aborts on connection loss/desync.\
+					Using a ramdisk is recommended.")
+
 
 if (CMAKE_USE_PTHREADS_INIT)
 	option(SIMUTRANS_MULTI_THREAD "Use multiple threads for drawing" ON)

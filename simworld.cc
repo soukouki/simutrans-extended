@@ -11155,10 +11155,7 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 
 		if(client_checklist != server_checklist)
 		{
-			dbg->warning("karte_t:::do_network_world_command", "disconnecting due to checklist mismatch:\n%s", buf );
 			network_disconnect();
-		} else {
-			dbg->message("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf);
 
 #if defined(HEAVY_MODE) && HEAVY_MODE >= 2
 			dbg->fatal(
@@ -11166,6 +11163,9 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 			dbg->warning(
 #endif
 				"karte_t:::do_network_world_command", "Disconnected due to checklist mismatch" );
+		}
+		else {
+			dbg->message("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf);
 		}
 	}
 	else {
@@ -11233,7 +11233,7 @@ static void heavy_rotate_saves(const char *prefix, uint32 sync_steps, uint32 num
 
 	char name[128];
 	sprintf(name, SAVE_PATH_X "heavy/heavy-%s-%04d.sve", prefix, sync_steps);
-	world()->save(name, false, SERVER_SAVEGAME_VER_NR, true);
+	world()->save(name, false, SERVER_SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR, true);
 
 	if (sync_steps >= num_to_keep) {
 		sprintf(name, SAVE_PATH_X "heavy/heavy-%s-%04d.sve", prefix, sync_steps - num_to_keep);

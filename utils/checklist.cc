@@ -8,13 +8,12 @@
 #include "../network/memory_rw.h"
 
 
-#if HEAVY_MODE
 checklist_t::checklist_t() :
+#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 	hash(0)
 {
 }
 #else
-checklist_t::checklist_t() :
 	ss(0),
 	st(0),
 	nfc(0),
@@ -41,6 +40,7 @@ checklist_t::checklist_t(const uint32 &hash) :
 #else
 checklist_t::checklist_t(uint32 _ss, uint32 _st, uint8 _nfc, uint32 _random_seed, uint16 _halt_entry, uint16 _line_entry, uint16 _convoy_entry, uint32 *_rands, uint32 *_debug_sums)
 	: ss(_ss), st(_st), nfc(_nfc), random_seed(_random_seed), halt_entry(_halt_entry), line_entry(_line_entry), convoy_entry(_convoy_entry)
+
 {
 	for(  uint8 i = 0;  i < CHK_RANDS; i++  ) {
 		rand[i]	 = _rands[i];
@@ -50,7 +50,6 @@ checklist_t::checklist_t(uint32 _ss, uint32 _st, uint8 _nfc, uint32 _random_seed
 	}
 }
 #endif
-
 
 
 bool checklist_t::operator==(const checklist_t& other) const
