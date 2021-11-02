@@ -64,28 +64,43 @@ const char * pier_builder_t::check_below_ways(player_t *player, koord3d pos, con
 
 const char * pier_builder_t::check_for_buildings(const grund_t *gr, const pier_desc_t *desc, const uint8 rotation){
     gebaeude_t *gb = gr->get_building();
-    if(gb) {
+    uint8 floor=0;
+    if(!gb){
+        gr=welt->lookup(gr->get_pos()-koord3d(0,0,1));
+        if(gr){
+            gb = gr->get_building();
+            floor=1;
+        }
+    }
+    if(!gb){
+        return NULL;
+    }
+
+    const building_tile_desc_t* tile = gb->get_tile();
+
+    //mask allows any buildings
+    if(desc->get_sub_obj_mask()==0xFFFFFFFF){
         //same general restrictions as existing elevated ways
         if(gb->is_attraction() || gb->is_townhall()){
             return "Cannot build piers on attractions or townhalls";
         }
 
-		const building_tile_desc_t* tile = gb->get_tile();
-		if (tile->get_desc()->get_level() > welt->get_settings().get_max_elevated_way_building_level())
-		{
-			return "Cannot build piers on large buildings";
-		}
-
-        //mask allows any buildings
-        if(desc->get_sub_obj_mask(rotation)==0xFFFFFFFF){
-            return NULL;
-        }else if(desc->get_sub_obj_mask(rotation)==0){
-            return "Cannot build this type of pier on buildings";
-        }else{
-            //(future work) filter buildings
-
-            return "Cannot build this type of pier on this type of building";
+        if(tile->get_desc()->get_level() > welt->get_settings().get_max_elevated_way_building_level()){
+            return "Cannot build pier on large buildings";
         }
+
+        return NULL;
+    }else if(desc->get_sub_obj_mask()==0){
+        return "Cannot build this type of pier on buildings";
+    }else{
+        //filter buildings
+
+        uint32 building_mask=tile->get_desc()->get_pier_mask(floor);
+
+        if((building_mask & desc->get_sub_obj_mask()) == desc->get_sub_obj_mask()){
+            return NULL;
+        }
+        return "Cannot build this type of pier on this type of building";
     }
 
     return NULL;
@@ -131,6 +146,10 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         return "Pier could block shipping lanes";
     }
 
+    if(gr->is_water() && desc->get_keep_dry()){
+        return "This type of pier cannot be built on water";
+    }
+
     if(gr->get_typ()==grund_t::brueckenboden || gr->get_typ()==grund_t::monorailboden){
         return "Pier can not be built on bridges";
     }
@@ -168,6 +187,9 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
 
     //check lower pier has enough supporting area
     if(gr->get_typ()==grund_t::pierdeck){
+        if(desc->get_bottom_only()){
+            return "This type of pier needs to be built on solid ground";
+        }
         grund_t *gr2=welt->lookup(gr->get_pos() + koord3d(0,0,-1));
         if(gr2==NULL){
             gr2=welt->lookup(gr->get_pos() + koord3d(0,0,-2));

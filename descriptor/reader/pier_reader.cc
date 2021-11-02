@@ -61,8 +61,13 @@ obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
     desc->rotational_symmetry=decode_uint8(p);
     desc->middle_mask=decode_uint32(p);
     desc->pier_weight=decode_uint32(p);
-    desc->drag_ribi=decode_uint8(p);
+    uint8 drag_ribi=decode_uint8(p);
     desc->above_way_supplement=decode_uint8(p);
+
+    //extract flags from upper bits of drag_ribi
+    desc->keep_dry = (drag_ribi & 0x10) != 0;
+    desc->bottom_only = (drag_ribi & 0x20) != 0;
+    desc->drag_ribi = drag_ribi & 0xFF;
 
     desc->topspeed = -1;
     desc->axle_load = -1;

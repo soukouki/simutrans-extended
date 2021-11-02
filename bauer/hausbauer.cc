@@ -552,6 +552,7 @@ gebaeude_t* hausbauer_t::build(player_t* player, koord3d pos, int org_layout, co
 	uint8 layout = desc->adjust_layout(org_layout);
 	dim = desc->get_size(org_layout);
 	bool needs_ground_recalc = false;
+	bool sub_pier = false;
 
 	for(k.y = 0; k.y < dim.y; k.y ++) {
 		for(k.x = 0; k.x < dim.x; k.x ++) {
@@ -591,8 +592,11 @@ gebaeude_t* hausbauer_t::build(player_t* player, koord3d pos, int org_layout, co
 					for(  uint8 i = 0;  i < gr->obj_count();  i++  ) {
 						obj_t *const obj = gr->obj_bei(i);
 						obj_t::typ const objtype = obj->get_typ();
-						if(  objtype == obj_t::leitung  ||  objtype == obj_t::pillar  ) {
+						if(  objtype == obj_t::leitung  ||  objtype == obj_t::pillar || objtype == obj_t::pier ) {
 							keptobjs.append(obj);
+						}
+						if( objtype == obj_t::pier){
+							sub_pier=true;
 						}
 					}
 					for(  size_t i = 0;  i < keptobjs.get_count();  i++  ) {
@@ -607,7 +611,9 @@ gebaeude_t* hausbauer_t::build(player_t* player, koord3d pos, int org_layout, co
 				needs_ground_recalc |= gr->get_grund_hang()!=slope_t::flat;
 				// Build fundament up or down?  Up is the default.
 				bool build_up = true;
-				if (dim.x == 1 && dim.y == 1) {
+				if(sub_pier){
+					build_up=false;
+				}else if (dim.x == 1 && dim.y == 1) {
 					// Consider building DOWNWARD.
 					koord front_side_neighbor= koord(0,0);
 					koord other_front_side_neighbor= koord(0,0);
@@ -679,6 +685,7 @@ gebaeude_t* hausbauer_t::build(player_t* player, koord3d pos, int org_layout, co
 						}
 					}
 				}
+
 				// Build a "fundament" to put the building on.
 				grund_t *gr2 = new fundament_t(gr->get_pos(), gr->get_grund_hang(), build_up);
 				welt->access(gr->get_pos().get_2d())->boden_ersetzen(gr, gr2);
