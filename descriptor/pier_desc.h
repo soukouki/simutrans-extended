@@ -32,8 +32,8 @@ private:
     uint64 base_mask;           //bit field for where foundation is needed (up to pakset designer)
     uint64 middle_mask;         //bit field to prevend piers occupying the same physical space (up to pakset designer)
     uint64 support_mask;        //bit field for locations on deck (or lack thereof) where columns can be supported (up to packset designer)
-    uint32 sub_obj_mask;        //(future use) restrict buildings and waytypes coninsiding with
-    uint32 deck_obj_mask;       //(future use) restrict objects and buildings on deck
+    uint32 sub_obj_mask;        //(future use) restrict buildings coninsiding within
+    uint32 deck_obj_mask;       //restrict ways and buildings on deck
 
     //other items
     uint32 max_weight; //(future use)
@@ -85,7 +85,8 @@ public:
 	uint64 get_support_mask(uint8 rotation=0) const {return rotate_mask(support_mask, rotation);}
 	uint32 get_sub_obj_mask(uint8 rotation=0) const {return rotate_mask(sub_obj_mask, rotation);}
 	uint32 get_deck_obj_mask() const {return deck_obj_mask;}
-
+	bool get_keep_dry() const {return keep_dry;}
+	bool get_bottom_only() const {return bottom_only;};
 	ribi_t::ribi get_drag_ribi(uint8 rotation=0) const {return rotate_ribi(drag_ribi, rotation);}
 
 	uint16 get_max_axle_load() const {return axle_load;}

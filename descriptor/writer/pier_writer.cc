@@ -49,9 +49,13 @@ void pier_writer_t::write_obj(FILE * outfp, obj_node_t& parent, tabfileobj_t& ob
 	uint8 drag_ribi			   = obj.get_int("drag_ribi",0);
 	uint8 above_way_supplement = obj.get_int("above_way_supplement",0);
 
-	uint32 base_mask_2 = 0;
-	uint32 middle_mask_2 = 0;
-	uint32 support_mask_2 = 0;
+	uint32 base_mask_2		   = obj.get_int("base_mask_2",0);
+	uint32 middle_mask_2	   = obj.get_int("middle_mask_2",0);
+	uint32 support_mask_2	   = obj.get_int("support_mask_2",0);
+
+	//place flags in extra bits of drag_ribi
+	drag_ribi |= obj.get_int("keep_dry",0) ? 0x10 : 0;
+	drag_ribi |= obj.get_int("bottom_only",0) ? 0x20 : 0;
 
 	uint16 max_speed			= obj.get_int("topspeed",0xFFFF);
 	uint16 max_axle_load		= obj.get_int("max_weight",0xFFFF);
