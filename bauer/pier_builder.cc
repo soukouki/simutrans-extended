@@ -97,7 +97,7 @@ const char * pier_builder_t::check_for_buildings(const grund_t *gr, const pier_d
 
         uint32 building_mask=tile->get_desc()->get_pier_mask(floor);
 
-        if((building_mask & desc->get_sub_obj_mask()) == desc->get_sub_obj_mask()){
+        if(pier_t::check_sub_masks(desc->get_sub_obj_mask(),building_mask)){
             return NULL;
         }
         return "Cannot build this type of pier on this type of building";
