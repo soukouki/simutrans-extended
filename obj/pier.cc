@@ -110,9 +110,9 @@ const char *pier_t::is_deletable(const player_t *player){
 
 const grund_t* pier_t::ground_below(const grund_t *gr){
 	koord3d pos=gr->get_pos();
-	gr = welt->lookup(gr->get_pos() - koord3d(0,0,1));
+	gr = welt->lookup(pos + koord3d(0,0,-1));
 	if(!gr){
-		gr = welt->lookup(pos - koord3d(0,0,2));
+		gr = welt->lookup(pos + koord3d(0,0,-2));
 	}
 	return gr;
 }
