@@ -220,3 +220,20 @@ uint16 pier_t::get_max_axle_load_deck_total(const grund_t *gr, uint16 maxload){
 	}
 	return maxload;
 }
+
+uint32 pier_t::get_sub_mask_total(const grund_t *gr){
+	uint32 ret=0;
+	if(gr){
+		for(uint8 i = 0; i < gr->get_top(); i++){
+			obj_t *ob = gr->obj_bei(i);
+			if(ob->get_typ()==obj_t::pier){
+				ret |= ((pier_t*)ob)->get_sub_mask();
+			}
+		}
+	}
+	return ret;
+}
+
+bool pier_t::check_sub_masks(uint32 pier1, uint32 building1, uint32 pier2, uint32 building2){
+	return ((pier1&building1)==pier1) && ((pier2&building2)==pier2);
+}

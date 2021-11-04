@@ -44,6 +44,7 @@ public:
     uint64 get_base_mask() const {return desc->get_base_mask(rotation);}
     uint64 get_middle_mask() const {return desc->get_middle_mask(rotation);}
     uint64 get_support_mask() const {return desc->get_support_mask(rotation);}
+    uint32 get_sub_mask() const {return desc->get_sub_obj_mask();}
     uint32 get_maxspeed() const {return desc->get_topspeed();}
     uint32 get_axle_load() const {return desc->get_max_axle_load();}
     uint32 get_deck_obj_mask() const {return desc->get_deck_obj_mask();}
@@ -58,6 +59,9 @@ public:
     static uint16 get_speed_limit_deck_total(const grund_t* gr, uint16 maxspeed=-1);
     static uint16 get_max_axle_load_deck_total(const grund_t* gr, uint16 maxload=-1);
     static uint32 get_deck_obj_mask_total(const grund_t* gr);
+    static uint32 get_sub_mask_total(const grund_t* gr);
+
+    static bool check_sub_masks(uint32 pier1, uint32 building1, uint32 pier2=0, uint32 building2=0);
 
     image_id get_image() const override;
     image_id get_front_image() const override;
