@@ -914,10 +914,10 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 		if( (ribimask|zvribi)!=ribimask){
 				return false;
 		}
-		if(to->get_weg_hang() && pier_t::get_above_ribi_total(to)){
+		if(to->get_weg_hang() && pier_t::get_above_ribi_total(to,true)){
 			return false;
 		}
-		if(from->get_weg_hang() && pier_t::get_above_ribi_total(from)){
+		if(from->get_weg_hang() && pier_t::get_above_ribi_total(from,true)){
 			return false;
 		}
 		if(welt->get_settings().get_way_height_clearance()==2){
