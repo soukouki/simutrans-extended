@@ -4642,6 +4642,12 @@ const char *tool_build_station_t::tool_station_building_aux(player_t *player, bo
 		}
 	}
 
+	msg=NULL;
+	msg=pier_t::check_building(desc,pos);
+	if(msg){
+		return msg;
+	}
+
 	if(!player_t::can_afford(player, -cost))
 	{
 		return NOTICE_INSUFFICIENT_FUNDS;
@@ -4762,6 +4768,10 @@ const char *tool_build_station_t::tool_station_dock_aux(player_t *player, koord3
 		}
 	}
 
+	const char* msg=pier_t::check_building(desc,pos);
+	if(msg){
+		return msg;
+	}
 	// remove everything from tile
 	gr->obj_loesche_alle(player);
 
@@ -5066,6 +5076,11 @@ const char *tool_build_station_t::tool_station_flat_dock_aux(player_t *player, k
 		}
 	}
 
+	const char* msg=pier_t::check_building(desc,bau_pos);
+	if(msg){
+		return msg;
+	}
+
 	// handle 16 layouts
 	bool change_layout = false;
 	if(desc->get_all_layouts()==16) {
@@ -5205,6 +5220,11 @@ DBG_MESSAGE("tool_station_aux()", "building %s on square %d,%d for waytype %x", 
 	if(  bd->get_depot() || bd->get_signalbox() ) {
 		// not on depots or signalboxes
 		return NOTICE_UNSUITABLE_GROUND;
+	}
+
+	const char* msg=pier_t::check_building(desc,pos);
+	if(msg){
+		return msg;
 	}
 
 	if(  bd->hat_weg(air_wt)  &&  bd->get_weg(air_wt)->get_desc()->get_styp()!=type_flat  ) {
@@ -7080,6 +7100,11 @@ const char *tool_build_depot_t::tool_depot_aux(player_t *player, koord3d pos, co
 	if (pos.z >= height && ri.pos != koord::invalid)
 	{
 		return "This cannot be built next to a runway.";
+	}
+
+	const char* msg=pier_t::check_building(desc,pos);
+	if(msg){
+		return msg;
 	}
 
 	if(welt->is_within_limits(pos.get_2d())) {
