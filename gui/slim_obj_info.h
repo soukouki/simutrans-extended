@@ -3,8 +3,8 @@
  * (see LICENSE.txt)
  */
 
-#ifndef GUI_PEDESTRIAN_INFO_H
-#define GUI_PEDESTRIAN_INFO_H
+#ifndef GUI_SLIM_OBJ_INFO_H
+#define GUI_SLIM_OBJ_INFO_H
 
 
 #include "gui_frame.h"
