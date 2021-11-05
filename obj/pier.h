@@ -8,6 +8,7 @@
 
 
 class karte_t;
+class building_desc_t;
 
 #include "../descriptor/pier_desc.h"
 #include "simobj.h"
@@ -62,6 +63,7 @@ public:
     static uint32 get_sub_mask_total(const grund_t* gr);
 
     static bool check_sub_masks(uint32 pier1, uint32 building1, uint32 pier2=0, uint32 building2=0);
+    static const char* check_building(const building_desc_t* desc, koord3d pos);
 
     image_id get_image() const override;
     image_id get_front_image() const override;

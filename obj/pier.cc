@@ -5,7 +5,7 @@
 
 #include "pier.h"
 #include "../bauer/pier_builder.h"
-
+#include "../descriptor/building_desc.h"
 #include "../player/simplay.h"
 
 pier_t::pier_t(loadsave_t* const file) :
@@ -236,4 +236,15 @@ uint32 pier_t::get_sub_mask_total(const grund_t *gr){
 
 bool pier_t::check_sub_masks(uint32 pier1, uint32 building1, uint32 pier2, uint32 building2){
 	return ((pier1&building1)==pier1) && ((pier2&building2)==pier2);
+}
+
+const char* pier_t::check_building(const building_desc_t *desc, koord3d pos){
+	uint32 pier_sub_1_mask=pier_t::get_sub_mask_total(welt->lookup(pos));
+	uint32 pier_sub_2_mask=pier_t::get_sub_mask_total(welt->lookup(pos + koord3d(0,0,1)));
+	if(desc->get_pier_needed()&&pier_sub_1_mask){
+		return "This building needs the proper type of pier";
+	}else if(!pier_t::check_sub_masks(pier_sub_1_mask,desc->get_pier_mask(0),pier_sub_2_mask,desc->get_pier_mask(1))){
+		return "This building cannot be placed under this type of pier";
+	}
+	return NULL;
 }
