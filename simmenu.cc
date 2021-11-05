@@ -699,7 +699,7 @@ bool tool_t::read_menu(const std::string &menuconf_path)
 					}
 				}
 				else {
-					dbg->warning( "tool_t::read_menu()", "When parsing menuconf.tab: Dialog tool id is not valid (%hhu >= %i). Tool ignored.", toolnr, (toolnr<0x80) ? (int)DIALOG_TOOL_STANDARD_COUNT : (int)DIALOGE_TOOL_COUNT );
+					dbg->warning( "tool_t::read_menu()", "When parsing menuconf.tab: Dialog tool id is not valid (%hhu >= %i). Tool ignored.", toolnr, (toolnr<0x80) ? (int)DIALOG_TOOL_STANDARD_COUNT : (int)DIALOG_TOOL_COUNT );
 				}
 			}
 			else if (char const* const c = strstart(toolname, "toolbar[")) {
