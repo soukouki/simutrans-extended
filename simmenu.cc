@@ -171,8 +171,8 @@ const char *tool_t::id_to_string(uint16 id)
 		CASE_TO_STRING(TOOL_SHOW_FACTORY_STORAGE);
 		}
 	}
-	else if (id & DIALOGE_TOOL) {
-		switch (id & ~DIALOGE_TOOL) {
+	else if (id & DIALOG_TOOL) {
+		switch (id & ~DIALOG_TOOL) {
 		CASE_TO_STRING(DIALOG_HELP);
 		CASE_TO_STRING(DIALOG_OPTIONS);
 		CASE_TO_STRING(DIALOG_MINIMAP);
