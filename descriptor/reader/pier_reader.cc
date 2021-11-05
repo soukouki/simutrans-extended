@@ -53,6 +53,12 @@ obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
     desc->base_mask = decode_uint32(p);
     desc->support_mask = decode_uint32(p);
     desc->sub_obj_mask = decode_uint32(p);
+    if(desc->sub_obj_mask==0){
+        desc->sub_obj_mask=0xFFFFFFFF;
+    }else if(desc->sub_obj_mask==0xFFFFFFFF){
+        desc->sub_obj_mask=0;
+    }
+
     desc->deck_obj_mask = decode_uint32(p);
     desc->auto_group = decode_uint8(p);
     desc->auto_height = decode_uint8(p);
