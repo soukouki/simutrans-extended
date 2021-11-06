@@ -15,6 +15,8 @@
 #include "descriptor/building_desc.h"
 #include "simdebug.h"
 #include "simtool.h"
+#include "gui/signal_info.h"
+#include "gui/simwin.h"
 
 slist_tpl<signalbox_t *> signalbox_t::all_signalboxes;
 
@@ -142,6 +144,10 @@ bool signalbox_t::add_signal(signal_t* s)
 	{
 		signals.append(s->get_pos());
 		s->set_signalbox(get_pos());
+		signal_info_t *win = dynamic_cast<signal_info_t*>(win_get_magic((ptrdiff_t)s));
+		if (win) {
+			win->update_data();
+		}
 		return true;
 	}
 

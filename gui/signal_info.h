@@ -36,7 +36,10 @@ class signal_info_t : public obj_infowin_t, public action_listener_t
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
 	// called, after external change
-	//void update_data();
+	void update_data();
+
+	void map_rotate90(sint16) OVERRIDE { update_data(); }
+
 };
 
 #endif
