@@ -365,13 +365,6 @@ private:
 	 */
 	void step_grow_city(bool new_town = false, bool map_generation = false);
 
-	enum pax_return_type {
-		no_return,
-		factory_return,
-		tourist_return,
-		city_return
-	};
-
 	/**
 	 * baut Spezialgebaeude, z.B Stadion
 	 */
@@ -417,8 +410,8 @@ private:
 	bool maybe_build_road(koord k, bool map_generation);
 protected:
 	bool build_road(const koord k, player_t *player, bool forced, bool map_generation);
-private:
 
+private:
 	void build(bool new_town, bool map_generation);
 
 	/**
@@ -426,10 +419,8 @@ private:
 	 * @param regel the rule to evaluate
 	 * @return true on match, false otherwise
 	 */
-
 	bool bewerte_loc_has_public_road(koord pos);
 	bool bewerte_loc(koord pos, const rule_t &regel, int rotation);
-
 
 	/*
 	 * evaluates the location, tests again all rules, and caches the result
@@ -439,7 +430,6 @@ private:
 	/**
 	 * Check rule in all transformations at given position
 	 */
-
 	sint32 bewerte_pos(koord pos, const rule_t &regel);
 
 	void bewerte_strasse(koord pos, sint32 rd, const rule_t &regel);
@@ -451,6 +441,8 @@ private:
 	void calc_traffic_level();
 
 public:
+	// Checks whether any builinding is within players network.
+	bool is_within_players_network(const player_t* player) const;
 
 	/**
 	 * Returns the data set associated with the pax/mail target factories
@@ -641,9 +633,6 @@ public:
 
 	// Checks whether any given postition is within the city limits.
 	bool is_within_city_limits(koord k) const;
-
-	// Checks whether any builinding is within players network.
-	bool is_within_players_network(const player_t* player) const;
 
 	/**
 	 * Generates an array of random coordinates suitable for creating cities.

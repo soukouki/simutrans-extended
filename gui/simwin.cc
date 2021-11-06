@@ -681,7 +681,7 @@ void rdwr_all_win(loadsave_t *file)
 				p.rdwr(file);
 				uint8 win_type;
 				file->rdwr_byte( win_type );
-				create_win( p.x, p.y, w, (wintype)win_type, id );
+				create_win( p.x, p.y, w, (wintype)win_type, id, true );
 				bool sticky, rollup, locked;
 				file->rdwr_bool( sticky );
 				file->rdwr_bool( locked );
@@ -881,6 +881,7 @@ int create_win(scr_coord_val x, scr_coord_val y, gui_frame_t* const gui, wintype
 
 		// make sure window is on screen
 		win_clamp_xywh_position(x, y, gui->get_windowsize(), move_to_full_view);
+
 
 		win.pos = scr_coord(x,y);
 		win.dirty = true;
@@ -1692,6 +1693,13 @@ void win_poll_event(event_t* const ev)
 		simgraph_resize( ev->new_window_size );
 		ticker::redraw();
 		tool_t::update_toolbars();
+		for( uint i = 0; i<wins.get_count(); i++ ) {
+			scr_coord_val x = wins[i].pos.x;
+			scr_coord_val y = wins[i].pos.y;
+			win_clamp_xywh_position( x, y, wins[i].gui->get_min_windowsize(), true );
+			wins[i].pos.x = x;
+			wins[i].pos.y = y;
+		}
 		wl->set_dirty();
 		wl->get_viewport()->metrics_updated();
 		ev->ev_class = EVENT_NONE;
@@ -1743,46 +1751,36 @@ void win_display_flush(double konto)
 	scr_size menu_size(disp_width, env_t::iconsize.h);
 	scr_rect clip_rr(0, env_t::iconsize.h, disp_width, disp_height - env_t::iconsize.h);
 	switch (env_t::menupos) {
-	case MENU_TOP:
-		// pos default (see above)
-		// size default
-		// rect default
-		break;
-	case MENU_BOTTOM:
-		menu_pos = scr_coord(0, disp_height - env_t::iconsize.h);
-		// size default
-		clip_rr.y = 0;
-		break;
-	case MENU_LEFT:
-		// pos default (see above)
-		menu_size = scr_size(env_t::iconsize.w, disp_height-win_get_statusbar_height()-show_ticker*TICKER_HEIGHT);
-		clip_rr = scr_rect(env_t::iconsize.h, 0, disp_width - env_t::iconsize.w, disp_height);
-		break;
-	case MENU_RIGHT:
-		menu_pos.x = disp_width - env_t::iconsize.w;
-		menu_size = scr_size(env_t::iconsize.w, disp_height - win_get_statusbar_height()-show_ticker*TICKER_HEIGHT );
-		clip_rr = scr_rect(0, 0, disp_width - env_t::iconsize.w, disp_height);
-		break;
+		case MENU_TOP:
+			// pos default (see above)
+			// size default
+			// rect default
+			break;
+		case MENU_BOTTOM:
+			menu_pos = scr_coord(0, disp_height - env_t::iconsize.h);
+			// size default
+			clip_rr.y = 0;
+			break;
+		case MENU_LEFT:
+			// pos default (see above)
+			menu_size = scr_size(env_t::iconsize.w, disp_height-win_get_statusbar_height()-show_ticker*TICKER_HEIGHT);
+			clip_rr = scr_rect(env_t::iconsize.h, 0, disp_width - env_t::iconsize.w, disp_height);
+			break;
+		case MENU_RIGHT:
+			menu_pos.x = disp_width - env_t::iconsize.w;
+			menu_size = scr_size(env_t::iconsize.w, disp_height - win_get_statusbar_height()-show_ticker*TICKER_HEIGHT );
+			clip_rr = scr_rect(0, 0, disp_width - env_t::iconsize.w, disp_height);
+			break;
 	}
+
+	display_set_clip_wh( menu_pos.x, menu_pos.y, menu_size.w, menu_size.h );
 
 	if(  skinverwaltung_t::toolbar_background  &&  skinverwaltung_t::toolbar_background->get_image_id(0) != IMG_EMPTY  ) {
 		const image_id back_img = skinverwaltung_t::toolbar_background->get_image_id(0);
-		scr_coord_val w = env_t::iconsize.w;
-		scr_rect row = scr_rect( menu_pos, menu_size );
-		display_fit_img_to_width( back_img, w );
-		// tile it wide
-		while(  w <= row.w  ) {
-			display_color_img( back_img, row.x, row.y, 0, false, true );
-			row.x += w;
-			row.w -= w;
-		}
-		// for the rest we have to clip the rectangle
-		if(  row.w > 0  ) {
-			clip_dimension const cl = display_get_clip_wh();
-			display_set_clip_wh( cl.x, cl.y, max(0, min(row.get_right(), cl.xx) - cl.x), cl.h );
-			display_color_img( back_img, row.x, row.y, 0, false, true );
-			display_set_clip_wh( cl.x, cl.y, cl.w, cl.h );
-		}
+		display_fit_img_to_width( back_img, env_t::iconsize.w );
+
+		stretch_map_t imag = { {IMG_EMPTY, IMG_EMPTY, IMG_EMPTY}, {IMG_EMPTY, back_img, IMG_EMPTY}, {IMG_EMPTY, IMG_EMPTY, IMG_EMPTY} };
+		display_img_stretch(imag, scr_rect(menu_pos, menu_size));
 	}
 	else {
 		display_fillbox_wh_rgb( menu_pos.x, menu_pos.y, menu_size.w, menu_size.h, color_idx_to_rgb(MN_GREY2), false );
@@ -1791,7 +1789,6 @@ void win_display_flush(double konto)
 	tooltip_element = main_menu->is_hit( get_mouse_x()-menu_pos.x, get_mouse_y()-menu_pos.y) ? main_menu : NULL;
 	void *old_inside_event_handling = inside_event_handling;
 	inside_event_handling = main_menu;
-	display_set_clip_wh( menu_pos.x, menu_pos.y, menu_size.w, menu_size.h );
 	menu_pos.y -= D_TITLEBAR_HEIGHT;
 	main_menu->draw(menu_pos, menu_size);
 	inside_event_handling = old_inside_event_handling;
@@ -1827,7 +1824,10 @@ void win_display_flush(double konto)
 				uint32 elapsed_time;
 				if(  !tooltip_owner  ||  ((elapsed_time=dr_time()-tooltip_register_time)>env_t::tooltip_delay  &&  elapsed_time<=env_t::tooltip_delay+env_t::tooltip_duration)  ) {
 					const sint16 width = proportional_string_width(tooltip_text)+7;
-					display_ddd_proportional_clip(tooltip_xpos, tooltip_ypos, width, 0, env_t::tooltip_color, env_t::tooltip_textcolor, tooltip_text, true);
+					scr_coord_val x = tooltip_xpos;
+					scr_coord_val y = tooltip_ypos;
+					win_clamp_xywh_position( x, y, scr_size( width, (LINESPACE*9)/7 ), true );
+					display_ddd_proportional_clip( x, y, width, 0, env_t::tooltip_color, env_t::tooltip_textcolor, tooltip_text, true);
 					if(wl) {
 						wl->set_background_dirty();
 					}
@@ -1837,7 +1837,7 @@ void win_display_flush(double konto)
 				const sint16 width = proportional_string_width(static_tooltip_text.c_str())+7;
 				scr_coord_val x = get_mouse_x();
 				scr_coord_val y = get_mouse_y();
-				win_clamp_xywh_position(x, y, scr_size(width, LINESPACE + 2), true);
+				win_clamp_xywh_position(x, y, scr_size(width, (LINESPACE*9)/7), true);
 				display_ddd_proportional_clip(x, y, width, 0, env_t::tooltip_color, env_t::tooltip_textcolor, static_tooltip_text.c_str(), true);
 				if(wl) {
 					wl->set_background_dirty();
