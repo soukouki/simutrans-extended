@@ -49,7 +49,7 @@ signal_info_t::signal_info_t(signal_t* const s) :
 		add_component(&lb_sb_distance);
 
 		bt_switch_signalbox.init(button_t::roundbox, "switch_sb");
-		bt_switch_signalbox.set_size(scr_size(D_BUTTON_WIDTH * 2 / 3, D_BUTTON_HEIGHT));
+		bt_switch_signalbox.set_size(scr_size(proportional_string_width(translator::translate("switch_sb"))+D_BUTTON_PADDINGS_X, D_BUTTON_HEIGHT));
 		bt_switch_signalbox.set_visible(false);
 		bt_switch_signalbox.set_tooltip(translator::translate("open_signal_connector_gui"));
 		bt_switch_signalbox.add_listener(this);
