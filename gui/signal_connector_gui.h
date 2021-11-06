@@ -3,8 +3,8 @@
  * (see LICENSE.txt)
  */
 
-#ifndef GUI_SIGNAL_CONNECTOR_GUI_T_H
-#define GUI_SIGNAL_CONNECTOR_GUI_T_H
+#ifndef GUI_SIGNAL_CONNECTOR_GUI_H
+#define GUI_SIGNAL_CONNECTOR_GUI_H
 
 
 #include "gui_frame.h"
