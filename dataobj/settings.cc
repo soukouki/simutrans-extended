@@ -2060,7 +2060,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	env_t::max_acceleration            = contents.get_int_clamped( "fast_forward",                   env_t::max_acceleration,          0, INT_MAX );
 	env_t::fps                         = contents.get_int_clamped( "frames_per_second",              env_t::fps,                       env_t::min_fps, env_t::max_fps );
 	env_t::ff_fps                      = contents.get_int_clamped( "fast_forward_frames_per_second", env_t::ff_fps,                    env_t::min_fps, env_t::max_fps );
-	env_t::num_threads                 = contents.get_int_clamped( "threads",                        env_t::num_threads,               1, min(dr_get_max_threads(), MAX_THREADS) );
+	env_t::num_threads                 = contents.get_int_clamped( "threads",                        env_t::num_threads,               1, MAX_THREADS );
 	env_t::simple_drawing_default      = contents.get_int_clamped( "simple_drawing_tile_size",       env_t::simple_drawing_default,    2, 256 );
 	env_t::simple_drawing_fast_forward = contents.get_int( "simple_drawing_fast_forward", env_t::simple_drawing_fast_forward ) != 0;
 	env_t::visualize_schedule          = contents.get_int( "visualize_schedule",          env_t::visualize_schedule ) != 0;
@@ -2518,8 +2518,7 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	crossconnect_factor            = contents.get_int_clamped("crossconnect_factories_percentage", crossconnect_factor,            0, 100 );
 	electric_promille              = contents.get_int_clamped("electric_promille",                 electric_promille,              0, 1000 );
 
-	env_t::just_in_time = contents.get_int_clamped("just_in_time", env_t::just_in_time, 0, 4);
-	just_in_time = env_t::just_in_time;
+	just_in_time = contents.get_int_clamped("just_in_time", just_in_time, 0, 4);
 
 	beginner_price_factor = contents.get_int_clamped("beginner_price_factor", beginner_price_factor, 1, 250000 ); /* this manipulates the good prices in beginner mode */
 	beginner_mode         = contents.get_int("first_beginner", beginner_mode ) != 0; /* start in beginner mode */
