@@ -1460,8 +1460,9 @@ void minimap_t::draw(scr_coord pos)
 				            (pos.y*world->get_size().y)/PAX_DESTINATIONS_SIZE);
 				max = koord(((pos.x+1)*world->get_size().x)/PAX_DESTINATIONS_SIZE,
 				            ((pos.y+1)*world->get_size().y)/PAX_DESTINATIONS_SIZE);
-				pos = min;
+				pos.x = min.x;
 				do {
+					pos.y = min.y;
 					do {
 						set_map_color(pos, color);
 						pos.y++;
