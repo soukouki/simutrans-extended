@@ -238,8 +238,8 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 
 		case by_surrounding_population:
 		{
-			const int a = halt1->get_pax_enabled() ? halt1->get_around_visitor_demand() : -1;
-			const int b = halt2->get_pax_enabled() ? halt2->get_around_visitor_demand() : -1;
+			const int a = halt1->get_pax_enabled() ? halt1->get_around_population() : -1;
+			const int b = halt2->get_pax_enabled() ? halt2->get_around_population() : -1;
 			order = (int)(a - b);
 			break;
 		}
