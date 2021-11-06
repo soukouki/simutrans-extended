@@ -1456,11 +1456,12 @@ void minimap_t::draw(scr_coord pos)
 			PIXVAL color;
 			for(  uint16 i = 0;  i < pax_dests->get_data_count();  i++  ) {
 				pax_dests->get_nonzero( i, pos, color );
-				min = koord(pos.x, pos.y);
-				max = koord(pos.x + 1, pos.y + 1);
-				pos.x = min.x;
+				min = koord((pos.x*world->get_size().x)/PAX_DESTINATIONS_SIZE,
+				            (pos.y*world->get_size().y)/PAX_DESTINATIONS_SIZE);
+				max = koord(((pos.x+1)*world->get_size().x)/PAX_DESTINATIONS_SIZE,
+				            ((pos.y+1)*world->get_size().y)/PAX_DESTINATIONS_SIZE);
+				pos = min;
 				do {
-					pos.y = min.y;
 					do {
 						set_map_color(pos, color);
 						pos.y++;

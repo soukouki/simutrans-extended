@@ -3378,9 +3378,12 @@ void stadt_t::merke_passagier_ziel(koord k, PIXVAL color)
 
 	FOR(vector_tpl<koord>, const& position, building_list)
 	{
-		pax_destinations_new.set(position, color);
+		const koord p = koord(
+			((position.x * PAX_DESTINATIONS_SIZE) / welt->get_size().x) & (PAX_DESTINATIONS_SIZE-1),
+			((position.y * PAX_DESTINATIONS_SIZE) / welt->get_size().y) & (PAX_DESTINATIONS_SIZE-1)
+		);
+		pax_destinations_new.set(p, color);
 	}
-
 	pax_destinations_new_change ++;
 }
 
