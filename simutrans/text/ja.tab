@@ -1499,6 +1499,10 @@ Only show goods which are currently handled by factories
 現在存在する産業が取り扱っている貨物のみを表示します。
 open
 進入可
+open_signalbox_info
+信号扱所情報
+open_signal_connector_gui
+信号機の接続先を操作する画面を開きます
 Operation
 運行費
 Ops Profit
@@ -3635,6 +3639,8 @@ Cannot start: no cab at the front of the convoy.
 編成の構成エラー：\n先頭になれない車両が先頭になっています。（運転台が無い等）
 switch the convoy nameplate display mode
 系統名表示モードの切り替え
+switch_sb
+信号機の接続先を変更
 no convoy nameplate
 系統名非表示
 mouseover

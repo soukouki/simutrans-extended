@@ -470,6 +470,7 @@ SOURCES += gui/schedule_list.cc
 SOURCES += gui/server_frame.cc
 SOURCES += gui/settings_frame.cc
 SOURCES += gui/settings_stats.cc
+SOURCES += gui/signal_connector_gui.cc
 SOURCES += gui/signal_info.cc
 SOURCES += gui/signal_spacing.cc
 SOURCES += gui/signalboxlist_frame.cc
