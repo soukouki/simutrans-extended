@@ -3172,7 +3172,7 @@ void settings_t::parse_colours(tabfile_t& simuconf)
 	env_t::tooltip_textcolor          = contents.get_color("tooltip_text_color",         env_t::tooltip_textcolor,          &env_t::tooltip_textcolor_rgb );
 	env_t::cursor_overlay_color       = contents.get_color("cursor_overlay_color",       env_t::cursor_overlay_color,       &env_t::cursor_overlay_color_rgb );
 	env_t::background_color           = contents.get_color("background_color",           env_t::background_color,           &env_t::background_color_rgb );
-	
+
 	env_t::bottom_window_darkness = contents.get_int("env_t::bottom_window_darkness", env_t::bottom_window_darkness);
 }
 
