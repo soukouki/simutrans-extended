@@ -201,6 +201,8 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         if((supportmask & desc->get_base_mask(rotation))!=desc->get_base_mask(rotation)){
             return "Cannot build pier.  Lower pier does not provide sufficient footing";
         }
+    }else if(desc->get_low_waydeck()){
+        return "Cannot build this pier on ground";
     }
 
     if(desc->get_middle_mask(rotation) & pier_t::get_middle_mask_total(gr)){

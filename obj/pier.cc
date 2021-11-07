@@ -208,6 +208,16 @@ uint64 pier_t::get_support_mask_total(const grund_t *gr){
 }
 
 uint16 pier_t::get_speed_limit_deck_total(const grund_t *gr, uint16 maxspeed){
+	if(gr){
+		for(uint8 i = 0; i < gr->get_top(); i++){
+			obj_t *ob = gr->obj_bei(i);
+			if(ob->get_typ()==obj_t::pier){
+				if(((pier_t*)ob)->get_low_waydeck() && maxspeed > ((pier_t*)ob)->get_maxspeed()){
+					maxspeed = ((pier_t*)ob)->get_maxspeed();
+				}
+			}
+		}
+	}
 	gr=ground_below(gr);
 	if(gr){
 		for(uint8 i = 0; i < gr->get_top(); i++){
@@ -237,6 +247,16 @@ uint32 pier_t::get_deck_obj_mask_total(const grund_t *gr){
 }
 
 uint16 pier_t::get_max_axle_load_deck_total(const grund_t *gr, uint16 maxload){
+	if(gr){
+		for(uint8 i = 0; i < gr->get_top(); i++){
+			obj_t *ob = gr->obj_bei(i);
+			if(ob->get_typ()==obj_t::pier){
+				if(((pier_t*)ob)->get_low_waydeck() && maxload > ((pier_t*)ob)->get_axle_load()){
+					maxload = ((pier_t*)ob)->get_axle_load();
+				}
+			}
+		}
+	}
 	gr=ground_below(gr);
 	if(gr){
 		for(uint8 i = 0; i < gr->get_top(); i++){
