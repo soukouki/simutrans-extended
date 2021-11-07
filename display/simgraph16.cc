@@ -5057,13 +5057,14 @@ int display_line_lettercode_rgb(scr_coord_val xpos, scr_coord_val ypos, PIXVAL l
 	ypos += D_GET_CENTER_ALIGN_OFFSET(h, LINEASCENT+6);
 	// calculate width
 	uint8 width = 4;
-	uint8 width_left  = text1[0]=='\0' ? 0 : proportional_string_width(text1)+2;
-	uint8 width_right = text2[0]=='\0' ? 0 : proportional_string_width(text2)+2;
+	const uint8 width_left  = text1[0]=='\0' ? 0 : proportional_string_width(text1)+2;
+	const uint8 width_right = text2[0]=='\0' ? 0 : proportional_string_width(text2)+2;
 	width += width_left + width_right;
 	width = max(LINEASCENT,width);
 
-	PIXVAL col_on_white = is_dark_color(line_color) ? line_color : display_blend_colors(line_color, color_idx_to_rgb(COL_BLACK), 20);
-	PIXVAL col_on_colored = is_dark_color(line_color) ? color_idx_to_rgb(COL_WHITE) : color_idx_to_rgb(COL_BLACK);
+	const sint8 brightness_factor = get_color_brightness_index(line_color);
+	PIXVAL col_on_white   = brightness_factor<28 ? line_color : display_blend_colors(line_color, color_idx_to_rgb(COL_BLACK), (brightness_factor-28)>>1);
+	PIXVAL col_on_colored = brightness_factor<14 ? color_idx_to_rgb(COL_WHITE) : color_idx_to_rgb(COL_BLACK);
 
 	// background
 	display_filled_roundbox_clip(xpos, ypos, width, h, style&2 ? color_idx_to_rgb(COL_WHITE) : line_color, dirty);
