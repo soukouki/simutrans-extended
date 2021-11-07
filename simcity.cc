@@ -3380,7 +3380,6 @@ void stadt_t::merke_passagier_ziel(koord k, PIXVAL color)
 	{
 		pax_destinations_new.set(position, color);
 	}
-
 	pax_destinations_new_change ++;
 }
 

@@ -111,6 +111,7 @@ enum magic_numbers {
 	magic_font,
 	magic_soundfont, // only with USE_FLUIDSYNTH_MIDI
 	magic_edit_groundobj,
+	magic_signal_connector_gui_t,
 
 	// magic numbers with big jumps between them
 	magic_convoi_info,
@@ -175,8 +176,8 @@ bool win_is_top(const gui_frame_t *ig);
 
 
 // return true if actually window was destroyed (or marked for destruction)
-bool destroy_win(const gui_frame_t *ig);
-bool destroy_win(const ptrdiff_t magic);
+bool destroy_win(const gui_frame_t *ig, bool destroy_locked = true);
+bool destroy_win(const ptrdiff_t magic, bool destroy_locked = true);
 
 void destroy_all_win(bool destroy_sticky);
 

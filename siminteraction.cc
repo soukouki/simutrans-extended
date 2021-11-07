@@ -163,7 +163,7 @@ void interaction_t::interactive_event( const event_t &ev )
 			case 127:
 				if( !IS_CONTROL_PRESSED( &ev ) && !IS_SHIFT_PRESSED( &ev ) ) {
 					// close topmost win
-					destroy_win( win_get_top() );
+					destroy_win( win_get_top(), false );
 				}
 				break;
 
