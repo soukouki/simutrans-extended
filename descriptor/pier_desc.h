@@ -87,6 +87,9 @@ public:
 	uint32 get_deck_obj_mask() const {return deck_obj_mask;}
 	bool get_keep_dry() const {return keep_dry;}
 	bool get_bottom_only() const {return bottom_only;};
+	bool get_above_way_supplement() const {return above_way_supplement;}
+	bool get_low_waydeck() const {return low_waydeck;}
+
 	ribi_t::ribi get_drag_ribi(uint8 rotation=0) const {return rotate_ribi(drag_ribi, rotation);}
 
 	uint16 get_max_axle_load() const {return axle_load;}

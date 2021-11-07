@@ -119,16 +119,41 @@ const grund_t* pier_t::ground_below(const grund_t *gr){
 
 ribi_t::ribi pier_t::get_above_ribi_total(const grund_t *gr, bool gr_is_base){
 	ribi_t::ribi ret=ribi_t::none;
+	const grund_t *gr2;
 	if(!gr_is_base){
+		gr2=gr;
 		gr=ground_below(gr);
+	}else{
+		gr2=welt->lookup(pier_builder_t::lookup_deck_pos(gr));
 	}
+	//first check for low deck on upper pier
+	if(gr2){
+		for(uint8 i = 0; i < gr2->get_top(); i++){
+			obj_t *ob = gr2->obj_bei(i);
+			if(ob->get_typ()==obj_t::pier && ((pier_t*)ob)->get_low_waydeck()){
+				ret |= ((pier_t*)ob)->get_below_ribi();
+			}
+		}
+	}
+	if(ret){
+		return ret;
+	}
+	//check for normal deck
+	ribi_t::ribi supplement=ribi_t::none;
 	if(gr){
 		for(uint8 i = 0; i < gr->get_top(); i++){
 			obj_t *ob = gr->obj_bei(i);
 			if(ob->get_typ()==obj_t::pier){
-				ret |= ((pier_t*)ob)->get_above_ribi();
+				if(((pier_t*)ob)->get_above_way_supplement()){
+					supplement |= ((pier_t*)ob)->get_above_ribi();
+				}else{
+					ret |= ((pier_t*)ob)->get_above_ribi();
+				}
 			}
 		}
+	}
+	if(ret){
+		ret |= supplement;
 	}
 	return ret;
 }

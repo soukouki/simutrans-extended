@@ -49,6 +49,8 @@ public:
     uint32 get_maxspeed() const {return desc->get_topspeed();}
     uint32 get_axle_load() const {return desc->get_max_axle_load();}
     uint32 get_deck_obj_mask() const {return desc->get_deck_obj_mask();}
+    bool get_low_waydeck() const {return  desc->get_low_waydeck();}
+    bool get_above_way_supplement() const {return  desc->get_above_way_supplement();}
 
     //get the total for entire tile
     static ribi_t::ribi get_above_ribi_total(const grund_t* gr, bool gr_is_base=false);

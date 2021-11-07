@@ -25,14 +25,14 @@ static bool compare_piers(const pier_desc_t* a, const pier_desc_t* b){
     return a->get_auto_group() < b->get_auto_group();
 }
 
-koord3d pier_builder_t::lookup_deck_pos(const grund_t *gr, koord3d pos){
+koord3d pier_builder_t::lookup_deck_pos(const grund_t *gr){
     sint8 hdiff;
     if(gr->get_grund_hang()==0){
         hdiff=1;
     }else{
         hdiff=slope_t::max_diff(gr->get_grund_hang());
     }
-    return pos+koord3d(0,0,hdiff);
+    return gr->get_pos()+koord3d(0,0,hdiff);
 }
 
 const char * pier_builder_t::check_below_ways(player_t *player, koord3d pos, const pier_desc_t *desc, const uint8 rotation, bool halfheight){
@@ -40,6 +40,9 @@ const char * pier_builder_t::check_below_ways(player_t *player, koord3d pos, con
     if(gr){
         if(weg_t *w0 = gr->get_weg_nr(0)){
             if(desc->get_above_way_ribi() && gr->get_weg_hang()){
+                return "Placing a pier here would block way(s)";
+            }
+            if(desc->get_low_waydeck()){
                 return "Placing a pier here would block way(s)";
             }
             if( ( w0->get_ribi_unmasked() & desc->get_below_way_ribi(rotation) ) == w0->get_ribi_unmasked()
@@ -167,7 +170,7 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         }
         if(desc->get_above_way_ribi()){
             if(weg_t *w0 = gr->get_weg_nr(0)){
-                if(!w0->is_low_clearence(player)){
+                if(!w0->is_low_clearence(player) || desc->get_low_waydeck()){
                     return "Placing a pier here would block way(s)";
                 }
             }
@@ -206,7 +209,7 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
 
 
     //make ground on top (if needed)
-    koord3d gpos=lookup_deck_pos(gr, pos);
+    koord3d gpos=lookup_deck_pos(gr);
     if(!welt->lookup(gpos)){
         pier_deck_t *deck = new pier_deck_t(gpos,desc->get_above_slope(rotation),desc->get_above_slope(rotation));
         welt->access(pos.get_2d())->boden_hinzufuegen(deck);
@@ -246,7 +249,10 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
     }
 
     if(pier_cnt==1){
-        koord3d gpos=lookup_deck_pos(gr,pos);
+        if(p->get_low_waydeck() && gr->get_weg_nr(0)){
+            return "Cannot remove pier supporting way";
+        }
+        koord3d gpos=lookup_deck_pos(gr);
         grund_t *bd = welt->lookup(gpos);
         if(bd){
             if(bd->obj_count() || bd->get_weg_nr(0)){
@@ -262,17 +268,20 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
         return NULL;
     }
 
-    for(uint8 j = 0; j < gr->obj_count(); j++){ //try every pier in tile
+    for(uint8 j = 0; j < gr->get_top(); j++){ //try every pier in tile
         obj_t *ob = gr->obj_bei(j);
         if(ob->get_typ()==obj_t::pier){
             pier_cnt++;
             p = (pier_t*)ob;
             if(p->is_deletable(player)==NULL){
-                koord3d gpos=lookup_deck_pos(gr,pos);
+                if(p->get_low_waydeck() && gr->get_weg_nr(0)){
+                    continue;
+                }
+                koord3d gpos=lookup_deck_pos(gr);
                 grund_t *bd = welt->lookup(gpos);
                 //check that we are not supporting another pier
                 const char *msg2=NULL;
-                for(uint8 i = 0; i < bd->obj_count(); i++){
+                for(uint8 i = 0; i < bd->get_top(); i++){
                     if(bd->obj_bei(i)->get_typ()==obj_t::pier){
                         if(((pier_t*)bd->obj_bei(i))->get_base_mask() & p->get_support_mask()){
                             msg2= "Cannot remove load bearing pier";
