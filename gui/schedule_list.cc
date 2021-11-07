@@ -923,7 +923,9 @@ void schedule_list_gui_t::display(scr_coord pos)
 				routebar_middle.set_color( player->get_player_color1() ); // uint8
 			}
 			else {
-				routebar_middle.set_color( line->get_line_color() ); // PIXVAL
+				PIXVAL line_color = line->get_line_color();
+				if (!is_dark_color(line_color)) line_color = display_blend_colors(line_color, color_idx_to_rgb(COL_BLACK), 15);
+				routebar_middle.set_color( line_color );
 			}
 			lb_line_destination.buf().append(destination_halt->get_name());
 			lb_travel_distance.buf().printf("%s: %.1fkm ", translator::translate("travel_distance"), (float)(line->get_travel_distance()*world()->get_settings().get_meters_per_tile()/1000.0));

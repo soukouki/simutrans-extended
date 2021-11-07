@@ -5062,7 +5062,7 @@ int display_line_lettercode_rgb(scr_coord_val xpos, scr_coord_val ypos, PIXVAL l
 	width += width_left + width_right;
 	width = max(LINEASCENT,width);
 
-	PIXVAL col_on_white = is_dark_color(line_color) ? line_color : display_blend_colors(line_color, color_idx_to_rgb(COL_BLACK), 15);
+	PIXVAL col_on_white = is_dark_color(line_color) ? line_color : display_blend_colors(line_color, color_idx_to_rgb(COL_BLACK), 20);
 	PIXVAL col_on_colored = is_dark_color(line_color) ? color_idx_to_rgb(COL_WHITE) : color_idx_to_rgb(COL_BLACK);
 
 	// background
