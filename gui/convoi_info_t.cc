@@ -551,7 +551,7 @@ void convoi_info_t::update_labels()
 	else if (welt->lookup(next_pos) && welt->lookup(next_pos)->get_depot() != NULL) {
 		halt_symbol_style=gui_schedule_entry_number_t::number_style::depot;
 	}
-	next_halt_number.init(schedule->get_current_stop(), halt_col_idx, halt_symbol_style);
+	next_halt_number.init(schedule->get_current_stop(), halt_col_idx, halt_symbol_style, next_pos);
 
 	// distance
 	sint32 cnv_route_index_left = cnv->get_route()->get_count() - 1 - cnv_route_index;
@@ -752,10 +752,7 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 */
 /*
 #ifdef DEBUG_PHYSICS
-		/*
-		 * Show braking distance
-		 */
-/*
+		// Show braking distance
 		{
 			const int pos_y = pos_y0 + 6 * LINESPACE; // line 7
 			const sint32 brk_meters = convoy.calc_min_braking_distance(convoy.get_weight_summary(), speed_to_v(cnv->get_akt_speed()));

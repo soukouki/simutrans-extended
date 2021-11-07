@@ -364,6 +364,9 @@ void convoi_detail_t::init(convoihandle_t cnv)
 		cont_maintenance.add_component(&retire_button);
 
 		sale_button.init(button_t::roundbox, "Verkauf", scr_coord(0,0), D_BUTTON_SIZE);
+		if (skinverwaltung_t::alerts) {
+			sale_button.set_image(skinverwaltung_t::alerts->get_image_id(3));
+		}
 		sale_button.set_tooltip("Remove vehicle from map. Use with care!");
 		sale_button.add_listener(this);
 		cont_maintenance.add_component(&sale_button);

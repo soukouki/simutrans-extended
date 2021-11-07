@@ -78,7 +78,7 @@ goods_frame_t::goods_frame_t() :
 	add_table(3,1)->set_alignment(ALIGN_TOP);
 	{
 		show_hide_input.init(button_t::roundbox, "+");
-		show_hide_input.set_width(display_get_char_width('+') + gui_theme_t::gui_button_text_offset.w + gui_theme_t::gui_button_text_offset_right.x);
+		show_hide_input.set_width(display_get_char_width('+') + D_BUTTON_PADDINGS_X);
 		show_hide_input.add_listener(this);
 		add_component(&show_hide_input);
 

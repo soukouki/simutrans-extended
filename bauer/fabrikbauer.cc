@@ -325,7 +325,7 @@ bool factory_builder_t::successfully_loaded()
 
 int factory_builder_t::count_producers(const goods_desc_t *ware, uint16 timeline)
 {
-	int anzahl=0;
+	int count=0;
 
 	// iterate over all factories and check if they produce this good...
 	for(auto const& t : desc_table) {
@@ -333,12 +333,12 @@ int factory_builder_t::count_producers(const goods_desc_t *ware, uint16 timeline
 		for (uint i = 0; i < tmp->get_product_count(); i++) {
 			const factory_product_desc_t *product = tmp->get_product(i);
 			if(  product->get_output_type()==ware  &&  tmp->get_distribution_weight()>0  &&  tmp->get_building()->is_available(timeline)  ) {
-				anzahl++;
+				count++;
 			}
 		}
 	}
-DBG_MESSAGE("factory_builder_t::count_producers()","%i producer for good '%s' found.", anzahl, translator::translate(ware->get_name()));
-	return anzahl;
+DBG_MESSAGE("factory_builder_t::count_producers()","%i producer for good '%s' found.", count, translator::translate(ware->get_name()));
+	return count;
 }
 
 

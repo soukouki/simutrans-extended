@@ -117,7 +117,7 @@ static void show_sizes()
 // render tests ...
 static void show_times(karte_t *welt, main_view_t *view)
 {
-	intr_set(welt, view);
+	intr_set_view(view);
 	welt->set_fast_forward(true);
 	intr_disable();
 
@@ -1511,7 +1511,7 @@ int simu_main(int argc, char** argv)
 		sets.set_traffic_level(7);
 		welt->init(&sets,0);
 		//  start in June ...
-		intr_set(welt, view);
+		intr_set_view(view);
 		win_set_world(welt);
 		tool_t::toolbar_tool[0]->init(welt->get_active_player());
 		welt->set_fast_forward(true);
@@ -1528,7 +1528,7 @@ int simu_main(int argc, char** argv)
 			welt->get_settings().set_freeplay( true );
 		}
 		// just init view (world was loaded from file)
-		intr_set(welt, view);
+		intr_set_view(view);
 		win_set_world(welt);
 		tool_t::toolbar_tool[0]->init(welt->get_active_player());
 	}

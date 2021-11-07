@@ -239,6 +239,7 @@ add_executable(simutrans-extended
 	gui/components/gui_tab_panel.cc
 	gui/components/gui_textarea.cc
 	gui/components/gui_textinput.cc
+	gui/components/gui_vehicle_capacitybar.cc
 	gui/components/gui_world_view_t.cc
 	gui/convoi_detail_t.cc
 	gui/convoi_filter_frame.cc
@@ -307,6 +308,7 @@ add_executable(simutrans-extended
 	gui/server_frame.cc
 	gui/settings_frame.cc
 	gui/settings_stats.cc
+	gui/signal_connector_gui.cc
 	gui/signal_info.cc
 	gui/signal_spacing.cc
 	gui/signalboxlist_frame.cc
