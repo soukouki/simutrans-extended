@@ -2009,6 +2009,7 @@
     <ClCompile Include="gui\privatesign_info.cc" />
     <ClCompile Include="gui\scenario_info.cc" />
     <ClCompile Include="gui\server_frame.cc" />
+    <ClCompile Include="gui\signal_connector_gui.cc" />
     <ClCompile Include="gui\signal_info.cc" />
     <ClCompile Include="gui\simwin.cc" />
     <ClCompile Include="gui\themeselector.cc" />
@@ -2298,6 +2299,7 @@
     <ClCompile Include="gui\components\gui_table.cc" />
     <ClCompile Include="gui\components\gui_textarea.cc" />
     <ClCompile Include="gui\components\gui_textinput.cc" />
+    <ClCompile Include="gui\components\gui_vehicle_capacitybar.cc" />
     <ClCompile Include="gui\components\gui_world_view_t.cc" />
     <ClCompile Include="gui\halt_detail.cc" />
     <ClCompile Include="gui\halt_info.cc" />
@@ -2581,6 +2583,7 @@
     <ClInclude Include="gui\privatesign_info.h" />
     <ClInclude Include="gui\scenario_info.h" />
     <ClInclude Include="gui\server_frame.h" />
+    <ClInclude Include="gui\signal_connector_gui.h" />
     <ClInclude Include="gui\signal_info.h" />
     <ClInclude Include="gui\simwin.h" />
     <ClInclude Include="gui\themeselector.h" />
@@ -2643,6 +2646,7 @@
     <ClInclude Include="script\script.h" />
     <ClInclude Include="siminteraction.h" />
     <ClInclude Include="simloadingscreen.h" />
+    <ClInclude Include="simsignalbox.h" />
     <ClInclude Include="simtool-dialogs.h" />
     <ClInclude Include="simunits.h" />
     <ClInclude Include="squirrel\sqstdaux.h" />
@@ -2776,6 +2780,7 @@
     <ClInclude Include="gui\components\gui_table.h" />
     <ClInclude Include="gui\components\gui_textarea.h" />
     <ClInclude Include="gui\components\gui_textinput.h" />
+    <ClInclude Include="gui\components\gui_vehicle_capacitybar.h" />
     <ClInclude Include="gui\components\gui_world_view_t.h" />
     <ClInclude Include="gui\halt_detail.h" />
     <ClInclude Include="gui\halt_info.h" />

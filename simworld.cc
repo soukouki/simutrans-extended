@@ -4901,8 +4901,8 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 	debug_sums[5] = 0; // Passengers/mail generated this step
 	debug_sums[6] = 0; // Transferring cargoes before passenger generation
 	debug_sums[7] = 0; // Transferring cargoes after passenger generation
-	debug_sums[8] = 0; // Number of randomised pedestrian hops this sync_step
-	debug_sums[9] = 0; // Number of randomised private car directions this sync_step
+	debug_sums[8] = 0; // Number of random first directions for cars following a route this sync_step
+	debug_sums[9] = 0; // Number of random directions for cars without a route this sync_step
 
 	set_random_mode( SYNC_STEP_RANDOM );
 	if(do_sync_step) {
@@ -5731,7 +5731,8 @@ void karte_t::step()
 		}
 		start_private_car_threads();
 #else
-		const sint32 cities_to_process = env_t::networkmode ? 1 : min(cities_awaiting_private_car_route_check.get_count(), parallel_operations - 1);
+		const sint32 cities_to_process = min(cities_awaiting_private_car_route_check.get_count(), env_t::networkmode ? 1 : parallel_operations - 1);
+
 		for (sint32 j = 0; j < cities_to_process; j++)
 		{
 			stadt_t* city = cities_awaiting_private_car_route_check.remove_first();

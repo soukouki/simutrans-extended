@@ -1499,6 +1499,10 @@ Only show goods which are currently handled by factories
 現在存在する産業が取り扱っている貨物のみを表示します。
 open
 進入可
+open_signalbox_info
+信号扱所情報
+open_signal_connector_gui
+信号機の接続先を操作する画面を開きます
 Operation
 運行費
 Ops Profit
@@ -3483,8 +3487,6 @@ waiting\ntolerance\nmax. min
 最大許容待機時間(分)
 waiting\ntolerance\nmin. min
 最小許容待機時間(分)
-Walked
-徒歩
 Walking time
 駅までの徒歩時間
 Way constraint permissive
@@ -3635,6 +3637,8 @@ Cannot start: no cab at the front of the convoy.
 編成の構成エラー：\n先頭になれない車両が先頭になっています。（運転台が無い等）
 switch the convoy nameplate display mode
 系統名表示モードの切り替え
+switch_sb
+信号機の接続先を変更
 no convoy nameplate
 系統名非表示
 mouseover
@@ -4051,6 +4055,30 @@ Population/Visitor demand
 人口／訪問者需要
 Climate
 気候
+by_waiting_passengers
+旅客待機数
+by_waiting_mails
+郵便待機数
+by_waiting_goods
+貨物待機数
+hl_sort_tiles
+敷地面積
+hl_sort_capacity
+収容数
+hl_sort_overcrowding_rate
+混雑度
+by_potential_pax_number
+旅客需要度
+by_potential_mail_users
+郵便需要度
+by_pax_happy_last_month
+先月の乗車数
+by_mail_delivered_last_month
+先月の郵便発送数
+show_mutual_use
+利用中の他社駅も表示
+Also shows the stops of other players you are using
+路線や編成が乗り入れをしている他社の駅も表示します
 player_stats
 会社情報
 Signalboxes

@@ -4117,7 +4117,7 @@ uint32 fabrik_t::calc_operation_rate(sint8 month) const
 	// which sector?
 	if ((sector == end_consumer || sector == power_plant) && input.get_count()) {
 		// check the consuming rate
-		for (int i = 0; i < input.get_count(); i++) {
+		for (uint32 i = 0; i < input.get_count(); i++) {
 			const sint64 pfactor = desc->get_supplier(i) ? (sint64)desc->get_supplier(i)->get_consumption() : 1ll;
 			const uint32 prod_rate = (uint32)((FAB_PRODFACT_UNIT_HALF + (sint32)pfactor * 100) >> DEFAULT_PRODUCTION_FACTOR_BITS);
 			temp_sum += convert_goods(input[i].get_stat(month, FAB_GOODS_CONSUMED)) * 10000 / (sint32)prod_rate;
@@ -4126,7 +4126,7 @@ uint32 fabrik_t::calc_operation_rate(sint8 month) const
 	}
 	else if(sector != unknown && output.get_count()){
 		// check the producing rate of this factory
-		for (int i = 0; i < output.get_count(); i++) {
+		for (uint32 i = 0; i < output.get_count(); i++) {
 			const sint64 pfactor = (sint64)desc->get_product(i)->get_factor();
 			const uint32 prod_rate = (uint32)((FAB_PRODFACT_UNIT_HALF + (sint32)pfactor * 100) >> DEFAULT_PRODUCTION_FACTOR_BITS);
 

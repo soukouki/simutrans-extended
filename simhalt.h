@@ -890,6 +890,18 @@ public:
 	uint32 get_around_mail_generated() const;
 	uint32 get_around_mail_delivery_succeeded() const;
 
+	// The number of passengers who have tried to use this station.
+	sint64 get_potential_passenger_number(uint8 month) const
+	{
+		sint64 sum=0;
+		sum += financial_history[month][HALT_HAPPY];
+		sum += financial_history[month][HALT_UNHAPPY];
+		sum += financial_history[month][HALT_NOROUTE];
+		sum += financial_history[month][HALT_TOO_SLOW];
+		sum += financial_history[month][HALT_TOO_WAITING];
+		return sum;
+	}
+
 	// Getting and setting average waiting times in minutes
 	// @author: jamespetts
 	uint32 get_average_waiting_time(halthandle_t halt, uint8 category, uint8 g_class);

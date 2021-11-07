@@ -79,7 +79,7 @@ void gui_factory_storage_info_t::draw(scr_coord offset)
 				left += STORAGE_INDICATOR_WIDTH + 2 + D_H_SPACE;
 
 				// [goods color box] This design is the same as the goods list
-				display_colorbox_with_tooltip(pos.x + offset.x + left, pos.y + offset.y + yoff + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, goods_color, NULL);
+				display_colorbox_with_tooltip(pos.x + offset.x + left, pos.y + offset.y + yoff + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, goods_color, false);
 				left += 12;
 				yoff -= 2; // box position adjistment
 
@@ -164,7 +164,7 @@ void gui_factory_storage_info_t::draw(scr_coord offset)
 				left += STORAGE_INDICATOR_WIDTH + 2 + D_H_SPACE;
 
 				// [goods color box] This design is the same as the goods list
-				display_colorbox_with_tooltip(pos.x + offset.x + left, pos.y + offset.y + yoff + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, goods_color, NULL);
+				display_colorbox_with_tooltip(pos.x + offset.x + left, pos.y + offset.y + yoff + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, goods_color, false);
 				left += 12;
 				yoff-=2; // box position adjistment
 
@@ -344,7 +344,7 @@ void gui_factory_connection_stat_t::draw(scr_coord offset)
 				xoff += 11;
 			}
 			// [goods color box] This design is the same as the goods list
-			display_colorbox_with_tooltip(offset.x + xoff, offset.y + yoff + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, transport_goods->get_color(), NULL);
+			display_colorbox_with_tooltip(offset.x + xoff, offset.y + yoff + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, transport_goods->get_color(), false);
 			xoff += 12;
 			// [distance]
 			col_val = is_within_own_network ? SYSCOL_TEXT : SYSCOL_TEXT_WEAK;
