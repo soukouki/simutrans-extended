@@ -123,6 +123,7 @@ welt_gui_t::welt_gui_t(settings_t* const sets_par) :
 			load_map.init(button_t::roundbox | button_t::flexible, "Lade Relief");
 			if (skinverwaltung_t::open_window) {
 				load_map.set_image(skinverwaltung_t::open_window->get_image_id(0));
+				load_map.set_image_position_right(true);
 			}
 			load_map.set_tooltip("load height data from file");
 			load_map.add_listener( this );
@@ -261,6 +262,7 @@ welt_gui_t::welt_gui_t(settings_t* const sets_par) :
 		open_setting_gui.pressed = win_get_magic( magic_settings_frame_t );
 		if (skinverwaltung_t::open_window) {
 			open_setting_gui.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			open_setting_gui.set_image_position_right(true);
 		}
 		open_setting_gui.add_listener( this );
 		add_component( &open_setting_gui );
@@ -270,6 +272,7 @@ welt_gui_t::welt_gui_t(settings_t* const sets_par) :
 		open_climate_gui.pressed = win_get_magic( magic_climate );
 		if (skinverwaltung_t::open_window) {
 			open_climate_gui.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			open_climate_gui.set_image_position_right(true);
 		}
 		open_climate_gui.add_listener( this );
 		add_component( &open_climate_gui );
@@ -284,6 +287,7 @@ welt_gui_t::welt_gui_t(settings_t* const sets_par) :
 		load_game.init(button_t::roundbox | button_t::flexible, "Load game");
 		if (skinverwaltung_t::open_window) {
 			load_game.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			load_game.set_image_position_right(true);
 		}
 		load_game.add_listener( this );
 		add_component( &load_game );
@@ -292,6 +296,7 @@ welt_gui_t::welt_gui_t(settings_t* const sets_par) :
 		load_scenario.init(button_t::roundbox | button_t::flexible,"Load scenario");
 		if (skinverwaltung_t::open_window) {
 			load_scenario.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			load_scenario.set_image_position_right(true);
 		}
 		load_scenario.add_listener( this );
 		add_component( &load_scenario );

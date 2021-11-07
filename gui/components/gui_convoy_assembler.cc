@@ -278,6 +278,7 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	bt_class_management.set_typ(button_t::roundbox);
 	if (skinverwaltung_t::open_window) {
 		bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		bt_class_management.set_image_position_right(true);
 	}
 	bt_class_management.set_text("class_manager");
 	bt_class_management.add_listener(this);

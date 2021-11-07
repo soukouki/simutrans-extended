@@ -147,6 +147,7 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	bt_details.init(button_t::roundbox, "Details");
 	if (skinverwaltung_t::open_window) {
 		bt_details.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		bt_details.set_image_position_right(true);
 	}
 	bt_details.add_listener(this);
 	bt_details.set_tooltip("Open the convoy detail window");

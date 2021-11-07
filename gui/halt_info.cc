@@ -566,6 +566,7 @@ void halt_info_t::init(halthandle_t halt)
 			detail_button.init(button_t::roundbox, "Details");
 			if (skinverwaltung_t::open_window) {
 				detail_button.set_image(skinverwaltung_t::open_window->get_image_id(0));
+				detail_button.set_image_position_right(true);
 			}
 			detail_button.set_width(view.get_size().w);
 			detail_button.set_tooltip("Open station/stop details");

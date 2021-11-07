@@ -65,6 +65,7 @@ message_frame_t::message_frame_t() :
 		option_bt.set_size(D_BUTTON_SIZE);
 		if (skinverwaltung_t::open_window) {
 			option_bt.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			option_bt.set_image_position_right(true);
 		}
 		option_bt.add_listener(this);
 		add_component(&option_bt);

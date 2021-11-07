@@ -159,6 +159,7 @@ signal_info_t::signal_info_t(signal_t* const s) :
 		bt_info_signalbox.init(button_t::roundbox, "Details");
 		if (skinverwaltung_t::open_window) {
 			bt_info_signalbox.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			bt_info_signalbox.set_image_position_right(true);
 		}
 		bt_info_signalbox.set_size(scr_size((D_BUTTON_WIDTH*3)>>2, D_BUTTON_HEIGHT));
 		bt_info_signalbox.set_visible(false);

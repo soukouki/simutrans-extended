@@ -100,6 +100,7 @@ gui_settings_t::gui_settings_t()
 	buttons[ IDBTN_SHOW_THEMEMANAGER ].init( button_t::roundbox_state | button_t::flexible, "Select a theme for display" );
 	if (skinverwaltung_t::open_window) {
 		buttons[ IDBTN_SHOW_THEMEMANAGER ].set_image(skinverwaltung_t::open_window->get_image_id(0));
+		buttons[ IDBTN_SHOW_THEMEMANAGER ].set_image_position_right(true);
 	}
 	add_component( buttons + IDBTN_SHOW_THEMEMANAGER );
 
@@ -107,6 +108,7 @@ gui_settings_t::gui_settings_t()
 	buttons[ IDBTN_CHANGE_FONT ].init( button_t::roundbox_state | button_t::flexible, "Select display font" );
 	if (skinverwaltung_t::open_window) {
 		buttons[ IDBTN_CHANGE_FONT ].set_image(skinverwaltung_t::open_window->get_image_id(0));
+		buttons[ IDBTN_CHANGE_FONT ].set_image_position_right(true);
 	}
 	add_component( buttons + IDBTN_CHANGE_FONT );
 
