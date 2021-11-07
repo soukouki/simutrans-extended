@@ -40,10 +40,14 @@ private:
 	schedule_t* schedule;
 	player_t* player;
 
+	uint8 line_color_index=254;
+
 public:
 	schedule_gui_stats_t(player_t *player_);
 
 	void set_schedule( schedule_t* f ) { schedule = f; }
+
+	void set_line_color_index( uint8 idx=254 ) { line_color_index = idx; }
 
 	void highlight_schedule( schedule_t *markschedule, bool marking );
 
