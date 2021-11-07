@@ -67,7 +67,6 @@ stringhashtable_tpl<halthandle_t, N_BAGS_LARGE> haltestelle_t::all_names;
 
 vector_tpl<lines_loaded_t> haltestelle_t::lines_loaded;
 
-uint8 haltestelle_t::pedestrian_limit = 0;
 // hash table only used during loading
 inthashtable_tpl<sint32,halthandle_t,N_BAGS_LARGE> *haltestelle_t::all_koords = NULL;
 // since size_x*size_y < 0x1000000, we have just to shift the high bits
@@ -4684,8 +4683,6 @@ void haltestelle_t::rdwr(loadsave_t *file)
 
 	// So compute it fresh every time
 	calc_transfer_time();
-
-	pedestrian_limit = 0;
 }
 
 

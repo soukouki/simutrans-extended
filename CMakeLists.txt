@@ -308,6 +308,7 @@ add_executable(simutrans-extended
 	gui/server_frame.cc
 	gui/settings_frame.cc
 	gui/settings_stats.cc
+	gui/signal_connector_gui.cc
 	gui/signal_info.cc
 	gui/signal_spacing.cc
 	gui/signalboxlist_frame.cc
