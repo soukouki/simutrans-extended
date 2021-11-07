@@ -39,8 +39,13 @@ void pier_t::calc_image(){
 		back_image=desc->get_background(gr->get_grund_hang(),rotation,snow );
 		front_image=desc->get_foreground(gr->get_grund_hang(), rotation, snow);
 	}else{ //assuming flat
-		back_image=desc->get_background(0,rotation,snow);
-		front_image=desc->get_foreground(0,rotation, snow);
+		if(get_low_waydeck() && gr->get_weg_nr(0)){
+			back_image=desc->get_background(43,rotation, snow);
+			front_image=desc->get_foreground(43,rotation, snow);
+		}else{
+			back_image=desc->get_background(0,rotation,snow);
+			front_image=desc->get_foreground(0,rotation, snow);
+		}
 	}
 	set_flag(obj_t::dirty);
 }
