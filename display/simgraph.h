@@ -47,7 +47,7 @@ extern int default_font_linespace;
 #define D_ENTRY_NO_HEIGHT (LINESPACE+4)
 #define D_ENTRY_NO_WIDTH (proportional_string_width("188")+6)
 
-#define MAX_LINE_COLOR_PALETTE 48
+#define MAX_LINE_COLOR_PALETTE 56
 
 /**
 * Alignment enum to align controls against each other
