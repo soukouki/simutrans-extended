@@ -170,6 +170,13 @@ public:
 	event_t(event_class_t event_class = EVENT_NONE);
 
 public:
+	/**
+	 * Move event origin. Useful when transferring events to sub-components.
+	 * @param delta position of new origin relative to the old origin.
+	 */
+	void move_origin(scr_coord delta);
+
+public:
 	event_class_t ev_class;
 	union
 	{
