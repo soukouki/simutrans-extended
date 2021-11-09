@@ -683,9 +683,8 @@ void grund_t::info(cbuffer_t& buf) const
 			}
 			if (maker) {
 				buf.printf(translator::translate("Constructed by %s"), maker);
-				buf.append("\n");
+				buf.append("\n\n");
 			}
-			buf.append("\n");
 			// second way
 			has_way = true;
 			if(flags&has_way2) {
