@@ -11177,7 +11177,7 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 				"karte_t:::do_network_world_command", "Disconnected due to checklist mismatch" );
 		}
 		else {
-			dbg->message("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf);
+			dbg->warning("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf);
 		}
 	}
 	else {
