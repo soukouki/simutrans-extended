@@ -11165,6 +11165,8 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 		assert(offset2 < 2048);
 		(void)offset2;
 
+		dbg->warning("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf);
+
 		if(client_checklist != server_checklist)
 		{
 			network_disconnect();
@@ -11174,10 +11176,7 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 #else
 			dbg->warning(
 #endif
-				"karte_t:::do_network_world_command", "Disconnected due to checklist mismatch" );
-		}
-		else {
-			dbg->warning("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf);
+				"karte_t:::do_network_world_command", "Disconnected due to checklist mismatch", buf );
 		}
 	}
 	else {
