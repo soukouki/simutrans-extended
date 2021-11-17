@@ -164,6 +164,172 @@ void gui_halt_type_images_t::draw(scr_coord offset)
 	gui_aligned_container_t::draw(offset);
 }
 
+gui_halt_handled_goods_images_t::gui_halt_handled_goods_images_t(halthandle_t h)
+{
+	halt = h;
+}
+
+void gui_halt_handled_goods_images_t::draw(scr_coord offset)
+{
+	scr_coord_val xoff = D_H_SPACE;
+	for (uint8 i = 0; i<goods_manager_t::get_max_catg_index(); i++) {
+		uint8 g_class = goods_manager_t::get_classes_catg_index(i) - 1;
+		haltestelle_t::connexions_map *connexions = halt->get_connexions(i, g_class);
+
+		if (!connexions->empty())
+		{
+			display_color_img_with_tooltip(goods_manager_t::get_info_catg_index(i)->get_catg_symbol(), offset.x + xoff, offset.y + D_GET_CENTER_ALIGN_OFFSET(10, D_LABEL_HEIGHT), 0, false, false, translator::translate(goods_manager_t::get_info_catg_index(i)->get_catg_name()));
+			xoff += 14;
+		}
+	}
+	set_size(scr_size(xoff + D_H_SPACE*2, D_LABEL_HEIGHT));
+	gui_container_t::draw(offset);
+}
+
+
+gui_halt_goods_demand_t::gui_halt_goods_demand_t(halthandle_t h, bool show_products)
+{
+	halt = h;
+	this->show_products = show_products;
+	build_goods_list();
+	set_size(D_LABEL_SIZE);
+}
+
+void gui_halt_goods_demand_t::build_goods_list()
+{
+	goods_list.clear();
+	if (old_fab_count = halt->get_fab_list().get_count()) {
+		FOR(const slist_tpl<fabrik_t*>, const fab, halt->get_fab_list()) {
+			FOR(array_tpl<ware_production_t>, const& i, show_products ? fab->get_output() : fab->get_input()) {
+				goods_desc_t const* const ware = i.get_typ();
+				goods_list.append_unique(ware);
+			}
+		}
+	}
+}
+
+void gui_halt_goods_demand_t::draw(scr_coord offset)
+{
+	offset += pos;
+	scr_coord_val xoff = D_H_SPACE;
+	if (halt->get_fab_list().get_count() != old_fab_count){
+		build_goods_list();
+	}
+	if (goods_list.get_count() && skinverwaltung_t::input_output) {
+		// show symbol
+		display_color_img(skinverwaltung_t::input_output->get_image_id(show_products ? 1:0), offset.x, offset.y + FIXED_SYMBOL_YOFF, 0, false, false);
+		xoff += 12;
+	}
+	FOR(slist_tpl<goods_desc_t const*>, const good, goods_list) {
+		display_colorbox_with_tooltip(offset.x + xoff, offset.y + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, good->get_color(), NULL);
+		xoff += GOODS_COLOR_BOX_HEIGHT+2;
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, translator::translate(good->get_name()), ALIGN_LEFT, halt->gibt_ab(good) ? SYSCOL_TEXT : SYSCOL_TEXT_WEAK, true);
+		xoff += D_H_SPACE;
+	}
+	set_size(scr_size(max(D_LABEL_WIDTH, xoff + D_H_SPACE * 2), D_LABEL_HEIGHT));
+}
+
+
+gui_halt_waiting_catg_t::gui_halt_waiting_catg_t(halthandle_t h, uint8 catg)
+{
+	halt = h;
+	catg_index = catg;
+	set_size(scr_size(D_H_SPACE, D_LABEL_HEIGHT));
+}
+
+void gui_halt_waiting_catg_t::draw(scr_coord offset)
+{
+	offset += pos;
+	scr_coord_val xoff = D_H_SPACE;
+	uint8 g_class = goods_manager_t::get_classes_catg_index(catg_index) - 1;
+	haltestelle_t::connexions_map *connexions = halt->get_connexions(catg_index, g_class);
+	if (connexions->empty()) {
+		// no connection
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, "-", ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
+	}
+	else {
+		bool got_one = false;
+		bool overcrowded = (halt->get_status_color(catg_index==goods_manager_t::INDEX_PAS ? 0 : catg_index == goods_manager_t::INDEX_MAIL ? 1 : 2)==color_idx_to_rgb(COL_OVERCROWD));
+
+		for (uint8 j = 0; j < goods_manager_t::get_count(); j++) {
+			const goods_desc_t *wtyp = goods_manager_t::get_info(j);
+			if (wtyp->get_catg_index() != catg_index) {
+				continue;
+			}
+			const uint32 sum = halt->get_ware_summe(wtyp);
+			if (sum > 0) {
+				buf.clear();
+				display_colorbox_with_tooltip(offset.x + xoff, offset.y, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, wtyp->get_color(), NULL);
+				xoff += GOODS_COLOR_BOX_HEIGHT+2;
+
+				buf.printf("%s ", translator::translate(wtyp->get_name()));
+				xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
+				buf.clear();
+				buf.printf("%d ", sum);
+				xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, buf, ALIGN_LEFT, overcrowded ? color_idx_to_rgb(COL_OVERCROWD) : SYSCOL_TEXT, true);
+				xoff += D_H_SPACE;
+				got_one = true;
+			}
+		}
+		if (!got_one) {
+			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, "0", ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
+		}
+	}
+
+	set_size( scr_size(xoff+D_H_SPACE*2, D_LABEL_HEIGHT) );
+	gui_container_t::draw(offset);
+}
+
+
+gui_halt_waiting_summary_t::gui_halt_waiting_summary_t(halthandle_t h)
+{
+	halt = h;
+}
+
+void gui_halt_waiting_summary_t::draw(scr_coord offset)
+{
+	scr_coord_val xoff = D_H_SPACE;
+	bool got_one = false;
+	for (uint8 i = 0; i < goods_manager_t::get_max_catg_index(); i++) {
+		bool already_show_icon=false;
+		for (uint8 j = 0; j < goods_manager_t::get_count(); j++) {
+			const goods_desc_t *wtyp = goods_manager_t::get_info(j);
+			if (wtyp->get_catg_index()!=i) {
+				continue;
+			}
+			if (halt->gibt_ab(wtyp)) {
+				// ignore goods with sum=zero
+				const uint32 sum = halt->get_ware_summe(wtyp); // UI TODO: Consider the display for each class
+				if (sum > 0) {
+					buf.clear();
+					if (!already_show_icon) {
+						if (got_one) {
+							xoff += D_H_SPACE+2;
+						}
+						display_color_img_with_tooltip(goods_manager_t::get_info_catg_index(i)->get_catg_symbol(), offset.x + xoff, offset.y + D_GET_CENTER_ALIGN_OFFSET(10, D_LABEL_HEIGHT), 0, false, false, translator::translate(goods_manager_t::get_info_catg_index(i)->get_catg_name()));
+						xoff += 12;
+						got_one = true;
+					}
+					else {
+						buf.append(", ");
+					}
+					buf.printf("%d%s %s", sum, translator::translate(wtyp->get_mass()), translator::translate(wtyp->get_name()));
+					xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
+
+					already_show_icon = true;
+				}
+			}
+		}
+	}
+	if (!got_one) {
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, translator::translate("no goods waiting"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
+	}
+
+	set_size(scr_size(xoff + D_H_SPACE * 2, D_LABEL_HEIGHT));
+	gui_container_t::draw(offset);
+}
+
+
 gui_halt_capacity_bar_t::gui_halt_capacity_bar_t(halthandle_t h, uint8 ft)
 {
 	if (ft > 2) { return; }
