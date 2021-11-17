@@ -30,6 +30,39 @@ private:
 
     static const char * check_for_buildings(const grund_t *gr, const pier_desc_t *desc, const uint8 rotation);
 
+    struct pier_finder_params{
+        pier_finder_params(){
+            above_way_ribi=0;
+            below_way_ribi=0;
+            above_slope=0;
+            ground_slope=0;
+            support_needed=0;
+            support_avail=0;
+            middle_mask_taken=0;
+            deck_obj_present=0;
+            sub_obj_present=-1;
+            need_clearence=false;
+            allow_low_waydeck=false;
+            is_wet=false;
+            on_deck=false;
+        }
+
+        uint64 support_needed;
+        uint64 support_avail;
+        uint64 middle_mask_taken;
+        uint32 deck_obj_present;
+        uint32 sub_obj_present;
+        ribi_t::ribi above_way_ribi;
+        ribi_t::ribi below_way_ribi;
+        slope_t::type above_slope;
+        slope_t::type ground_slope;
+        bool need_clearence;
+        bool allow_low_waydeck;
+        bool is_wet;
+        bool on_deck;
+
+    };
+
 public:
 
     /**
@@ -52,6 +85,17 @@ public:
 	 * @return bridge descriptor or NULL if not found
 	 */
 	static const pier_desc_t *get_desc(const char *name);
+
+	/**
+	 * @brief get_desc_bad_load obtain pier requirements from context after a bad load
+	 * @param pos position of pier
+	 * @param owner owner of pier
+	 * @return the best matching pier
+	 */
+	static const pier_desc_t *get_desc_bad_load(koord3d pos,player_t *owner,uint8 &rotation);
+
+	static bool get_desc_context(pier_desc_t const *& descriptor, uint8& rotation, pier_finder_params params, bool allow_inexact=false);
+
 
 	/**
 	 * build a single pier

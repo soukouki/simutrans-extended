@@ -27,6 +27,7 @@ pier_t::pier_t(koord3d pos, player_t *player, const pier_desc_t *desc, uint8 rot
 {
 	this->desc = desc;
 	this->rotation = rot;
+	this->bad_load = false;
 	set_owner(player);
 	player_t::book_construction_costs( get_owner(), -desc->get_value(), get_pos().get_2d(), desc->get_waytype());
 	calc_image();
@@ -74,13 +75,18 @@ void pier_t::rdwr(loadsave_t *file){
 	if(file->is_loading()){
 		desc = pier_builder_t::get_desc(s);
 
-		//TODO what if load fails
+		//cannot determine what to replace this with here, delay until rest of game loaded
+		bad_load=(desc==NULL);
 
 		free(const_cast<char *>(s));
 	}
 }
 
 void pier_t::finish_rd(){
+	if(desc==NULL){
+		desc = pier_builder_t::get_desc_bad_load(this->get_pos(),this->get_owner(),rotation);
+	}
+
 	player_t *player=get_owner();
 	player_t::add_maintenance( player,  desc->get_maintenance(), waytype_t::any_wt);
 }

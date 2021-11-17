@@ -128,7 +128,206 @@ void pier_builder_t::register_desc(pier_desc_t *desc){
 }
 
 const pier_desc_t *pier_builder_t::get_desc(const char *name){
-    return (name ? desc_table.get(name) : NULL);
+    if(name){
+        if(desc_table.is_contained(name)){
+            return desc_table.get(name);
+        }
+    }
+    return NULL;
+}
+
+const pier_desc_t *pier_builder_t::get_desc_bad_load(koord3d pos,player_t *owner,uint8 &rotation){
+    pier_finder_params params;
+    grund_t *gr = welt->lookup(pos);
+    grund_t *deck = welt->lookup(lookup_deck_pos(gr));
+    if(deck){
+        params.above_slope=deck->get_weg_hang();
+        if(deck->get_weg_nr(0)){
+            params.above_way_ribi|=deck->get_weg_nr(0)->get_ribi_unmasked();
+            if(deck->get_weg_nr(1)){
+                params.above_way_ribi|=deck->get_weg_nr(1)->get_ribi_unmasked();
+            }
+        }
+        //special code to handle possible other unloaded piers
+        for(uint8 i = 0; i < deck->get_top(); i++){
+            obj_t *ob = deck->obj_bei(i);
+            if(ob->get_typ()==obj_t::pier){
+                if(!((pier_t*)ob)->is_bad_load()){
+                    params.support_needed|=((pier_t*)ob)->get_base_mask();
+                }
+            }else if(ob->get_typ()==obj_t::way){
+                params.deck_obj_present|= ((weg_t*)ob)->get_deckmask();
+            }
+        }
+    }
+    for(uint8 i = 0; i < gr->get_top(); i++){
+        obj_t *ob = gr->obj_bei(i);
+        if(ob->get_typ()==obj_t::pier){
+            if(!((pier_t*)ob)->is_bad_load()){
+                params.middle_mask_taken|=((pier_t*)ob)->get_middle_mask();
+            }
+        }
+    }
+    if(gr->get_weg_nr(0)){
+        if(gr->get_weg_hang()){
+            params.need_clearence=true;
+        }
+        params.below_way_ribi|=gr->get_weg_nr(0)->get_ribi_unmasked();
+        params.need_clearence|=!gr->get_weg_nr(0)->is_low_clearence(owner);
+        if(gr->get_weg_nr(0)){
+            params.below_way_ribi|=gr->get_weg_nr(1)->get_ribi_unmasked();
+            params.need_clearence|=!gr->get_weg_nr(1)->is_low_clearence(owner);
+        }
+    }
+    if(gr->get_typ()==grund_t::pierdeck){
+        params.allow_low_waydeck=true;
+        const grund_t *gr2 = pier_t::ground_below(gr);
+        if(gr2){
+            params.below_way_ribi|=gr2->get_weg_nr(0)->get_ribi_unmasked();
+            params.allow_low_waydeck&=gr2->get_weg_nr(0)->is_low_clearence(owner);
+            if(gr2->get_weg_nr(0)){
+                params.below_way_ribi|=gr2->get_weg_nr(1)->get_ribi_unmasked();
+                params.allow_low_waydeck&=gr2->get_weg_nr(1)->is_low_clearence(owner);
+            }
+            //need special code here, pier data may not be complete
+            for(uint8 i = 0; i < gr2->get_top(); i++){
+                obj_t *ob = gr2->obj_bei(i);
+                if(ob->get_typ()==obj_t::pier){
+                    if(!((pier_t*)ob)->is_bad_load()){
+                        params.support_avail|=((pier_t*)ob)->get_support_mask();
+                    }
+                }
+            }
+            if(gebaeude_t *gb = gr2->get_building()){
+                params.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(1);
+            }
+        }
+        params.on_deck=true;
+    }else{
+        params.ground_slope=gr->get_grund_hang();
+    }
+
+    if(gr->is_water()){
+        params.is_wet=true;
+    }
+
+
+    if(gebaeude_t *gb = gr->get_building()){
+        params.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(1);
+    }
+    const pier_desc_t *desc;
+    get_desc_context(desc,rotation,params,true);
+    return desc;
+}
+
+bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& rotation, pier_finder_params params, bool allow_inexact){
+    descriptor=NULL;
+
+    sint32 min_cost=0x7FFFFFFF;
+    uint32 min_match=-1;
+    bool exact_match=false;
+    for(auto const & i : desc_table){
+        pier_desc_t const* const desc = i.value;
+
+        for(uint8 r=0; r<4; r++){
+            if(desc->get_background(params.ground_slope,r,0) == IMG_EMPTY){
+                continue;
+            }
+
+            uint32 match=0;
+            bool unmatch=false;
+
+            if((params.above_way_ribi & desc->get_above_way_ribi(r)) != params.above_way_ribi){
+                unmatch=true;
+            }
+            match+=hammingWeight((uint8)(params.above_way_ribi ^ desc->get_above_way_ribi(r)));
+
+            if((params.below_way_ribi & desc->get_below_way_ribi(r)) != params.below_way_ribi){
+                unmatch=true;
+            }
+            match+=hammingWeight((uint8)(params.below_way_ribi ^ desc->get_below_way_ribi(r)));
+
+            if(params.above_slope!= desc->get_above_slope(r)){
+                match+=128;
+                unmatch=true;
+            }
+
+            if(params.on_deck){
+                if((params.support_avail | desc->get_base_mask(r))!= params.support_avail){
+                    unmatch=true;
+                }
+                match+=hammingWeight(params.support_avail ^ desc->get_base_mask(r));
+
+                if(desc->get_bottom_only()){
+                    match+=2;
+                    unmatch=true;
+                }
+            }
+
+            if((params.support_needed & desc->get_support_mask(r)) != params.support_needed){
+                unmatch=true;
+            }
+            match+=hammingWeight(params.support_needed ^ desc->get_support_mask(r));
+
+            if((~params.middle_mask_taken | desc->get_middle_mask(r)) != ~params.middle_mask_taken){
+                unmatch=true;
+            }
+            match+=hammingWeight(~params.middle_mask_taken ^ desc->get_middle_mask(r));
+
+            if((params.deck_obj_present & desc->get_deck_obj_mask()) != params.deck_obj_present){
+                unmatch=true;
+            }
+            match+=hammingWeight(params.deck_obj_present ^ desc->get_deck_obj_mask());
+
+            if((params.sub_obj_present & desc->get_sub_obj_mask()) != params.sub_obj_present){
+                match+=4;
+                unmatch=true;
+            }
+            match+=hammingWeight(params.sub_obj_present ^ desc->get_sub_obj_mask());
+
+            if(params.need_clearence && !desc->get_above_way_supplement() && desc->get_above_way_ribi(r)){
+                match+=64;
+                unmatch=true;
+            }
+
+            if(!params.allow_low_waydeck && desc->get_low_waydeck()){
+                match+=128;
+                unmatch=true;
+            }
+
+            if(params.is_wet && desc->get_keep_dry()){
+                match+=1;
+                unmatch=true;
+            }
+
+
+            if(!unmatch && !exact_match){
+                exact_match=true;
+                min_cost=desc->get_maintenance();
+                descriptor=desc;
+                rotation=r;
+            }
+            if(exact_match && !unmatch){
+                if(desc->get_maintenance() < min_cost){
+                    min_cost=desc->get_maintenance();
+                    descriptor=desc;
+                    rotation=r;
+                }
+            }
+            if(!exact_match && unmatch){
+                if(match < min_match){
+                    min_match = match;
+                    descriptor=desc;
+                    rotation=r;
+                    min_cost=desc->get_maintenance();
+                }
+            }
+        }
+    }
+    if(!exact_match && !allow_inexact){
+        descriptor=NULL;
+    }
+    return exact_match;
 }
 
 const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc_t *desc, const uint8 rotation){

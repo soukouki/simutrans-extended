@@ -83,7 +83,7 @@ public:
 	uint64 get_base_mask(uint8 rotation=0) const {return rotate_mask(base_mask,rotation);}
 	uint64 get_middle_mask(uint8 rotation=0) const {return rotate_mask(middle_mask,rotation);}
 	uint64 get_support_mask(uint8 rotation=0) const {return rotate_mask(support_mask, rotation);}
-	uint32 get_sub_obj_mask(uint8 rotation=0) const {return rotate_mask(sub_obj_mask, rotation);}
+	uint32 get_sub_obj_mask() const {return sub_obj_mask;}
 	uint32 get_deck_obj_mask() const {return deck_obj_mask;}
 	bool get_keep_dry() const {return keep_dry;}
 	bool get_bottom_only() const {return bottom_only;};
