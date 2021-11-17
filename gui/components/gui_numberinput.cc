@@ -54,15 +54,13 @@ void gui_numberinput_t::set_size(scr_size size_par) {
 
 scr_size gui_numberinput_t::get_max_size() const
 {
-	uint16 max_digits = max(digits, log10( (uint32)max( max(1, abs(min_value)), abs(max_value) ) )+1);
-	return scr_size(display_get_char_max_width( "+-/0123456789" ) * max_digits + D_ARROW_LEFT_WIDTH + D_ARROW_RIGHT_WIDTH + D_H_SPACE,
-					max(LINESPACE+4, max(D_ARROW_LEFT_HEIGHT, D_ARROW_RIGHT_HEIGHT)));
+	return get_min_size();
 }
 
 scr_size gui_numberinput_t::get_min_size() const
 {
-	return scr_size(display_get_char_max_width( "+-/0123456789" ) * digits + D_ARROW_LEFT_WIDTH + D_ARROW_RIGHT_WIDTH + D_H_SPACE,
-					max(LINESPACE+4, max(D_ARROW_LEFT_HEIGHT, D_ARROW_RIGHT_HEIGHT)));
+	return scr_size(max_numbertext_width + D_ARROW_LEFT_WIDTH + D_ARROW_RIGHT_WIDTH + 2*D_H_SPACE,
+					max(LINESPACE+4, max( max(D_ARROW_LEFT_HEIGHT, D_ARROW_RIGHT_HEIGHT), D_EDIT_HEIGHT)) );
 }
 
 void gui_numberinput_t::set_value(sint32 new_value)
@@ -108,6 +106,10 @@ void gui_numberinput_t::set_limits(sint32 _min, sint32 _max)
 {
 	min_value = _min;
 	max_value = _max;
+	char min_text[32], max_text[32];
+	sprintf(min_text, "%d", _min);
+	sprintf(max_text, "%d", _max);
+	max_numbertext_width = max(proportional_string_width(min_text), proportional_string_width(max_text));
 }
 
 
@@ -241,12 +243,12 @@ bool gui_numberinput_t::infowin_event(const event_t *ev)
 	// buttons pressed
 	if(  bt_left.getroffen(ev->cx, ev->cy)  &&  ev->ev_code == MOUSE_LEFTBUTTON  ) {
 		event_t ev2 = *ev;
-		translate_event(&ev2, -bt_left.get_pos().x, -bt_left.get_pos().y);
+		ev2.move_origin(bt_left.get_pos());
 		return bt_left.infowin_event(&ev2);
 	}
 	else if(  bt_right.getroffen(ev->cx, ev->cy)  &&  ev->ev_code == MOUSE_LEFTBUTTON  ) {
 		event_t ev2 = *ev;
-		translate_event(&ev2, -bt_right.get_pos().x, -bt_right.get_pos().y);
+		ev2.move_origin(bt_right.get_pos());
 		return bt_right.infowin_event(&ev2);
 	}
 	else if(  ev->ev_class == INFOWIN  &&  ev->ev_code == WIN_UNTOP  ) {
@@ -311,7 +313,7 @@ bool gui_numberinput_t::infowin_event(const event_t *ev)
 			}
 			if(  call_textinp  ) {
 				event_t ev2 = *ev;
-				translate_event(&ev2, -textinp.get_pos().x, -textinp.get_pos().y);
+				ev2.move_origin(textinp.get_pos());
 				result = textinp.infowin_event(&ev2);
 				new_value = get_text_value();
 			}

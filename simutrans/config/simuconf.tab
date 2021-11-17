@@ -431,7 +431,7 @@ auto_connect_industries_and_attractions_by_road = 4
 # This can be only set in the user defined simuconf.tab
 #fontname=C:\Windows\fonts\arial.ttf
 
-# Position of the main menu bar (0=top, 1=left, 2=bottom, 3=right)
+# Position of the main menu bar (0=left, 1=top[default], 2=right, 3=bottom)
 #menubar_position = 0
 
 # 1=selecting a tool again will close it (0=will be topped/reinit)
