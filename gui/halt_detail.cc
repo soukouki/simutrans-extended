@@ -32,8 +32,6 @@
 #define BARCOL_TRANSFER_IN color_idx_to_rgb(10)
 #define MAX_CATEGORY_COLS 16
 
-static uint16 routelist_default_pos_y = 0;
-
 sint16 halt_detail_t::tabstate = -1;
 
 halt_detail_t::halt_detail_t(halthandle_t halt_) :
@@ -43,12 +41,12 @@ halt_detail_t::halt_detail_t(halthandle_t halt_) :
 	pas(halt_),
 	goods(halt_),
 	cont_service(halt_),
-	destinations(halt_, selected_route_catg_index),
 	scrolly_pas(&pas),
 	scrolly_goods(&cont_goods),
 	scrolly_service(&cont_service),
 	scrolly_route(&cont_desinations),
-	nearby_factory(halt_)
+	nearby_factory(halt_),
+	destinations(halt_, selected_route_catg_index)
 {
 	if (halt.is_bound()) {
 		init();
@@ -78,7 +76,7 @@ void halt_detail_t::init()
 	old_factory_count = 0;
 	old_catg_count = 0;
 	cached_active_player=NULL;
-	cashed_size_y = 0;
+	cached_size_y = 0;
 	show_pas_info = false;
 	show_freight_info = false;
 
@@ -337,8 +335,8 @@ void halt_detail_t::update_components()
 	}
 
 	// tab1
-	if (cashed_size_y != pas.get_size().h) {
-		cashed_size_y = pas.get_size().h;
+	if (cached_size_y != pas.get_size().h) {
+		cached_size_y = pas.get_size().h;
 		if (tabstate==0) {
 			set_tab_opened();
 		}
@@ -451,7 +449,7 @@ void halt_detail_t::update_components()
 
 
 
-bool halt_detail_t::action_triggered( gui_action_creator_t *comp, value_t extra)
+bool halt_detail_t::action_triggered( gui_action_creator_t *comp, value_t /*extra*/)
 {
 	if (tabstate != tabs.get_active_tab_index() || get_windowsize().h == get_min_windowsize().h) {
 		set_tab_opened();
@@ -588,7 +586,7 @@ void halt_detail_t::set_tab_opened()
 	{
 		case 0: // pas
 		default:
-			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cashed_size_y)));
+			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cached_size_y)));
 			break;
 		case 1: // goods
 			set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, margin_above_tab + cont_goods.get_size().h)));
@@ -712,8 +710,6 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 		pas_info.clear();
 
 		// color bar
-		PIXVAL overlay_color = i < good_category->get_number_of_classes() / 2 ? COL_BLACK : COL_WHITE;
-		uint8 overlay_transparency = abs(good_category->get_number_of_classes() / 2 - i) * 7;
 		uint bar_width = ((waiting_sum_by_class*GOODS_WAITING_BAR_BASE_WIDTH) + (base_capacity-1)) / base_capacity;
 		// transferring bar
 		display_fillbox_wh_clip_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 10, y + GOODS_COLOR_BOX_YOFF + 1, (transfers_in * GOODS_WAITING_BAR_BASE_WIDTH / base_capacity) + bar_width, 6, BARCOL_TRANSFER_IN, true);
@@ -740,7 +736,7 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 
 	// total
 	PIXVAL color;
-	color = halt->is_overcrowded(good_category->get_catg_index()) ? COL_DARK_PURPLE : SYSCOL_TEXT;
+	color = halt->is_overcrowded(good_category->get_catg_index()) ? color_idx_to_rgb(COL_DARK_PURPLE) : SYSCOL_TEXT;
 	pas_info.append(halt->get_ware_summe(good_category));
 	display_proportional_clip_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH, y, pas_info, ALIGN_RIGHT, color, true);
 	pas_info.clear();
@@ -1025,8 +1021,6 @@ void halt_detail_goods_t::draw(scr_coord offset)
 			display_direct_line_rgb(offset.x + GOODS_SYMBOL_CELL_WIDTH + D_BUTTON_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 5 + 4, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + D_BUTTON_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 5 + GOODS_WAITING_BAR_BASE_WIDTH, offset.y + top, color_idx_to_rgb(MN_GREY1));
 			top += 4;
 
-			uint32 max_capacity = halt->get_capacity(2);
-			const uint8 max_classes = max(goods_manager_t::passengers->get_number_of_classes(), goods_manager_t::mail->get_number_of_classes());
 			for (uint8 i = 0; i < goods_manager_t::get_max_catg_index(); i++) {
 				if (i == goods_manager_t::INDEX_PAS || i == goods_manager_t::INDEX_MAIL)
 				{
@@ -1122,7 +1116,7 @@ void halt_detail_goods_t::draw(scr_coord offset)
 
 			// total
 			PIXVAL color;
-			color = halt->is_overcrowded(2) ? COL_DARK_PURPLE : SYSCOL_TEXT;
+			color = halt->is_overcrowded(2) ? color_idx_to_rgb(COL_DARK_PURPLE) : SYSCOL_TEXT;
 			goods_info.append(waiting_sum);
 			display_proportional_clip_rgb(offset.x + D_BUTTON_WIDTH + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH, offset.y + top, goods_info, ALIGN_RIGHT, color, true);
 			goods_info.clear();
@@ -1291,7 +1285,7 @@ void gui_halt_nearby_factory_info_t::draw(scr_coord offset)
 				// category symbol
 				display_color_img(ware->get_catg_symbol(), offset.x, offset.y + yoff + LINESPACE * input_cnt + FIXED_SYMBOL_YOFF, 0, false, false);
 				// goods color
-				display_colorbox_with_tooltip(offset.x + GOODS_SYMBOL_CELL_WIDTH, offset.y + yoff + LINESPACE * input_cnt + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, ware->get_color(), NULL);
+				display_colorbox_with_tooltip(offset.x + GOODS_SYMBOL_CELL_WIDTH, offset.y + yoff + LINESPACE * input_cnt + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, ware->get_color(), false);
 				// goods name
 				display_proportional_clip_rgb(offset.x + GOODS_SYMBOL_CELL_WIDTH * 2 - 2, offset.y + yoff + LINESPACE * input_cnt, translator::translate(ware->get_name()), ALIGN_LEFT, SYSCOL_TEXT, true);
 				input_cnt++;
@@ -1302,7 +1296,7 @@ void gui_halt_nearby_factory_info_t::draw(scr_coord offset)
 				// category symbol
 				display_color_img(ware->get_catg_symbol(), offset.x + xoff, offset.y + yoff + LINESPACE * output_cnt + FIXED_SYMBOL_YOFF, 0, false, false);
 				// goods color
-				display_colorbox_with_tooltip(offset.x + xoff + GOODS_SYMBOL_CELL_WIDTH, offset.y + yoff + LINESPACE * output_cnt + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, ware->get_color(), NULL);
+				display_colorbox_with_tooltip(offset.x + xoff + GOODS_SYMBOL_CELL_WIDTH, offset.y + yoff + LINESPACE * output_cnt + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, ware->get_color(), false);
 				// goods name
 				PIXVAL text_color;
 				display_proportional_clip_rgb(offset.x + xoff + GOODS_SYMBOL_CELL_WIDTH * 2 - 2, offset.y + yoff + LINESPACE * output_cnt, translator::translate(ware->get_name()), ALIGN_LEFT, text_color = active_product.is_contained(ware) ? SYSCOL_TEXT : SYSCOL_TEXT_WEAK, true);
@@ -1381,7 +1375,7 @@ void gui_halt_service_info_t::draw(scr_coord offset)
 	gui_aligned_container_t::draw(offset);
 }
 
-void gui_halt_service_info_t::update_connections(halthandle_t h)
+void gui_halt_service_info_t::update_connections(halthandle_t /*h*/)
 {
 	if (!halt.is_bound()) {
 		// first call, or invalid handle
@@ -1452,9 +1446,9 @@ void gui_halt_service_info_t::update_connections(halthandle_t h)
 					lb_frequency->buf().append("--:--:--");
 					lb_frequency->set_color(COL_INACTIVE);
 				}
-				lb_frequency->set_fixed_width( proportional_string_width("--:--:--") );
 				lb_frequency->set_align(gui_label_t::right);
 				lb_frequency->update();
+				lb_frequency->set_fixed_width( proportional_string_width("--:--:--") );
 
 				// convoy count
 				gui_label_buf_t *lb_convoy_count = new_component<gui_label_buf_t>();
@@ -1525,9 +1519,9 @@ void gui_halt_service_info_t::update_connections(halthandle_t h)
 					lb_triptime->buf().append("--:--:--");
 					lb_triptime->set_color(COL_INACTIVE);
 				}
-				lb_triptime->set_fixed_width(proportional_string_width("--:--:--"));
 				lb_triptime->set_align(gui_label_t::right);
 				lb_triptime->update();
+				lb_triptime->set_fixed_width(proportional_string_width("--:--:--"));
 
 				new_component<gui_empty_t>();
 
@@ -1827,10 +1821,6 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 
 void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 {
-	clip_dimension const cd = display_get_clip_wh();
-	const int start = cd.y - LINESPACE - 1;
-	const int end = cd.yy + LINESPACE + 1;
-
 	static cbuffer_t buf;
 	int xoff = pos.x;
 	int yoff = pos.y;
@@ -1838,7 +1828,6 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 
 	uint8 g_class = goods_manager_t::get_classes_catg_index(selected_route_catg_index) - 1;
 
-	uint32 sel = line_selected;
 	FORX(const vector_tpl<halthandle_t>, const dest, halt_list, yoff += LINESPACE + 1)
 	{
 		if (!dest.is_bound())
@@ -1862,7 +1851,7 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 			buf.printf("%ukm", (uint)km_to_halt);
 		}
 		xoff += proportional_string_width("000.00km");
-		display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_RIGHT, is_walking ? MN_GREY0 : SYSCOL_TEXT, true);
+		display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_RIGHT, is_walking ? SYSCOL_TEXT_WEAK : SYSCOL_TEXT, true);
 		if (is_walking && skinverwaltung_t::on_foot) {
 			display_color_img(skinverwaltung_t::on_foot->get_image_id(0), offset.x + D_MARGIN_LEFT, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false);
 		}

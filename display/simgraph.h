@@ -398,6 +398,10 @@ void draw_bezier_rgb(scr_coord_val Ax, scr_coord_val Ay, scr_coord_val Bx, scr_c
 int display_fluctuation_triangle_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const bool dirty, sint64 value=0);
 
 void display_right_triangle_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val height, const PIXVAL colval, const bool dirty);
+void display_right_pointer_rgb(scr_coord_val x, scr_coord_val y, uint8 height, const PIXVAL colval, const bool dirty);
+void display_signal_direction_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val raster_width, uint8 way_dir, uint8 sig_dir, uint8 state, bool is_diagonal=false, uint8 open_dir=15/* all */, sint8 slope=type_flat);
+
+void display_depot_symbol(scr_coord_val x, scr_coord_val y, scr_coord_val width=12, const uint8 darkest_pcol_idx=88/*brown*/, const bool dirty=true);
 
 void display_set_clip_wh(scr_coord_val x, scr_coord_val y, scr_coord_val w, scr_coord_val h  CLIP_NUM_DEF CLIP_NUM_DEFAULT_ZERO, bool fit = false);
 clip_dimension display_get_clip_wh(CLIP_NUM_DEF0 CLIP_NUM_DEFAULT_ZERO);

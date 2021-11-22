@@ -175,13 +175,33 @@ public:
 								condmet += gr->hat_weg(road_wt);
 								break;
 							case factory_desc_t::shore:
-								condmet += welt->get_climate(k)==water_climate;
+							case factory_desc_t::shore_city:
+								if (welt->get_climate(k) == water_climate)
+								{
+									if (site == factory_desc_t::shore_city)
+									{
+										condmet += gr->hat_weg(road_wt);
+									}
+									else
+									{
+										condmet++;
+									}
+								}
 								break;
 							case factory_desc_t::river:
+							case factory_desc_t::river_city:
 							if(  welt->get_settings().get_river_number() >0  ) {
 								weg_t* river = gr->get_weg(water_wt);
-								if (river  &&  river->get_desc()->get_styp()==type_river) {
-									condmet++;
+								if (river  &&  river->get_desc()->get_styp()==type_river)
+								{
+									if (site == factory_desc_t::river_city)
+									{
+										condmet += gr->hat_weg(road_wt);
+									}
+									else
+									{
+										condmet++;
+									}
 									DBG_DEBUG("factory_site_searcher_t::is_area_ok()", "Found river near %s", pos.get_str());
 								}
 								break;
@@ -305,7 +325,7 @@ bool factory_builder_t::successfully_loaded()
 
 int factory_builder_t::count_producers(const goods_desc_t *ware, uint16 timeline)
 {
-	int anzahl=0;
+	int count=0;
 
 	// iterate over all factories and check if they produce this good...
 	for(auto const& t : desc_table) {
@@ -313,12 +333,12 @@ int factory_builder_t::count_producers(const goods_desc_t *ware, uint16 timeline
 		for (uint i = 0; i < tmp->get_product_count(); i++) {
 			const factory_product_desc_t *product = tmp->get_product(i);
 			if(  product->get_output_type()==ware  &&  tmp->get_distribution_weight()>0  &&  tmp->get_building()->is_available(timeline)  ) {
-				anzahl++;
+				count++;
 			}
 		}
 	}
-DBG_MESSAGE("factory_builder_t::count_producers()","%i producer for good '%s' found.", anzahl, translator::translate(ware->get_name()));
-	return anzahl;
+DBG_MESSAGE("factory_builder_t::count_producers()","%i producer for good '%s' found.", count, translator::translate(ware->get_name()));
+	return count;
 }
 
 
@@ -647,7 +667,7 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 	}
 
 	// no cities at all?
-	if (info->get_placement() == factory_desc_t::City  &&  welt->get_cities().empty()) {
+	if ((info->get_placement() == factory_desc_t::City || info->get_placement() == factory_desc_t::shore_city || info->get_placement() == factory_desc_t::river_city) &&  welt->get_cities().empty()) {
 		return 0;
 	}
 
@@ -662,7 +682,7 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 	}
 
 	// Industries in town needs different place search
-	if (info->get_placement() == factory_desc_t::City) {
+	if (info->get_placement() == factory_desc_t::City || info->get_placement() == factory_desc_t::shore_city || info->get_placement() == factory_desc_t::river_city) {
 
 		koord size=info->get_building()->get_size(0);
 
@@ -1306,7 +1326,7 @@ next_ware_check:
 						continue;
 					}
 				}
-				const bool in_city = consumer->get_placement() == factory_desc_t::City;
+				const bool in_city = consumer->get_placement() == factory_desc_t::City || consumer->get_placement() == factory_desc_t::shore_city || consumer->get_placement() == factory_desc_t::river_city;
 				if (in_city && welt->get_cities().empty())
 				{
 					// we cannot build this factory here

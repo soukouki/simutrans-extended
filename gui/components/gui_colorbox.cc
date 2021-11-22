@@ -53,6 +53,21 @@ void gui_colorbox_t::draw(scr_coord offset)
 
 
 
+gui_right_pointer_t::gui_right_pointer_t(PIXVAL c, uint8 height_)
+{
+	height = height_;
+	color = c;
+	tooltip = NULL;
+	gui_component_t::set_size(scr_size(height, height));
+}
+
+void gui_right_pointer_t::draw(scr_coord offset)
+{
+	offset += pos;
+	display_right_pointer_rgb(offset.x, offset.y, height, color, true);
+}
+
+
 gui_vehicle_bar_t::gui_vehicle_bar_t(PIXVAL c, scr_size size)
 {
 	color = c;
@@ -92,3 +107,35 @@ void gui_vehicle_number_t::draw(scr_coord offset)
 	display_proportional_clip_rgb(offset.x+(size.w - proportional_string_width(buf))/2, offset.y+2, buf, ALIGN_LEFT, color_idx_to_rgb(COL_WHITE), false);
 }
 
+
+void gui_capacity_bar_t::draw(scr_coord offset)
+{
+	if (height < 2) { return; }
+	offset += gui_colorbox_t::pos;
+	if (show_frame) {
+		display_colorbox_with_tooltip(offset.x, offset.y, width, height, bg_col, true, tooltip);
+	}
+	else {
+		display_fillbox_wh_clip_rgb(offset.x+1, offset.y+1, width-2, height-2, bg_col, true);
+	}
+
+	if (capacity) {
+		scr_coord_val colored_width = ((width-2)*min(capacity,loading)+capacity-1)/capacity;
+		scr_coord_val overcrowded_width = loading > capacity ? min(width-2, ((width-2)*(loading-capacity) + loading-capacity - 1) / loading) : 0;
+
+		if (cylinder_style) {
+			display_cylinderbar_wh_clip_rgb(offset.x + 1, offset.y + 1, colored_width, height - 2, color, true);
+		}
+		else {
+			display_fillbox_wh_clip_rgb(offset.x + 1, offset.y + 1, colored_width, height - 2, color, true);
+		}
+		if (overcrowded_width) {
+			if (cylinder_style) {
+				display_cylinderbar_wh_clip_rgb(offset.x+width-1- overcrowded_width, offset.y + 1, overcrowded_width, height - 2, color_idx_to_rgb(COL_OVERCROWD), true);
+			}
+			else {
+				display_fillbox_wh_clip_rgb(offset.x+width-1- overcrowded_width, offset.y + 1, overcrowded_width, height - 2, color_idx_to_rgb(COL_OVERCROWD), true);
+			}
+		}
+	}
+}

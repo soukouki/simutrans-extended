@@ -4241,7 +4241,7 @@ bool karte_t::change_player_tool(uint8 cmd, uint8 player_nr, uint16 param, bool 
 void karte_t::set_tool( tool_t *tool_in, player_t *player )
 {
 	if(  get_random_mode()&LOAD_RANDOM  ) {
-		dbg->warning("karte_t::set_tool", "Ignored tool %i during loading.", tool_in->get_id() );
+		dbg->warning("karte_t::set_tool", "Ignored tool %s during loading.", tool_in->get_name() );
 		return;
 	}
 	bool scripted_call = tool_in->is_scripted();
@@ -4901,11 +4901,10 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 	debug_sums[5] = 0; // Passengers/mail generated this step
 	debug_sums[6] = 0; // Transferring cargoes before passenger generation
 	debug_sums[7] = 0; // Transferring cargoes after passenger generation
-	debug_sums[8] = 0; // Sync objects before sync list step
-	debug_sums[9] = 0; // Sync objects after sync list step
+	debug_sums[8] = 0; // Number of random first directions for cars following a route this sync_step
+	debug_sums[9] = 0; // Number of random directions for cars without a route this sync_step
 
 	set_random_mode( SYNC_STEP_RANDOM );
-	haltestelle_t::pedestrian_limit = 0;
 	if(do_sync_step) {
 		// Only omitted when called to display a new frame during fast forward
 
@@ -4935,9 +4934,7 @@ void karte_t::sync_step(uint32 delta_t, bool do_sync_step, bool display )
 
 		clear_random_mode( INTERACTIVE_RANDOM );
 
-		debug_sums[8] = sync.list.get_count();
 		sync.sync_step( delta_t );
-		debug_sums[9] = sync.list.get_count();
 
 		rands[4] = get_random_seed();
 
@@ -5734,7 +5731,8 @@ void karte_t::step()
 		}
 		start_private_car_threads();
 #else
-		const sint32 cities_to_process = env_t::networkmode ? 1 : min(cities_awaiting_private_car_route_check.get_count(), parallel_operations - 1);
+		const sint32 cities_to_process = min(cities_awaiting_private_car_route_check.get_count(), env_t::networkmode ? 1 : parallel_operations - 1);
+
 		for (sint32 j = 0; j < cities_to_process; j++)
 		{
 			stadt_t* city = cities_awaiting_private_car_route_check.remove_first();
@@ -6958,7 +6956,6 @@ sint32 karte_t::generate_passengers_or_mail(const goods_desc_t * wtyp)
 
 				uint32 best_start_halt = 0;
 				uint32 best_journey_time_including_crowded_halts = UINT32_MAX_VALUE;
-				uint32 current_stop_transfer_time = 0;
 
 				sint32 i = 0;
 
@@ -9412,7 +9409,6 @@ void karte_t::load(loadsave_t *file)
 		bool read_pak_simuconf = env_t::default_settings.get_pak_overrides_savegame_settings();
 		bool read_userdir_simuconf = env_t::default_settings.get_userdir_overrides_savegame_settings();
 		tabfile_t simuconf;
-		sint16 idummy;
 		string dummy;
 
 		if (read_progdir_simuconf) {

@@ -113,7 +113,7 @@ void main_view_t::display(bool force_dirty)
 		// rect default
 		break;
 	case MENU_BOTTOM:
-		clip_rr = scr_rect(0, win_get_statusbar_height() + (!ticker::empty() ? TICKER_HEIGHT : 0), disp_width, disp_height - env_t::iconsize.h + 1);
+		clip_rr.y = win_get_statusbar_height() + (!ticker::empty() ? TICKER_HEIGHT : 0);
 		break;
 	case MENU_LEFT:
 		clip_rr = scr_rect(env_t::iconsize.w, 0, disp_width - env_t::iconsize.w, disp_height);
@@ -133,7 +133,7 @@ void main_view_t::display(bool force_dirty)
 		force_dirty = false;
 	}
 
-	const int dpy_width = disp_width + 2;
+	const int dpy_width = display_get_width()/IMG_SIZE + 2;
 	const int dpy_height = (disp_real_height*4)/IMG_SIZE;
 
 	const int i_off = viewport->get_world_position().x + viewport->get_viewport_ij_offset().x;

@@ -31,7 +31,7 @@ public:
 	del_button_t() : button_t()
 	{
 		init(button_t::roundbox, "X");
-		w = max(D_BUTTON_HEIGHT, display_get_char_width('X') + gui_theme_t::gui_button_text_offset.w + gui_theme_t::gui_button_text_offset_right.x);
+		w = max(D_BUTTON_HEIGHT, display_get_char_width('X') + D_BUTTON_PADDINGS_X);
 	}
 	scr_size get_min_size() const OVERRIDE
 	{
@@ -284,7 +284,6 @@ void savegame_frame_t::list_filled( void )
 {
 	uint cols = (delete_enabled ? 1 : 0) + 1 + (label_enabled ? 1 : 0);
 	button_frame.set_table_layout(1,0);
-	button_frame.add_table(cols,0);
 	button_frame.add_table(cols,0)->set_spacing(scr_size(D_H_SPACE,D_FILELIST_V_SPACE)); // change space between entries to zero to see more on screen
 
 	FOR(slist_tpl<dir_entry_t>, const& i, entries) {

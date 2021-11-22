@@ -239,6 +239,7 @@ add_executable(simutrans-extended
 	gui/components/gui_tab_panel.cc
 	gui/components/gui_textarea.cc
 	gui/components/gui_textinput.cc
+	gui/components/gui_vehicle_capacitybar.cc
 	gui/components/gui_world_view_t.cc
 	gui/convoi_detail_t.cc
 	gui/convoi_filter_frame.cc
@@ -295,6 +296,7 @@ add_executable(simutrans-extended
 	gui/overtaking_mode.cc
 	gui/pakselector.cc
 	gui/password_frame.cc
+	gui/pedestrian_info.cc
 	gui/player_frame_t.cc
 	gui/privatesign_info.cc
 	gui/replace_frame.cc
@@ -303,10 +305,10 @@ add_executable(simutrans-extended
 	gui/scenario_info.cc
 	gui/schedule_gui.cc
 	gui/schedule_list.cc
-	gui/schiene_info.cc
 	gui/server_frame.cc
 	gui/settings_frame.cc
 	gui/settings_stats.cc
+	gui/signal_connector_gui.cc
 	gui/signal_info.cc
 	gui/signal_spacing.cc
 	gui/signalboxlist_frame.cc
@@ -320,6 +322,7 @@ add_executable(simutrans-extended
 	gui/trafficlight_info.cc
 	gui/vehiclelist_frame.cc
 	gui/vehicle_class_manager.cc
+	gui/way_info.cc
 	gui/welt.cc
 	io/rdwr/bzip2_file_rdwr_stream.cc
 	io/rdwr/raw_file_rdwr_stream.cc

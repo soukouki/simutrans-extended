@@ -117,10 +117,10 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv) :
 	text(&freight_info),
 	view(scr_size(max(64, get_base_tile_raster_width()), max(56, (get_base_tile_raster_width() * 7) / 8))),
 	loading_bar(cnv),
-	scroll_freight(&container_freight, true, true),
+	next_halt_number(-1),
 	cont_times_history(linehandle_t(), cnv),
-	scroll_times_history(&cont_times_history, true),
-	next_halt_number(-1)
+	scroll_freight(&container_freight, true, true),
+	scroll_times_history(&cont_times_history, true)
 {
 	if (cnv.is_bound()) {
 		init(cnv);
@@ -534,7 +534,7 @@ void convoi_info_t::update_labels()
 		schedule_t::gimme_short_stop_name(target_label.buf(), welt, cnv->get_owner(), schedule, schedule->get_current_stop(), 50);
 	}
 	target_label.update();
-	uint8 halt_col_idx;
+	uint8 halt_col_idx = COL_INACTIVE;
 	uint8 halt_symbol_style=0;
 	const koord3d next_pos = schedule->get_current_entry().pos;
 	const halthandle_t next_halt = haltestelle_t::get_halt(next_pos, cnv->get_owner());
@@ -547,7 +547,7 @@ void convoi_info_t::update_labels()
 	else if (welt->lookup(next_pos) && welt->lookup(next_pos)->get_depot() != NULL) {
 		halt_symbol_style=gui_schedule_entry_number_t::number_style::depot;
 	}
-	next_halt_number.init(schedule->get_current_stop(), halt_col_idx, halt_symbol_style);
+	next_halt_number.init(schedule->get_current_stop(), halt_col_idx, halt_symbol_style, next_pos);
 
 	// distance
 	sint32 cnv_route_index_left = cnv->get_route()->get_count() - 1 - cnv_route_index;
@@ -748,10 +748,7 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 */
 /*
 #ifdef DEBUG_PHYSICS
-		/*
-		 * Show braking distance
-		 */
-/*
+		// Show braking distance
 		{
 			const int pos_y = pos_y0 + 6 * LINESPACE; // line 7
 			const sint32 brk_meters = convoy.calc_min_braking_distance(convoy.get_weight_summary(), speed_to_v(cnv->get_akt_speed()));

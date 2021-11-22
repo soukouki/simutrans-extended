@@ -119,6 +119,8 @@ public:
 
 	void add_color_value(const sint32 *value, PIXVAL color, bool cylinder_style=false);
 
+	void clear() { values.clear(); }
+
 	void draw(scr_coord offset) OVERRIDE;
 
 	scr_size get_min_size() const OVERRIDE;

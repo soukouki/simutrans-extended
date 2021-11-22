@@ -43,6 +43,66 @@ public:
 };
 
 /**
+ * Helper class to draw halt handled goods categories
+ */
+class gui_halt_handled_goods_images_t : public gui_container_t
+{
+	halthandle_t halt;
+public:
+	gui_halt_handled_goods_images_t(halthandle_t h);
+
+	void draw(scr_coord offset);
+
+	scr_size get_min_size() const OVERRIDE { return size; }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
+class gui_halt_goods_demand_t : public gui_component_t
+{
+	halthandle_t halt;
+	slist_tpl<const goods_desc_t *> goods_list;
+	bool show_products=true;
+	uint32 old_fab_count=0;
+
+	void build_goods_list();
+
+public:
+	gui_halt_goods_demand_t(halthandle_t h, bool show_products);
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE { return size; }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
+class gui_halt_waiting_catg_t : public gui_container_t
+{
+	halthandle_t halt;
+	uint8 catg_index;
+	cbuffer_t buf;
+public:
+	gui_halt_waiting_catg_t(halthandle_t h, uint8 catg);
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE { return size; }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
+class gui_halt_waiting_summary_t : public gui_container_t
+{
+	halthandle_t halt;
+	cbuffer_t buf;
+public:
+	gui_halt_waiting_summary_t(halthandle_t h);
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE { return size; }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
+/**
  * Helper class to draw freight type capacity bar
  */
 class gui_halt_capacity_bar_t : public gui_container_t
@@ -52,7 +112,7 @@ class gui_halt_capacity_bar_t : public gui_container_t
 public:
 	gui_halt_capacity_bar_t(halthandle_t h, uint8 ft);
 
-	void draw(scr_coord offset);
+	void draw(scr_coord offset) OVERRIDE;
 
 	scr_size get_min_size() const OVERRIDE { return scr_size(HALT_CAPACITY_BAR_WIDTH + 2, GOODS_COLOR_BOX_HEIGHT); }
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
@@ -82,7 +142,6 @@ public:
 
 	void draw(scr_coord offset) OVERRIDE;
 };
-
 
 /**
  * Main class: the station info window.

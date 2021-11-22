@@ -275,8 +275,6 @@ public:
 
 	halthandle_t get_halt_within_walking_distance(uint32 index) const { return halts_within_walking_distance[index]; }
 
-	static uint8 pedestrian_limit;
-
 	/**
 	 * List of all tiles (grund_t) that belong to this halt.
 	 */
@@ -891,6 +889,18 @@ public:
 	uint32 get_around_mail_demand() const;
 	uint32 get_around_mail_generated() const;
 	uint32 get_around_mail_delivery_succeeded() const;
+
+	// The number of passengers who have tried to use this station.
+	sint64 get_potential_passenger_number(uint8 month) const
+	{
+		sint64 sum=0;
+		sum += financial_history[month][HALT_HAPPY];
+		sum += financial_history[month][HALT_UNHAPPY];
+		sum += financial_history[month][HALT_NOROUTE];
+		sum += financial_history[month][HALT_TOO_SLOW];
+		sum += financial_history[month][HALT_TOO_WAITING];
+		return sum;
+	}
 
 	// Getting and setting average waiting times in minutes
 	// @author: jamespetts

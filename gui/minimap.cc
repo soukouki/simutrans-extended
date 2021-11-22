@@ -1386,7 +1386,7 @@ const fabrik_t* minimap_t::draw_factory_connections(const fabrik_t* const fab, b
 				const char * name = translator::translate(fab2->get_name());
 				int name_width = proportional_string_width(name)+8;
 				boxpos.x = clamp( boxpos.x, pos.x, pos.x+get_size().w-name_width );
-				display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, color_idx_to_rgb(5), color_idx_to_rgb(COL_WHITE), name, true);
+				display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, supplier_link ? color_idx_to_rgb(COL_DODGER_BLUE-1) : color_idx_to_rgb(COL_ORANGE-1), color_idx_to_rgb(COL_WHITE), name, true);
 			}
 		}
 	}
@@ -1439,11 +1439,11 @@ void minimap_t::draw(scr_coord pos)
 		needs_redraw = false;
 	}
 
-	if( map_data==nullptr) {
+	if( map_data==NULL) {
 		return;
 	}
 
-	if(  mode & MAP_PAX_DEST  &&  selected_city!=nullptr  ) {
+	if(  mode & MAP_PAX_DEST  &&  selected_city!=NULL  ) {
 		const uint32 current_pax_destinations = selected_city->get_pax_destinations_new_change();
 		if(  pax_destinations_last_change > current_pax_destinations  ) {
 			// new month started.

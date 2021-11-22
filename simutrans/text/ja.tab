@@ -89,6 +89,8 @@ hlf_btn_keine
 全解除
 lake
 湖を作成する
+Lake
+湖
 Maximize height levels
 高さを最大化する
 Networks
@@ -409,7 +411,7 @@ With a big festival\n%s built\na new monument.\n%i citicens rejoiced.
 \n電化
 \nHeightfield has wrong image type.\n
 \nマップファイルの\nイメージ形式が不正です。\n
-\nis reserved by:
+is reserved by:
 優先列車：
 \nminimum speed:
 \n最低速度：
@@ -439,8 +441,6 @@ With a big festival\n%s built\na new monument.\n%i citicens rejoiced.
 %i車、
 %i km/h (max. %ikm/h)
  %i km/h (最高速度 %ikm/h)
-%i years %i months old
-%i年%i月です。
 %i years %i months old.
 樹齢 %i 年と %i ヶ月です。
 %s at (%i,%i) now public stop.
@@ -817,8 +817,8 @@ Convoi is sold when all wagons are empty.
 この編成を回送し、空車時に売却します。
 convoi mouseover tooltips
 マウスオーバーで車両の状態を表示
-convoi passed last\nmonth %i\n
-\n前月の交通量: %i\n―――――――――――
+convoi passed last month:
+前月交通量:
 Convois
 編成数
 Convois: %d\nProfit: %s
@@ -1263,8 +1263,6 @@ Leitung
 送電線
 length: %d
 建設距離: %d
-letzen Monat: diesen Monat:
-先月:　　　　　　　　　今月:
 Line
 路線
 Line Filter
@@ -1501,6 +1499,10 @@ Only show goods which are currently handled by factories
 現在存在する産業が取り扱っている貨物のみを表示します。
 open
 進入可
+open_signalbox_info
+信号扱所情報
+open_signal_connector_gui
+信号機の接続先を操作する画面を開きます
 Operation
 運行費
 Ops Profit
@@ -1865,6 +1867,8 @@ Speedbonus\nroad %i km/h, rail %i km/h\nships %i km/h, planes %i km/h.
 速達ボーナス:\n        道路 %i km/h, 鉄道 %i km/h, \n        海路 %i km/h 空路 %i km/h.
 Speedlimit
 制限速度
+speed_restricted
+最高速度が制限されています
 Speichern
 ゲームの保存
 Spieler
@@ -2066,7 +2070,7 @@ Warnings_msg
 Wasser
 海上
 Water
-沿岸
+水域
 Water level
 海面水位：
 water vehicle
@@ -2209,7 +2213,7 @@ Zu nah am Kartenrand
 #___________________________Simutrans Extended Texts____________________________
 #_________________________________program_text__________________________________
 #_________________________________program_text__________________________________
- %1.2f$/mon)
+ %1.2f$/mon
 %1.2f$/月
  from %s
  (%sから)
@@ -2239,10 +2243,6 @@ brakes from max. speed in %i m
 \n\n信用格付けに影響があります。
 \nCity:
 \n都市:
-\nMax. axle load:
-\n軸重制限:
-\nMax. weight:
-重量制限:
 \nMAY USE:
 \n通行可能:
 \nMUST USE:
@@ -2965,8 +2965,6 @@ one_way_sign
 一方通行標識
 Open countryside
 市域外
-open countryside
-市域外
 Open water
 水上
 Operating revenue less operating expenditure
@@ -3491,8 +3489,6 @@ waiting\ntolerance\nmax. min
 最大許容待機時間(分)
 waiting\ntolerance\nmin. min
 最小許容待機時間(分)
-Walked
-徒歩
 Walking time
 駅までの徒歩時間
 Way constraint permissive
@@ -3643,6 +3639,8 @@ Cannot start: no cab at the front of the convoy.
 編成の構成エラー：\n先頭になれない車両が先頭になっています。（運転台が無い等）
 switch the convoy nameplate display mode
 系統名表示モードの切り替え
+switch_sb
+信号機の接続先を変更
 no convoy nameplate
 系統名非表示
 mouseover
@@ -3692,7 +3690,7 @@ Return the vehicle(s) for a full refund.
 Sell the convoy for %s
 編成を %s にて売却します
 Congestion: %i%%
-混雑度： %i%%
+混雑度:  %i%%
 Display loaded detail
 積載情報の詳細を表示
 Displays detailed information of the vehicle's load.
@@ -4059,6 +4057,30 @@ Population/Visitor demand
 人口／訪問者需要
 Climate
 気候
+by_waiting_passengers
+旅客待機数
+by_waiting_mails
+郵便待機数
+by_waiting_goods
+貨物待機数
+hl_sort_tiles
+敷地面積
+hl_sort_capacity
+収容数
+hl_sort_overcrowding_rate
+混雑度
+by_potential_pax_number
+旅客需要度
+by_potential_mail_users
+郵便需要度
+by_pax_happy_last_month
+先月の乗車数
+by_mail_delivered_last_month
+先月の郵便発送数
+show_mutual_use
+利用中の他社駅も表示
+Also shows the stops of other players you are using
+路線や編成が乗り入れをしている他社の駅も表示します
 player_stats
 会社情報
 Signalboxes
@@ -4107,6 +4129,34 @@ Show producers
 資材・製品を生産する産業を表示します
 Show consumers
 資材・製品を消費する産業を表示します
+Municipal way
+市道
+Private way
+私道
+%u cities
+都市へのルート(%u)：
+%u buildings
+ランドマーク／産業へのルート(%u)：
+The gradient does not fit a tunnel
+斜面がトンネルを建設するのに適していません
+Industry overlay
+産業在庫量ツールチップ
+Display bars above the factory to show the status
+産業建築物の上部に在庫量を示すバーを表示します
+Show the private car information window
+自家用車ウィンドウを表示
+Show the pedestrian information window
+歩行者ウィンドウを表示
+can open a dedicated window by clicking on a private car.
+自家用車をクリックすると専用の情報ウィンドウを開きます
+can open a dedicated window by clicking on a pedestrian.
+歩行者をクリックすると専用の情報ウィンドウを開きます
+Date format
+日時の表示形式
+Show own depot names
+プレイヤー所有の車庫名を表示する
+Show the name of own depots in the main game window.
+メインゲーム画面上にプレイヤーの車庫の名前を表示します
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
@@ -4117,10 +4167,10 @@ Passengers %d %c, %d %c, %d no route
 旅客の評価 %d %c, %d %c, %d 経路無し
 Passengers %d %s, %d %s, %d no route
 旅客の評価 %d %s, %d %s, %d 経路無し
-Passengers %d %c, %d %c, %d no route, %d too slow
-旅客の評価 %d %c, %d %c, %d 経路無し, %d 許容時間超過
-Passengers %d %s, %d %s, %d no route, %d too slow
-旅客の評価 %d %s, %d %s, %d 経路無し, %d 許容時間超過
+#Passengers %d %c, %d %c, %d no route, %d too slow
+#旅客の評価 %d %c, %d %c, %d 経路無し, %d 許容時間超過
+#Passengers %d %s, %d %s, %d no route, %d too slow
+#旅客の評価 %d %s, %d %s, %d 経路無し, %d 許容時間超過
 Unhappy
 不幸せ
 The number of passengers who have left because of overcrowding or excess waiting
@@ -4129,8 +4179,6 @@ Arbeiter aus:
 労働者居住地:
 No Route
 経路無し
-Welcome to Simutrans-Experimental, a game created by Hj. Malthaner and the Simutrans community, and modified by James E. Petts and the Simutrans community
-ようこそSimutrans-Extendedへ! Simutrans-StandardはHj. MalthanerとSimutransコミュニティによって開発されました。Simutrans-ExtendedはSimutrans-Standardを元にしてJames E. PettsとSimutransコミュニティによって開発されました。
 Usage/Output
 使用量/発電量
 Vehicle Name
@@ -4175,3 +4223,9 @@ Power: %4d kW\n
 #所要
 #cl_txt_sort
 #並び替え:
+#letzen Monat: diesen Monat:
+#先月:　　　　　　　　　今月:
+#\nMax. axle load:
+#\n軸重制限:
+#\nMax. weight:
+#重量制限:

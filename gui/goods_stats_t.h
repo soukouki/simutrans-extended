@@ -24,10 +24,6 @@ private:
 	uint32 distance_meters;
 	uint8 g_class;
 
-	// The number of goods to be displayed. May be less than maximum number of goods possible,
-	// if we are filtering to only the goods being produced by factories in the current game.
-	int listd_goods;
-
 public:
 	goods_stats_t() {}
 

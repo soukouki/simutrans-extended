@@ -117,7 +117,7 @@ static void show_sizes()
 // render tests ...
 static void show_times(karte_t *welt, main_view_t *view)
 {
-	intr_set(welt, view);
+	intr_set_view(view);
 	welt->set_fast_forward(true);
 	intr_disable();
 
@@ -611,16 +611,6 @@ int simu_main(int argc, char** argv)
 		*(strrchr( env_t::data_dir, PATH_SEPARATOR[0] )+1) = 0;
 
 #ifdef __APPLE__
-		// change working directory from binary dir to bundle dir
-		if(  !strcmp((env_t::data_dir + (strlen(env_t::data_dir) - 20 )), ".app/Contents/MacOS/")  ) {
-			env_t::data_dir[strlen(env_t::data_dir) - 20] = 0;
-			while(  env_t::data_dir[strlen(env_t::data_dir) - 1] != '/'  ) {
-				env_t::data_dir[strlen(env_t::data_dir) - 1] = 0;
-			}
-		}
-#endif
-
-#ifdef __APPLE__
 		// Detect if the binary is started inside an application bundle
 		// Change working dir to bundle dir if that is the case or the game will search for the files inside the bundle
 		if (!strcmp((env_t::data_dir + (strlen(env_t::data_dir) - 20 )), ".app/Contents/MacOS/"))
@@ -954,7 +944,6 @@ int simu_main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	DBG_MESSAGE("simu_main()", ".. results in disp_width=%d, disp_height=%d", display_get_width(), display_get_height());
-
 	// now that the graphics system has already started
 	// the saved colours can be converted to the system format
 	env_t_rgb_to_system_colors();
@@ -1267,7 +1256,15 @@ int simu_main(int argc, char** argv)
 	}
 
 	dbg->message("simu_main()","Reading menu configuration ...");
-	tool_t::read_menu(env_t::objfilename);
+	dr_chdir( env_t::data_dir );
+	if (!tool_t::read_menu(env_t::objfilename + "config/menuconf.tab")) {
+		// Fatal error while reading menuconf.tab, we cannot continue!
+		dbg->fatal(
+			"Could not read %s%sconfig/menuconf.tab.\n"
+			"This file is required for a valid pak set (graphics).\n"
+			"Please install and select a valid pak set.",
+			env_t::data_dir, env_t::objfilename.c_str());
+	}
 
 	dbg->message("simu_main()","Reading private car ownership configuration ...");
 	karte_t::privatecar_init(env_t::objfilename);
@@ -1493,11 +1490,14 @@ int simu_main(int argc, char** argv)
 	if(  loadgame==""  ||  !welt->load(loadgame.c_str())  ) {
 		// create a default map
 		DBG_MESSAGE("simu_main()", "Init with default map (failing will be a pak error!)");
+
 		// no autosave on initial map during the first six month ...
 		loadgame = "";
 		new_world = true;
+
 		sint32 old_autosave = env_t::autosave;
 		env_t::autosave = false;
+
 		uint32 old_number_of_big_cities = env_t::number_of_big_cities;
 		env_t::number_of_big_cities = 0;
 		settings_t sets;
@@ -1510,15 +1510,19 @@ int simu_main(int argc, char** argv)
 		sets.set_tourist_attractions(1);
 		sets.set_traffic_level(7);
 		welt->init(&sets,0);
+
 		//  start in June ...
-		intr_set(welt, view);
+		intr_set_view(view);
 		win_set_world(welt);
+
 		tool_t::toolbar_tool[0]->init(welt->get_active_player());
+
 		welt->set_fast_forward(true);
 		welt->sync_step(5000,true,false);
 		welt->step_month(5);
 		welt->step();
 		welt->step();
+
 		env_t::number_of_big_cities = old_number_of_big_cities;
 		env_t::autosave = old_autosave;
 	}
@@ -1528,7 +1532,7 @@ int simu_main(int argc, char** argv)
 			welt->get_settings().set_freeplay( true );
 		}
 		// just init view (world was loaded from file)
-		intr_set(welt, view);
+		intr_set_view(view);
 		win_set_world(welt);
 		tool_t::toolbar_tool[0]->init(welt->get_active_player());
 	}
