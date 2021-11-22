@@ -6218,3 +6218,7 @@ show_mutual_use
 Include other companies' stops
 travel_distance
 Line service distance
+switch_sb
+Change signalbox
+open_signal_connector_gui
+Reassign this signal to a different signalbox

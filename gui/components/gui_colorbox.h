@@ -153,7 +153,9 @@ class gui_capacity_bar_t : public gui_colorbox_t
 
 public:
 	gui_capacity_bar_t(scr_size size, PIXVAL c = color_idx_to_rgb(COL_GREEN), bool size_fixed=true, bool cylinder_style = true):
-		gui_colorbox_t(color = c) {
+		gui_colorbox_t(c),
+		cylinder_style(cylinder_style)
+	{
 		gui_colorbox_t::set_size(size);
 		width = size.w; height = size.h;
 		set_size_fixed(size_fixed);

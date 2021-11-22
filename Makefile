@@ -470,6 +470,7 @@ SOURCES += gui/schedule_list.cc
 SOURCES += gui/server_frame.cc
 SOURCES += gui/settings_frame.cc
 SOURCES += gui/settings_stats.cc
+SOURCES += gui/signal_connector_gui.cc
 SOURCES += gui/signal_info.cc
 SOURCES += gui/signal_spacing.cc
 SOURCES += gui/signalboxlist_frame.cc
@@ -621,6 +622,10 @@ SOURCES += bauer/pier_builder.cc
 SOURCES += boden/pier_deck.cc
 SOURCES += descriptor/pier_desc.cc
 SOURCES += gui/pier_rotation_select.cc
+
+SOURCES += io/raw_image.cc
+SOURCES += io/raw_image_png.cc
+LDFLAGS += -lpng
 
 ifeq ($(BACKEND),posix)
   SOURCES += sys/simsys_posix.cc

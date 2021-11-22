@@ -24,8 +24,6 @@ private:
 
     static stringhashtable_tpl<pier_desc_t *, N_BAGS_MEDIUM> desc_table;
 
-
-
     static const char * check_below_ways(player_t *player, koord3d pos, const pier_desc_t *desc, const uint8 rotation, bool halfheight);
 
     static const char * check_for_buildings(const grund_t *gr, const pier_desc_t *desc, const uint8 rotation);
