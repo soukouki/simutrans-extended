@@ -40,11 +40,17 @@ private:
             support_avail=0;
             middle_mask_taken=0;
             deck_obj_present=0;
-            sub_obj_present=-1;
+            sub_obj_present=0;
             need_clearence=false;
             allow_low_waydeck=false;
             is_wet=false;
             on_deck=false;
+            stackable=false;
+            autogroup=0xFF;
+            max_cost=0x7FFFFFFF;
+            max_maintenance=0x7FFFFFFF;
+            min_axle_load=0xFFFF;
+            requre_low_waydeck=false;
         }
 
         uint64 support_needed;
@@ -52,16 +58,32 @@ private:
         uint64 middle_mask_taken;
         uint32 deck_obj_present;
         uint32 sub_obj_present;
+        sint32 max_cost;
+        sint32 max_maintenance;
+        uint16 min_axle_load;
         ribi_t::ribi above_way_ribi;
         ribi_t::ribi below_way_ribi;
         slope_t::type above_slope;
         slope_t::type ground_slope;
+        uint8 autogroup;
+
         bool need_clearence;
         bool allow_low_waydeck;
         bool is_wet;
         bool on_deck;
-
+        bool stackable;
+        bool requre_low_waydeck;
     };
+
+    struct pier_finder_match{
+        const pier_desc_t* desc;
+        uint32 match;
+        uint8 rotation;
+    };
+
+    static void get_params_from_ground(pier_finder_params &params, const grund_t *gr, player_t *owner);
+
+    static inline bool get_desc_context(pier_desc_t const *& descriptor, uint8& rotation, pier_finder_params params, bool allow_inexact=false, vector_tpl<pier_finder_match> *matches=0, pier_finder_match *best_match=0, uint32 add_match=0);
 
 public:
 
@@ -94,7 +116,15 @@ public:
 	 */
 	static const pier_desc_t *get_desc_bad_load(koord3d pos,player_t *owner,uint8 &rotation);
 
-	static bool get_desc_context(pier_desc_t const *& descriptor, uint8& rotation, pier_finder_params params, bool allow_inexact=false);
+	/**
+	 * @brief get_desc_from_tos get the pier based on the top level of pier
+	 * @param tos original pier to substitute
+	 * @param rotation rotation to substitute
+	 * @param pos position to place
+	 * @param owner owner of pier
+	 * @param upper_layer is the upper layer of piers
+	 */
+	static void get_desc_from_tos(pier_desc_t const *& tos, uint8 &rotation, koord3d pos, player_t *owner, uint16 topz, bool upper_layer);
 
 
 	/**

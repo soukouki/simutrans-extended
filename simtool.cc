@@ -6055,7 +6055,11 @@ const char *tool_build_pier_t::work(player_t *player, koord3d pos){
 				}
 			}
 		}
+		if(is_ctrl_pressed()){
+			pier_builder_t::get_desc_from_tos(pdsc,rotation,pos,player,dragbegin.z,pos.z==dragbegin.z);
+		}
 	}
+
 
 	return pier_builder_t::build(player,pos,pdsc,rotation);
 }

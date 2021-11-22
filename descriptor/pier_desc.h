@@ -22,11 +22,11 @@ private:
     ribi_t::ribi below_way_ribi :4;      //which directions ways can go beneath (0 for no ways)
 
 
-    slope_t::type above_slope;        //(future use) slope of ramp
+    slope_t::type above_slope;        //slope of ramp
 
-    uint8 auto_group;                 //(future use) group for automatic placement (0 is nor group)
-    uint8 auto_height;                //(future use) bit feild for automatic placement height
-                                      //(future use) MSB to LSB: Reserved; Reserved; Only 1 pier; Top Peir; Upper third; Middle; lower Third; Bottom;
+    uint8 auto_group;                 //group for automatic placement (0 is no group)
+    uint8 auto_height;                //bit feild for automatic placement height
+                                      //MSB to LSB: avoid placement; (remain bits future use...) Reserved; Only 1 pier; Top Peir; Upper third; Middle; lower Third; Bottom;
 
     //masks are rotated by 8 bits during rotation;
     uint64 base_mask;           //bit field for where foundation is needed (up to pakset designer)
@@ -80,6 +80,9 @@ public:
 	ribi_t::ribi get_below_way_ribi(uint8 rotation=0) const {return rotate_ribi(below_way_ribi, rotation);}
 	slope_t::type get_above_slope(uint8 rotation=0) const;
 	uint8 get_auto_group() const {return auto_group;}
+	uint8 get_auto_height() const {return auto_height;}
+	bool get_auto_height_avoid() const {return auto_height & 0x80;}
+
 	uint64 get_base_mask(uint8 rotation=0) const {return rotate_mask(base_mask,rotation);}
 	uint64 get_middle_mask(uint8 rotation=0) const {return rotate_mask(middle_mask,rotation);}
 	uint64 get_support_mask(uint8 rotation=0) const {return rotate_mask(support_mask, rotation);}

@@ -183,11 +183,13 @@ const pier_desc_t *pier_builder_t::get_desc_bad_load(koord3d pos,player_t *owner
         params.allow_low_waydeck=true;
         const grund_t *gr2 = pier_t::ground_below(gr);
         if(gr2){
-            params.below_way_ribi|=gr2->get_weg_nr(0)->get_ribi_unmasked();
-            params.allow_low_waydeck&=gr2->get_weg_nr(0)->is_low_clearence(owner);
             if(gr2->get_weg_nr(0)){
-                params.below_way_ribi|=gr2->get_weg_nr(1)->get_ribi_unmasked();
-                params.allow_low_waydeck&=gr2->get_weg_nr(1)->is_low_clearence(owner);
+                params.below_way_ribi|=gr2->get_weg_nr(0)->is_low_clearence(owner) ? 0 : gr2->get_weg_nr(0)->get_ribi_unmasked();
+                params.allow_low_waydeck&=gr2->get_weg_nr(0)->is_low_clearence(owner);
+                if(gr2->get_weg_nr(1)){
+                    params.below_way_ribi|=gr2->get_weg_nr(1)->is_low_clearence(owner) ? 0 : gr2->get_weg_nr(1)->get_ribi_unmasked();
+                    params.allow_low_waydeck&=gr2->get_weg_nr(1)->is_low_clearence(owner);
+                }
             }
             //need special code here, pier data may not be complete
             for(uint8 i = 0; i < gr2->get_top(); i++){
@@ -205,6 +207,9 @@ const pier_desc_t *pier_builder_t::get_desc_bad_load(koord3d pos,player_t *owner
         params.on_deck=true;
     }else{
         params.ground_slope=gr->get_grund_hang();
+        if(gebaeude_t *gb = gr->get_building()){
+            params.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(0);
+        }
     }
 
     if(gr->is_water()){
@@ -220,7 +225,100 @@ const pier_desc_t *pier_builder_t::get_desc_bad_load(koord3d pos,player_t *owner
     return desc;
 }
 
-bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& rotation, pier_finder_params params, bool allow_inexact){
+void pier_builder_t::get_params_from_ground(pier_finder_params &params, const grund_t *gr, player_t *owner){
+    params.ground_slope=gr->get_grund_hang();
+    params.is_wet=gr->is_water();
+    params.on_deck=gr->get_typ()==grund_t::pierdeck;
+    params.middle_mask_taken=pier_t::get_middle_mask_total(gr);
+    if(const grund_t *gr2=pier_t::ground_below(gr)){
+        params.support_avail=pier_t::get_support_mask_total(gr2);
+        if(gr2->get_weg_nr(0)){
+            params.below_way_ribi|=gr2->get_weg_nr(0)->is_low_clearence(owner) ? 0 : gr2->get_weg_nr(0)->get_ribi_unmasked();
+            if(gr2->get_weg_nr(1)){
+                params.below_way_ribi|=gr2->get_weg_nr(1)->is_low_clearence(owner) ? 0 : gr2->get_weg_nr(1)->get_ribi_unmasked();
+            }
+        }
+        if(gebaeude_t *gb = gr2->get_building()){
+            params.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(1);
+        }
+    }
+    if(gr->get_weg_nr(0)){
+        params.below_way_ribi|=gr->get_weg_nr(0)->get_ribi_unmasked();
+        if(gr->get_weg_nr(1)){
+            params.below_way_ribi|=gr->get_weg_nr(1)->get_ribi_unmasked();
+        }
+    }
+    if(gebaeude_t *gb = gr->get_building()){
+        params.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(0);
+    }
+    params.ground_slope=gr->get_grund_hang();
+}
+
+void pier_builder_t::get_desc_from_tos(const pier_desc_t *&tos, uint8 &rotation, koord3d pos, player_t *owner, uint16 topz, bool upper_layer){
+    vector_tpl<pier_finder_match> top_options;
+    pier_finder_params params_top;
+    const pier_desc_t* old_tos=tos;
+    uint8 old_rotation=rotation;
+
+    const grund_t *gr=welt->lookup(pos);
+
+    params_top.above_way_ribi=tos->get_above_way_ribi(rotation);
+    params_top.min_axle_load=tos->get_max_axle_load();
+    params_top.autogroup=tos->get_auto_group();
+    params_top.requre_low_waydeck=tos->get_low_waydeck();
+    if(params_top.requre_low_waydeck){
+        params_top.below_way_ribi=tos->get_below_way_ribi(rotation);
+    }
+    if(upper_layer){
+        get_params_from_ground(params_top,gr,owner);
+    }else if(topz - pos.z == 1){
+        //check ways and buildings for second layer
+        if(gr->get_weg_nr(0)){
+            params_top.below_way_ribi|=gr->get_weg_nr(0)->is_low_clearence(owner) ? 0 : gr->get_weg_nr(0)->get_ribi_unmasked();
+            if(gr->get_weg_nr(1)){
+                params_top.below_way_ribi|=gr->get_weg_nr(1)->is_low_clearence(owner) ? 0 : gr->get_weg_nr(1)->get_ribi_unmasked();
+            }
+        }
+        if(gebaeude_t *gb = gr->get_building()){
+            params_top.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(1);
+        }
+    }
+
+    //check top for other piers on top tile
+    koord3d top_pos=pos;
+    top_pos.z = topz;
+    if(const grund_t *gr_top = welt->lookup(top_pos)){
+        params_top.middle_mask_taken=pier_t::get_middle_mask_total(gr_top);
+        //TODO check for if supplement allowed
+    }
+
+    pier_finder_match best_match;
+    best_match.match=-1;
+    best_match.desc=old_tos;
+    best_match.rotation=old_rotation;
+
+    if(get_desc_context(tos,rotation,params_top,false,&top_options)){
+        if(upper_layer){
+            return;
+        }
+        //traverse options for top to find stackable pillar piers
+        for(uint32 i = 0; i < top_options.get_count(); i++){
+            pier_finder_match top=top_options[i];
+            pier_finder_params params;
+            params.stackable=true;
+            params.support_needed=top.desc->get_base_mask(top.rotation);
+            params.autogroup=top.desc->get_auto_group();
+            get_params_from_ground(params,gr,owner);
+
+            get_desc_context(tos,rotation,params,false,0,&best_match,top.desc->get_maintenance() * 4 + top.match);
+        }
+    }
+    //no substiture found, restore original tos
+    tos=best_match.desc;
+    rotation=best_match.rotation;
+}
+
+bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& rotation, pier_finder_params params, bool allow_inexact, vector_tpl<pier_finder_match> *matches, pier_finder_match *best_match, uint32 add_match){
     descriptor=NULL;
 
     sint32 min_cost=0x7FFFFFFF;
@@ -229,6 +327,10 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
     for(auto const & i : desc_table){
         pier_desc_t const* const desc = i.value;
 
+        if(!(desc->get_auto_group() & params.autogroup)){
+            continue;
+        }
+
         for(uint8 r=0; r<4; r++){
             if(desc->get_background(params.ground_slope,r,0) == IMG_EMPTY){
                 continue;
@@ -236,6 +338,32 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
 
             uint32 match=0;
             bool unmatch=false;
+
+            if(params.stackable &&
+                    (desc->get_support_mask(r)|desc->get_base_mask(r)) != desc->get_support_mask(r)){
+                unmatch=true;
+                match+=hammingWeight(desc->get_support_mask(r) ^ desc->get_base_mask(r));
+            }
+
+            if(params.max_cost< desc->get_value()){
+                unmatch=true;
+                match+=(desc->get_value()-params.max_cost)/128;
+            }
+
+            if(params.max_maintenance < desc->get_maintenance()){
+                unmatch=true;
+                match+=(desc->get_maintenance()-params.max_maintenance)/128;
+            }
+
+            if(params.min_axle_load > desc->get_max_axle_load()){
+                unmatch=true;
+                match+=params.min_axle_load - desc->get_max_axle_load();
+            }
+
+            if(params.requre_low_waydeck && !desc->get_low_waydeck()){
+                unmatch=true;
+                match+=256;
+            }
 
             if((params.above_way_ribi & desc->get_above_way_ribi(r)) != params.above_way_ribi){
                 unmatch=true;
@@ -272,7 +400,7 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
             if((~params.middle_mask_taken | desc->get_middle_mask(r)) != ~params.middle_mask_taken){
                 unmatch=true;
             }
-            match+=hammingWeight(~params.middle_mask_taken ^ desc->get_middle_mask(r));
+            match+=hammingWeight(~params.middle_mask_taken & desc->get_middle_mask(r));
 
             if((params.deck_obj_present & desc->get_deck_obj_mask()) != params.deck_obj_present){
                 unmatch=true;
@@ -290,7 +418,7 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
                 unmatch=true;
             }
 
-            if(!params.allow_low_waydeck && desc->get_low_waydeck()){
+            if(!params.requre_low_waydeck && !params.allow_low_waydeck && desc->get_low_waydeck()){
                 match+=128;
                 unmatch=true;
             }
@@ -300,18 +428,45 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
                 unmatch=true;
             }
 
+            if(desc->get_auto_height_avoid()){
+                match *= 2;
+            }
 
             if(!unmatch && !exact_match){
                 exact_match=true;
                 min_cost=desc->get_maintenance();
+                min_match=match;
                 descriptor=desc;
                 rotation=r;
             }
             if(exact_match && !unmatch){
                 if(desc->get_maintenance() < min_cost){
                     min_cost=desc->get_maintenance();
+                    min_match=match;
                     descriptor=desc;
                     rotation=r;
+                }else if(desc->get_maintenance() == min_cost && match < min_match){
+                    min_cost=desc->get_maintenance();
+                    min_match=match;
+                    descriptor=desc;
+                    rotation=r;
+                }
+            }
+            if(!unmatch){
+                if(matches){
+                    pier_finder_match m;
+                    m.desc=desc;
+                    m.rotation=r;
+                    m.match=match+add_match;
+                    matches->append(m);
+
+                }
+                if(best_match){
+                    if(match+add_match < best_match->match || (best_match->desc && match+add_match == best_match->match && desc->get_maintenance() < best_match->desc->get_maintenance())){
+                        best_match->match=match+add_match;
+                        best_match->desc=desc;
+                        best_match->rotation=rotation;
+                    }
                 }
             }
             if(!exact_match && unmatch){
