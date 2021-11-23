@@ -31,6 +31,8 @@ public:
 	water_info_t(const char *name, const koord3d &pos);
 
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
+
+	void map_rotate90(sint16) OVERRIDE;
 };
 
 

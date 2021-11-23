@@ -49,6 +49,10 @@ void water_info_t::draw(scr_coord pos, scr_size size)
 	display_proportional_clip_rgb(pos.x + view.get_pos().x, pos.y+view.get_pos().y, k.get_2d().get_fullstr(), ALIGN_LEFT, color_idx_to_rgb(COL_WHITE), true);
 }
 
+void water_info_t::map_rotate90(sint16 new_ysize)
+{
+	view.map_rotate90(new_ysize);
+}
 
 void water_info_t::update()
 {
