@@ -112,7 +112,8 @@ void slim_obj_info_t::draw(scr_coord pos, scr_size size)
 	}
 	gui_frame_t::draw(pos, size);
 	pos += view.get_pos() + scr_size(D_V_SPACE + 2, D_TITLEBAR_HEIGHT + 2);
-	display_proportional_clip_rgb(pos.x, pos.y, view.get_obj()->get_pos().get_2d().get_fullstr(), ALIGN_LEFT, color_idx_to_rgb(COL_WHITE), true);
+	display_proportional_clip_rgb(pos.x+1, pos.y+1, view.get_obj()->get_pos().get_2d().get_fullstr(), ALIGN_LEFT, color_idx_to_rgb(COL_BLACK), true);
+	display_proportional_clip_rgb(pos.x,   pos.y,   view.get_obj()->get_pos().get_2d().get_fullstr(), ALIGN_LEFT, color_idx_to_rgb(COL_WHITE), true);
 }
 
 
