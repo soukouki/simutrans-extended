@@ -5776,9 +5776,11 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
  */
 void convoi_t::hat_gehalten(halthandle_t halt)
 {
+	grund_t *gr = welt->lookup(front()->get_pos());
+
 	// now find out station length
 	uint16 vehicles_loading=0;
-	if(fahr[0]->get_desc()->get_waytype() == water_wt) {
+	if(vehicle[0]->get_desc()->get_waytype() == water_wt) {
 		// harbour has any size
 		vehicles_loading = vehicle_count;
 	}
@@ -5788,7 +5790,6 @@ void convoi_t::hat_gehalten(halthandle_t halt)
 		// and numbers of vehicles that can be (un)loaded
 		koord zv = koord( ribi_t::backward(front()->get_direction()) );
 		koord3d pos = front()->get_pos();
-		grund_t *gr=welt->lookup(pos);
 		// start on bridge?
 		pos.z += gr->get_weg_yoff() / TILE_HEIGHT_STEP;
 		// difference between actual station length and vehicle lenghts
