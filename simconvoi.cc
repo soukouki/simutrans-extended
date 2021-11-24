@@ -802,7 +802,7 @@ void convoi_t::add_running_cost(sint64 cost, const weg_t *weg)
 {
 	jahresgewinn += cost;
 
-	if(weg && weg->get_owner() != get_owner() && weg->get_owner() != NULL && (!welt->get_settings().get_toll_free_public_roads() || (weg->get_waytype() != road_wt || weg->get_player_nr() != 1)))
+	if(weg && weg->get_owner() != get_owner() && weg->get_owner() != NULL && (!welt->get_settings().get_toll_free_public_roads() || (weg->get_waytype() != road_wt || weg->get_owner_nr() != 1)))
 	{
 		// running on non-public way costs toll (since running costs are positive => invert)
 		sint32 toll = -(cost * welt->get_settings().get_way_toll_runningcost_percentage()) / 100l;
@@ -862,7 +862,7 @@ void convoi_t::increment_odometer(uint32 steps)
 		}
 		else
 		{
-			player = way->get_player_nr();
+			player = way->get_owner_nr();
 		}
 	}
 
