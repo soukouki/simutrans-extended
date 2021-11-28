@@ -215,8 +215,8 @@ void gui_routebar_t::draw(scr_coord offset)
 			break;
 		case 0:
 		default:
-			display_fillbox_wh_clip_rgb( offset.x+h/2, offset.y + 1, to-2, h - 2, color_idx_to_rgb( COL_GREEN ), true );
-			display_right_triangle_rgb(offset.x + to, offset.y, h, color_idx_to_rgb(COL_MAGENTA), true);
+			//display_fillbox_wh_clip_rgb( offset.x+h/2, offset.y + 1, to-2, h - 2, color_idx_to_rgb( COL_GREEN ), true );
+			display_right_triangle_rgb(offset.x + to, offset.y, h, COL_CLEAR, true);
 			break;
 	}
 }
