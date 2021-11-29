@@ -325,15 +325,18 @@ const char *loadsave_frame_t::get_info(const char *fname)
 
 	// check hash table
 	sve_info_t *svei = cached_info.get(fname);
+	uint32 version = 0;
+	uint32 extended_version = 0;
 	if (svei   &&  svei->file_size == sb.st_size  &&  svei->mod_time == sb.st_mtime) {
 		// compare size and mtime
 		// if both are equal then most likely the files are the same
 		// no need to read the file for pak_extension
 		pak_extension = svei->pak.c_str();
 		svei->file_exists = true;
+		version = svei->version;
+		extended_version = svei->extended_version;
 	}
 	else {
-		/*
 		// read pak_extension from file
 		loadsave_t test;
 		test.rd_open(fname); // == loadsave_t::FILE_STATUS_OK
@@ -346,12 +349,12 @@ const char *loadsave_frame_t::get_info(const char *fname)
 		char *key = strdup(fname);
 		sve_info_t *svei_old = cached_info.set(key, svei_new);
 		delete svei_old;
-		*/
 	}
 
 	// write everything in string
 	// add pak extension
-	const size_t n = snprintf( date, lengthof(date), "%s - ", pak_extension.c_str());
+	const size_t n = (version && extended_version) ? snprintf( date, lengthof(date), "%s (v%u.%u e%i) - ", pak_extension.c_str(), version/1000, version%100, extended_version):
+		snprintf(date, lengthof(date), "%s - ", pak_extension.c_str());
 
 	// add the time too
 	struct tm *tm = localtime(&sb.st_mtime);
