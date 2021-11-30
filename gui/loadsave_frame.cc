@@ -353,7 +353,7 @@ const char *loadsave_frame_t::get_info(const char *fname)
 
 	// write everything in string
 	// add pak extension
-	const size_t n = (version && extended_version) ? snprintf( date, lengthof(date), "%s (v%u.%u e%i) - ", pak_extension.c_str(), version/1000, version%100, extended_version):
+	const size_t n = (version && extended_version) ? snprintf( date, lengthof(date), "%s (v %u.%u, e %i) - ", pak_extension.c_str(), version/1000, version%100, extended_version):
 		snprintf(date, lengthof(date), "%s - ", pak_extension.c_str());
 
 	// add the time too
