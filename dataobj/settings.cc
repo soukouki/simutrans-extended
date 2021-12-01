@@ -983,7 +983,7 @@ void settings_t::rdwr(loadsave_t *file)
 		if(file->is_version_atleast(102, 3)) {
 			// network stuff
 			// Superseded by simrand_rdwr in newer versions
-			if (file->is_version_less(122, 1)) {
+			if (file->is_version_ex_less(14, 47)) {
 				random_counter = get_random_seed( );
 				file->rdwr_long( random_counter );
 			}
