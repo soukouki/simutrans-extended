@@ -244,7 +244,7 @@ void ware_t::rdwr(loadsave_t *file)
 
 	g_class = min(g_class, get_desc()->get_number_of_classes()-1);
 
-	if (file->get_extended_version() >= 13 || (file->get_extended_version() == 12 && file->get_extended_revision() >= 27))
+	if (file->is_version_ex_atleast(12, 27))
 	{
 		file->rdwr_short(comfort_preference_percentage);
 	}
