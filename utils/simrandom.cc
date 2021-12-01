@@ -24,7 +24,7 @@
 #define UPPER_MASK 0x80000000UL /* most significant w-r bits */
 #define LOWER_MASK 0x7fffffffUL /* least significant r bits */
 
-static uint32 thread_local mersenne_twister[MERSENNE_TWISTER_N]; // the array for the state vector
+static uint32 thread_local mersenne_twister[MERSENNE_TWISTER_N] = { 0 }; // the array for the state vector
 static uint32 thread_local mersenne_twister_index = MERSENNE_TWISTER_N + 1; // mersenne_twister_index==N+1 means mersenne_twister[N] is not initialized
 
 static uint8 thread_local random_origin = 0;
