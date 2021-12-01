@@ -9428,7 +9428,7 @@ void karte_t::load(loadsave_t *file)
 	if(  env_t::networkmode  ) {
 		// To have games synchronized, transfer random counter too
 		// Superseded by simrand_rdwr in newer versions
-		if (file->is_version_less(122, 1)) {
+		if (file->is_version_ex_less(14, 47)) {
 			setsimrand(settings.get_random_counter(), 0xFFFFFFFFu );
 		}
 
