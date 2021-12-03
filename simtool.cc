@@ -7368,17 +7368,19 @@ const char *tool_build_factory_t::work( player_t *player, koord3d pos )
 		int streetdir = 0;
                 // Convert 'neighbors' indices to SENW bits
 		static int const neighbours_to_senw[] = { 0x0c, 0x08, 0x09, 0x01, 0x03, 0x02, 0x06, 0x04 };
+                static int const neighbours_to_diag[] = { 4, 8, 1, 8, 1, 2, 4, 2 };
 		for(  int i = 1;  i < 8;  i+=2  ) {
 			grund_t *gr2 = welt->lookup_kartenboden(k + koord::neighbours[i]);
 			if(  gr2  &&  gr2->get_weg_hang() == gr2->get_grund_hang()  &&  gr2->get_weg(road_wt) != NULL  ) {
-				streetdir |= neighbours_to_senw[i];
+                          streetdir |= neighbours_to_senw[i];
 			}
 		}
                 if (streetdir == 0) { // No adjacent streets; check diagonally
                   for(  int i = 0;  i < 8;  i+=2  ) {
                     grund_t *gr2 = welt->lookup_kartenboden(k + koord::neighbours[i]);
                     if(  gr2  &&  gr2->get_weg_hang() == gr2->get_grund_hang()  &&  gr2->get_weg(road_wt) != NULL  ) {
-                      streetdir |= neighbours_to_senw[i];
+                      int ribi_ns = ((int)gr2->get_weg_ribi_unmasked(road_wt) & 0x05) ? 1 : 0;
+                      streetdir |= neighbours_to_diag[ i + ribi_ns ];
                     }
                   }
                 }
