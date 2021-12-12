@@ -744,13 +744,10 @@ void win_clamp_xywh_position( scr_coord_val &x, scr_coord_val &y, scr_size wh, b
 			y = clip_rr.y + clip_rr.h - wh.h;
 		}
 	}
+
 	// now do not hide titlebar by menubar
-	if (x < clip_rr.x) {
-		x = clip_rr.x;
-	}
-	if (y < clip_rr.y) {
-		y = clip_rr.y;
-	}
+	x = max(x, clip_rr.x);
+	y = max(y, clip_rr.y);
 }
 
 
