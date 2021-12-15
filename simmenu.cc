@@ -28,6 +28,7 @@
 
 #include "boden/grund.h"
 #include "boden/wege/strasse.h"
+#include "boden/pier_deck.h"
 
 #include "dataobj/environment.h"
 #include "dataobj/tabfile.h"
@@ -916,7 +917,7 @@ void toolbar_t::update(player_t *player)
 					hausbauer_t::fill_menu( tool_selector, utype, way, get_sound(c));
 				}
 				else if(char const* c = strstart(param, "piers(")) {
-					pier_builder_t::fill_menu(tool_selector);
+					pier_builder_t::fill_menu(tool_selector,c[0]);
 				}
 				else if (param[0] == '-') {
 					// add dummy tool_t as separator
@@ -1228,7 +1229,7 @@ void two_click_tool_t::cleanup( bool delete_start_marker )
 		grund_t *gr = welt->lookup( pos );
 		delete z;
 		// Remove dummy ground (placed by tool_build_tunnel_t and tool_build_way_t) unless it has vehicles on it
-		if(gr  &&   (gr->get_typ() == grund_t::tunnelboden  ||  gr->get_typ() == grund_t::monorailboden)  &&  gr->get_weg_nr(0) == NULL && !gr->get_leitung() && !gr->get_convoi_vehicle())
+		if(gr  &&   (gr->get_typ() == grund_t::tunnelboden  ||  gr->get_typ() == grund_t::monorailboden || (gr->get_typ() == grund_t::pierdeck && ((pier_deck_t*)gr)->get_is_dummy()))  &&  gr->get_weg_nr(0) == NULL && !gr->get_leitung() && !gr->get_convoi_vehicle())
 		{
 			welt->access(pos.get_2d())->boden_entfernen(gr);
 			delete gr;

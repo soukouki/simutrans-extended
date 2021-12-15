@@ -69,6 +69,7 @@ private:
         return 0;
     }
 
+    tool_t *auto_builder;
 public:
 	const char *get_name() const { return get_cursor()->get_name(); }
 	const char *get_copyright() const { return get_cursor()->get_copyright(); }
@@ -102,6 +103,19 @@ public:
 	image_id get_foreground(slope_t::type slope, uint8 rotation, uint8 season) const;
 
 	void calc_checksum(checksum_t *chk) const;
+
+	tool_t* get_auto_builder() const {
+		return auto_builder;
+	}
+
+	void set_auto_builder( tool_t *tool){
+		auto_builder=tool;
+	}
+
+	static const slope_t::type low_waydeck_image;
+	static const slope_t::type auto_tool_cursor_image;
+	static const slope_t::type auto_tool_icon_image;
+	static const slope_t::type rotation_select_image;
 };
 
 #endif // PIER_DESC_H

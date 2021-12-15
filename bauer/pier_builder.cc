@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of the Simutrans-Extended project under the Artistic License.
  * (see LICENSE.txt)
  */
@@ -65,7 +65,7 @@ const char * pier_builder_t::check_below_ways(player_t *player, koord3d pos, con
     return "Placing a pier here would block way(s)";
 }
 
-const char * pier_builder_t::check_for_buildings(const grund_t *gr, const pier_desc_t *desc, const uint8 rotation){
+const char * pier_builder_t::check_for_buildings(const grund_t *gr, const pier_desc_t *desc, const uint8){
     gebaeude_t *gb = gr->get_building();
     uint8 floor=0;
     if(!gb){
@@ -113,6 +113,10 @@ void pier_builder_t::register_desc(pier_desc_t *desc){
     if (const pier_desc_t *old_pier = desc_table.remove(desc->get_name())) {
         dbg->doubled("pier", desc->get_name());
         tool_t::general_tool.remove( old_pier->get_builder() );
+        if(old_pier->get_auto_builder()){
+            tool_t::general_tool.remove(old_pier->get_auto_builder());
+            delete old_pier->get_auto_builder();
+        }
         delete old_pier->get_builder();
         delete old_pier;
     }
@@ -124,6 +128,18 @@ void pier_builder_t::register_desc(pier_desc_t *desc){
     tool->set_default_param(desc->get_name());
     tool_t::general_tool.append( tool );
     desc->set_builder( tool );
+
+    if(desc->get_background(pier_desc_t::auto_tool_icon_image,0,0)!=IMG_EMPTY){
+        tool_build_pier_auto_t *tool = new tool_build_pier_auto_t;
+        tool->set_icon( desc->get_background(pier_desc_t::auto_tool_icon_image,0,0));
+        tool->cursor = desc->get_background(pier_desc_t::auto_tool_cursor_image,1,0);
+        tool->set_default_param(desc->get_name());
+        tool_t::general_tool.append( tool );
+        desc->set_auto_builder( tool );
+    }else{
+        desc->set_auto_builder(NULL);
+    }
+
     desc_table.put(desc->get_name(), desc);
 }
 
@@ -225,12 +241,17 @@ const pier_desc_t *pier_builder_t::get_desc_bad_load(koord3d pos,player_t *owner
     return desc;
 }
 
-void pier_builder_t::get_params_from_ground(pier_finder_params &params, const grund_t *gr, player_t *owner){
-    params.ground_slope=gr->get_grund_hang();
-    params.is_wet=gr->is_water();
-    params.on_deck=gr->get_typ()==grund_t::pierdeck;
-    params.middle_mask_taken=pier_t::get_middle_mask_total(gr);
-    if(const grund_t *gr2=pier_t::ground_below(gr)){
+void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos, player_t *owner){
+    const grund_t* gr=welt->lookup(pos);
+    if(gr){
+        params.ground_slope=gr->get_grund_hang();
+        params.is_wet=gr->is_water();
+        params.on_deck=gr->get_typ()==grund_t::pierdeck;
+        params.allow_low_waydeck=false;
+        params.middle_mask_taken=pier_t::get_middle_mask_total(gr);
+        params.existing_above_ribi=pier_t::get_above_ribi_total(gr,true);
+    }
+    if(const grund_t *gr2=pier_t::ground_below(pos)){
         params.support_avail=pier_t::get_support_mask_total(gr2);
         if(gr2->get_weg_nr(0)){
             params.below_way_ribi|=gr2->get_weg_nr(0)->is_low_clearence(owner) ? 0 : gr2->get_weg_nr(0)->get_ribi_unmasked();
@@ -242,19 +263,27 @@ void pier_builder_t::get_params_from_ground(pier_finder_params &params, const gr
             params.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(1);
         }
     }
-    if(gr->get_weg_nr(0)){
-        params.below_way_ribi|=gr->get_weg_nr(0)->get_ribi_unmasked();
-        if(gr->get_weg_nr(1)){
-            params.below_way_ribi|=gr->get_weg_nr(1)->get_ribi_unmasked();
+    if(gr){
+        if(gr->get_weg_nr(0)){
+            params.need_clearence=!gr->get_weg_nr(0)->is_low_clearence(owner);
+            params.below_way_ribi|=gr->get_weg_nr(0)->get_ribi_unmasked();
+            if(gr->get_weg_nr(1)){
+                params.below_way_ribi|=!gr->get_weg_nr(1)->get_ribi_unmasked();
+                params.need_clearence|=gr->get_weg_nr(1)->is_low_clearence(owner);
+            }
+        }
+        if(gebaeude_t *gb = gr->get_building()){
+            params.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(0);
         }
     }
-    if(gebaeude_t *gb = gr->get_building()){
-        params.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(0);
-    }
-    params.ground_slope=gr->get_grund_hang();
 }
 
-void pier_builder_t::get_desc_from_tos(const pier_desc_t *&tos, uint8 &rotation, koord3d pos, player_t *owner, uint16 topz, bool upper_layer){
+void pier_builder_t::get_params_from_ground(pier_finder_params &params, const grund_t *gr, player_t *owner){
+    get_params_from_pos(params,gr->get_pos(),owner);
+    return;
+}
+
+bool pier_builder_t::get_desc_from_tos(const pier_desc_t *&tos, uint8 &rotation, koord3d pos, player_t *owner, sint8 topz, bool upper_layer, ribi_t::ribi alt_tos_ribi){
     vector_tpl<pier_finder_match> top_options;
     pier_finder_params params_top;
     const pier_desc_t* old_tos=tos;
@@ -263,6 +292,9 @@ void pier_builder_t::get_desc_from_tos(const pier_desc_t *&tos, uint8 &rotation,
     const grund_t *gr=welt->lookup(pos);
 
     params_top.above_way_ribi=tos->get_above_way_ribi(rotation);
+    if(alt_tos_ribi){
+        params_top.above_way_ribi=alt_tos_ribi;
+    }
     params_top.min_axle_load=tos->get_max_axle_load();
     params_top.autogroup=tos->get_auto_group();
     params_top.requre_low_waydeck=tos->get_low_waydeck();
@@ -289,7 +321,6 @@ void pier_builder_t::get_desc_from_tos(const pier_desc_t *&tos, uint8 &rotation,
     top_pos.z = topz;
     if(const grund_t *gr_top = welt->lookup(top_pos)){
         params_top.middle_mask_taken=pier_t::get_middle_mask_total(gr_top);
-        //TODO check for if supplement allowed
     }
 
     pier_finder_match best_match;
@@ -299,7 +330,7 @@ void pier_builder_t::get_desc_from_tos(const pier_desc_t *&tos, uint8 &rotation,
 
     if(get_desc_context(tos,rotation,params_top,false,&top_options)){
         if(upper_layer){
-            return;
+            return true;
         }
         //traverse options for top to find stackable pillar piers
         for(uint32 i = 0; i < top_options.get_count(); i++){
@@ -316,13 +347,235 @@ void pier_builder_t::get_desc_from_tos(const pier_desc_t *&tos, uint8 &rotation,
     //no substiture found, restore original tos
     tos=best_match.desc;
     rotation=best_match.rotation;
+    return best_match.match!=(uint32)(-1);
 }
+
+bool pier_builder_t::append_route_stack(vector_tpl<pier_route_elem> &route, player_t *player, const pier_desc_t *base_desc, koord3d topdeck, ribi_t::ribi deckribi){
+    //check for runways
+    karte_t::runway_info ri=welt->check_nearby_runways(topdeck.get_2d());
+    if(ri.pos!=koord::invalid){
+        return false;
+    }
+
+    //check for existing piers in right place
+    if(const grund_t* gr = welt->lookup(topdeck)){
+        if((deckribi & pier_t::get_above_ribi_total(gr,false)) == deckribi){
+            return true;
+        }
+    }
+
+    const grund_t *base_gr = welt->lookup_kartenboden(topdeck.get_2d());
+    if(!base_gr) return false;
+    if(!base_desc->get_low_waydeck()){
+        topdeck.z-=1;
+    }
+    pier_route_elem elem;
+    elem.desc=base_desc;
+    elem.rotation=0;
+    elem.pos=koord3d(topdeck.get_2d(),base_gr->get_pos().z);
+
+    //no pier needed
+    if(base_gr->get_pos().z>topdeck.z){
+        return true;
+    }
+    if(base_gr->get_pos()==topdeck && base_desc->get_low_waydeck()){
+        return true;
+    }
+
+    //trivial case of single pier
+    if(base_gr->get_pos()==topdeck
+            || (base_gr->get_pos()==topdeck-koord3d(0,0,1) && slope_t::max_diff(base_gr->get_grund_hang())==2)){
+        if(get_desc_from_tos(elem.desc,elem.rotation,elem.pos,player,topdeck.z,true,deckribi)){
+            route.append(elem);
+            return true;
+        }
+        return false;
+    }
+
+
+
+    vector_tpl< vector_tpl<pier_finder_match> > match_tree;
+    vector_tpl<pier_finder_match> match_row;
+    match_tree.set_count(topdeck.z - base_gr->get_pos().z + 1);
+
+    pier_finder_params top_params;
+    if(base_desc->get_low_waydeck()){
+        top_params.allow_low_waydeck=true;
+        top_params.requre_low_waydeck=true;
+        top_params.below_way_ribi=deckribi;
+    }else{
+        top_params.above_way_ribi=deckribi;
+    }
+    get_params_from_pos(top_params,topdeck,player);
+    top_params.autogroup=base_desc->get_auto_group();
+    top_params.on_deck=true;
+    top_params.min_axle_load=base_desc->get_max_axle_load();
+    top_params.support_avail=-1;
+
+    get_desc_context(elem.desc,elem.rotation,top_params,false,&(match_tree[0]),0,0);
+    for(uint8 i = 1; i < match_tree.get_count(); i++){
+        koord3d row_pos = topdeck - koord3d(0,0,i);
+        uint32 lasti=i-1;
+        const grund_t* gr_below = welt->lookup(row_pos - koord3d(0,0,1));
+        if(gr_below){
+            if(slope_t::max_diff(gr_below->get_grund_hang())==2){
+                row_pos=row_pos - koord3d(0,0,1);
+                i++;
+            }
+        }
+        for(uint32 j=0; j < match_tree[lasti].get_count(); j++){
+            //if null match, continue link and continue
+            if(match_tree[lasti][j].desc==NULL){
+                pier_finder_match n;
+                n.desc=NULL;
+                n.match=match_tree[lasti][j].match;
+                n.aux=j;
+                match_tree[i].append(n);
+                continue;
+            }
+            //if buildable already, add null match
+            if(const grund_t *gr = welt->lookup(row_pos + koord3d(0,0,1))){
+                //only thing not already tested is existing support
+                uint64 existingsupport=0;
+                if(const grund_t *gr2=pier_t::ground_below(gr)){
+                    existingsupport=pier_t::get_support_mask_total(gr2);
+                }
+                if((existingsupport | match_tree[lasti][j].desc->get_base_mask(match_tree[lasti][j].rotation))==existingsupport){
+                    pier_finder_match n;
+                    n.desc=NULL;
+                    n.match=match_tree[lasti][j].match;
+                    n.aux=j;
+                    match_tree[i].append(n);
+                }
+            }
+
+            //search through to find piers that can go below
+            pier_finder_params params;
+            get_params_from_pos(params,row_pos,player);
+            params.autogroup=match_tree[lasti][j].desc->get_auto_group();
+            params.support_avail=-1;
+            params.support_needed=match_tree[lasti][j].desc->get_base_mask(match_tree[lasti][j].rotation);
+            match_row.clear();
+            get_desc_context(elem.desc,elem.rotation,params,false,&match_row,0,match_tree[lasti][j].match + 4 * match_tree[lasti][j].desc->get_maintenance());
+            //append results, removing duplacates and marking path upwards
+            //list sizes too small to justify sorting techneques
+            for(uint32 k = 0; k < match_row.get_count(); k++){
+                bool dup_match=false;
+                for(uint32 l = 0; l<match_tree[i].get_count(); l++){
+                    if(match_tree[i][l].desc==match_row[k].desc && match_tree[i][l].rotation==match_row[k].rotation){
+                        dup_match=true;
+                        if(match_tree[i][l].match>match_row[k].match){
+                            match_tree[i][l].match=match_row[k].match;
+                            match_tree[i][l].aux=j;
+                        }
+                        break;
+                    }
+                }
+                if(!dup_match){
+                    match_row[k].aux=j;
+                    match_tree[i].append(match_row[k]);
+                }
+            }
+        }
+        //no row found
+        if(match_tree[i].empty()){
+            return false;
+        }
+    }
+
+    uint8 match_link=0xFF;
+
+    for(uint32 i=match_tree.get_count()-1; i < match_tree.get_count(); i--){
+        if(match_link==0xFF){
+            uint32 min_match=-1;
+            for(uint32 j=0; j < match_tree[i].get_count(); j++){
+                if(match_tree[i][j].match < min_match){
+                    min_match=match_tree[i][j].match;
+                    match_link=j;
+                }
+            }
+        }
+        if(match_link!=0xFF && match_tree[i].get_count()){
+            if(match_tree[i][match_link].desc){
+                elem.desc=match_tree[i][match_link].desc;
+                elem.rotation=match_tree[i][match_link].rotation;
+                elem.pos=topdeck - koord3d(0,0,i);
+                route.append(elem);
+            }
+            match_link=match_tree[i][match_link].aux;
+        }
+    }
+
+    return true;
+
+}
+
+bool pier_builder_t::calc_route(vector_tpl<pier_route_elem> &route, player_t *player, const pier_desc_t *base_desc, koord3d start, koord3d end, sint8 start_height){
+    route.clear();
+    if(start_height<0){
+        return false;
+    }
+    if(start.get_2d()==end.get_2d()){
+        return false;
+    }
+
+    start = start + koord3d(0,0,start_height);
+    //use algorithm simular to way_builder calc_straight_route to find 2d route
+    koord pos=start.get_2d();
+    vector_tpl<koord> straight_route;
+    while(pos!=end.get_2d()){
+        straight_route.append(pos);
+        if(abs(pos.x-end.x)>=abs(pos.y-end.y)) {
+            if(pos.x>end.x){
+                pos.x--;
+            }else{
+                pos.x++;
+            }
+        }
+        else {
+            if(pos.y>end.y){
+                pos.y--;
+            }else{
+                pos.y++;
+            }
+        }
+    }
+    straight_route.append(end.get_2d());
+    vector_tpl<ribi_t::ribi> route_ribi(straight_route.get_size());
+    route_ribi.append(ribi_type(straight_route[1]-straight_route[0]));
+    for(uint32 i = 1; i < straight_route.get_count()-1; i++){
+        ribi_t::ribi pos_ribi = ribi_t::none;
+        pos_ribi|=ribi_type(straight_route[i-1]-straight_route[i]);
+        pos_ribi|=ribi_type(straight_route[i+1]-straight_route[i]);
+        route_ribi.append(pos_ribi);
+    }
+    route_ribi.append(ribi_type(straight_route[straight_route.get_count()-2]-straight_route[straight_route.get_count()-1]));
+
+    for(uint32 i = 0; i < straight_route.get_count(); i++){
+        if(!append_route_stack(route,player,base_desc,koord3d(straight_route[i],start.z),route_ribi[i])){
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
 
 bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& rotation, pier_finder_params params, bool allow_inexact, vector_tpl<pier_finder_match> *matches, pier_finder_match *best_match, uint32 add_match){
     descriptor=NULL;
 
     sint32 min_cost=0x7FFFFFFF;
     uint32 min_match=-1;
+    if(params.existing_above_ribi==0 && ribi_t::is_single(params.above_way_ribi)){
+        params.above_way_ribi=ribi_t::doubles(params.above_way_ribi);
+    }
+    if(params.requre_low_waydeck && ribi_t::is_single(params.below_way_ribi)){
+        params.below_way_ribi=ribi_t::doubles(params.below_way_ribi);
+    }
+    if(params.requre_low_waydeck && !params.allow_low_waydeck){
+        return false;
+    }
     bool exact_match=false;
     for(auto const & i : desc_table){
         pier_desc_t const* const desc = i.value;
@@ -365,6 +618,13 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
                 match+=256;
             }
 
+
+            if(params.existing_above_ribi==0 && desc->get_above_way_supplement()){
+                match+=64;
+                unmatch=true;
+            }
+
+            params.above_way_ribi &= ~params.existing_above_ribi;
             if((params.above_way_ribi & desc->get_above_way_ribi(r)) != params.above_way_ribi){
                 unmatch=true;
             }
@@ -407,7 +667,7 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
             }
             match+=hammingWeight(params.deck_obj_present ^ desc->get_deck_obj_mask());
 
-            if((params.sub_obj_present & desc->get_sub_obj_mask()) != params.sub_obj_present){
+            if((params.sub_obj_present & desc->get_sub_obj_mask()) != desc->get_sub_obj_mask()){
                 match+=4;
                 unmatch=true;
             }
@@ -666,7 +926,7 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
     return msg;
 }
 
-void pier_builder_t::fill_menu(tool_selector_t *tool_selector){
+void pier_builder_t::fill_menu(tool_selector_t *tool_selector, char mode){
     if(!welt->get_scenario()->is_tool_allowed(welt->get_active_player(), TOOL_BUILD_PIER | GENERAL_TOOL)){
         return;
     }
@@ -682,7 +942,12 @@ void pier_builder_t::fill_menu(tool_selector_t *tool_selector){
     }
 
     FOR(vector_tpl<pier_desc_t const*>, const i, matching){
-        tool_selector->add_tool_selector(i->get_builder());
+        if(mode!='A'){
+            tool_selector->add_tool_selector(i->get_builder());
+        }
+        if(i->get_auto_builder() && mode!='M'){
+            tool_selector->add_tool_selector(i->get_auto_builder());
+        }
     }
 
 }
