@@ -244,12 +244,24 @@ const pier_desc_t *pier_builder_t::get_desc_bad_load(koord3d pos,player_t *owner
 void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos, player_t *owner){
     const grund_t* gr=welt->lookup(pos);
     if(gr){
+        if(gr->get_typ()==grund_t::brueckenboden || gr->get_typ()==grund_t::monorailboden){
+            params.notallowed=true;
+        }
         params.ground_slope=gr->get_grund_hang();
         params.is_wet=gr->is_water();
         params.on_deck=gr->get_typ()==grund_t::pierdeck;
         params.allow_low_waydeck=false;
         params.middle_mask_taken=pier_t::get_middle_mask_total(gr);
         params.existing_above_ribi=pier_t::get_above_ribi_total(gr,true);
+        if(const grund_t *gr3 = welt->lookup(pier_builder_t::lookup_deck_pos(gr))){
+            for(uint8 i=0; i < gr3->get_top(); i++){
+                if(gr3->obj_bei(i)->get_typ()==obj_t::pier){
+                    if(((pier_t*)gr3->obj_bei(i))->get_low_waydeck()){
+                        params.nodeck=true;
+                    }
+                }
+            }
+        }
     }
     if(const grund_t *gr2=pier_t::ground_below(pos)){
         params.support_avail=pier_t::get_support_mask_total(gr2);
@@ -576,7 +588,11 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
     if(params.requre_low_waydeck && !params.allow_low_waydeck){
         return false;
     }
-    bool exact_match=false;
+    if(params.notallowed && !allow_inexact){
+        return false;
+    }
+
+    bool exact_match=params.notallowed;
     for(auto const & i : desc_table){
         pier_desc_t const* const desc = i.value;
 
@@ -621,6 +637,11 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
 
             if(params.existing_above_ribi==0 && desc->get_above_way_supplement()){
                 match+=64;
+                unmatch=true;
+            }
+
+            if(params.nodeck && desc->get_above_way_ribi()){
+                match+=128;
                 unmatch=true;
             }
 
@@ -830,6 +851,15 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         pier_deck_t *deck = new pier_deck_t(gpos,desc->get_above_slope(rotation),desc->get_above_slope(rotation));
         welt->access(pos.get_2d())->boden_hinzufuegen(deck);
         deck->calc_image();
+    }else if(desc->get_above_way_ribi()){
+        const grund_t *gr=welt->lookup(gpos);
+        for(uint8 i=0; i < gr->get_top(); i++){
+            if(gr->obj_bei(i)->get_typ()==obj_t::pier){
+                if(((pier_t*)gr->obj_bei(i))->get_low_waydeck()){
+                    return "Cannot place pier here due to redundant deck";
+                }
+            }
+        }
     }
 
     //remove trees

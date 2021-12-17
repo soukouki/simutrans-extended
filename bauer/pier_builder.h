@@ -50,6 +50,8 @@ private:
             min_axle_load=0xFFFF;
             requre_low_waydeck=false;
             existing_above_ribi=0;
+            notallowed=false;
+            nodeck=false;
         }
 
         uint64 support_needed;
@@ -73,6 +75,8 @@ private:
         bool on_deck;
         bool stackable;
         bool requre_low_waydeck;
+        bool notallowed;
+        bool nodeck;
     };
 
     struct pier_finder_match{
