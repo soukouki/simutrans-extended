@@ -32,7 +32,7 @@ private:
     uint64 base_mask;           //bit field for where foundation is needed (up to pakset designer)
     uint64 middle_mask;         //bit field to prevend piers occupying the same physical space (up to pakset designer)
     uint64 support_mask;        //bit field for locations on deck (or lack thereof) where columns can be supported (up to packset designer)
-    uint32 sub_obj_mask;        //(future use) restrict buildings coninsiding within
+    uint32 sub_obj_mask;        //restrict buildings coninsiding within
     uint32 deck_obj_mask;       //restrict ways and buildings on deck
 
     //other items
@@ -42,10 +42,10 @@ private:
     uint8 rotational_symmetry : 3;
 
     uint8 drag_ribi : 4; //direction for dragging
-    uint8 above_way_supplement : 1; //(future use) only allow above_way_ribi if not only pier
-    uint8 bottom_only : 1; //(future use) restrict pier to nature tiles
-    uint8 keep_dry : 1; //(future use) restict pier to dry land
-    uint8 low_waydeck : 1; //(future use) pier supports ways in pier, not on top
+    uint8 above_way_supplement : 1; //only allow above_way_ribi if not only pier
+    uint8 bottom_only : 1; //restrict pier to nature tiles
+    uint8 keep_dry : 1; //restict pier to dry land
+    uint8 low_waydeck : 1; //pier supports ways in pier, not on top
 
     static uint32 rotate_mask(uint32 m,uint8 r){
         return (m << (8*r)) | (m >> (32 - 8*r));
