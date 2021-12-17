@@ -253,10 +253,10 @@ void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos
         params.allow_low_waydeck=false;
         params.middle_mask_taken=pier_t::get_middle_mask_total(gr);
         params.existing_above_ribi=pier_t::get_above_ribi_total(gr,true);
-        if(const grund_t *gr3 = welt->lookup(pier_builder_t::lookup_deck_pos(gr))){
-            for(uint8 i=0; i < gr3->get_top(); i++){
-                if(gr3->obj_bei(i)->get_typ()==obj_t::pier){
-                    if(((pier_t*)gr3->obj_bei(i))->get_low_waydeck()){
+        if(const grund_t *gr0= welt->lookup(pier_builder_t::lookup_deck_pos(gr))){
+            for(uint8 i=0; i < gr0->get_top(); i++){
+                if(gr0->obj_bei(i)->get_typ()==obj_t::pier){
+                    if(((pier_t*)gr0->obj_bei(i))->get_low_waydeck()){
                         params.nodeck=true;
                     }
                 }
@@ -266,9 +266,12 @@ void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos
     if(const grund_t *gr2=pier_t::ground_below(pos)){
         params.support_avail=pier_t::get_support_mask_total(gr2);
         if(gr2->get_weg_nr(0)){
-            params.below_way_ribi|=gr2->get_weg_nr(0)->is_low_clearence(owner) ? 0 : gr2->get_weg_nr(0)->get_ribi_unmasked();
+            params.below_way_ribi|=(gr2->get_weg_nr(0)->is_low_clearence(owner) || gr2->get_weg_hang())? 0 : gr2->get_weg_nr(0)->get_ribi_unmasked();
             if(gr2->get_weg_nr(1)){
-                params.below_way_ribi|=gr2->get_weg_nr(1)->is_low_clearence(owner) ? 0 : gr2->get_weg_nr(1)->get_ribi_unmasked();
+                params.below_way_ribi|=(gr2->get_weg_nr(1)->is_low_clearence(owner) || gr2->get_weg_hang()) ? 0 : gr2->get_weg_nr(1)->get_ribi_unmasked();
+            }
+            if(gr2->get_weg_hang()){
+                params.need_clearence=true;
             }
         }
         if(gebaeude_t *gb = gr2->get_building()){
@@ -282,6 +285,9 @@ void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos
             if(gr->get_weg_nr(1)){
                 params.below_way_ribi|=!gr->get_weg_nr(1)->get_ribi_unmasked();
                 params.need_clearence|=gr->get_weg_nr(1)->is_low_clearence(owner);
+            }
+            if(gr->get_weg_hang()){
+                params.need_clearence=true;
             }
         }
         if(gebaeude_t *gb = gr->get_building()){
