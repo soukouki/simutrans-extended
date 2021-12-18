@@ -77,7 +77,7 @@ bool pier_rotation_select_t::action_triggered(gui_action_creator_t *comp, value_
 
 sint8 pier_height_select_t::height = 2;
 
-pier_height_select_t::pier_height_select_t(player_t *player_,tool_build_pier_auto_t *tool_) : gui_frame_t(translator::translate("set signal height")){
+pier_height_select_t::pier_height_select_t(player_t *player_,tool_build_pier_auto_t *tool_) : gui_frame_t(translator::translate("set pier height")){
 	player = player_;
 	tool = tool_;
 	height = tool->get_height(player);
