@@ -911,6 +911,7 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
                 return "Cannot remove sole load bearing pier";
             }
         }
+        player_t::book_construction_costs(player, -p->get_desc()->get_value(),gr->get_pos().get_2d(),p->get_desc()->get_waytype());
         gr->obj_remove(p);
         delete p;
         if(bd){
@@ -950,8 +951,11 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
                     continue;
                 }
 
+                player_t::book_construction_costs(player, -p->get_desc()->get_value(),gr->get_pos().get_2d(),p->get_desc()->get_waytype());
+
                 gr->obj_remove(p);
                 delete p;
+
 
                 return NULL;
 
