@@ -35,6 +35,7 @@ if (MINGW)
 endif ()
 
 if (APPLE)
+	set(CMAKE_PREFIX_PATH "/usr/local/opt")
 	link_directories(/usr/local/lib)
 	set(CMAKE_EXE_LINKER_FLAGS "-framework Cocoa")
 endif ()
