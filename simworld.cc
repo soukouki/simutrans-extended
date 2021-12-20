@@ -9539,6 +9539,7 @@ bool karte_t::load(const char *filename)
 	else {
 DBG_MESSAGE("karte_t::load()","Savegame version is %u", file.get_version_int());
 
+		file.set_buffered(true);
 		load(&file);
 
 		if(  env_t::server  ) {
@@ -9793,8 +9794,6 @@ void karte_t::load(loadsave_t *file)
 
 	tile_counter = 0;
 	simloops = 60;
-
-	file->set_buffered(true);
 
 	rdwr_gamestate(file, &ls);
 
