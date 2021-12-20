@@ -11092,10 +11092,10 @@ void karte_t::process_network_commands(sint32 *ms_difference)
 				// out of sync => drop client (but we can only compare if nwt->last_sync_step is not too old)
 				else if(  is_checklist_available(nwt->last_sync_step)  &&  LCHKLST(nwt->last_sync_step)!=nwt->last_checklist  ) {
 					// lost synchronisation -> server kicks client out actively
-					char buf[2048];
-					const int offset = LCHKLST(nwt->last_sync_step).print(buf, "server");
-					nwt->last_checklist.print(buf + offset, "initiator");
-					dbg->warning("karte_t::process_network_commands", "kicking client due to checklist mismatch : sync_step=%u %s", nwt->last_sync_step, buf);
+					cbuffer_t buf;
+					LCHKLST(nwt->last_sync_step).print(buf, "server");
+					nwt->last_checklist.print(buf, "initiator");
+					dbg->warning("karte_t::process_network_commands", "kicking client due to checklist mismatch : sync_step=%u %s", nwt->last_sync_step, buf.get_str());
 					socket_list_t::remove_client( nwc->get_sender() );
 					delete nwc;
 					nwc = NULL;
@@ -11152,31 +11152,26 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 	// check random counter?
 	else if(  nwc->get_id()==NWC_CHECK  ) {
 		nwc_check_t* nwcheck = (nwc_check_t*)nwc;
+ 		const uint32 server_sync_step = nwcheck->server_sync_step;
+
 		// this was the random number at the previous sync step on the server
 		const checklist_t &server_checklist = nwcheck->server_checklist;
-		const uint32 server_sync_step = nwcheck->server_sync_step;
 		const checklist_t client_checklist = LCHKLST(server_sync_step);
-		char buf[2048];
 
-		const int offset = server_checklist.print(buf, "server");
-		assert(offset < 2048);
+		cbuffer_t buf;
+		server_checklist.print(buf, "server");
+		LCHKLST(server_sync_step).print(buf, "client");
 
-		const int offset2 = offset + client_checklist.print(buf + offset, "client");
-		assert(offset2 < 2048);
-		(void)offset2;
+		client_checklist.print(buf, "client");
 
-		dbg->warning("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf);
+		dbg->warning("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf.get_str());
 
 		if(client_checklist != server_checklist)
 		{
 			network_disconnect();
-
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 2
-			dbg->fatal(
-#else
-			dbg->warning(
-#endif
-				"karte_t:::do_network_world_command", "Disconnected due to checklist mismatch", buf );
+			// output warning / throw fatal error depending on heavy mode setting
+			void (log_t::*outfn)(const char*, const char*, ...) = (env_t::network_heavy_mode == 2 ? &log_t::fatal : &log_t::warning);
+			(dbg->*outfn)("karte_t:::do_network_world_command", "Disconnected due to checklist mismatch" );
 		}
 	}
 	else {
@@ -11184,14 +11179,11 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 			nwc_tool_t *nwt = dynamic_cast<nwc_tool_t *>(nwc);
 			if(  is_checklist_available(nwt->last_sync_step)  &&  LCHKLST(nwt->last_sync_step)!=nwt->last_checklist  ) {
 				// lost synchronisation ...
-				char buf[2048];
-				const int offset = nwt->last_checklist.print(buf, "server");
-				assert(offset < 2048);
-				const int offset2 = offset + LCHKLST(nwt->last_sync_step).print(buf + offset, "executor");
-				assert(offset2 < 2048);
-				(void)offset2;
+				cbuffer_t buf;
+				nwt->last_checklist.print(buf, "server");
+				LCHKLST(nwt->last_sync_step).print(buf, "executor");
 
-				dbg->warning("karte_t:::do_network_world_command", "skipping command due to checklist mismatch : sync_step=%u %s", nwt->last_sync_step, buf);
+				dbg->warning("karte_t:::do_network_world_command", "skipping command due to checklist mismatch : sync_step=%u %s", nwt->last_sync_step, buf.get_str());
 				if(  !env_t::server  ) {
 					network_disconnect();
 				}
@@ -11237,26 +11229,23 @@ sint16 karte_t::get_sound_id(grund_t *gr)
 }
 
 
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 2
 static void heavy_rotate_saves(const char *prefix, uint32 sync_steps, uint32 num_to_keep)
 {
 	dr_mkdir( SAVE_PATH_X "heavy");
 
-	char name[128];
-	sprintf(name, SAVE_PATH_X "heavy/heavy-%s-%04d.sve", prefix, sync_steps);
+	cbuffer_t name;
+	name.printf(SAVE_PATH_X "heavy/heavy-%s-%04d.sve", prefix, sync_steps);
 	world()->save(name, false, SERVER_SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR, true);
 
 	if (sync_steps >= num_to_keep) {
-		sprintf(name, SAVE_PATH_X "heavy/heavy-%s-%04d.sve", prefix, sync_steps - num_to_keep);
+		name.printf(SAVE_PATH_X "heavy/heavy-%s-%04d.sve", prefix, sync_steps - num_to_keep);
 		dr_remove(name);
 	}
 }
-#endif
 
 
 bool karte_t::interactive(uint32 quit_month)
 {
-
 	finish_loop = false;
 	sync_steps = 0;
 	sync_steps_barrier = sync_steps;
@@ -11389,25 +11378,20 @@ bool karte_t::interactive(uint32 quit_month)
 						network_frame_count = 0;
 					}
 					sync_steps = steps * settings.get_frames_per_step() + network_frame_count;
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
-					LCHKLST(sync_steps) = checklist_t(get_gamestate_hash());
 
-#if HEAVY_MODE >= 2
-					heavy_rotate_saves(env_t::server ? "server" : "client", sync_steps, 10);
-#endif
-
-#else
-					LCHKLST(sync_steps) = checklist_t(sync_steps, (uint32)steps, network_frame_count, get_random_seed(), halthandle_t::get_next_check(), linehandle_t::get_next_check(), convoihandle_t::get_next_check(),
-						rands, debug_sums
-					);
-
-#endif
-#ifdef DEBUG_SIMRAND_CALLS
-					char buf[2048];
-					const int offset = LCHKLST(sync_steps).print(buf, "chklist");
-					assert(offset<2048);
-					dbg->warning("karte_t::interactive", "sync_step=%u  %s", sync_steps, buf);
-#endif
+					switch(env_t::network_heavy_mode) {
+						case 0:
+						default:
+							LCHKLST(sync_steps) = checklist_t(sync_steps, (uint32)steps, network_frame_count, get_random_seed(), halthandle_t::get_next_check(), linehandle_t::get_next_check(), convoihandle_t::get_next_check(),
+								rands, debug_sums
+							);
+							break;
+						case 2:
+							heavy_rotate_saves(env_t::server ? "server" : "client", sync_steps, 10);
+							// fall-through
+						case 1:
+							LCHKLST(sync_steps) = checklist_t(get_gamestate_hash());
+					}
 
 					// some server side tasks
 					if(  env_t::networkmode  &&  env_t::server  ) {
@@ -12500,7 +12484,6 @@ uint32 karte_t::get_cities_awaiting_private_car_route_check_count() const
 }
 
 
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 uint32 karte_t::get_gamestate_hash()
 {
 	adler32_stream_t *stream = new adler32_stream_t;
@@ -12509,4 +12492,3 @@ uint32 karte_t::get_gamestate_hash()
 	rdwr_gamestate(&ls, NULL);
 	return stream->get_hash();
 }
-#endif

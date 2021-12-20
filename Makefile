@@ -232,12 +232,6 @@ else
 endif
 
 ifneq ($(HEAVY_MODE),)
-  CFLAGS += -DHEAVY_MODE=$(HEAVY_MODE)
-  ifeq ($(shell expr $(HEAVY_MODE) \>= 1), 1)
-    SOURCES += io/rdwr/adler32_stream.cc
-  endif
-endif
-
 ifneq ($(MULTI_THREAD),)
   ifeq ($(shell expr $(MULTI_THREAD) \>= 1), 1)
     CFLAGS += -DMULTI_THREAD
@@ -502,6 +496,7 @@ SOURCES += io/raw_image.cc
 SOURCES += io/raw_image_bmp.cc
 SOURCES += io/raw_image_png.cc
 SOURCES += io/raw_image_ppm.cc
+SOURCES += io/rdwr/adler32_stream.cc
 SOURCES += io/rdwr/rdwr_stream.cc
 SOURCES += io/rdwr/zlib_file_rdwr_stream.cc
 SOURCES += network/checksum.cc

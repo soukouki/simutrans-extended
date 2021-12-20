@@ -8,19 +8,16 @@
 
 #include "../simtypes.h"
 
-
 class memory_rw_t;
-
+class cbuffer_t;
 
 #define CHK_RANDS 32
 #define CHK_DEBUG_SUMS 10
 
 struct checklist_t
 {
-#if HEAVY_MODE
 private:
 	uint32 hash;
-#else
 	uint32 random_seed;
 	uint16 halt_entry;
 	uint16 line_entry;
@@ -33,22 +30,16 @@ private:
 	uint32 rand[CHK_RANDS];
 	uint32 debug_sum[CHK_DEBUG_SUMS];
 
-#endif
-
-
 public:
 	checklist_t();
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 	explicit checklist_t(const uint32 &hash);
-#else
 	checklist_t(uint32 _ss, uint32 _st, uint8 _nfc, uint32 _random_seed, uint16 _halt_entry, uint16 _line_entry, uint16 _convoy_entry, uint32 *_rands, uint32 *_debug_sums);
-#endif
 
 	bool operator == (const checklist_t &other) const;
 	bool operator != (const checklist_t &other) const { return !( (*this)==other ); }
 
 	void rdwr(memory_rw_t *buffer);
-	int print(char *buffer, const char *entity) const;
+	void print(cbuffer_t &buffer, const char *entity) const;
 };
 
 

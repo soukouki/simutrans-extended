@@ -485,6 +485,7 @@ void print_help()
 		" -server_dns FQDN/IP FQDN or IP address of server for announcements\n"
 		" -server_name NAME   Name of server for announcements\n"
 		" -server_admin_pw PW password for server administration\n"
+		" -heavy NUM          enables heavy-mode debugging for network games. VERY SLOW!\n"
 		" -set_workdir WD     Use WD as directory containing all data.\n"
 		" -singleuser         Save everything in data directory (portable version)\n"
 #ifdef DEBUG
@@ -847,6 +848,12 @@ int simu_main(int argc, char** argv)
 			// no announce for clients ...
 			env_t::server_announce = 0;
 		}
+	}
+	// enabling heavy-mode for debugging network games
+	env_t::network_heavy_mode = 0;
+	if(  args.has_arg("-heavy")  ) {
+		int heavy = atoi(args.gimme_arg("-heavy", 1));
+		env_t::network_heavy_mode = clamp(heavy, 0, 2);
 	}
 
 #ifdef DEBUG

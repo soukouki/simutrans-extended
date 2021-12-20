@@ -6,21 +6,20 @@
 #include "checklist.h"
 
 #include "../network/memory_rw.h"
+#include "../utils/cbuffer_t.h"
+
+#include <cstring>
 
 
 checklist_t::checklist_t() :
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
-	hash(0)
-{
-}
-#else
-	ss(0),
-	st(0),
-	nfc(0),
+	hash(0),
 	random_seed(0),
 	halt_entry(0),
 	line_entry(0),
-	convoy_entry(0)
+	convoy_entry(0),
+	ss(0),
+	st(0),
+	nfc(0)
 {
 	for(  uint8 i = 0;  i < CHK_RANDS;  i++  ) {
 		rand[i] = 0;
@@ -29,38 +28,54 @@ checklist_t::checklist_t() :
 		debug_sum[i] = 0;
 	}
 }
-#endif
 
 
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 checklist_t::checklist_t(const uint32 &hash) :
-	hash(hash)
+	hash(hash),
+	random_seed(0),
+	halt_entry(0),
+	line_entry(0),
+	convoy_entry(0),
+	ss(0),
+	st(0),
+	nfc(0)
 {
+	for(  uint8 i = 0;  i < CHK_RANDS;  i++  ) {
+		rand[i] = 0;
+	}
+	for(  uint8 i = 0;  i < CHK_DEBUG_SUMS;  i++  ) {
+		debug_sum[i] = 0;
+	}
 }
-#else
-checklist_t::checklist_t(uint32 _ss, uint32 _st, uint8 _nfc, uint32 _random_seed, uint16 _halt_entry, uint16 _line_entry, uint16 _convoy_entry, uint32 *_rands, uint32 *_debug_sums)
-	: ss(_ss), st(_st), nfc(_nfc), random_seed(_random_seed), halt_entry(_halt_entry), line_entry(_line_entry), convoy_entry(_convoy_entry)
 
+
+// checklist_t::checklist_t(uint32 _ss, uint32 _st, uint8 _nfc, uint32 _random_seed, uint16 _halt_entry, uint16 _line_entry, uint16 _convoy_entry, uint32* _rands, uint32* _debug_sums)
+checklist_t::checklist_t(uint32 _ss, uint32 _st, uint8 _nfc, uint32 _random_seed, uint16 _halt_entry, uint16 _line_entry, uint16 _convoy_entry, uint32 *_rands, uint32 *_debug_sums) :
+	hash(0),
+	random_seed(_random_seed),
+	halt_entry(_halt_entry),
+	line_entry(_line_entry),
+	convoy_entry(_convoy_entry),
+	ss(_ss),
+	st(_st),
+	nfc(_nfc)
 {
-	for(  uint8 i = 0;  i < CHK_RANDS; i++  ) {
-		rand[i]	 = _rands[i];
+	for(  uint8 i = 0;  i < CHK_RANDS;  i++  ) {
+		rand[i] = _rands[i];
 	}
-	for(  uint8 i = 0;  i < CHK_DEBUG_SUMS; i++  ) {
-		debug_sum[i]	 = _debug_sums[i];
+	for(  uint8 i = 0;  i < CHK_DEBUG_SUMS;  i++  ) {
+		debug_sum[i] = _debug_sums[i];
 	}
 }
-#endif
 
 
 bool checklist_t::operator==(const checklist_t& other) const
 {
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
-	return hash == other.hash;
-#else
-	bool rands_equal = true;
-	for(  uint8 i = 0;  i < CHK_RANDS  &&  rands_equal;  i++  ) {
-		rands_equal = rands_equal  &&  rand[i] == other.rand[i];
+	if (hash != other.hash) {
+		return false;
 	}
+
+	const bool rands_equal = memcmp(rand, other.rand, CHK_RANDS * sizeof(rand[0]));
 
 	bool debugs_equal = true;
 	for(  uint8 i = 0;  i < CHK_DEBUG_SUMS  &&  debugs_equal;  i++  ) {
@@ -79,15 +94,12 @@ bool checklist_t::operator==(const checklist_t& other) const
 		line_entry == other.line_entry &&
 		convoy_entry == other.convoy_entry
 		);
-#endif
 }
 
 
 void checklist_t::rdwr(memory_rw_t *buffer)
 {
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
 	buffer->rdwr_long(hash);
-#else
 	buffer->rdwr_long(ss);
 	buffer->rdwr_long(st);
 	buffer->rdwr_byte(nfc);
@@ -103,21 +115,16 @@ void checklist_t::rdwr(memory_rw_t *buffer)
 	for(  uint8 i = 0;  i < CHK_DEBUG_SUMS;  i++  ) {
 		buffer->rdwr_long(debug_sum[i]);
 	}
-#endif
 }
 
 
-int checklist_t::print(char *buffer, const char *entity) const
+void checklist_t::print(cbuffer_t &buffer, const char *entity) const
 {
-#if defined(HEAVY_MODE) && HEAVY_MODE >= 1
-	return sprintf(buffer, "%s=[adler32=%08x] ", entity, hash);
-#else
-	return sprintf(buffer, "%s=[ss=%u st=%u nfc=%u rand=%u halt=%u line=%u cnvy=%u\n\tssr=%u,%u,%u,%u,%u,%u,%u,%u\n\tstr=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n\texr=%u,%u,%u,%u,%u,%u,%u,%u\n\tsums=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u]\n",
-		entity, ss, st, nfc, random_seed, halt_entry, line_entry, convoy_entry,
+	buffer.printf("%s=[ss=%u st=%u nfc=%u adler32=%08x rand=%u halt=%u line=%u cnvy=%u\n\tssr=%u,%u,%u,%u,%u,%u,%u,%u\n\tstr=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n\texr=%u,%u,%u,%u,%u,%u,%u,%u\n\tsums=%u,%u,%u,%u,%u,%u,%u,%u,%u,%u]\n",
+		entity, ss, st, nfc, hash, random_seed, halt_entry, line_entry, convoy_entry,
 		rand[0], rand[1], rand[2], rand[3], rand[4], rand[5], rand[6], rand[7],
 		rand[8], rand[9], rand[10], rand[11], rand[12], rand[13], rand[14], rand[15], rand[16], rand[17], rand[18], rand[19], rand[20], rand[21], rand[22], rand[23],
 		rand[24], rand[25], rand[26], rand[27], rand[28], rand[29], rand[30], rand[31],
 		debug_sum[0], debug_sum[1], debug_sum[2], debug_sum[3], debug_sum[4], debug_sum[5], debug_sum[6], debug_sum[7], debug_sum[8], debug_sum[9]
 	);
-#endif
 }
