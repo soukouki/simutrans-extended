@@ -61,9 +61,11 @@ void gui_aligned_container_t::set_size(scr_size new_size)
 //	}
 //	printf("\n");
 
-	if (min_size.h > new_size.h  ||  min_size.w > new_size.w) {
-		dbg->message("gui_aligned_container_t::set_size", "new size (%d,%d) smaller than min size (%d,%d)", new_size.w, new_size.h, min_size.w, min_size.h);
+#ifdef DEBUG
+	if (new_size.w < min_size.w  ||  new_size.h < min_size.h) {
+		dbg->message("gui_aligned_container_t::set_size", "new size (%d,%d) cannot fit all elements; at least (%d,%d) required", new_size.w, new_size.h, min_size.w, min_size.h);
 	}
+#endif
 
 	scr_size extra = new_size - min_size;
 	extra.clip_lefttop(scr_coord(0,0));
@@ -115,8 +117,8 @@ void gui_aligned_container_t::set_size(scr_size new_size)
 		// cells spanning more than one column into account
 		do {
 			// maybe no visible cells in this row anymore
-			if (cc < col_minw.get_count()) {
-				cell_size.w += col_minw[cc];
+			if (c < col_minw.get_count()) {
+				cell_size.w += col_minw[c];
 			}
 			cell_size.h = max(cell_size.h, row_minh[rr] );
 
@@ -184,7 +186,7 @@ void gui_aligned_container_t::set_size(scr_size new_size)
 				delta.x      = -c_pos.x;
 				comp_size.w +=  c_pos.x;
 			}
-			if (columns  &&  (c % columns) == 0) {
+			if (columns  &&  ((c+1) % columns) == 0) {
 				// last element in column
 				comp_size.w = new_size.w - (c_pos.x + delta.x);
 			}
@@ -353,7 +355,7 @@ void gui_aligned_container_t::compute_sizes(vector_tpl<scr_coord_val>& col_w, ve
 }
 
 
-scr_size gui_aligned_container_t::get_size(vector_tpl<scr_coord_val>& col_w, vector_tpl<scr_coord_val>& row_h) const
+scr_size gui_aligned_container_t::get_size(const vector_tpl<scr_coord_val>& col_w, const vector_tpl<scr_coord_val>& row_h) const
 {
 	scr_coord_val sinf = scr_size::inf.w;
 	scr_size s = margin_tl + margin_br;
