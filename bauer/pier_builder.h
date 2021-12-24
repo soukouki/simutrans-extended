@@ -67,7 +67,7 @@ private:
         ribi_t::ribi below_way_ribi;
         slope_t::type above_slope;
         slope_t::type ground_slope;
-        uint8 autogroup;
+        uint32 autogroup;
 
         bool need_clearence;
         bool allow_low_waydeck;

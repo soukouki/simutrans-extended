@@ -24,7 +24,7 @@ private:
 
     slope_t::type above_slope;        //slope of ramp
 
-    uint8 auto_group;                 //group for automatic placement (0 is no group)
+    uint32 auto_group;                 //group for automatic placement (0 is no group)
     uint8 auto_height;                //bit feild for automatic placement height
                                       //MSB to LSB: avoid placement; (remain bits future use...) Reserved; Only 1 pier; Top Peir; Upper third; Middle; lower Third; Bottom;
 
@@ -80,7 +80,7 @@ public:
 	ribi_t::ribi get_above_way_ribi(uint8 rotation=0) const {return rotate_ribi(above_way_ribi,rotation);}
 	ribi_t::ribi get_below_way_ribi(uint8 rotation=0) const {return rotate_ribi(below_way_ribi, rotation);}
 	slope_t::type get_above_slope(uint8 rotation=0) const;
-	uint8 get_auto_group() const {return auto_group;}
+	uint32 get_auto_group() const {return auto_group;}
 	uint8 get_auto_height() const {return auto_height;}
 	bool get_auto_height_avoid() const {return auto_height & 0x80;}
 
