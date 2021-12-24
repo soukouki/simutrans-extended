@@ -247,12 +247,19 @@ void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos
         if(gr->get_typ()==grund_t::brueckenboden || gr->get_typ()==grund_t::monorailboden){
             params.notallowed=true;
         }
+        if(gr->is_water()){
+            params.nodeck=true;
+        }
         params.ground_slope=gr->get_grund_hang();
         params.is_wet=gr->is_water();
         params.on_deck=gr->get_typ()==grund_t::pierdeck;
-        params.allow_low_waydeck=false;
         params.middle_mask_taken=pier_t::get_middle_mask_total(gr);
         params.existing_above_ribi=pier_t::get_above_ribi_total(gr,true);
+        if(gr->get_typ()!=grund_t::pierdeck){
+            params.allow_low_waydeck=false;
+        }else{
+            params.allow_low_waydeck=params.existing_above_ribi==0;
+        }
         if(const grund_t *gr0= welt->lookup(pier_builder_t::lookup_deck_pos(gr))){
             for(uint8 i=0; i < gr0->get_top(); i++){
                 if(gr0->obj_bei(i)->get_typ()==obj_t::pier){
@@ -264,6 +271,9 @@ void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos
         }
     }
     if(const grund_t *gr2=pier_t::ground_below(pos)){
+        if(gr2->is_water()){
+            params.allow_low_waydeck=false;
+        }
         params.support_avail=pier_t::get_support_mask_total(gr2);
         if(gr2->get_weg_nr(0)){
             params.below_way_ribi|=(gr2->get_weg_nr(0)->is_low_clearence(owner) || gr2->get_weg_hang())? 0 : gr2->get_weg_nr(0)->get_ribi_unmasked();
@@ -293,6 +303,9 @@ void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos
         if(gebaeude_t *gb = gr->get_building()){
             params.sub_obj_present=gb->get_tile()->get_desc()->get_pier_mask(0);
         }
+    }
+    if(welt->lookup_hgt(pos.get_2d()) < welt->get_water_hgt(pos.get_2d())){
+        params.notallowed=true;
     }
 }
 
@@ -614,6 +627,11 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
             uint32 match=0;
             bool unmatch=false;
 
+            if(!desc->is_available(welt->get_timeline_year_month())){
+                unmatch=true;
+                match+=32;
+            }
+
             if(params.stackable &&
                     (desc->get_support_mask(r)|desc->get_base_mask(r)) != desc->get_support_mask(r)){
                 unmatch=true;
@@ -788,6 +806,12 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
 
     if(gr->is_water() && desc->get_above_way_ribi()){
         return "Pier could block shipping lanes";
+    }
+
+    if(const grund_t *gr2 = pier_t::ground_below(gr)){
+        if(gr2->is_water() && desc->get_low_waydeck()){
+            return "Pier could block shipping lanes";
+        }
     }
 
     if(gr->is_water() && desc->get_keep_dry()){
