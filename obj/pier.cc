@@ -105,7 +105,7 @@ void pier_t::rotate90(){
 }
 
 const char *pier_t::is_deletable(const player_t *player){
-	if (get_player_nr()==welt->get_public_player()->get_player_nr()) {
+	if (get_owner_nr()==welt->get_public_player()->get_player_nr()) {
 		return NULL;
 	}
 	if(grund_t *gr = welt->lookup(get_pos())){
