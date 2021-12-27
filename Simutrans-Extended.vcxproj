@@ -2590,7 +2590,6 @@
     <ClInclude Include="gui\onewaysign_info.h" />
     <ClInclude Include="gui\overtaking_mode.h" />
     <ClInclude Include="gui\obj_info.h" />
-    <ClInclude Include="gui\pedestrian_info.h" />
     <ClInclude Include="gui\pier_rotation_select.h" />
     <ClInclude Include="gui\slim_obj_info.h" />
     <ClInclude Include="gui\privatesign_info.h" />
