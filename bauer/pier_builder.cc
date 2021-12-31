@@ -243,6 +243,7 @@ const pier_desc_t *pier_builder_t::get_desc_bad_load(koord3d pos,player_t *owner
 
 void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos, player_t *owner){
     const grund_t* gr=welt->lookup(pos);
+    params.pos_lsbs=((pos.x&1)<<0) | ((pos.y&1)<<1) | ((pos.y&1)<<2);
     if(gr){
         if(gr->get_typ()==grund_t::brueckenboden || gr->get_typ()==grund_t::monorailboden){
             params.notallowed=true;
@@ -591,8 +592,6 @@ bool pier_builder_t::calc_route(vector_tpl<pier_route_elem> &route, player_t *pl
     return true;
 }
 
-
-
 bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& rotation, pier_finder_params params, bool allow_inexact, vector_tpl<pier_finder_match> *matches, pier_finder_match *best_match, uint32 add_match){
     descriptor=NULL;
 
@@ -630,6 +629,14 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
             if(!desc->is_available(welt->get_timeline_year_month())){
                 unmatch=true;
                 match+=32;
+            }
+
+            ribi_t::ribi way_ribi=params.requre_low_waydeck ? params.below_way_ribi : params.above_way_ribi;
+            if(ribi_t::is_straight_ns(way_ribi)){
+                match+=(r&2)^(params.pos_lsbs&2);
+            }
+            if(ribi_t::is_straight_ew(way_ribi)){
+                match+=(((r&2)>>1)^(params.pos_lsbs&1))<<1;
             }
 
             if(params.stackable &&

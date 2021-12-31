@@ -52,6 +52,7 @@ private:
             existing_above_ribi=0;
             notallowed=false;
             nodeck=false;
+            pos_lsbs=0;
         }
 
         uint64 support_needed;
@@ -62,12 +63,13 @@ private:
         sint32 max_cost;
         sint32 max_maintenance;
         uint16 min_axle_load;
+        uint32 autogroup;
+        uint8 pos_lsbs;
         ribi_t::ribi above_way_ribi;
         ribi_t::ribi existing_above_ribi;
         ribi_t::ribi below_way_ribi;
         slope_t::type above_slope;
         slope_t::type ground_slope;
-        uint32 autogroup;
 
         bool need_clearence;
         bool allow_low_waydeck;
