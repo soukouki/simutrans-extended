@@ -532,7 +532,7 @@ static void internal_GetEvents()
 			}
 			// Ignore other window events.
 			break;
-		
+
 		case SDL_MOUSEBUTTONDOWN:
 			dLastDist = 0.0;
 			if (event.button.which != SDL_TOUCH_MOUSEID) {
