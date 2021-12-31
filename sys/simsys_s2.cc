@@ -41,6 +41,9 @@ extern char **__argv;
 #else
 #endif
 
+// threshold for zooming in/out with multitouch
+#define DELTA_PINCH (0.033)
+
 static Uint8 hourglass_cursor[] = {
 	0x3F, 0xFE, //   *************
 	0x30, 0x06, //   **         **
