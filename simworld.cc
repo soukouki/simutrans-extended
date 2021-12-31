@@ -11326,12 +11326,7 @@ bool karte_t::interactive(uint32 quit_month)
 			INT_CHECK( "karte_t::interactive()" );
 			const sint32 wait_time = (sint32)(next_step_time-dr_time());
 			if(wait_time>0) {
-				if(  wait_time < 4  ) {
-					dr_sleep( wait_time );
-				}
-				else {
-					dr_sleep( 3 );
-				}
+				dr_sleep(min(wait_time, 3));
 				INT_CHECK( "karte_t::interactive()" );
 			}
 			DBG_DEBUG4("karte_t::interactive", "end of sleep");
@@ -12307,7 +12302,7 @@ karte_t::runway_info karte_t::check_nearby_runways(koord pos)
 			continue;
 		}
 		runway_t* rw = (runway_t*)gr->get_weg(air_wt);
-		if (rw && rw->get_desc()->get_styp() == type_runway && !(rw->get_player_nr() == PLAYER_UNOWNED && rw->is_degraded() && rw->get_max_speed() == 0)) // Do not care about degraded, unowned runways
+		if (rw && rw->get_desc()->get_styp() == type_runway && !(rw->get_owner_nr() == PLAYER_UNOWNED && rw->is_degraded() && rw->get_max_speed() == 0)) // Do not care about degraded, unowned runways
 		{
 			ri.pos = gr->get_pos().get_2d();
 			// We must iterate through all directions in case there are multiple runways.
