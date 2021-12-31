@@ -505,7 +505,7 @@ static int conv_mouse_buttons(Uint8 const state)
 }
 
 
-static void internal_GetEvents(bool const wait)
+static void internal_GetEvents()
 {
 	// Apparently Cocoa SDL posts key events that meant to be used by IM...
 	// Ignoring SDL_KEYDOWN during preedit seems to work fine.
@@ -514,37 +514,15 @@ static void internal_GetEvents(bool const wait)
 
 	SDL_Event event;
 	event.type = 1;
-	if(  wait  ) {
-		int n;
-		do {
-			SDL_WaitEvent( &event );
-			n = SDL_PollEvent( NULL );
-		} while(  n != 0  &&  event.type == SDL_MOUSEMOTION  );
-	}
-	else {
-		int n;
-		bool got_one = false;
-		do {
-			n = SDL_PollEvent( &event );
-			if(  n != 0  ) {
-				got_one = true;
-				if(  event.type == SDL_MOUSEMOTION  ) {
-					sys_event.mx   = SCREEN_TO_TEX_X(event.motion.x);
-					sys_event.my   = SCREEN_TO_TEX_Y(event.motion.y);
-					sys_event.type = SIM_MOUSE_MOVE;
-					sys_event.code = SIM_MOUSE_MOVED;
-					sys_event.mb   = conv_mouse_buttons( event.motion.state );
-				}
-			}
-		} while(  n != 0  &&  event.type == SDL_MOUSEMOTION  );
-		if(  !got_one  ) {
-			return;
-		}
+	if (SDL_PollEvent(&event) == 0) {
+		return;
 	}
 
 	static char textinput[SDL_TEXTINPUTEVENT_TEXT_SIZE];
 	switch(  event.type  ) {
+
 		case SDL_WINDOWEVENT: {
+			dbg->message("SDL_WINDOWEVENT", "%i", event.window.event);
 			if(  event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED  ) {
 				sys_event.new_window_size.w = SCREEN_TO_TEX_X(event.window.data1);
 				sys_event.new_window_size.h = SCREEN_TO_TEX_Y(event.window.data2);
@@ -752,16 +730,7 @@ static void internal_GetEvents(bool const wait)
 
 void GetEvents()
 {
-	internal_GetEvents( true );
-}
-
-
-void GetEventsNoWait()
-{
-	sys_event.type = SIM_NOEVENT;
-	sys_event.code = 0;
-
-	internal_GetEvents( false );
+	internal_GetEvents();
 }
 
 

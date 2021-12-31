@@ -20,6 +20,7 @@
 	CHG: search dialoges now consistent design, text search, preserved during saveload
 	ADD: menubar can be now top bottom left or right
 	ADD: reselect a tool will close it (new default, set by reselect_closes_tool in menuconf.tab)
+	CHG: window rollup also with double click
 
 
 Release of 122.0 (r9274 on 10-Oct-2020):

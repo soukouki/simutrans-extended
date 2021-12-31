@@ -313,12 +313,12 @@ void modal_dialogue( gui_frame_t *gui, ptrdiff_t magic, karte_t *welt, bool (*qu
 	}
 
 	// just trigger not another following window => wait for button release
-	display_get_event(&ev);
 	if (IS_LEFTCLICK(&ev)) {
 		do {
-			display_get_event(&ev);
+			display_poll_event(&ev);
 		} while (!IS_LEFTRELEASE(&ev));
 	}
+
 	// restore autosave
 	env_t::autosave = old_autosave;
 }
