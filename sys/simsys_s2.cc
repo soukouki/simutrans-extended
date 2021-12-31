@@ -512,6 +512,11 @@ static void internal_GetEvents()
 	// Ignoring SDL_KEYDOWN during preedit seems to work fine.
 	static bool composition_is_underway = false;
 	static bool ignore_previous_number = false;
+	static int previous_multifinger_touch = 0;
+	static bool in_finger_handling = false;
+	static SDL_FingerID FirstFingerId = 0;
+	static bool previous_mouse_down = false;
+	static double dLastDist = 0.0;
 
 	SDL_Event event;
 	event.type = 1;
@@ -592,12 +597,6 @@ static void internal_GetEvents()
 			 * The button down events will be from fingr move and the coordinate will be set from mouse up: enough
 			 */
 	DBG_MESSAGE("SDL_FINGERDOWN", "fingerID=%x FirstFingerId=%x Finger %i", (int)event.tfinger.fingerId, (int)FirstFingerId, SDL_GetNumTouchFingers(event.tfinger.touchId));
-			{
-				int mx = SCREEN_TO_TEX_X((event.tfinger.x) * screen->w);
-				int my = SCREEN_TO_TEX_Y((event.tfinger.y) * screen->h);
-				int tx = event.tfinger.x * display_get_width();
-				int ty = event.tfinger.y * display_get_height();
-			}
 			if (!in_finger_handling) {
 				dLastDist = 0.0;
 				FirstFingerId = event.tfinger.fingerId;
