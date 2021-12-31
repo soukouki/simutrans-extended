@@ -5916,7 +5916,19 @@ image_id tool_build_pier_t::get_icon(player_t *) const {
 
 const char *tool_build_pier_t::get_tooltip(const player_t *) const{
 	if(const pier_desc_t *desc = get_desc()){
-		return tooltip_with_price_maintenance(welt,desc->get_name(),-desc->get_value(),desc->get_maintenance());
+		tooltip_with_price_maintenance(welt,desc->get_name(),-desc->get_value(),desc->get_maintenance());
+		size_t n = strlen(toolstr);
+		n += sprintf(toolstr+n, " %s", translator::translate("per tile"));
+		if(desc->get_topspeed()!=0xFFFF){
+			n+=sprintf(toolstr+n, " %dkm/h",desc->get_topspeed());
+		}
+		if(desc->get_max_axle_load()!=0xFFFF){
+			n+=sprintf(toolstr+n, translator::translate(" %dt/axle"),desc->get_max_axle_load());
+		}
+		if(desc->get_low_waydeck()){
+			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
+		}
+		return toolstr;
 	}
 	return "Invalid Pier";
 }
@@ -6067,11 +6079,30 @@ const char *tool_build_pier_t::work(player_t *player, koord3d pos){
 sint8 tool_build_pier_auto_t::pier_info::start_height = 2;
 
 const char* tool_build_pier_auto_t::get_tooltip(const player_t *) const{
-	if(desc){
-		sprintf(tool_t::toolstr, translator::translate("Automatically build %s or simular with needed supports"), translator::translate(desc->get_name()));
-		return tool_t::toolstr;
+	//TODO get desc
+	char name[256]="";
+	uint32 i;
+	for(i=0; default_param[i]!=0  &&  default_param[i]!=','; i++) {
+		name[i]=default_param[i];
 	}
-	return NULL;
+	name[i]=0;
+	const pier_desc_t *tdesc=pier_builder_t::get_desc(name);
+	if(tdesc){
+		strcpy(name, translator::translate("Automatically build "));
+		strcat(name, translator::translate(tdesc->get_name()));
+		strcat(name," et Al.");
+		tooltip_with_price_maintenance(welt,name,-tdesc->get_value(),tdesc->get_maintenance());
+		size_t n = strlen(toolstr);
+		n += sprintf(toolstr+n, " %s", translator::translate("per tile apprx."));
+		if(tdesc->get_max_axle_load()!=0xFFFF){
+			n+=sprintf(toolstr+n, translator::translate(" %dt+/axle"),tdesc->get_max_axle_load());
+		}
+		if(tdesc->get_low_waydeck()){
+			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
+		}
+		return toolstr;
+	}
+	return "Invalid Pier";
 }
 
 void tool_build_pier_auto_t::draw_after(scr_coord k, bool dirty) const{
