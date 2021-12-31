@@ -180,12 +180,12 @@ bool dr_os_init(const int* parameter)
 #ifndef USE_SDL_TEXTEDITING
 	SDL_EventState( SDL_TEXTEDITING, SDL_DISABLE );
 #endif
-	SDL_EventState( SDL_FINGERDOWN, SDL_DISABLE );
-	SDL_EventState( SDL_FINGERUP, SDL_DISABLE );
-	SDL_EventState( SDL_FINGERMOTION, SDL_DISABLE );
+	SDL_EventState( SDL_FINGERDOWN, SDL_ENABLE );
+	SDL_EventState( SDL_FINGERUP, SDL_ENABLE );
+	SDL_EventState( SDL_FINGERMOTION, SDL_ENABLE );
 	SDL_EventState( SDL_DOLLARGESTURE, SDL_DISABLE );
 	SDL_EventState( SDL_DOLLARRECORD, SDL_DISABLE );
-	SDL_EventState( SDL_MULTIGESTURE, SDL_DISABLE );
+	SDL_EventState( SDL_MULTIGESTURE, SDL_ENABLE );
 	SDL_EventState( SDL_CLIPBOARDUPDATE, SDL_DISABLE );
 	SDL_EventState( SDL_DROPFILE, SDL_DISABLE );
 
@@ -273,7 +273,8 @@ bool internal_create_surfaces(int tex_width, int tex_height)
 	if(  !SDL_PixelFormatEnumToMasks( pixel_format, &bpp, &rmask, &gmask, &bmask, &amask )  ) {
 		dbg->error( "internal_create_surfaces(SDL2)", "Pixel format error. Couldn't generate masks: %s", SDL_GetError() );
 		return false;
-	} else if(  bpp != COLOUR_DEPTH  ||  amask != 0  ) {
+	}
+	else if(  bpp != COLOUR_DEPTH  ||  amask != 0  ) {
 		dbg->error( "internal_create_surfaces(SDL2)", "Pixel format error. Bpp got %d, needed %d. Amask got %d, needed 0.", bpp, COLOUR_DEPTH, amask );
 		return false;
 	}
@@ -531,36 +532,45 @@ static void internal_GetEvents()
 			}
 			// Ignore other window events.
 			break;
-		}
-		case SDL_MOUSEBUTTONDOWN: {
-			sys_event.type    = SIM_MOUSE_BUTTONS;
-			switch(  event.button.button  ) {
-				case SDL_BUTTON_LEFT:   sys_event.code = SIM_MOUSE_LEFTBUTTON;  break;
-				case SDL_BUTTON_MIDDLE: sys_event.code = SIM_MOUSE_MIDBUTTON;   break;
-				case SDL_BUTTON_RIGHT:  sys_event.code = SIM_MOUSE_RIGHTBUTTON; break;
-				case SDL_BUTTON_X1:     sys_event.code = SIM_MOUSE_WHEELUP;     break;
-				case SDL_BUTTON_X2:     sys_event.code = SIM_MOUSE_WHEELDOWN;   break;
+		
+		case SDL_MOUSEBUTTONDOWN:
+			dLastDist = 0.0;
+			if (event.button.which != SDL_TOUCH_MOUSEID) {
+				sys_event.type    = SIM_MOUSE_BUTTONS;
+				switch(  event.button.button  ) {
+					case SDL_BUTTON_LEFT:   sys_event.code = SIM_MOUSE_LEFTBUTTON;  break;
+					case SDL_BUTTON_MIDDLE: sys_event.code = SIM_MOUSE_MIDBUTTON;   break;
+					case SDL_BUTTON_RIGHT:  sys_event.code = SIM_MOUSE_RIGHTBUTTON; break;
+					case SDL_BUTTON_X1:     sys_event.code = SIM_MOUSE_WHEELUP;     break;
+					case SDL_BUTTON_X2:     sys_event.code = SIM_MOUSE_WHEELDOWN;   break;
+				}
+				sys_event.mx      = SCREEN_TO_TEX_X(event.button.x);
+				sys_event.my      = SCREEN_TO_TEX_Y(event.button.y);
+				sys_event.mb      = conv_mouse_buttons( SDL_GetMouseState(0, 0) );
+				sys_event.key_mod = ModifierKeys();
+				previous_mouse_down = true;
 			}
-			sys_event.mx      = SCREEN_TO_TEX_X(event.button.x);
-			sys_event.my      = SCREEN_TO_TEX_Y(event.button.y);
-			sys_event.mb      = conv_mouse_buttons( SDL_GetMouseState(0, 0) );
-			sys_event.key_mod = ModifierKeys();
 			break;
-		}
-		case SDL_MOUSEBUTTONUP: {
-			sys_event.type    = SIM_MOUSE_BUTTONS;
-			switch(  event.button.button  ) {
-				case SDL_BUTTON_LEFT:   sys_event.code = SIM_MOUSE_LEFTUP;  break;
-				case SDL_BUTTON_MIDDLE: sys_event.code = SIM_MOUSE_MIDUP;   break;
-				case SDL_BUTTON_RIGHT:  sys_event.code = SIM_MOUSE_RIGHTUP; break;
+
+		case SDL_MOUSEBUTTONUP:
+			if (!previous_multifinger_touch  &&  !in_finger_handling) {
+				// we try to only handle mouse events
+				sys_event.type    = SIM_MOUSE_BUTTONS;
+				switch(  event.button.button  ) {
+					case SDL_BUTTON_LEFT:   sys_event.code = SIM_MOUSE_LEFTUP;  break;
+					case SDL_BUTTON_MIDDLE: sys_event.code = SIM_MOUSE_MIDUP;   break;
+					case SDL_BUTTON_RIGHT:  sys_event.code = SIM_MOUSE_RIGHTUP; break;
+				}
+				sys_event.mx      = SCREEN_TO_TEX_X(event.button.x);
+				sys_event.my      = SCREEN_TO_TEX_Y(event.button.y);
+				sys_event.mb      = conv_mouse_buttons( SDL_GetMouseState(0, 0) );
+				sys_event.key_mod = ModifierKeys();
+				previous_multifinger_touch = false;
 			}
-			sys_event.mx      = SCREEN_TO_TEX_X(event.button.x);
-			sys_event.my      = SCREEN_TO_TEX_Y(event.button.y);
-			sys_event.mb      = conv_mouse_buttons( SDL_GetMouseState(0, 0) );
-			sys_event.key_mod = ModifierKeys();
+			previous_mouse_down = false;
 			break;
-		}
-		case SDL_MOUSEWHEEL: {
+
+		case SDL_MOUSEWHEEL:
 			sys_event.type    = SIM_MOUSE_BUTTONS;
 			sys_event.code    = event.wheel.y > 0 ? SIM_MOUSE_WHEELUP : SIM_MOUSE_WHEELDOWN;
 			sys_event.key_mod = ModifierKeys();
@@ -841,15 +851,6 @@ static void internal_GetEvents()
 			break;
 		}
 #endif
-		case SDL_MOUSEMOTION: {
-			sys_event.type    = SIM_MOUSE_MOVE;
-			sys_event.code    = SIM_MOUSE_MOVED;
-			sys_event.mx      = SCREEN_TO_TEX_X(event.motion.x);
-			sys_event.my      = SCREEN_TO_TEX_Y(event.motion.y);
-			sys_event.mb      = conv_mouse_buttons( event.motion.state );
-			sys_event.key_mod = ModifierKeys();
-			break;
-		}
 		case SDL_KEYUP: {
 			sys_event.type = SIM_KEYBOARD;
 			sys_event.code = 0;
