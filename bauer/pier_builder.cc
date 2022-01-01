@@ -121,7 +121,7 @@ void pier_builder_t::register_desc(pier_desc_t *desc){
         delete old_pier;
     }
 
-    //add the tool
+    //add the tool(s)
     tool_build_pier_t *tool = new tool_build_pier_t;
     tool->set_icon( desc->get_cursor()->get_image_id(1) );
     tool->cursor = desc->get_cursor()->get_image_id(0);
@@ -132,12 +132,24 @@ void pier_builder_t::register_desc(pier_desc_t *desc){
     if(desc->get_background(pier_desc_t::auto_tool_icon_image,0,0)!=IMG_EMPTY){
         tool_build_pier_auto_t *tool = new tool_build_pier_auto_t;
         tool->set_icon( desc->get_background(pier_desc_t::auto_tool_icon_image,0,0));
-        tool->cursor = desc->get_background(pier_desc_t::auto_tool_cursor_image,1,0);
+        tool->cursor = desc->get_background(pier_desc_t::auto_tool_cursor_image,0,0);
         tool->set_default_param(desc->get_name());
         tool_t::general_tool.append( tool );
         desc->set_auto_builder( tool );
     }else{
         desc->set_auto_builder(NULL);
+    }
+
+    for(int i=0; i < 3; i++){
+        if(desc->get_true_background(pier_desc_t::alt_tool_icon,i+1,0)!=IMG_EMPTY){
+            tool = new tool_build_pier_t;
+            tool->set_icon(desc->get_true_background(pier_desc_t::alt_tool_icon,i+1,0));
+            desc->ref_tool_string(i).clear();
+            desc->ref_tool_string(i).printf("%s,%d",desc->get_name(),i+1);
+            tool->set_default_param(desc->ref_tool_string(i));
+            tool_t::general_tool.append(tool);
+            desc->set_alt_tool(i,tool);
+        }
     }
 
     desc_table.put(desc->get_name(), desc);
@@ -1017,6 +1029,11 @@ void pier_builder_t::fill_menu(tool_selector_t *tool_selector, char mode){
     FOR(vector_tpl<pier_desc_t const*>, const i, matching){
         if(mode!='A'){
             tool_selector->add_tool_selector(i->get_builder());
+            for(int j=0; j < 3; j++){
+                if(i->get_alt_tool(j)){
+                    tool_selector->add_tool_selector(i->get_alt_tool(j));
+                }
+            }
         }
         if(i->get_auto_builder() && mode!='M'){
             tool_selector->add_tool_selector(i->get_auto_builder());

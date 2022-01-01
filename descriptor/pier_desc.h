@@ -6,7 +6,7 @@
 #ifndef DESCRIPTOR_PIER_DESC_H
 #define DESCRIPTOR_PIER_DESC_H
 
-
+#include "../utils/cbuffer_t.h"
 #include "way_desc.h"
 #include "../dataobj/ribi.h"
 #include "../dataobj/way_constraints.h"
@@ -70,6 +70,8 @@ private:
     }
 
     tool_t *auto_builder;
+    tool_t *alt_tools[3];
+    cbuffer_t alt_tool_params[3];
 public:
 	const char *get_name() const { return get_cursor()->get_name(); }
 	const char *get_copyright() const { return get_cursor()->get_copyright(); }
@@ -100,6 +102,11 @@ public:
 
 	image_id get_background(slope_t::type slope, uint8 rotation, uint8 season) const;
 
+	image_id get_true_background(slope_t::type slope, uint8 rotataion, uint8 season) const {
+		if(rotataion>=rotational_symmetry) return IMG_EMPTY;
+		return get_background(slope,rotataion,season);
+	}
+
 	image_id get_foreground(slope_t::type slope, uint8 rotation, uint8 season) const;
 
 	void calc_checksum(checksum_t *chk) const;
@@ -112,10 +119,22 @@ public:
 		auto_builder=tool;
 	}
 
+	tool_t* get_alt_tool(int i) const {
+		return alt_tools[i];
+	}
+
+	void set_alt_tool(int i, tool_t *tool){
+		alt_tools[i]=tool;
+	}
+
+	cbuffer_t& ref_tool_string(int i){return alt_tool_params[i];}
+
+
 	static const slope_t::type low_waydeck_image;
 	static const slope_t::type auto_tool_cursor_image;
 	static const slope_t::type auto_tool_icon_image;
 	static const slope_t::type rotation_select_image;
+	static const slope_t::type alt_tool_icon;
 };
 
 #endif // PIER_DESC_H

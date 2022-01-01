@@ -95,7 +95,7 @@ pier_height_select_t::pier_height_select_t(player_t *player_,tool_build_pier_aut
 	set_windowsize(get_min_windowsize());
 }
 
-bool pier_height_select_t::action_triggered(gui_action_creator_t *comp, value_t extra){
+bool pier_height_select_t::action_triggered(gui_action_creator_t *comp, value_t){
 	if(comp == &height_inp){
 		height = height_inp.get_value();
 	}
