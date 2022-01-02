@@ -1731,7 +1731,7 @@ void settings_t::rdwr(loadsave_t *file)
 				max_speed_drive_by_sight = kmh_to_speed(max_speed_drive_by_sight_kmh);
 			}
 #endif
-			if ((file->get_extended_version() == 14 && file->get_extended_revision()) >= 31 || file->get_extended_version() >= 15)
+			if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 31) || file->get_extended_version() >= 15)
 			{
 				file->rdwr_long(max_speed_drive_by_sight_tram);
 				max_speed_drive_by_sight_tram = kmh_to_speed(max_speed_drive_by_sight_tram);
