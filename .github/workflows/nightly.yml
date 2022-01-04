@@ -176,11 +176,7 @@ jobs:
       #TODO pak192.comic
       - run: unzip pak128.britain-ex-nightly.zip -d ./simutrans/pak128.britain-ex
 
-      - name: zip
-        uses: papeloto/action-zip@v1
-        with:
-          files: ./simutrans/
-          dest: ./simutrans-extended.zip
+      - run: zip ./simutrans-extended.zip ./simutrans/
 
       - name: Deploy
         uses: svenstaro/upload-release-action@v2
