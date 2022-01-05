@@ -2785,6 +2785,14 @@ uint8 tool_build_way_t::is_valid_pos( player_t *player, const koord3d &pos, cons
 				// We cannot detect the direciton here: this will be done elsewhere.
 			}
 		}
+		//check for way
+		if(gr->get_typ()==grund_t::pierdeck){
+			uint32 deckmask=pier_t::get_deck_obj_mask_total(gr);
+			if((deckmask&desc->get_deckmask())!=desc->get_deckmask()){
+				error = "This type of way cannot be built on this type of pier";
+				return 0;
+			}
+		}
 		bool const elevated = desc->get_styp() == type_elevated  &&  desc->get_wtyp() != air_wt;
 		// ignore water
 		if(  desc->get_wtyp() != water_wt  &&  gr->get_typ() == grund_t::wasser  ) {
@@ -5921,9 +5929,13 @@ const char *tool_build_pier_t::get_tooltip(const player_t *) const{
 		n += sprintf(toolstr+n, " %s", translator::translate("per tile"));
 		if(desc->get_topspeed()!=0xFFFF){
 			n+=sprintf(toolstr+n, " %dkm/h",desc->get_topspeed());
+		}else{
+			n+=sprintf(toolstr+n, "%s", translator::translate(" NA km/h"));
 		}
 		if(desc->get_max_axle_load()!=0xFFFF){
 			n+=sprintf(toolstr+n, translator::translate(" %dt/axle"),desc->get_max_axle_load());
+		}else{
+			n+=sprintf(toolstr+n, " %s" , translator::translate("NA t/axle"));
 		}
 		if(desc->get_low_waydeck()){
 			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
@@ -6090,12 +6102,19 @@ const char* tool_build_pier_auto_t::get_tooltip(const player_t *) const{
 	if(tdesc){
 		strcpy(name, translator::translate("Automatically build "));
 		strcat(name, translator::translate(tdesc->get_name()));
-		strcat(name," et Al.");
+		strcat(name, translator::translate(" et Al."));
 		tooltip_with_price_maintenance(welt,name,-tdesc->get_value(),tdesc->get_maintenance());
 		size_t n = strlen(toolstr);
 		n += sprintf(toolstr+n, " %s", translator::translate("per tile apprx."));
+		if(tdesc->get_topspeed()!=0xFFFF){
+			n+=sprintf(toolstr+n, " ~%dkm/h",tdesc->get_topspeed());
+		}else{
+			n+=sprintf(toolstr+n, "%s", translator::translate(" NA km/h"));
+		}
 		if(tdesc->get_max_axle_load()!=0xFFFF){
 			n+=sprintf(toolstr+n, translator::translate(" %dt+/axle"),tdesc->get_max_axle_load());
+		}else{
+			n+=sprintf(toolstr+n, " %s", translator::translate("NA t/axle"));
 		}
 		if(tdesc->get_low_waydeck()){
 			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
