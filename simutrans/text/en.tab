@@ -6242,3 +6242,7 @@ PIERBLOCKS
 Elevated way support building blocks
 Through Truss
 Through truss
+Bridges cannot be built over large buildings.
+Bridges cannot be built over these buildings.
+Cannot build pier on large buildings
+Elevated way supports cannot be built over these buildings.
