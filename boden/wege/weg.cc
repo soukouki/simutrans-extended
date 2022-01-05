@@ -1119,6 +1119,11 @@ void weg_t::check_diagonal()
 	grund_t *from = welt->lookup(get_pos());
 	grund_t *to;
 
+	if(from->get_typ()==grund_t::pierdeck){
+		flags |= IS_DIAGONAL;
+		return;
+	}
+
 	ribi_t::ribi r1 = ribi_t::none;
 	ribi_t::ribi r2 = ribi_t::none;
 
