@@ -913,6 +913,22 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
         }
     }
 
+    if(!desc->get_low_waydeck() && desc->get_above_way_ribi()){
+        grund_t *deck=welt->lookup(gpos);
+        //update all other parapets
+        ribi_t::ribi full_ribi = pier_t::get_above_ribi_total(deck) | desc->get_above_way_ribi(rotation);
+        for(uint i=0; i < deck->get_top(); i++){
+            if(deck->obj_bei(i)->get_typ()==obj_t::parapet){
+                ((parapet_t*)deck->obj_bei(i))->update_extra_ways(full_ribi);
+            }
+        }
+        //create new parapet if available
+        if(desc->get_background(pier_desc_t::parapet[0],0,0)!=IMG_EMPTY){
+            parapet_t *parapet=new parapet_t(deck->get_pos(),player,desc,rotation);
+            deck->obj_add(parapet);
+        }
+    }
+
     //remove trees
     if(gr->ist_natur()) {
         player_t::book_construction_costs(player, -gr->remove_trees(), gr->get_pos().get_2d());
@@ -952,8 +968,15 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
         koord3d gpos=lookup_deck_pos(gr);
         grund_t *bd = welt->lookup(gpos);
         if(bd){
-            if(bd->obj_count() || bd->get_weg_nr(0)){
-                return "Cannot remove sole load bearing pier";
+            if(bd->get_top()){
+                if(bd->get_top()==1 && bd->obj_bei(0)->get_typ()==obj_t::parapet){
+                    obj_t* parapet=bd->obj_bei(0);
+                    parapet->cleanup(player);
+                    gr->obj_remove(parapet);
+                    delete parapet;
+                }else{
+                    return "Cannot remove sole load bearing pier";
+                }
             }
         }
         p->cleanup(player);
@@ -972,6 +995,7 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
             pier_cnt++;
             p = (pier_t*)ob;
             if(p->is_deletable(player)==NULL){
+                parapet_t* parapet = NULL;
                 if(p->get_low_waydeck() && gr->get_weg_nr(0)){
                     continue;
                 }
@@ -986,6 +1010,19 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
                             break;
                         }
                     }
+                    if(bd->obj_bei(i)->get_typ()==obj_t::way){
+                        weg_t *way=(weg_t*)bd->obj_bei(i);
+                        if(!p->get_desc()->get_above_way_supplement() || (way->get_ribi_unmasked() & p->get_above_ribi())){
+                            msg2= "Cannot remove load bearing pier";
+                            break;
+                        }
+                    }
+                    if(bd->obj_bei(i)->get_typ()==obj_t::parapet){
+                        parapet_t* tpar=(parapet_t*)bd->obj_bei(i);
+                        if(tpar->get_desc()==p->get_desc() && tpar->get_rotation() == p->get_rotation()){
+                            parapet=tpar;
+                        }
+                    }
                 }
                 if(msg2) {
                     if(msg){
@@ -994,6 +1031,12 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
                         msg=msg2;
                     }
                     continue;
+                }
+
+                if(parapet){
+                    parapet->cleanup(player);
+                    bd->obj_remove(parapet);
+                    delete parapet;
                 }
 
                 p->cleanup(player);

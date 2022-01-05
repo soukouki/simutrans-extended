@@ -49,6 +49,7 @@ class tunnel_t;
 class wayobj_t;
 class zeiger_t;
 class pier_t;
+class parapet_t;
 
 template<typename T> struct map_obj {};
 template<> struct map_obj<air_vehicle_t>  { static const obj_t::typ code = obj_t::air_vehicle;  };
@@ -73,6 +74,7 @@ template<> struct map_obj<wayobj_t>       { static const obj_t::typ code = obj_t
 template<> struct map_obj<weg_t>          { static const obj_t::typ code = obj_t::way;          };
 template<> struct map_obj<zeiger_t>       { static const obj_t::typ code = obj_t::zeiger;       };
 template<> struct map_obj<pier_t>         { static const obj_t::typ code = obj_t::pier;        };
+template<> struct map_obj<parapet_t>      { static const obj_t::typ code = obj_t::parapet;        };
 
 template<typename T> static inline T* obj_cast(obj_t* const d)
 {
