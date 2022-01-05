@@ -95,7 +95,11 @@ public:
 
 	void set_show_y_axis(bool yesno) { show_y_axis = yesno; }
 
-	void set_ltr(bool yesno) { ltr = yesno; }
+	// Whether the chart follows the left_to_right_graphs setting or not
+	//  0: Does not follow the settings. the graph is right to left.
+	// *1: Follow the settings (default). Out-of-range values are treated as 1.
+	//  2: Does not follow the settings, but the graphs is left to right
+	void set_ltr(uint8 value) { ltr = value; }
 
 	int get_curve_count() { return curves.get_count(); }
 
@@ -135,7 +139,8 @@ private:
 
 	scr_coord tooltipcoord;
 
-	bool show_x_axis, show_y_axis, ltr;
+	uint8 ltr;
+	bool show_x_axis, show_y_axis;
 
 	/**
 	 * Background color, -1 for transparent background
