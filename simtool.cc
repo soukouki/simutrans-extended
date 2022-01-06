@@ -6091,7 +6091,6 @@ const char *tool_build_pier_t::work(player_t *player, koord3d pos){
 sint8 tool_build_pier_auto_t::pier_info::start_height = 2;
 
 const char* tool_build_pier_auto_t::get_tooltip(const player_t *) const{
-	//TODO get desc
 	char name[256]="";
 	uint32 i;
 	for(i=0; default_param[i]!=0  &&  default_param[i]!=','; i++) {
@@ -6203,6 +6202,7 @@ void tool_build_pier_auto_t::mark_tiles(player_t *player, const koord3d &start, 
 }
 
 const char *tool_build_pier_auto_t::do_work( player_t *player, const koord3d &start, const koord3d &end){
+	read_default_param(player);
 	vector_tpl<pier_builder_t::pier_route_elem> route;
 	if(!pier_builder_t::calc_route(route,player,desc,start,end,pier_info::start_height)){
 		return "Could not find valid route";
