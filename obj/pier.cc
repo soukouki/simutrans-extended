@@ -433,7 +433,7 @@ void parapet_t::rotate90(){
 }
 
 const char *parapet_t::is_deletable(const player_t *player){
-	if (get_player_nr()==welt->get_public_player()->get_player_nr()) {
+	if (get_owner_nr()==welt->get_public_player()->get_player_nr()) {
 		return NULL;
 	}
 	return obj_t::is_deletable(player);
