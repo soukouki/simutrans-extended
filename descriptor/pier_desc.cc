@@ -9,6 +9,7 @@
 const slope_t::type pier_desc_t::alt_tool_icon=40;
 const slope_t::type pier_desc_t::rotation_select_image=41;
 const slope_t::type pier_desc_t::low_waydeck_image=43;
+const slope_t::type pier_desc_t::parapet[]={44,49,50,52};
 const slope_t::type pier_desc_t::auto_tool_cursor_image=79;
 const slope_t::type pier_desc_t::auto_tool_icon_image=80;
 

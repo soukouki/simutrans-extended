@@ -136,6 +136,8 @@ public:
 	static const slope_t::type auto_tool_icon_image;
 	static const slope_t::type rotation_select_image;
 	static const slope_t::type alt_tool_icon;
+	static const slope_t::type parapet[];
+
 };
 
 #endif // PIER_DESC_H

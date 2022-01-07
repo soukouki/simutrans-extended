@@ -181,7 +181,8 @@ public:
 		// Should be negative numbers <= -10
 
 		signalbox = -10,
-		pier = -11
+		pier = -11,
+		parapet = -12
 	};
 
 	inline sint8 get_xoff() const {return xoff;}

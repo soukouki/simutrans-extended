@@ -2785,6 +2785,14 @@ uint8 tool_build_way_t::is_valid_pos( player_t *player, const koord3d &pos, cons
 				// We cannot detect the direciton here: this will be done elsewhere.
 			}
 		}
+		//check for way
+		if(gr->get_typ()==grund_t::pierdeck){
+			uint32 deckmask=pier_t::get_deck_obj_mask_total(gr);
+			if((deckmask&desc->get_deckmask())!=desc->get_deckmask()){
+				error = "This type of way cannot be built on this type of pier";
+				return 0;
+			}
+		}
 		bool const elevated = desc->get_styp() == type_elevated  &&  desc->get_wtyp() != air_wt;
 		// ignore water
 		if(  desc->get_wtyp() != water_wt  &&  gr->get_typ() == grund_t::wasser  ) {
@@ -5921,9 +5929,13 @@ const char *tool_build_pier_t::get_tooltip(const player_t *) const{
 		n += sprintf(toolstr+n, " %s", translator::translate("per tile"));
 		if(desc->get_topspeed()!=0xFFFF){
 			n+=sprintf(toolstr+n, " %dkm/h",desc->get_topspeed());
+		}else{
+			n+=sprintf(toolstr+n, "%s", translator::translate(" NA km/h"));
 		}
 		if(desc->get_max_axle_load()!=0xFFFF){
 			n+=sprintf(toolstr+n, translator::translate(" %dt/axle"),desc->get_max_axle_load());
+		}else{
+			n+=sprintf(toolstr+n, " %s" , translator::translate("NA t/axle"));
 		}
 		if(desc->get_low_waydeck()){
 			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
@@ -6079,7 +6091,6 @@ const char *tool_build_pier_t::work(player_t *player, koord3d pos){
 sint8 tool_build_pier_auto_t::pier_info::start_height = 2;
 
 const char* tool_build_pier_auto_t::get_tooltip(const player_t *) const{
-	//TODO get desc
 	char name[256]="";
 	uint32 i;
 	for(i=0; default_param[i]!=0  &&  default_param[i]!=','; i++) {
@@ -6090,12 +6101,19 @@ const char* tool_build_pier_auto_t::get_tooltip(const player_t *) const{
 	if(tdesc){
 		strcpy(name, translator::translate("Automatically build "));
 		strcat(name, translator::translate(tdesc->get_name()));
-		strcat(name," et Al.");
+		strcat(name, translator::translate(" et Al."));
 		tooltip_with_price_maintenance(welt,name,-tdesc->get_value(),tdesc->get_maintenance());
 		size_t n = strlen(toolstr);
 		n += sprintf(toolstr+n, " %s", translator::translate("per tile apprx."));
+		if(tdesc->get_topspeed()!=0xFFFF){
+			n+=sprintf(toolstr+n, " ~%dkm/h",tdesc->get_topspeed());
+		}else{
+			n+=sprintf(toolstr+n, "%s", translator::translate(" NA km/h"));
+		}
 		if(tdesc->get_max_axle_load()!=0xFFFF){
 			n+=sprintf(toolstr+n, translator::translate(" %dt+/axle"),tdesc->get_max_axle_load());
+		}else{
+			n+=sprintf(toolstr+n, " %s", translator::translate("NA t/axle"));
 		}
 		if(tdesc->get_low_waydeck()){
 			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
@@ -6184,6 +6202,7 @@ void tool_build_pier_auto_t::mark_tiles(player_t *player, const koord3d &start, 
 }
 
 const char *tool_build_pier_auto_t::do_work( player_t *player, const koord3d &start, const koord3d &end){
+	read_default_param(player);
 	vector_tpl<pier_builder_t::pier_route_elem> route;
 	if(!pier_builder_t::calc_route(route,player,desc,start,end,pier_info::start_height)){
 		return "Could not find valid route";

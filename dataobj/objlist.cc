@@ -891,6 +891,10 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 					new_obj = new pier_t(file);
 					break;
 
+				case obj_t::parapet:
+					new_obj = new parapet_t(file);
+					break;
+
 				case obj_t::baum:
 					{
 						baum_t *b = new baum_t(file);
