@@ -457,8 +457,15 @@ DBG_MESSAGE("tool_remover_intern()","at (%s)", pos.get_str());
 		return false;
 	}
 
-	if (gr->get_top()==0) {
-		if(gr->get_typ()==grund_t::pierdeck){
+	if(gr->get_typ()==grund_t::pierdeck){
+		bool onlyparapets=true;
+		for(uint8 i = 0; i < gr->get_top(); i++){
+			if(gr->obj_bei(i)->get_typ()!=obj_t::parapet){
+				onlyparapets=false;
+				break;
+			}
+		}
+		if(onlyparapets){
 			gr=welt->lookup(pos+koord3d(0,0,-1));
 			if(!gr){
 				gr=welt->lookup(pos+koord3d(0,0,-2));
@@ -467,7 +474,12 @@ DBG_MESSAGE("tool_remover_intern()","at (%s)", pos.get_str());
 				msg = pier_builder_t::remove(player,gr->get_pos());
 				return msg==NULL;
 			}
+			msg = "";
+			return false;
 		}
+	}
+
+	if (gr->get_top()==0) {
 		msg = "";
 		return false;
 	}
@@ -656,7 +668,7 @@ DBG_MESSAGE("tool_remover()",  "removing bridge from %d,%d,%d",gr->get_pos().x, 
 	}
 
 	//try to delete pier, continue if unsucessfull
-	const char *pier_msg;
+	const char *pier_msg=NULL;
 	if(gr->find<pier_t>()){
 		pier_msg = pier_builder_t::remove(player,pos);
 		if(pier_msg==NULL){
@@ -799,6 +811,19 @@ DBG_MESSAGE("tool_remover()",  "took out powerline");
 	if(label) {
 		gr->obj_remove(label);
 	}
+	//do not delete parapets
+	minivec_tpl<parapet_t*> parapets;
+	while(parapet_t *parapet = gr->find<parapet_t>()){
+		parapets.append(parapet);
+		gr->obj_remove(parapet);
+	}
+	//do not delete piers
+	minivec_tpl<pier_t*> piers;
+	while(pier_t *pier = gr->find<pier_t>()){
+		piers.append(pier);
+		gr->obj_remove(pier);
+	}
+
 
 	// remove all other stuff (clouds, ...)
 	bool return_ok = false;
@@ -806,32 +831,17 @@ DBG_MESSAGE("tool_remover()",  "took out powerline");
 	if(num_obj>0) {
 		msg = gr->kann_alle_obj_entfernen(player);
 		if(return_ok = ((msg==NULL  &&  !(gr->get_typ()==grund_t::brueckenboden  ||  gr->get_typ()==grund_t::tunnelboden)))){
-			if(gr->find<pier_t>()){
-				//there is a pier here, try to remove everything else
-				return_ok=false;
-				uint8 objcnt=0;
-				while(objcnt<gr->get_top()){
-					const obj_t* obj = gr->obj_bei(objcnt);
-					if(obj->get_typ()==obj_t::pier || obj->get_typ()==obj_t::way){
-						objcnt++;
-					}else if(gr->obj_remove(obj)){
-						return_ok=true;
-					}else{
-						objcnt++;
-					}
-				}
-				num_obj=gr->obj_count();
-				if(!return_ok && !gr->get_weg_nr(0)){
-					msg=pier_msg;
-					return false;
-				}
-			}else{
-				return_ok = gr->obj_loesche_alle(player);
-			}
+			return_ok = gr->obj_loesche_alle(player);
 		}
 		DBG_MESSAGE("tool_remover()",  "removing everything from %d,%d,%d",gr->get_pos().x, gr->get_pos().y, gr->get_pos().z);
 	}
 
+	for(uint8 i = 0; i < piers.get_count(); i++){
+		gr->obj_add(piers[i]);
+	}
+	for(uint8 i = 0; i < parapets.get_count(); i++){
+		gr->obj_add(parapets[i]);
+	}
 	if(lt) {
 		DBG_MESSAGE("tool_remover()",  "add again powerline");
 		gr->obj_add(lt);
@@ -854,6 +864,10 @@ DBG_MESSAGE("tool_remover()",  "took out powerline");
 		// no sound
 		msg = "";
 		return true;
+	}
+	if(pier_msg && !gr->get_weg_nr(0)){
+		msg=pier_msg;
+		return false;
 	}
 
 	// ok, now we remove every object that should be removed - one by one.
