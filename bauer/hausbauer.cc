@@ -906,6 +906,7 @@ gebaeude_t *hausbauer_t::build_station_extension_depot(player_t *player, koord3d
 	}
 
 	gr->obj_add(gb);
+	parapet_t::hide_all(gr->get_pos());
 
 	if(  station_building.is_contained(desc)  &&  desc->get_type()!=building_desc_t::depot && !desc->is_signalbox()) {
 		// is a station/bus stop

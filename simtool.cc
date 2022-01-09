@@ -724,6 +724,7 @@ DBG_MESSAGE("tool_remover()",  "removing tunnel  from %d,%d,%d",gr->get_pos().x,
 		}
 		dep->cleanup(player);
 		delete dep;
+		parapet_t::unhide_all(gr->get_pos());
 		return true;
 	}
 
