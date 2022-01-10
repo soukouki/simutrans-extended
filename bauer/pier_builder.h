@@ -177,7 +177,7 @@ public:
 	 * @param tool_selector gui object of toolbar
 	 * @param mode 'A' for auto only, 'M' for manual Only
 	 */
-	static void fill_menu(tool_selector_t *tool_selector, char mode=')');
+	static void fill_menu(tool_selector_t *tool_selector, char mode=')', uint32 filter=0);
 };
 
 #endif // PIER_BUILDER_H
