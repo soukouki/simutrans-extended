@@ -593,7 +593,16 @@ bool pier_builder_t::calc_route(vector_tpl<pier_route_elem> &route, player_t *pl
         pos_ribi|=ribi_type(straight_route[i+1]-straight_route[i]);
         route_ribi.append(pos_ribi);
     }
-    route_ribi.append(ribi_type(straight_route[straight_route.get_count()-2]-straight_route[straight_route.get_count()-1]));
+    if(straight_route.get_count()>=2){
+        ribi_t::ribi pos_ribi = ribi_t::none;
+        pos_ribi|=ribi_type(straight_route[straight_route.get_count()-2]-straight_route[straight_route.get_count()-1]);
+        if(ribi_t::is_bend(route_ribi[straight_route.get_count()-2])){
+            pos_ribi=~route_ribi[straight_route.get_count()-2] & 0xF;
+        }
+        route_ribi.append(pos_ribi);
+    }else{
+        route_ribi.append(ribi_type(straight_route[straight_route.get_count()-2]-straight_route[straight_route.get_count()-1]));
+    }
 
     for(uint32 i = 0; i < straight_route.get_count(); i++){
         if(!append_route_stack(route,player,base_desc,koord3d(straight_route[i],start.z),route_ribi[i])){
