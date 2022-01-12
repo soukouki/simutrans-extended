@@ -468,6 +468,7 @@ jobs:
         run: mkdir ${{ github.workspace }}/build
       - name: Install dependencies using vcpkg
         run: |
+          cd ${{ github.workspace }}/build
           git clone https://github.com/Microsoft/vcpkg
           ./vcpkg/bootstrap-vcpkg.bat
           ./vcpkg/vcpkg --triplet x64-windows-static install zlib bzip2 libpng zstd sdl2 freetype miniupnpc
