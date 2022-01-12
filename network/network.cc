@@ -883,8 +883,12 @@ bool get_external_IP( cbuffer_t &myIPaddr, cbuffer_t &altIPaddr )
  */
 
 extern "C" {
-#include <miniupnpc.h>
-#include <upnpcommands.h>
+#define MINIUPNPC_DECLSPEC_H_INCLUDED
+#define MINIUPNP_LIBSPEC extern
+
+//#define MINIUPNP_STATICLIB
+#include <miniupnpc/miniupnpc.h>
+#include <miniupnpc/upnpcommands.h>
 }
 
 #if MINIUPNPC_API_VERSION < 14
