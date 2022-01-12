@@ -1934,6 +1934,10 @@
     <ClCompile Include="descriptor\vehicle_desc.cc" />
     <ClCompile Include="descriptor\way_desc.cc" />
     <ClCompile Include="io\classify_file.cc" />
+    <ClCompile Include="io\rdwr\raw_image.cc" />
+    <ClCompile Include="io\rdwr\raw_image_bmp.cc" />
+    <ClCompile Include="io\rdwr\raw_image_png.cc" />
+    <ClCompile Include="io\rdwr\raw_image_ppm.cc" />
     <ClCompile Include="io\rdwr\bzip2_file_rdwr_stream.cc" />
     <ClCompile Include="io\rdwr\raw_file_rdwr_stream.cc" />
     <ClCompile Include="io\rdwr\rdwr_stream.cc" />
@@ -2165,7 +2169,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Optimised debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="sys\simsys_w32_png.cc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release (command-line server)|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="simunits.cc" />
@@ -2528,7 +2531,7 @@
     <ClCompile Include="bauer\wegbauer.cc" />
     <ClCompile Include="gui\welt.cc" />
     <ClCompile Include="gui\tool_selector.cc" />
-    <ClCompile Include="sound\win32_sound.cc">
+    <ClCompile Include="sound\win32_sound_xa.cc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug (SDL 2)|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug (non-graphical server)|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -2590,6 +2593,7 @@
     <ClInclude Include="gui\times_history_container.h" />
     <ClInclude Include="gui\vehicle_class_manager.h" />
     <ClInclude Include="io\classify_file.h" />
+    <ClCompile Include="io\rdwr\raw_image.h" />
     <ClInclude Include="io\rdwr\bzip2_file_rdwr_stream.h" />
     <ClInclude Include="io\rdwr\raw_file_rdwr_stream.h" />
     <ClInclude Include="io\rdwr\rdwr_stream.h" />
