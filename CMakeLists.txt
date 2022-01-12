@@ -197,7 +197,7 @@ if (SIMUTRANS_USE_ZSTD)
 	target_include_directories(simutrans-extended PRIVATE ${ZSTD_INCLUDE_DIRS})
 	target_compile_definitions(simutrans-extended PRIVATE USE_ZSTD=1)
 	if (MSVC)
-		target_link_libraries(simutrans-extended PRIVATE ZSTD::libzstd_static)
+		target_link_libraries(simutrans-extended PRIVATE zstd::libzstd_static)
 	elseif (MINGW)
 		# only 64 bit cmake, 32 bit is broken
 		target_link_libraries(simutrans-extended PRIVATE -lzstd)
