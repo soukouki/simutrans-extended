@@ -1054,7 +1054,7 @@ const char *pier_builder_t::remove(player_t *player, koord3d pos){
     return msg;
 }
 
-void pier_builder_t::fill_menu(tool_selector_t *tool_selector, char mode){
+void pier_builder_t::fill_menu(tool_selector_t *tool_selector, char mode, uint32 filter){
     if(!welt->get_scenario()->is_tool_allowed(welt->get_active_player(), TOOL_BUILD_PIER | GENERAL_TOOL)){
         return;
     }
@@ -1065,7 +1065,9 @@ void pier_builder_t::fill_menu(tool_selector_t *tool_selector, char mode){
     for(auto const & i :desc_table){
         pier_desc_t const * const p = i.value;
         if(p->is_available(time)){
-            matching.insert_ordered(p, compare_piers);
+            if(!filter || (filter&p->get_deck_obj_mask())){
+                matching.insert_ordered(p, compare_piers);
+            }
         }
     }
 

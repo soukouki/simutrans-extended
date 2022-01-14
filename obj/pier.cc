@@ -350,6 +350,7 @@ parapet_t::parapet_t(koord3d pos, player_t *player, const pier_desc_t *desc, uin
 	this->desc = desc;
 	this->rotation = rot;
 	this->extra_ways = 0;
+	this->hidden = 0;
 	set_owner(player);
 	calc_image();
 }
@@ -377,11 +378,30 @@ void parapet_t::update_extra_ways(ribi_t::ribi full_ribi){
 	calc_image();
 }
 
+void parapet_t::set_hidden_all(uint8 tohide, koord3d pos){
+	if(const grund_t* gr = welt->lookup(pos)){
+		if(gr->get_typ()==grund_t::pierdeck){
+			for(uint8 i = 0; i < gr->get_top(); i++){
+				if(gr->obj_bei(i)->get_typ()==obj_t::parapet){
+					parapet_t *parapet=(parapet_t*)gr->obj_bei(i);
+					parapet->hidden=tohide;
+					parapet->calc_image();
+				}
+			}
+		}
+	}
+}
+
 void parapet_t::calc_image(){
-	uint8 snow=get_pos().z >= welt->get_snowline()  ||  welt->get_climate( get_pos().get_2d() ) == arctic_climate ? 1 : 0;
-	slope_t::type parapet_slope = pier_desc_t::parapet[extra_ways];
-	back_image=desc->get_background(parapet_slope,rotation,snow);
-	front_image=desc->get_foreground(parapet_slope,rotation,snow);
+	if(hidden){
+		back_image=IMG_EMPTY;
+		front_image=IMG_EMPTY;
+	}else{
+		uint8 snow=get_pos().z >= welt->get_snowline()  ||  welt->get_climate( get_pos().get_2d() ) == arctic_climate ? 1 : 0;
+		slope_t::type parapet_slope = pier_desc_t::parapet[extra_ways];
+		back_image=desc->get_background(parapet_slope,rotation,snow);
+		front_image=desc->get_foreground(parapet_slope,rotation,snow);
+	}
 	set_flag(obj_t::dirty);
 }
 
@@ -403,7 +423,7 @@ void parapet_t::rdwr(loadsave_t *file){
 
 	if(file->is_saving()){
 		s = desc->get_name();
-		bits = rotation | extra_ways<<3;
+		bits = rotation | extra_ways<<3 | hidden<<5;
 	}
 
 	file->rdwr_str(s);
@@ -412,8 +432,8 @@ void parapet_t::rdwr(loadsave_t *file){
 	if(file->is_loading()){
 		desc = pier_builder_t::get_desc(s);
 		rotation=bits & 7;
-		extra_ways=bits>>3;
-
+		extra_ways=(bits>>3) & 3;
+		hidden=bits>>5 & 1;
 		free(const_cast<char *>(s));
 	}
 }

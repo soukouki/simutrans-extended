@@ -1181,7 +1181,13 @@ void toolbar_t::update(player_t *player)
 					hausbauer_t::fill_menu( tool_selector, utype, way, get_sound(c));
 				}
 				else if(char const* c = strstart(param, "piers(")) {
-					pier_builder_t::fill_menu(tool_selector,c[0]);
+					uint32 filter=0;
+					char mode=c[0];
+					if(c[0]>='a' && c[0]<='z'){
+						filter=atoi(c+1);
+						mode=c[0] + 'A' - 'a';
+					}
+					pier_builder_t::fill_menu(tool_selector,mode,filter);
 				}
 				else if (param[0] == '-') {
 					// add dummy tool_t as separator

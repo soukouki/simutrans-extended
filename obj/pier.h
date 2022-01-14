@@ -107,8 +107,11 @@ private:
     image_id back_image;
     image_id front_image;
 
-    uint8_t rotation : 3;
-    uint8_t extra_ways : 2;
+    uint8 rotation : 3;
+    uint8 extra_ways : 2;
+    uint8 hidden : 1;
+
+    static void set_hidden_all(uint8 tohide, koord3d pos);
 
 protected:
     void rdwr(loadsave_t *file) override;
@@ -118,6 +121,22 @@ public:
     parapet_t(koord3d pos, player_t *player, const pier_desc_t *desc, uint8_t rot);
 
     void update_extra_ways(ribi_t::ribi full_ribi);
+    void hide(){
+        hidden=1;
+        calc_image();
+    }
+    void unhide(){
+        hidden=0;
+        calc_image();
+    }
+
+    static void hide_all(koord3d pos){
+        set_hidden_all(1,pos);
+    }
+
+    static void unhide_all(koord3d pos){
+        set_hidden_all(0,pos);
+    }
 
     const pier_desc_t *get_desc() const {return desc;}
     uint8_t get_rotation() const {return rotation;}
