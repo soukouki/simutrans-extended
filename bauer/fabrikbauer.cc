@@ -325,7 +325,7 @@ bool factory_builder_t::successfully_loaded()
 
 int factory_builder_t::count_producers(const goods_desc_t *ware, uint16 timeline)
 {
-	int anzahl=0;
+	int count=0;
 
 	// iterate over all factories and check if they produce this good...
 	for(auto const& t : desc_table) {
@@ -333,12 +333,12 @@ int factory_builder_t::count_producers(const goods_desc_t *ware, uint16 timeline
 		for (uint i = 0; i < tmp->get_product_count(); i++) {
 			const factory_product_desc_t *product = tmp->get_product(i);
 			if(  product->get_output_type()==ware  &&  tmp->get_distribution_weight()>0  &&  tmp->get_building()->is_available(timeline)  ) {
-				anzahl++;
+				count++;
 			}
 		}
 	}
-DBG_MESSAGE("factory_builder_t::count_producers()","%i producer for good '%s' found.", anzahl, translator::translate(ware->get_name()));
-	return anzahl;
+DBG_MESSAGE("factory_builder_t::count_producers()","%i producer for good '%s' found.", count, translator::translate(ware->get_name()));
+	return count;
 }
 
 
@@ -709,10 +709,10 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 			k1 = factory_site_searcher_t(welt, factory_desc_t::City).find_place(city->get_pos(), size.y, size.x, cl, regions_allowed);
 		}
 
-
                 int streetdir = 0;
                 if (size.x == 1 && size.y == 1) {
                   static int const neighbours_to_senw[] = { 0x0c, 0x08, 0x09, 0x01, 0x03, 0x02, 0x06, 0x04 };
+                  static int const neighbours_to_diag[] = { 4, 8, 1, 8, 1, 2, 4, 2 };
                   for ( int i = 1;  i < 8;  i+=2  ) {
                     grund_t *gr2 = welt->lookup_kartenboden(k + koord::neighbours[i]);
                     if ( gr2  &&  gr2->get_weg_hang() == gr2->get_grund_hang()  &&  gr2->get_weg(road_wt) != NULL  ) {
@@ -729,7 +729,8 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
                     for(  int i = 0;  i < 8;  i+=2  ) {
                       grund_t *gr2 = welt->lookup_kartenboden(k + koord::neighbours[i]);
                       if(  gr2  &&  gr2->get_weg_hang() == gr2->get_grund_hang()  &&  gr2->get_weg(road_wt) != NULL  ) {
-                        streetdir |= neighbours_to_senw[i];
+                        int ribi_ns = ((int)gr2->get_weg_ribi_unmasked(road_wt) & 0x05) ? 1 : 0;
+                        streetdir |= neighbours_to_diag[ i + ribi_ns ];
                       }
                     }
                   }

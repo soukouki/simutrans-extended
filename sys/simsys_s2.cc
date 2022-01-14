@@ -21,7 +21,6 @@ extern int __argc;
 extern char **__argv;
 #endif
 
-#include "simsys_w32_png.h"
 #include "simsys.h"
 
 #include "../macros.h"
@@ -459,23 +458,6 @@ void set_pointer(int loading)
 }
 
 
-/**
- * Some wrappers can save screenshots.
- * @return 1 on success, 0 if not implemented for a particular wrapper and -1
- *         in case of error.
- */
-int dr_screenshot(const char *filename, int x, int y, int w, int h)
-{
-#ifdef WIN32
-	if(  dr_screenshot_png( filename, w, h, screen->w, ((unsigned short *)(screen->pixels)) + x + y * screen->w, screen->format->BitsPerPixel )  ) {
-		return 1;
-	}
-#endif
-	(void)x; (void)y; (void)w; (void)h;
-	return SDL_SaveBMP( screen, filename ) == 0 ? 1 : -1;
-}
-
-
 /*
  * Hier sind die Funktionen zur Messageverarbeitung
  */
@@ -483,14 +465,14 @@ int dr_screenshot(const char *filename, int x, int y, int w, int h)
 
 static inline unsigned int ModifierKeys()
 {
-	SDL_Keymod mod = SDL_GetModState();
+	const SDL_Keymod mod = SDL_GetModState();
 
 	return
-		(mod & KMOD_SHIFT ? 1 : 0)
-		| (mod & KMOD_CTRL ? 2 : 0)
+		  ((mod & KMOD_SHIFT) ? SIM_MOD_SHIFT : SIM_MOD_NONE)
+		| ((mod & KMOD_CTRL)  ? SIM_MOD_CTRL  : SIM_MOD_NONE)
 #ifdef __APPLE__
 		// Treat the Command key as a control key.
-		| (mod & KMOD_GUI ? 2 : 0)
+		| ((mod & KMOD_GUI)   ? SIM_MOD_CTRL  : SIM_MOD_NONE)
 #endif
 		;
 }
@@ -615,6 +597,7 @@ static void internal_GetEvents(bool const wait)
 			bool np = false; // to indicate we converted a numpad key
 
 			switch(  sym  ) {
+				case SDLK_AC_BACK:
 				case SDLK_BACKSPACE:  code = SIM_KEY_BACKSPACE;             break;
 				case SDLK_TAB:        code = SIM_KEY_TAB;                   break;
 				case SDLK_RETURN:     code = SIM_KEY_ENTER;                 break;
@@ -658,7 +641,7 @@ static void internal_GetEvents(bool const wait)
 				case SDLK_SCROLLLOCK: code = SIM_KEY_SCROLLLOCK;            break;
 				default: {
 					// Handle CTRL-keys. SDL_TEXTINPUT event handles regular input
-					if(  (sys_event.key_mod & 2)  &&  SDLK_a <= sym  &&  sym <= SDLK_z  ) {
+					if(  (sys_event.key_mod & SIM_MOD_CTRL)  &&  SDLK_a <= sym  &&  sym <= SDLK_z  ) {
 						code = event.key.keysym.sym & 31;
 					}
 					else {

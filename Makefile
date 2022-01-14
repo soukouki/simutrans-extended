@@ -470,6 +470,7 @@ SOURCES += gui/schedule_list.cc
 SOURCES += gui/server_frame.cc
 SOURCES += gui/settings_frame.cc
 SOURCES += gui/settings_stats.cc
+SOURCES += gui/signal_connector_gui.cc
 SOURCES += gui/signal_info.cc
 SOURCES += gui/signal_spacing.cc
 SOURCES += gui/signalboxlist_frame.cc
@@ -484,8 +485,9 @@ SOURCES += gui/tool_selector
 SOURCES += gui/trafficlight_info.cc
 SOURCES += gui/vehiclelist_frame.cc
 SOURCES += gui/obj_info.cc
-SOURCES += gui/pedestrian_info.cc
+SOURCES += gui/slim_obj_info.cc
 SOURCES += gui/vehicle_class_manager.cc
+SOURCES += gui/water_info.cc
 SOURCES += gui/way_info.cc
 SOURCES += gui/welt.cc
 SOURCES += io/classify_file.cc
@@ -621,6 +623,12 @@ SOURCES += bauer/pier_builder.cc
 SOURCES += boden/pier_deck.cc
 SOURCES += descriptor/pier_desc.cc
 SOURCES += gui/pier_rotation_select.cc
+
+SOURCES += io/raw_image.cc
+SOURCES += io/raw_image_png.cc
+SOURCES += io/raw_image_bmp.cc
+SOURCES += io/raw_image_ppm.cc
+LDFLAGS += -lpng
 
 ifeq ($(BACKEND),posix)
   SOURCES += sys/simsys_posix.cc

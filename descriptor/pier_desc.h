@@ -7,6 +7,7 @@
 #define DESCRIPTOR_PIER_DESC_H
 
 
+#include "../utils/cbuffer_t.h"
 #include "way_desc.h"
 #include "../dataobj/ribi.h"
 #include "../dataobj/way_constraints.h"
@@ -22,18 +23,18 @@ private:
     ribi_t::ribi below_way_ribi :4;      //which directions ways can go beneath (0 for no ways)
 
 
-    slope_t::type above_slope;        //(future use) slope of ramp
+    slope_t::type above_slope;        //slope of ramp
 
-    uint8 auto_group;                 //(future use) group for automatic placement (0 is nor group)
-    uint8 auto_height;                //(future use) bit feild for automatic placement height
-                                      //(future use) MSB to LSB: Reserved; Reserved; Only 1 pier; Top Peir; Upper third; Middle; lower Third; Bottom;
+    uint32 auto_group;                 //group for automatic placement (0 is no group)
+    uint8 auto_height;                //bit feild for automatic placement height
+                                      //MSB to LSB: avoid placement; (remain bits future use...) Reserved; Only 1 pier; Top Peir; Upper third; Middle; lower Third; Bottom;
 
     //masks are rotated by 8 bits during rotation;
-    uint32 base_mask;           //bit field for where foundation is needed (up to pakset designer)
-    uint32 middle_mask;         //bit field to prevend piers occupying the same physical space (up to pakset designer)
-    uint32 support_mask;        //bit field for locations on deck (or lack thereof) where columns can be supported (up to packset designer)
-    uint32 sub_obj_mask;        //(future use) restrict buildings and waytypes coninsiding with
-    uint32 deck_obj_mask;       //(future use) restrict objects and buildings on deck
+    uint64 base_mask;           //bit field for where foundation is needed (up to pakset designer)
+    uint64 middle_mask;         //bit field to prevend piers occupying the same physical space (up to pakset designer)
+    uint64 support_mask;        //bit field for locations on deck (or lack thereof) where columns can be supported (up to packset designer)
+    uint32 sub_obj_mask;        //restrict buildings coninsiding within
+    uint32 deck_obj_mask;       //restrict ways and buildings on deck
 
     //other items
     uint32 max_weight; //(future use)
@@ -42,10 +43,17 @@ private:
     uint8 rotational_symmetry : 3;
 
     uint8 drag_ribi : 4; //direction for dragging
-    uint8 above_way_supplement : 1; //(future use) only allow above_way_ribi if not only pier
+    uint8 above_way_supplement : 1; //only allow above_way_ribi if not only pier
+    uint8 bottom_only : 1; //restrict pier to nature tiles
+    uint8 keep_dry : 1; //restict pier to dry land
+    uint8 low_waydeck : 1; //pier supports ways in pier, not on top
 
     static uint32 rotate_mask(uint32 m,uint8 r){
         return (m << (8*r)) | (m >> (32 - 8*r));
+    }
+
+    static uint64 rotate_mask(uint64 m,uint8 r){
+        return (m << (16*r)) | (m >> (64 - 16*r));
     }
 
     //TODO maybe move this into ribi.h
@@ -62,6 +70,9 @@ private:
         return 0;
     }
 
+    tool_t *auto_builder;
+    tool_t *alt_tools[3];
+    cbuffer_t alt_tool_params[3];
 public:
 	const char *get_name() const { return get_cursor()->get_name(); }
 	const char *get_copyright() const { return get_cursor()->get_copyright(); }
@@ -72,19 +83,61 @@ public:
 	ribi_t::ribi get_above_way_ribi(uint8 rotation=0) const {return rotate_ribi(above_way_ribi,rotation);}
 	ribi_t::ribi get_below_way_ribi(uint8 rotation=0) const {return rotate_ribi(below_way_ribi, rotation);}
 	slope_t::type get_above_slope(uint8 rotation=0) const;
-	uint8 get_auto_group() const {return auto_group;}
-	uint32 get_base_mask(uint8 rotation=0) const {return rotate_mask(base_mask,rotation);}
-	uint32 get_middle_mask(uint8 rotation=0) const {return rotate_mask(middle_mask,rotation);}
-	uint32 get_support_mask(uint8 rotation=0) const {return rotate_mask(support_mask, rotation);}
-	uint32 get_sub_obj_mask(uint8 rotation=0) const {return rotate_mask(sub_obj_mask, rotation);}
+	uint32 get_auto_group() const {return auto_group;}
+	uint8 get_auto_height() const {return auto_height;}
+	bool get_auto_height_avoid() const {return auto_height & 0x80;}
+
+	uint64 get_base_mask(uint8 rotation=0) const {return rotate_mask(base_mask,rotation);}
+	uint64 get_middle_mask(uint8 rotation=0) const {return rotate_mask(middle_mask,rotation);}
+	uint64 get_support_mask(uint8 rotation=0) const {return rotate_mask(support_mask, rotation);}
+	uint32 get_sub_obj_mask() const {return sub_obj_mask;}
+	uint32 get_deck_obj_mask() const {return deck_obj_mask;}
+	bool get_keep_dry() const {return keep_dry;}
+	bool get_bottom_only() const {return bottom_only;};
+	bool get_above_way_supplement() const {return above_way_supplement;}
+	bool get_low_waydeck() const {return low_waydeck;}
+
 	ribi_t::ribi get_drag_ribi(uint8 rotation=0) const {return rotate_ribi(drag_ribi, rotation);}
 
+	uint16 get_max_axle_load() const {return axle_load;}
 
 	image_id get_background(slope_t::type slope, uint8 rotation, uint8 season) const;
+
+	image_id get_true_background(slope_t::type slope, uint8 rotataion, uint8 season) const {
+		if(rotataion>=rotational_symmetry) return IMG_EMPTY;
+		return get_background(slope,rotataion,season);
+	}
 
 	image_id get_foreground(slope_t::type slope, uint8 rotation, uint8 season) const;
 
 	void calc_checksum(checksum_t *chk) const;
+
+	tool_t* get_auto_builder() const {
+		return auto_builder;
+	}
+
+	void set_auto_builder( tool_t *tool){
+		auto_builder=tool;
+	}
+
+	tool_t* get_alt_tool(int i) const {
+		return alt_tools[i];
+	}
+
+	void set_alt_tool(int i, tool_t *tool){
+		alt_tools[i]=tool;
+	}
+
+	cbuffer_t& ref_tool_string(int i){return alt_tool_params[i];}
+
+
+	static const slope_t::type low_waydeck_image;
+	static const slope_t::type auto_tool_cursor_image;
+	static const slope_t::type auto_tool_icon_image;
+	static const slope_t::type rotation_select_image;
+	static const slope_t::type alt_tool_icon;
+	static const slope_t::type parapet[];
+
 };
 
 #endif // PIER_DESC_H

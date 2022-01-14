@@ -150,7 +150,7 @@ const char *schedule_list_gui_t::sort_text[SORT_MODES] = {
 };
 
 
-gui_line_wainting_status_t::gui_line_wainting_status_t(linehandle_t line_)
+gui_line_waiting_status_t::gui_line_waiting_status_t(linehandle_t line_)
 {
 	line = line_;
 
@@ -159,11 +159,13 @@ gui_line_wainting_status_t::gui_line_wainting_status_t(linehandle_t line_)
 	init();
 }
 
-void gui_line_wainting_status_t::init()
+void gui_line_waiting_status_t::init()
 {
 	remove_all();
 	if (line.is_bound()) {
 		schedule = line->get_schedule();
+		if( !schedule->get_count() ) return; // nothing to show
+
 		uint8 cols; // table cols
 		cols = line->get_goods_catg_index().get_count()+show_name+1;
 
@@ -220,7 +222,7 @@ void gui_line_wainting_status_t::init()
 	}
 }
 
-void gui_line_wainting_status_t::draw(scr_coord offset)
+void gui_line_waiting_status_t::draw(scr_coord offset)
 {
 	if (line.is_bound()) {
 		if (!line->get_schedule()->matches(world(), schedule)) {
@@ -364,8 +366,11 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	cont_line_info.add_table(2,1);
 	{
 		cont_line_info.add_component(&lb_convoy_count);
-		bt_withdraw_line.init(button_t::box_state, "Withdraw All", scr_coord(0, 0), D_BUTTON_SIZE);
+		bt_withdraw_line.init(button_t::box_state, "Withdraw All", scr_coord(0, 0), scr_size(D_BUTTON_WIDTH+18,D_BUTTON_HEIGHT));
 		bt_withdraw_line.set_tooltip("Convoi is sold when all wagons are empty.");
+		if (skinverwaltung_t::alerts) {
+			bt_withdraw_line.set_image(skinverwaltung_t::alerts->get_image_id(2));
+		}
 		bt_withdraw_line.add_listener(this);
 		cont_line_info.add_component(&bt_withdraw_line);
 	}
@@ -489,7 +494,7 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	info_tabs.add_tab(&scroll_times_history, translator::translate("times_history"));
 
 	cont_tab_haltlist.set_table_layout(1,0);
-	bt_show_halt_name.init(button_t::square_state, "Show station names");
+	bt_show_halt_name.init(button_t::square_state, "show station names");
 	bt_show_halt_name.set_tooltip("helptxt_show_station_name");
 	bt_show_halt_name.pressed=true;
 	bt_show_halt_name.add_listener(this);
@@ -888,6 +893,9 @@ void schedule_list_gui_t::display(scr_coord pos)
 		lb_service_frequency.set_color(line->get_state() & simline_t::line_missing_scheduled_slots ? color_idx_to_rgb(COL_DARK_TURQUOISE) : SYSCOL_TEXT);
 		lb_service_frequency.set_tooltip(line->get_state() & simline_t::line_missing_scheduled_slots ? translator::translate(line_alert_helptexts[1]) : "");
 	}
+	else {
+		lb_service_frequency.buf().append("--:--");
+	}
 	lb_service_frequency.update();
 
 	int len2 = display_proportional_clip_rgb(pos.x+LINE_NAME_COLUMN_WIDTH, pos.y+top, translator::translate("Gewinn"), ALIGN_LEFT, SYSCOL_TEXT, true );
@@ -1074,7 +1082,8 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		bt_edit_line.enable( activate );
 
 		bt_withdraw_line.pressed = new_line->get_withdraw();
-		bt_withdraw_line.background_color = color_idx_to_rgb( bt_withdraw_line.pressed ? COL_DARK_YELLOW-1 : COL_YELLOW+1 );
+		bt_withdraw_line.background_color = color_idx_to_rgb( bt_withdraw_line.pressed ? COL_DARK_YELLOW-1 : COL_YELLOW );
+		bt_withdraw_line.text_color = color_idx_to_rgb(bt_withdraw_line.pressed ? COL_WHITE : COL_BLACK);
 
 		livery_selector.set_focusable(true);
 		livery_selector.clear_elements();

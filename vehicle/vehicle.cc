@@ -307,11 +307,11 @@ uint32 vehicle_base_t::do_drive(uint32 distance)
 		set_flag( obj_t::dirty );
 	}
 
-	uint32 distance_travelled; // Return value
-
 	grund_t *gr = NULL; // if hopped, then this is new position
 
 	uint32 steps_target = steps_to_do + (uint32)steps;
+
+	uint32 distance_travelled; // Return value
 
 	if(  steps_target > (uint32)steps_next  ) {
 		// We are going far enough to hop.
@@ -324,7 +324,7 @@ uint32 vehicle_base_t::do_drive(uint32 distance)
 		koord3d pos_prev;
 
 		// Hop as many times as possible.
-		while( steps_target > steps_next && (gr = hop_check()) ) {
+		while(  steps_target > steps_next  &&  (gr = hop_check())  ) {
 			// now do the update for hopping
 			steps_target -= steps_next+1;
 			steps_done += steps_next+1;
@@ -462,7 +462,7 @@ uint16 vehicle_base_t::get_tile_steps(const koord &start, const koord &ende, /*o
 // calcs new direction and applies it to the vehicles
 ribi_t::ribi vehicle_base_t::calc_set_direction(const koord3d& start, const koord3d& ende)
 {
-	ribi_t::ribi direction = ribi_t::none; //"direction" = direction (Google); "keine" = none (Google)
+	ribi_t::ribi direction = ribi_t::none;
 
 	const sint8 di = ende.x - start.x;
 	const sint8 dj = ende.y - start.y;

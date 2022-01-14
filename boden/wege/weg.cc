@@ -32,6 +32,7 @@
 #include "../../obj/bruecke.h"
 #include "../../obj/tunnel.h"
 #include "../../obj/gebaeude.h" // for ::should_city_adopt_this
+#include "../../obj/pier.h"
 #include "../../utils/cbuffer_t.h"
 #include "../../dataobj/environment.h" // TILE_HEIGHT_STEP
 #include "../../dataobj/translator.h"
@@ -164,6 +165,7 @@ void weg_t::set_desc(const way_desc_t *b, bool from_saved_game)
 	}
 
 	desc = b;
+
 	if (!from_saved_game)
 	{
 		// Add the new maintenance cost
@@ -185,6 +187,8 @@ void weg_t::set_desc(const way_desc_t *b, bool from_saved_game)
 	}
 	const bruecke_t *bridge = gr ? gr->find<bruecke_t>() : NULL;
 	const tunnel_t *tunnel = gr ? gr->find<tunnel_t>() : NULL;
+	bool on_pier = gr ? gr->get_typ()==grund_t::pierdeck : false;
+
 	const slope_t::type hang = gr ? gr->get_weg_hang() : slope_t::flat;
 
 #ifdef MULTI_THREAD_CONVOYS
@@ -254,6 +258,10 @@ void weg_t::set_desc(const way_desc_t *b, bool from_saved_game)
 			{
 				max_speed = min(desc->get_topspeed(), tunnel->get_desc()->get_topspeed());
 			}
+		else if(on_pier)
+			{
+				max_speed = pier_t::get_speed_limit_deck_total(gr,desc->get_topspeed());
+			}
 			else
 			{
 				max_speed = desc->get_topspeed();
@@ -268,6 +276,16 @@ void weg_t::set_desc(const way_desc_t *b, bool from_saved_game)
 	}
 
 	max_axle_load = desc->get_max_axle_load();
+	if(on_pier){
+		if(desc->get_wtyp() == road_wt){ //roads can have one vehicle in each direction
+			uint16 pier_max_load = pier_t::get_max_axle_load_deck_total(gr) / 2;
+			if(pier_max_load < max_axle_load){
+				max_axle_load = pier_max_load;
+			}
+		}else{
+			max_axle_load = pier_t::get_max_axle_load_deck_total(gr, max_axle_load);
+		}
+	}
 
 	// Clear the old constraints then add all sources of constraints again.
 	// (Removing will not work in cases where a way and another object,
@@ -409,9 +427,9 @@ void weg_t::rdwr(loadsave_t *file)
 
 	// save owner
 	if(  file->is_version_atleast(99, 6)  ) {
-		sint8 spnum=get_player_nr();
+		sint8 spnum=get_owner_nr();
 		file->rdwr_byte(spnum);
-		set_player_nr(spnum);
+		set_owner_nr(spnum);
 	}
 
 	// all connected directions
@@ -1101,6 +1119,11 @@ void weg_t::check_diagonal()
 	grund_t *from = welt->lookup(get_pos());
 	grund_t *to;
 
+	if(from->get_typ()==grund_t::pierdeck){
+		flags |= IS_DIAGONAL;
+		return;
+	}
+
 	ribi_t::ribi r1 = ribi_t::none;
 	ribi_t::ribi r2 = ribi_t::none;
 
@@ -1167,7 +1190,7 @@ void weg_t::finish_rd()
 // players can remove public owned ways (Depracated)
 const char *weg_t::is_deletable(const player_t *player)
 {
-	if(  get_player_nr()==welt->get_public_player()->get_player_nr()  ) {
+	if(  get_owner_nr()==PUBLIC_PLAYER_NR  ) {
 		return NULL;
 	}
 	return obj_t::is_deletable(player);

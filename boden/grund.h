@@ -49,6 +49,7 @@ class tunnel_t;
 class wayobj_t;
 class zeiger_t;
 class pier_t;
+class parapet_t;
 
 template<typename T> struct map_obj {};
 template<> struct map_obj<air_vehicle_t>  { static const obj_t::typ code = obj_t::air_vehicle;  };
@@ -73,6 +74,7 @@ template<> struct map_obj<wayobj_t>       { static const obj_t::typ code = obj_t
 template<> struct map_obj<weg_t>          { static const obj_t::typ code = obj_t::way;          };
 template<> struct map_obj<zeiger_t>       { static const obj_t::typ code = obj_t::zeiger;       };
 template<> struct map_obj<pier_t>         { static const obj_t::typ code = obj_t::pier;        };
+template<> struct map_obj<parapet_t>      { static const obj_t::typ code = obj_t::parapet;        };
 
 template<typename T> static inline T* obj_cast(obj_t* const d)
 {
@@ -594,8 +596,8 @@ public:
 
 	template<typename T> T* find(uint start = 0) const { return static_cast<T*>(objlist.suche(map_obj<T>::code, start)); }
 
-	uint8  obj_add(obj_t *obj) { return objlist.add(obj); }
-	uint8 obj_remove(const obj_t* obj) { return objlist.remove(obj); }
+	bool obj_add(obj_t *obj) { return objlist.add(obj); }
+	bool obj_remove(const obj_t* obj) { return objlist.remove(obj); }
 	bool obj_loesche_alle(player_t *player) { return objlist.loesche_alle(player,offsets[flags/has_way1]); }
 	bool obj_ist_da(const obj_t* obj) const { return objlist.ist_da(obj); }
 	obj_t * obj_bei(uint8 n) const { return objlist.bei(n); }
@@ -875,9 +877,12 @@ public:
 	 */
 	bool remove_everything_from_way(player_t *player,waytype_t wt,ribi_t::ribi ribi_rem);
 
+	/// @returns true if this is a dummy ground that is only there for UI purposes
+	/// (previews for bridges, elevated ways and tunnels)
+	bool is_dummy_ground() const;
+
 	void* operator new(size_t s);
 	void  operator delete(void* p, size_t s);
-
 };
 
 

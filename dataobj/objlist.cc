@@ -125,7 +125,7 @@ static uint8 type_to_pri[256]=
 	255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255,
-	255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 1,
 	3, // signalbox
 	255,
 	255, 255, 255, 255, 255, 255, 255, 255
@@ -889,6 +889,10 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 
 				case obj_t::pier:
 					new_obj = new pier_t(file);
+					break;
+
+				case obj_t::parapet:
+					new_obj = new parapet_t(file);
 					break;
 
 				case obj_t::baum:

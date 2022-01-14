@@ -6,6 +6,13 @@
 #include "pier_desc.h"
 #include "../network/checksum.h"
 
+const slope_t::type pier_desc_t::alt_tool_icon=40;
+const slope_t::type pier_desc_t::rotation_select_image=41;
+const slope_t::type pier_desc_t::low_waydeck_image=43;
+const slope_t::type pier_desc_t::parapet[]={44,49,50,52};
+const slope_t::type pier_desc_t::auto_tool_cursor_image=79;
+const slope_t::type pier_desc_t::auto_tool_icon_image=80;
+
 slope_t::type pier_desc_t::get_above_slope(uint8 rotation) const{
     switch (rotation&3) {
     case 0: return above_slope;
@@ -46,14 +53,25 @@ void pier_desc_t::calc_checksum(checksum_t *chk) const{
 	chk->input(above_slope);
 	chk->input(auto_group);
 	chk->input(auto_height);
-	chk->input(base_mask);
-	chk->input(support_mask);
+	chk->input((uint32)(base_mask & 0xFFFFFFFF));
+	chk->input((uint32)(base_mask >> 32));
+	chk->input((uint32)(support_mask & 0xFFFFFFFF));
+	chk->input((uint32)(support_mask >> 32));
+	chk->input((uint32)(middle_mask & 0xFFFFFFFF));
+	chk->input((uint32)(middle_mask >> 32));
 	chk->input(sub_obj_mask);
 	chk->input(deck_obj_mask);
 	chk->input(max_weight);
 	chk->input(number_of_seasons);
-	chk->input(middle_mask);
 	chk->input(pier_weight);
 	chk->input(drag_ribi);
 	chk->input(above_way_supplement);
+	chk->input(rotational_symmetry);
+	chk->input(topspeed);
+	chk->input(axle_load);
+	for(uint8 slope=0; slope<81; slope++){
+		for(uint8 rotation = 0; rotation < 4; rotation++){
+			chk->input(get_background(slope,rotation,0)!=IMG_EMPTY);
+		}
+	}
 }

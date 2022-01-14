@@ -89,6 +89,8 @@ hlf_btn_keine
 全解除
 lake
 湖を作成する
+Lake
+湖
 Maximize height levels
 高さを最大化する
 Networks
@@ -439,8 +441,6 @@ is reserved by:
 %i車、
 %i km/h (max. %ikm/h)
  %i km/h (最高速度 %ikm/h)
-%i years %i months old
-%i年%i月です。
 %i years %i months old.
 樹齢 %i 年と %i ヶ月です。
 %s at (%i,%i) now public stop.
@@ -1499,6 +1499,10 @@ Only show goods which are currently handled by factories
 現在存在する産業が取り扱っている貨物のみを表示します。
 open
 進入可
+open_signalbox_info
+信号扱所情報
+open_signal_connector_gui
+信号機の接続先を操作する画面を開きます
 Operation
 運行費
 Ops Profit
@@ -2064,7 +2068,7 @@ Warnings_msg
 Wasser
 海上
 Water
-沿岸
+水域
 Water level
 海面水位：
 water vehicle
@@ -3483,8 +3487,6 @@ waiting\ntolerance\nmax. min
 最大許容待機時間(分)
 waiting\ntolerance\nmin. min
 最小許容待機時間(分)
-Walked
-徒歩
 Walking time
 駅までの徒歩時間
 Way constraint permissive
@@ -3635,6 +3637,8 @@ Cannot start: no cab at the front of the convoy.
 編成の構成エラー：\n先頭になれない車両が先頭になっています。（運転台が無い等）
 switch the convoy nameplate display mode
 系統名表示モードの切り替え
+switch_sb
+信号機の接続先を変更
 no convoy nameplate
 系統名非表示
 mouseover
@@ -4137,10 +4141,6 @@ Industry overlay
 産業在庫量ツールチップ
 Display bars above the factory to show the status
 産業建築物の上部に在庫量を示すバーを表示します
-Show the private car information window
-自家用車ウィンドウを表示
-Show the pedestrian information window
-歩行者ウィンドウを表示
 can open a dedicated window by clicking on a private car.
 自家用車をクリックすると専用の情報ウィンドウを開きます
 can open a dedicated window by clicking on a pedestrian.
@@ -4151,6 +4151,22 @@ Show own depot names
 プレイヤー所有の車庫名を表示する
 Show the name of own depots in the main game window.
 メインゲーム画面上にプレイヤーの車庫の名前を表示します
+fare_chart
+運賃グラフ
+fare_short
+近距離運賃
+fare_long
+長距離運賃
+no_speed_bonus
+スピードボーナス対象外
+has_no_class
+-
+Information windows pop up control:
+情報ウィンドウの表示許可設定：
+helptxt_ground_info_toggler
+占有されていないタイルをクリックすると土地情報を情報ウィンドウを開きます
+helptxt_tree_info_toggler
+樹木、岩石、鳥の群れなどのオブジェクトをクリックすると専用の情報ウィンドウを開きます
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month

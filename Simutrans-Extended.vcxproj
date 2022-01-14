@@ -2011,10 +2011,12 @@
     <ClCompile Include="gui\onewaysign_info.cc" />
     <ClCompile Include="gui\overtaking_mode.cc" />
     <ClCompile Include="gui\obj_info.cc" />
-    <ClCompile Include="gui\pedestrian_info.cc" />
+    <ClCompile Include="gui\slim_obj_info.cc" />
     <ClCompile Include="gui\privatesign_info.cc" />
     <ClCompile Include="gui\scenario_info.cc" />
+    <ClCompile Include="gui\water_info.cc" />
     <ClCompile Include="gui\server_frame.cc" />
+    <ClCompile Include="gui\signal_connector_gui.cc" />
     <ClCompile Include="gui\signal_info.cc" />
     <ClCompile Include="gui\simwin.cc" />
     <ClCompile Include="gui\themeselector.cc" />
@@ -2588,11 +2590,13 @@
     <ClInclude Include="gui\onewaysign_info.h" />
     <ClInclude Include="gui\overtaking_mode.h" />
     <ClInclude Include="gui\obj_info.h" />
-    <ClInclude Include="gui\pedestrian_info.h" />
     <ClInclude Include="gui\pier_rotation_select.h" />
+    <ClInclude Include="gui\slim_obj_info.h" />
     <ClInclude Include="gui\privatesign_info.h" />
     <ClInclude Include="gui\scenario_info.h" />
+    <ClInclude Include="gui\water_info.h" />
     <ClInclude Include="gui\server_frame.h" />
+    <ClInclude Include="gui\signal_connector_gui.h" />
     <ClInclude Include="gui\signal_info.h" />
     <ClInclude Include="gui\simwin.h" />
     <ClInclude Include="gui\themeselector.h" />
@@ -2656,6 +2660,7 @@
     <ClInclude Include="script\script.h" />
     <ClInclude Include="siminteraction.h" />
     <ClInclude Include="simloadingscreen.h" />
+    <ClInclude Include="simsignalbox.h" />
     <ClInclude Include="simtool-dialogs.h" />
     <ClInclude Include="simunits.h" />
     <ClInclude Include="squirrel\sqstdaux.h" />
