@@ -1642,7 +1642,10 @@ sint32 rail_vehicle_t::block_reserver(route_t *route, uint16 start_index, uint16
 					if (directional_only)
 					{
 						// Stop a directional reservation when a one way sign is encountered
-						count--;
+						if (next_signal_working_method != time_interval_with_telegraph)
+						{
+							count--;
+						}
 						if (is_from_directional)
 						{
 							reached_end_of_loop = true;
