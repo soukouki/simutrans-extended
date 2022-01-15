@@ -2169,8 +2169,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Optimised debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release (command-line server)|Win32'">false</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="simunits.cc" />
     <ClCompile Include="sound\no_sound.cc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-64|Win32'">true</ExcludedFromBuild>
