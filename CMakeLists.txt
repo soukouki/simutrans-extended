@@ -109,7 +109,11 @@ if (WIN32)
 	target_link_libraries(simutrans-extended PRIVATE ws2_32 winmm)
 
 	# Backup sound and music routines if the selected backend does not provide any routines
-	set(BACKUP_SOUND sound/win32_sound_xa.cc)
+	if (MINGW)
+		set(BACKUP_SOUND sound/win32_sound.cc)
+	else ()
+		set(BACKUP_SOUND sound/win32_sound_xa.cc)
+	endif ()
 	set(BACKUP_MUSIC music/w32_midi.cc)
 else ()
 	if (SIMUTRANS_BACKEND STREQUAL "sdl2")
