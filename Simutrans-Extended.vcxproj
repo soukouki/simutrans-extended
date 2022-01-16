@@ -3044,6 +3044,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <Text Include="CMakeLists.txt" />
     <Text Include="simutrans\text\en\airtools.txt" />
     <Text Include="simutrans\text\en\baum_build.txt" />
     <Text Include="simutrans\text\en\catering.txt" />
