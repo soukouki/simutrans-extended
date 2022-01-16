@@ -1949,6 +1949,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug (non-graphical server)|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Optimised debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="sound\win32_sound.cc" />
     <ClCompile Include="sys\clipboard_w32.cc" />
     <ClCompile Include="dataobj\environment.cc" />
     <ClCompile Include="dataobj\gameinfo.cc" />
@@ -2519,10 +2520,6 @@
     <ClCompile Include="bauer\wegbauer.cc" />
     <ClCompile Include="gui\welt.cc" />
     <ClCompile Include="gui\tool_selector.cc" />
-    <ClCompile Include="sound\win32_sound_xa.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug (SDL 2)|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug (non-graphical server)|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="descriptor\reader\xref_reader.cc" />
   </ItemGroup>
   <ItemGroup>
