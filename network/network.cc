@@ -887,7 +887,10 @@ extern "C" {
 #define MINIUPNP_LIBSPEC extern
 
 //#define MINIUPNP_STATICLIB
-#ifndef _MSC_VER
+#ifdef CUSTOM_MINIUPNPC_LOCATION
+#include <miniupnpc.h>
+#include <upnpcommands.h>
+#else
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/upnpcommands.h>
 #endif
