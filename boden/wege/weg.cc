@@ -50,7 +50,7 @@
 #include "../../utils/simthread.h"
 static pthread_mutex_t weg_calc_image_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 static pthread_mutexattr_t mutex_attributes;
-static pthread_rwlockattr_t rwlock_attributes;
+//static pthread_rwlockattr_t rwlock_attributes;
 
 pthread_mutex_t weg_t::private_car_route_map::route_map_mtx = PTHREAD_MUTEX_INITIALIZER;
 #endif

@@ -403,7 +403,7 @@ scr_size gui_combobox_t::get_min_size() const
 		return scr_size(bl.w + ti.w + br.w + D_H_SPACE, max(max(bl.h, ti.h), br.h));
 	}
 	else {
-		return scr_size(bl.w + sl.w + br.w + D_H_SPACE, max(max(bl.h, ti.h), br.h));
+		return scr_size(bl.w + br.w + sl.w - D_H_SPACE, max(max(bl.h, ti.h), br.h));
 	}
 }
 

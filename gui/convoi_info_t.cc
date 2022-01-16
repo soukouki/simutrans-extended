@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "convoi_info_t.h"
+#include "minimap.h"
 #include "replace_frame.h"
 
 #include "../vehicle/air_vehicle.h"
@@ -136,6 +137,7 @@ void convoi_info_t::init(convoihandle_t cnv)
 	gui_frame_t::set_owner(cnv->get_owner());
 	cont_times_history.set_convoy(cnv);
 
+	minimap_t::get_instance()->set_selected_cnv(cnv);
 	set_table_layout(1,0);
 
 	// top part: speedbars, view, buttons
@@ -850,6 +852,7 @@ void convoi_info_t::set_tab_opened()
  */
 bool convoi_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 {
+	minimap_t::get_instance()->set_selected_cnv(cnv);
 	if(  comp == &switch_mode  &&  get_windowsize().h == get_min_windowsize().h  ) {
 		set_tab_opened();
 		return true;
@@ -933,6 +936,19 @@ bool convoi_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 	}
 
 	return false;
+}
+
+
+bool convoi_info_t::infowin_event(const event_t *ev)
+{
+	if(  ev->ev_class == INFOWIN  &&  ev->ev_code == WIN_CLOSE  ) {
+		minimap_t::get_instance()->set_selected_cnv(convoihandle_t());
+	}
+
+	if(  ev->ev_class == INFOWIN  &&  ev->ev_code == WIN_TOP  ) {
+		minimap_t::get_instance()->set_selected_cnv(cnv);
+	}
+	return gui_frame_t::infowin_event(ev);
 }
 
 

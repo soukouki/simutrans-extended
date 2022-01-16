@@ -121,8 +121,6 @@ void signal_connector_gui_t::update(signal_t* sig)
 		end_table();
 		new_component<gui_empty_t>();
 
-		koord3d current_sb = sig->get_signalbox();
-
 		new_component<gui_label_t>("Connect to:");
 		if (!sb_selections.get_count()) {
 			new_component<gui_label_t>("keine");
