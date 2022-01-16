@@ -50,7 +50,7 @@ file_info_t::file_info_t(file_type_t file_type, extended_version_t version) :
 }
 
 
-file_classify_status_t classify_file(const char *path, file_info_t *info)
+file_classify_status_t classify_save_file(const char *path, file_info_t *info)
 {
 	if (!info) {
 		dbg->error("classify_file()", "Cannot classify file: info is NULL");
@@ -61,12 +61,23 @@ file_classify_status_t classify_file(const char *path, file_info_t *info)
 		return FILE_CLASSIFY_INVALID_ARGS;
 	}
 
-	FILE *f = dr_fopen((const char *)path, "rb");
+#ifdef MAKEOBJ
+	FILE *f = fopen(path, "rb");
+#else
+	FILE *f = dr_fopen(path, "rb");
+#endif
 
 	if (!f) {
 		// Do not warn about this since we can also use this function to check whether a file exists
 		return FILE_CLASSIFY_NOT_EXISTING;
 	}
+
+#ifdef MAKEOBJ
+	info->file_type = file_info_t::TYPE_RAW;
+	info->version = INVALID_FILE_VERSION;
+	info->header_size = 0;
+	return FILE_CLASSIFY_OK;
+#else
 
 	fseek(f, 0, SEEK_SET);
 	if (classify_as_zstd(f, info)) {
@@ -124,6 +135,7 @@ file_classify_status_t classify_file(const char *path, file_info_t *info)
 	}
 
 	return FILE_CLASSIFY_OK;
+#endif // MAKEOBJ
 }
 
 file_classify_status_t classify_image_file(const char *path, file_info_t *info)
@@ -220,7 +232,7 @@ bool classify_as_ppm(FILE *f, file_info_t *info)
 	info->file_type = file_info_t::TYPE_PPM;
 	return true;
 }
-
+#ifndef MAKEOBJ
 bool classify_as_bzip2(FILE *f, file_info_t *info)
 {
 	char buf[80];
@@ -235,6 +247,7 @@ bool classify_as_bzip2(FILE *f, file_info_t *info)
 	info->file_type = file_info_t::TYPE_BZIP2;
 	return true;
 }
+#endif
 
 
 bool classify_as_zstd(FILE *f, file_info_t *info)

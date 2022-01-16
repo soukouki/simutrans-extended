@@ -35,6 +35,11 @@ public:
 	uint32 extended_revision;
 };
 
+/**
+ * Holds information about file type, format and version.
+ * Use @ref classify_save_file and @ref classify_image_file to classify
+ * save files and image files, respectively.
+ */
 struct file_info_t
 {
 	enum file_type_t {
@@ -64,19 +69,19 @@ public:
 	file_type_t file_type;
 	extended_version_t ext_version;
 	char pak_extension[256]; ///< Pak extension of saved game.
-	size_t header_size;      ///< Header size in bytes
+	size_t header_size;     ///< Header size of saved game in bytes
 };
 ENUM_BITSET(file_info_t::file_type_t);
 
 
 /**
- * Classify a file.
+ * Classify a save file.
  * @param path must a valid system name, either a short name for windows or UTF8 for other plattforms
  * @param file_info_t If successfully classified, holds information about file format and version.
  *                    Must not be NULL.
- * @returns FILE_ERROR_OK iff successfully classified.
+ * @returns FILE_CLASSIFY_OK iff successfully classified.
  */
-file_classify_status_t classify_file(const char *path, file_info_t *info);
+file_classify_status_t classify_save_file(const char *path, file_info_t *info);
 
 /**
  * Classify an image file.
