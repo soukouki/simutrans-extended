@@ -20,8 +20,6 @@
 #include "../utils/plainstring.h"
 #include "../utils/simstring.h"
 
-#include "loadsave.h"
-
 #include "../io/rdwr/bzip2_file_rdwr_stream.h"
 #include "../io/rdwr/raw_file_rdwr_stream.h"
 #include "../io/rdwr/zlib_file_rdwr_stream.h"
@@ -280,7 +278,7 @@ loadsave_t::file_status_t loadsave_t::rd_open(const char *filename_utf8)
 {
 	close();
 
-	const file_classify_status_t cl_status = classify_save_file(filename_utf8, &finfo);
+	const file_classify_status_t cl_status = classify_file(filename_utf8, &finfo);
 
 	if (cl_status != FILE_CLASSIFY_OK) {
 		// file likely does not exist
