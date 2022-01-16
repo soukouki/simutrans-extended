@@ -54,18 +54,18 @@ struct bitmap_info_header_t
 
 enum compression_method_t
 {
-	BI_RGB  = 0,
-	BI_RLE8 = 1,
-	BI_RLE4 = 2
+	BIRGB  = 0,
+	BIRLE8 = 1,
+	BIRLE4 = 2
 };
 
 
 static bool is_format_supported(uint16 bpp, uint32 compression)
 {
-	if (compression == BI_RGB) {
+	if (compression == BIRGB) {
 		return bpp == 8 || bpp == 24;
 	}
-	else if (compression == BI_RLE8) {
+	else if (compression == BIRLE8) {
 		return bpp == 8;
 	}
 	else {
@@ -120,7 +120,7 @@ bool raw_image_t::read_bmp(const char *filename)
 
 	// We only allow the following image formats:
 	//   8 bit: BI_RGB (uncompressed)
-	//          BI_RLE8 (8 bit RLE)
+	//          BIRLE8 (8 bit RLE)
 	//  24 bit: BI_RGB
 	if(  !is_format_supported(bit_depth, compression)  ) {
 		dbg->warning("raw_image_t::read_bmp", "Can only use 8 bit (RLE or normal) or 24 bit bitmaps!");
@@ -379,7 +379,7 @@ bool raw_image_t::write_bmp(const char *filename) const
 	iheader.height                = endian(sint32(get_height()));
 	iheader.num_color_planes      = endian(uint16(1));
 	iheader.bpp                   = endian(uint16(bpp));
-	iheader.compression           = endian(uint32(BI_RGB));
+	iheader.compression           = endian(uint32(BIRGB));
 	iheader.horizontal_resolution = 0;
 	iheader.vertical_resolution   = 0;
 	iheader.num_palette_colors    = 0;

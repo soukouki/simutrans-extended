@@ -744,13 +744,10 @@ void win_clamp_xywh_position( scr_coord_val &x, scr_coord_val &y, scr_size wh, b
 			y = clip_rr.y + clip_rr.h - wh.h;
 		}
 	}
+
 	// now do not hide titlebar by menubar
-	if (x < clip_rr.x) {
-		x = clip_rr.x;
-	}
-	if (y < clip_rr.y) {
-		y = clip_rr.y;
-	}
+	x = max(x, clip_rr.x);
+	y = max(y, clip_rr.y);
 }
 
 
@@ -1634,7 +1631,7 @@ bool check_pos_win(event_t *ev)
 						move_win(i, ev);
 						is_moving = i;
 					}
-					if(IS_RIGHTCLICK(ev)) {
+					if(IS_RIGHTCLICK(ev)  || IS_LEFTDBLCLK(ev)  ) {
 						wins[i].rollup ^= 1;
 						gui_frame_t *gui = wins[i].gui;
 						scr_size size = gui->get_windowsize();

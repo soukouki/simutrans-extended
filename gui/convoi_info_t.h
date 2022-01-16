@@ -158,6 +158,8 @@ public:
 	 */
 	void update_data() { reset_cnv_name(); set_dirty(); }
 
+	bool infowin_event(const event_t *ev) OVERRIDE;
+
 	void rdwr( loadsave_t *file ) OVERRIDE;
 
 	uint32 get_rdwr_id() OVERRIDE { return magic_convoi_info; }

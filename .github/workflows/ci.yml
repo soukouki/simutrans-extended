@@ -460,19 +460,18 @@ jobs:
     name: Windows (MSVC, headless, zstd, UPNP)
     runs-on: windows-latest
     needs: check-code-formatting
-    if: ${{ false }} #Disabled as not working
+    if: always()
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up build dir
         run: mkdir ${{ github.workspace }}/build
       - name: Install dependencies using vcpkg
-        uses: lukka/run-vcpkg@v4.1
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/build/vcpkg'
-          vcpkgArguments: '--disable-metrics zlib bzip2 miniupnpc zstd libpng'
-          vcpkgGitCommitId: 6185aa76504a5025f36754324abf307cc776f3da
-          vcpkgTriplet: x64-windows-static
+        run: |
+          cd ${{ github.workspace }}/build
+          git clone https://github.com/Microsoft/vcpkg
+          ./vcpkg/bootstrap-vcpkg.bat
+          ./vcpkg/vcpkg --triplet x64-windows-static install zlib bzip2 libpng zstd sdl2 freetype miniupnpc
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - name: Configure
