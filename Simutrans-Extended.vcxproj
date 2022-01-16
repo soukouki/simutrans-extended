@@ -2579,7 +2579,7 @@
     <ClInclude Include="gui\times_history_container.h" />
     <ClInclude Include="gui\vehicle_class_manager.h" />
     <ClInclude Include="io\classify_file.h" />
-    <ClCompile Include="io\raw_image.h" />
+    <ClInclude Include="io\raw_image.h" />
     <ClInclude Include="io\rdwr\bzip2_file_rdwr_stream.h" />
     <ClInclude Include="io\rdwr\raw_file_rdwr_stream.h" />
     <ClInclude Include="io\rdwr\rdwr_stream.h" />
