@@ -97,11 +97,7 @@ jobs:
           cp ./artifacts/makeobj-${{matrix.buildtype}}-nightly/makeobj-extended${{matrix.suffix}} ./${{matrix.os}}/makeobj-extended${{matrix.suffix}}
           cp ./artifacts/nettool-${{matrix.buildtype}}-nightly/nettool-extended${{matrix.suffix}} ./${{matrix.os}}/nettool-extended${{matrix.suffix}}
 
-      - name: zip
-        uses: papeloto/action-zip@v1
-        with:
-          files: ./${{matrix.os}}/
-          dest: ./${{matrix.os}}.zip
+      - run: zip ./${{matrix.os}}.zip ./${{matrix.os}}/
 
       - name: Deploy
         uses: svenstaro/upload-release-action@v2
