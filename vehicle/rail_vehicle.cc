@@ -1685,7 +1685,7 @@ sint32 rail_vehicle_t::block_reserver(route_t *route, uint16 start_index, uint16
 
 			if(signal_here || station_signals_in_advance || station_signal_to_clear_only)
 			{
-				signal_t* signal = NULL; 
+				signal_t* signal = NULL;
 				halthandle_t station_signal_halt;
 				uint32 check_station_signals = 0;
 
