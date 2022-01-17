@@ -40,7 +40,7 @@ else
           CFLAGS  += -DPNG_STATIC -DZLIB_STATIC -static
           LDFLAGS += -static-libgcc -static-libstdc++ -Wl,--large-address-aware -static
           ifeq ($(USE_FREETYPE),1)
-          	LDFLAGS += -Wl,-Bstatic -lfreetype -lpng -lharfbuzz -lgraphite2 -lfreetype -Wl,-Bdynamic
+          	LDFLAGS += -Wl,-Bstatic -lfreetype -lharfbuzz -lgraphite2 -lfreetype -Wl,-Bdynamic
           endif
           LIBS += -lmingw32
         endif
