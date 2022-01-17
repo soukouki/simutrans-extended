@@ -186,7 +186,7 @@ ifdef USE_FREETYPE
     else
       LDFLAGS += -lfreetype
       ifeq ($(OSTYPE),mingw)
-        LDFLAGS += -lpng -lharfbuzz
+        LDFLAGS +=-lharfbuzz
       endif
     endif
 
