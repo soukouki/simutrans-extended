@@ -88,7 +88,7 @@ ifeq ($(OSTYPE),openbsd)
   CXXFLAGS +=  -std=c++11
 endif
 
-LIBS += -lbz2 -lz -lpng
+LIBS += -lbz2 -lz
 
 CXXFLAGS +=  -std=gnu++11
 
