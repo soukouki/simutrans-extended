@@ -80,12 +80,6 @@ endif (NOT MSVC)
 
 
 #
-# output directory
-#
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/simutrans)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/simutrans)
-
-#
 # sources
 #
 add_executable(simutrans-extended)
@@ -94,6 +88,14 @@ if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif ()
 
 include(SimutransSourceList)
+
+
+#
+# output directory
+#
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/simutrans)
+set_target_properties( simutrans-extended PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/simutrans/$<0:> )
+
 
 #
 # Libraries
@@ -107,8 +109,11 @@ if (WIN32)
 	target_link_libraries(simutrans-extended PRIVATE ws2_32 winmm)
 
 	# Backup sound and music routines if the selected backend does not provide any routines
-	#set(BACKUP_SOUND sound/win32_sound_xa.cc)
-	set(BACKUP_SOUND sound/win32_sound.cc)
+	if (MINGW)
+		set(BACKUP_SOUND sound/win32_sound.cc)
+	else ()
+		set(BACKUP_SOUND sound/win32_sound_xa.cc)
+	endif ()
 	set(BACKUP_MUSIC music/w32_midi.cc)
 else ()
 	if (SIMUTRANS_BACKEND STREQUAL "sdl2")
@@ -197,7 +202,7 @@ if (SIMUTRANS_USE_ZSTD)
 	target_include_directories(simutrans-extended PRIVATE ${ZSTD_INCLUDE_DIRS})
 	target_compile_definitions(simutrans-extended PRIVATE USE_ZSTD=1)
 	if (MSVC)
-		target_link_libraries(simutrans-extended PRIVATE ZSTD::libzstd_static)
+		target_link_libraries(simutrans-extended PRIVATE zstd::libzstd_static)
 	elseif (MINGW)
 		# only 64 bit cmake, 32 bit is broken
 		target_link_libraries(simutrans-extended PRIVATE -lzstd)
