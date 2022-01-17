@@ -317,8 +317,8 @@ install(FILES get_pak.sh DESTINATION "simutrans"
 #
 # Nettool/Makeobj
 #
-add_subdirectory(makeobj EXCLUDE_FROM_ALL)
-add_subdirectory(nettools EXCLUDE_FROM_ALL)
+add_subdirectory(makeobj)
+add_subdirectory(nettools)
 
 
 #
