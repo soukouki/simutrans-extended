@@ -120,17 +120,17 @@ citybuilding_edit_frame_t::citybuilding_edit_frame_t(player_t* player_) :
 	bt_res.init( button_t::square_state, "residential house");
 	bt_res.add_listener(this);
 	bt_res.pressed = true;
-	cont_filter.add_component(&bt_res);
+	cont_filter.add_component(&bt_res,3);
 
 	bt_com.init( button_t::square_state, "shops and stores");
 	bt_com.add_listener(this);
 	bt_com.pressed = true;
-	cont_filter.add_component(&bt_com);
+	cont_filter.add_component(&bt_com,3);
 
 	bt_ind.init( button_t::square_state, "industrial building");
 	bt_ind.add_listener(this);
 	bt_ind.pressed = true;
-	cont_filter.add_component(&bt_ind);
+	cont_filter.add_component(&bt_ind,3);
 
 	// add to sorting selection
 	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_LEVEL_PAX);
@@ -211,9 +211,9 @@ void citybuilding_edit_frame_t::fill_list()
 		// color code for objects: BLACK: normal, YELLOW: consumer only, GREEN: source only
 		PIXVAL color;
 		switch (i->get_type()) {
-			case building_desc_t::city_res: color = color_idx_to_rgb(COL_BLUE);       break;
-			case building_desc_t::city_com: color = color_idx_to_rgb(COL_DARK_GREEN); break;
-			default:                        color = SYSCOL_TEXT;                      break;
+			case building_desc_t::city_res: color = color_idx_to_rgb(COL_DARK_BLUE + env_t::gui_player_color_dark); break;
+			case building_desc_t::city_com: color = color_idx_to_rgb(40 + env_t::gui_player_color_dark);            break;
+			default:                        color = SYSCOL_TEXT;                                                    break;
 		}
 		char const* const name = get_sortedby()==gui_sorting_item_t::BY_NAME_OBJECT ?  i->get_name() : translator::translate(i->get_name());
 		scl.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(name, color);

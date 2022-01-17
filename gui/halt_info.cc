@@ -200,7 +200,7 @@ gui_halt_goods_demand_t::gui_halt_goods_demand_t(halthandle_t h, bool show_produ
 void gui_halt_goods_demand_t::build_goods_list()
 {
 	goods_list.clear();
-	if (old_fab_count = halt->get_fab_list().get_count()) {
+	if ( (old_fab_count = halt->get_fab_list().get_count()) ) {
 		FOR(const slist_tpl<fabrik_t*>, const fab, halt->get_fab_list()) {
 			FOR(array_tpl<ware_production_t>, const& i, show_products ? fab->get_output() : fab->get_input()) {
 				goods_desc_t const* const ware = i.get_typ();
@@ -223,7 +223,7 @@ void gui_halt_goods_demand_t::draw(scr_coord offset)
 		xoff += 12;
 	}
 	FOR(slist_tpl<goods_desc_t const*>, const good, goods_list) {
-		display_colorbox_with_tooltip(offset.x + xoff, offset.y + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, good->get_color(), NULL);
+		display_colorbox_with_tooltip(offset.x + xoff, offset.y + GOODS_COLOR_BOX_YOFF, GOODS_COLOR_BOX_HEIGHT, GOODS_COLOR_BOX_HEIGHT, good->get_color(), false);
 		xoff += GOODS_COLOR_BOX_HEIGHT+2;
 		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, translator::translate(good->get_name()), ALIGN_LEFT, halt->gibt_ab(good) ? SYSCOL_TEXT : SYSCOL_TEXT_WEAK, true);
 		xoff += D_H_SPACE;

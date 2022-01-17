@@ -125,11 +125,11 @@ factory_edit_frame_t::factory_edit_frame_t(player_t* player_) :
 
 	bt_city_chain.init( button_t::square_state, "Only city chains");
 	bt_city_chain.add_listener(this);
-	cont_filter.add_component(&bt_city_chain);
+	cont_filter.add_component(&bt_city_chain,3);
 
 	bt_land_chain.init( button_t::square_state, "Only land chains");
 	bt_land_chain.add_listener(this);
-	cont_filter.add_component(&bt_land_chain);
+	cont_filter.add_component(&bt_land_chain,3);
 
 	// add water to climate selection
 	cb_climates.new_component<gui_climates_item_t>(climate::water_climate);
@@ -211,8 +211,8 @@ void factory_edit_frame_t::fill_list()
 	scl.set_selection(-1);
 	FOR(vector_tpl<factory_desc_t const*>, const i, factory_list) {
 		PIXVAL const color =
-			i->is_consumer_only() ? color_idx_to_rgb(COL_BLUE)       :
-			i->is_producer_only() ? color_idx_to_rgb(COL_DARK_GREEN) :
+			i->is_consumer_only() ? color_idx_to_rgb(COL_DARK_BLUE + env_t::gui_player_color_dark) :
+			i->is_producer_only() ? color_idx_to_rgb(40 + env_t::gui_player_color_dark)            :
 			SYSCOL_TEXT;
 		char const* const name = get_sortedby()==gui_sorting_item_t::BY_NAME_OBJECT ?  i->get_name() : translator::translate(i->get_name());
 		scl.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(name, color);
