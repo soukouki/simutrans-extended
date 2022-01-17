@@ -11,7 +11,11 @@
 #include "../dataobj/translator.h"
 
 #ifndef __APPLE__
+#ifdef ALT_SDL_DIR
+#include "SDL.h"
+#else
 #include <SDL2/SDL.h>
+#endif
 #else
 #include <SDL.h>
 #endif
