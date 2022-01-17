@@ -8122,7 +8122,7 @@ void karte_t::update_history()
 	finance_history_year[0][WORLD_MAIL_GENERATED] = total_mail_year-1;
 	finance_history_year[0][WORLD_GOODS_RATIO] = (10000*supplied_goods_year)/total_goods_year;
 
-	// update total transported, including passenger and mail
+	// update total transported goods, NOT including passenger and mail
 	sint64 transported = 0;
 	sint64 transported_year = 0;
 	for(  uint i=0;  i<MAX_PLAYER_COUNT;  i++ ) {
