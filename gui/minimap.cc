@@ -2015,6 +2015,15 @@ void minimap_t::draw(scr_coord pos)
 		}
 
 	}
+
+	if (current_cnv.is_bound()) {
+		scr_coord_val offset = zoom_in / zoom_out /2;
+		scr_coord_val wd = max( zoom_in/zoom_out, 1) * 2 + 1; // to have it always odd
+		for(  int i = 0;  i < current_cnv->get_vehicle_count();  i++  ) {
+			const scr_coord veh_pos = map_to_screen_coord(current_cnv->get_vehicle(i)->get_pos().get_2d()) + pos;
+			display_fillbox_wh_clip_rgb(veh_pos.x-(wd/2)+offset, veh_pos.y-(wd/2)+offset, wd, wd, color_idx_to_rgb(COL_MAGENTA), true);
+		}
+	}
 }
 
 

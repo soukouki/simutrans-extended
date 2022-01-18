@@ -69,7 +69,7 @@ gui_scrolled_list_t::gui_scrolled_list_t(enum type type, item_compare_func cmp) 
 	item_list(container.get_components())
 {
 	container.set_table_layout(1,0);
-	container.set_margin( scr_size( D_H_SPACE, 0 ), scr_size( D_H_SPACE, 0 ) );
+	container.set_margin( scr_size( D_H_SPACE, D_V_SPACE ), scr_size( D_H_SPACE, D_V_SPACE ) );
 	container.set_spacing( scr_size( D_H_SPACE, 0 ) );
 
 	set_component(&container);
@@ -200,11 +200,11 @@ bool gui_scrolled_list_t::infowin_event(const event_t *ev)
 	// translate key up/down to tab/shift-tab
 	if(  ev->ev_class==EVENT_KEYBOARD  && ev->ev_code == SIM_KEY_UP  &&  get_selection()>0) {
 		ev2.ev_code = SIM_KEY_TAB;
-		ev2.ev_key_mod |= 1;
+		ev2.ev_key_mod |= SIM_MOD_SHIFT;
 	}
 	if(  ev->ev_class==EVENT_KEYBOARD  && ev->ev_code == SIM_KEY_DOWN  &&  (uint32)(get_selection()+1) < item_list.get_count()) {
 		ev2.ev_code = SIM_KEY_TAB;
-		ev2.ev_key_mod &= ~1;
+		ev2.ev_key_mod &= ~SIM_MOD_SHIFT;
 	}
 
 	bool swallowed = gui_scrollpane_t::infowin_event(&ev2);
@@ -303,6 +303,9 @@ void gui_scrolled_list_t::draw(scr_coord offset)
 			case listskin:
 				display_img_stretch( gui_theme_t::listbox, rect);
 				break;
+			case transparent:
+				break;
+
 		}
 	}
 

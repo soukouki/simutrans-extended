@@ -260,7 +260,7 @@ bool rail_vehicle_t::check_next_tile(const grund_t *bd) const
 				// below speed limit
 				return false;
 			}
-			if(  rs->get_desc()->is_private_way()  &&  (rs->get_player_mask() & (1<<get_player_nr()) ) == 0  ) {
+			if(  rs->get_desc()->is_private_way()  &&  (rs->get_player_mask() & (1<<get_owner_nr()) ) == 0  ) {
 				// private road
 				return false;
 			}
@@ -1642,7 +1642,10 @@ sint32 rail_vehicle_t::block_reserver(route_t *route, uint16 start_index, uint16
 					if (directional_only)
 					{
 						// Stop a directional reservation when a one way sign is encountered
-						count--;
+						if (next_signal_working_method != time_interval_with_telegraph)
+						{
+							count--;
+						}
 						if (is_from_directional)
 						{
 							reached_end_of_loop = true;

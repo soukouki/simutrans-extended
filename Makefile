@@ -88,7 +88,7 @@ ifeq ($(OSTYPE),openbsd)
   CXXFLAGS +=  -std=c++11
 endif
 
-LIBS += -lbz2 -lz
+LIBS += -lbz2 -lz -lpng
 
 CXXFLAGS +=  -std=gnu++11
 
@@ -482,8 +482,9 @@ SOURCES += gui/tool_selector
 SOURCES += gui/trafficlight_info.cc
 SOURCES += gui/vehiclelist_frame.cc
 SOURCES += gui/obj_info.cc
-SOURCES += gui/pedestrian_info.cc
+SOURCES += gui/slim_obj_info.cc
 SOURCES += gui/vehicle_class_manager.cc
+SOURCES += gui/water_info.cc
 SOURCES += gui/way_info.cc
 SOURCES += gui/welt.cc
 SOURCES += io/classify_file.cc
