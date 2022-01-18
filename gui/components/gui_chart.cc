@@ -283,7 +283,7 @@ void gui_chart_t::draw(scr_coord offset)
 
 						if(  left_to_right_graph  ) {
 							const sint16 width = proportional_string_width(cmin)+7;
-							display_ddd_proportional( tmpx + 8, (scr_coord_val)(offset.y+baseline-(int)(tmp/scale)-4), width, 0, env_t::tooltip_color, c.color, cmin, true);
+							display_ddd_proportional( tmpx + 8, (scr_coord_val)(offset.y+baseline-(int)(tmp/scale)-4), width, 0, c.color, is_dark_color(c.color) ? color_idx_to_rgb(COL_WHITE) : color_idx_to_rgb(COL_BLACK), cmin, true);
 						}
 						else if(  (baseline-tmp/scale-8) > 0  &&  (baseline-tmp/scale+8) < chart_size.h  &&  abs((int)(tmp/scale)) > 9  ) {
 							display_proportional_rgb(tmpx - 4, (scr_coord_val)(offset.y+baseline-(int)(tmp/scale)-4), cmin, ALIGN_RIGHT, c.color, true );

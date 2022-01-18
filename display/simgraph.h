@@ -152,6 +152,14 @@ void simgraph_exit();
 void simgraph_resize(scr_size new_window_size);
 void reset_textur(void *new_textur);
 
+// If the background color is dark, the white text will match.
+bool is_dark_color(PIXVAL color);
+bool is_dark_color(uint32 rgb);
+
+// Returns the brightness of the color from -128 to 127.
+// If it is greater than 0, black text will fit, if it is smaller, white text will fit.
+// The higher the positive value, the less visible the white text.
+sint8 get_color_brightness_index(PIXVAL color);
 
 /**
  * Loads the font, returns the number of characters in it
