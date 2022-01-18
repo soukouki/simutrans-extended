@@ -3244,7 +3244,8 @@ void vehicle_t::display_after(int xpos, int ypos, bool is_global) const
 					display_proportional_clip_rgb(xpos+(bar_width_half*2-width+7+2)/2, idplate_yoff+1, nameplate_text, ALIGN_LEFT, color_idx_to_rgb(COL_WHITE), true);
 				}
 				else {
-					display_ddd_proportional_clip(xpos, ypos-yoff, width, 0, col_val, color_idx_to_rgb(COL_WHITE), nameplate_text, true);
+					// line/convoy name
+					display_ddd_proportional_clip(xpos, ypos-yoff, width, 0, col_val, is_dark_color(col_val) ? color_idx_to_rgb(COL_WHITE) : color_idx_to_rgb(COL_BLACK), nameplate_text, true);
 					// (*)display_ddd_proportional_clip's height is LINESPACE/2+1+1
 				}
 			}
