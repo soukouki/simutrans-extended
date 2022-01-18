@@ -68,6 +68,11 @@ static const gui_chart_t::convert_proc ref_convert[MAX_FAB_REF_LINE] =
 	convert_boost, convert_boost, convert_boost, convert_power, NULL, NULL
 };
 
+static const uint8 ref_chart_type[MAX_FAB_REF_LINE] =
+{
+	gui_chart_t::PERCENT, gui_chart_t::PERCENT, gui_chart_t::PERCENT, gui_chart_t::KW, gui_chart_t::STANDARD, gui_chart_t::STANDARD
+};
+
 static const koord button_pos[MAX_FAB_STAT] =
 {
 	/* Production */  koord(0, 0), koord(1, 0),
@@ -159,7 +164,7 @@ void factory_chart_t::set_factory(const fabrik_t *_factory)
 		if(  s==FAB_BOOST_MAIL  ) {
 			// insert the reference line buttons here to ensure correct tab order
 			for(  int r=0;  r<MAX_FAB_REF_LINE;  ++r  ) {
-				uint16 curve = prod_chart.add_curve( color_idx_to_rgb(ref_color[r]), prod_ref_line_data + r, 0, 0, MAX_MONTH, r<3 ? gui_chart_t::PERCENT : gui_chart_t::STANDARD, false, true, 0, ref_convert[r], marker_type[r] );
+				uint16 curve = prod_chart.add_curve( color_idx_to_rgb(ref_color[r]), prod_ref_line_data + r, 0, 0, MAX_MONTH, ref_chart_type[r], false, true, 0, ref_convert[r], marker_type[r] );
 				button_to_curve[r + MAX_FAB_STAT].button = &prod_ref_line_buttons[r];
 				button_to_curve[r + MAX_FAB_STAT].curve = curve;
 

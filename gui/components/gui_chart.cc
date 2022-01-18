@@ -81,6 +81,7 @@ uint32 gui_chart_t::add_curve(PIXVAL color, const sint64 *values, int size, int 
 		case TON_KM:
 		case TON_KM_MAIL:
 			           new_curve.suffix = translator::translate("tkm");  break;
+		case KW:       new_curve.suffix = "kW";   break;
 		default:       new_curve.suffix = NULL;   break;
 	}
 	new_curve.precision = precision;
