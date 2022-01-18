@@ -356,8 +356,8 @@ void goods_frame_t::update_fare_charts()
 		fare_curve_s[i] = (revenue_s + 2048) / 4096;
 		fare_curve_l[i] = (revenue_l + 2048) / 4096;
 	}
-	chart_s.add_curve(wtyp->get_color(), (sint64*)fare_curve_s, 1, 0, FARE_RECORDS, MONEY, true, false, 2);
-	chart_l.add_curve(wtyp->get_color(), (sint64*)fare_curve_l, 1, 0, FARE_RECORDS, MONEY, true, false, 2);
+	chart_s.add_curve(wtyp->get_color(), (sint64*)fare_curve_s, 1, 0, FARE_RECORDS, gui_chart_t::MONEY, true, false, 2);
+	chart_l.add_curve(wtyp->get_color(), (sint64*)fare_curve_l, 1, 0, FARE_RECORDS, gui_chart_t::MONEY, true, false, 2);
 }
 
 

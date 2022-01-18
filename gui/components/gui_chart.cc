@@ -76,6 +76,11 @@ uint32 gui_chart_t::add_curve(PIXVAL color, const sint64 *values, int size, int 
 		case DISTANCE: new_curve.suffix = "km";   break;
 		case FORCE:    new_curve.suffix = "kN";   break;
 		case KMPH:     new_curve.suffix = "km/h"; break;
+		case PAX_KM:   new_curve.suffix = translator::translate("pkm");  break;
+		case KG_KM:    new_curve.suffix = translator::translate("kgkm"); break;
+		case TON_KM:
+		case TON_KM_MAIL:
+			           new_curve.suffix = translator::translate("tkm");  break;
 		default:       new_curve.suffix = NULL;   break;
 	}
 	new_curve.precision = precision;

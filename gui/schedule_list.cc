@@ -55,10 +55,11 @@ uint16 schedule_list_gui_t::livery_scheme_index = 0;
 static const char *cost_type[MAX_LINE_COST] =
 {
 	"Free Capacity",
-	"Transported",
+	"Pax-km",
+	"Mail-km",
+	"Freight-km", // ton-km
 	"Distance",
 	"Average speed",
-//	"Maxspeed",
 	"Comfort",
 	"Revenue",
 	"Operation",
@@ -73,7 +74,9 @@ static const char *cost_type[MAX_LINE_COST] =
 const uint8 cost_type_color[MAX_LINE_COST] =
 {
 	COL_FREE_CAPACITY,
+	COL_LIGHT_PURPLE,
 	COL_TRANSPORTED,
+	COL_BROWN,
 	COL_DISTANCE,
 	COL_AVERAGE_SPEED,
 	COL_COMFORT,
@@ -83,7 +86,6 @@ const uint8 cost_type_color[MAX_LINE_COST] =
 	COL_TOLL,
 	COL_PROFIT,
 	COL_VEHICLE_ASSETS,
-	//COL_COUNVOI_COUNT,
 	COL_MAXSPEED,
 	COL_LILAC
 };
@@ -93,12 +95,16 @@ static uint8 tabs_to_lineindex[8];
 static uint8 max_idx=0;
 
 static uint8 statistic[MAX_LINE_COST]={
-	LINE_CAPACITY, LINE_TRANSPORTED_GOODS, LINE_DISTANCE, LINE_AVERAGE_SPEED, LINE_COMFORT, LINE_REVENUE, LINE_OPERATIONS, LINE_REFUNDS, LINE_WAYTOLL, LINE_PROFIT, LINE_CONVOIS, LINE_DEPARTURES, LINE_DEPARTURES_SCHEDULED
-//std	LINE_CAPACITY, LINE_TRANSPORTED_GOODS, LINE_REVENUE, LINE_OPERATIONS, LINE_PROFIT, LINE_CONVOIS, LINE_DISTANCE, LINE_MAXSPEED, LINE_WAYTOLL
+	LINE_CAPACITY, LINE_PAX_DISTANCE, LINE_MAIL_DISTANCE, LINE_PAYLOAD_DISTANCE,
+	LINE_DISTANCE, LINE_AVERAGE_SPEED, LINE_COMFORT, LINE_REVENUE,
+	LINE_OPERATIONS, LINE_REFUNDS, LINE_WAYTOLL, LINE_PROFIT,
+	LINE_CONVOIS, LINE_DEPARTURES, LINE_DEPARTURES_SCHEDULED
 };
 
 static uint8 statistic_type[MAX_LINE_COST]={
-	STANDARD, STANDARD, DISTANCE, STANDARD, STANDARD, MONEY, MONEY, MONEY, MONEY, MONEY, STANDARD, STANDARD, STANDARD
+	gui_chart_t::STANDARD, gui_chart_t::PAX_KM, gui_chart_t::KG_KM, gui_chart_t::TON_KM,
+	gui_chart_t::DISTANCE, gui_chart_t::STANDARD, gui_chart_t::STANDARD, gui_chart_t::MONEY,
+	gui_chart_t::MONEY, gui_chart_t::MONEY, gui_chart_t::MONEY, gui_chart_t::MONEY, gui_chart_t::STANDARD, gui_chart_t::STANDARD, gui_chart_t::STANDARD
 };
 
 static const char * line_alert_helptexts[5] =
@@ -1153,7 +1159,8 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		// chart
 		chart.remove_curves();
 		for(i=0; i<MAX_LINE_COST; i++)  {
-			chart.add_curve(color_idx_to_rgb(cost_type_color[i]), new_line->get_finance_history(), MAX_LINE_COST, statistic[i], MAX_MONTHS, statistic_type[i], filterButtons[i].pressed, true, statistic_type[i] == MONEY ? 2 : 0);
+			const uint8 precision = statistic_type[i] == gui_chart_t::MONEY ? 2 : (statistic_type[i]==gui_chart_t::PAX_KM || statistic_type[i]==gui_chart_t::KG_KM || statistic_type[i]==gui_chart_t::TON_KM) ? 1 : 0;
+			chart.add_curve(color_idx_to_rgb(cost_type_color[i]), new_line->get_finance_history(), MAX_LINE_COST, statistic[i], MAX_MONTHS, statistic_type[i], filterButtons[i].pressed, true, precision);
 			if (bFilterStates & (1 << i)) {
 				chart.show_curve(i);
 			}
@@ -1312,8 +1319,11 @@ void schedule_list_gui_t::rdwr( loadsave_t *file )
 	if(  file->is_version_less(112, 8)  ) {
 		chart_records = 8;
 	}
-	else if (file->get_extended_version() < 14 || (file->get_extended_version() == 14 && file->get_extended_revision() < 25)) {
+	else if (file->is_version_ex_less(14,25)) {
 		chart_records = 12;
+	}
+	else if (file->is_version_ex_less(14,47)) {
+		chart_records = 13;
 	}
 	for (int i=0; i<chart_records; i++) {
 		bool b = filterButtons[i].pressed;

@@ -11,15 +11,13 @@
 #include "gui_component.h"
 #include "../../tpl/slist_tpl.h"
 
-// NOTE: KMPH and FORCE hacks drawing accuracy and should not be mixed with other types
-// CURVE TYPES
+/*
 #define STANDARD 0
 #define MONEY 1
 #define PERCENT 2
 #define DISTANCE 3
 #define KMPH 4
-#define FORCE 5
-//#define KW       6
+#define FORCE 5*/
 
 /**
  * Draws a group of curves.
@@ -28,6 +26,9 @@ class gui_chart_t : public gui_component_t
 {
 public:
 	enum chart_marker_t { square = 0, cross, diamond, round_box, none };
+	// NOTE: KMPH and FORCE hacks drawing accuracy and should not be mixed with other types
+	// CURVE TYPES
+	enum chart_suffix_t { STANDARD = 0, MONEY, PERCENT, DISTANCE, KMPH, FORCE, PAX_KM, KG_KM, TON_KM, TON_KM_MAIL, /*KW*/ };
 
 	/**
 	 * Set background color. -1 means no background

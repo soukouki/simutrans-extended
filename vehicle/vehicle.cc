@@ -1009,16 +1009,10 @@ uint16 vehicle_t::unload_cargo(halthandle_t halt, sint64 & revenue_from_unloadin
 	}
 
 	if(  sum_menge  ) {
-		// book transported goods
-		get_owner()->book_transported( sum_menge, get_desc()->get_waytype(), index );
-
 		if(  sum_delivered  ) {
 			// book delivered goods to destination
 			get_owner()->book_delivered( sum_delivered, get_desc()->get_waytype(), index );
 		}
-
-		// add delivered goods to statistics
-		cnv->book( sum_menge, convoi_t::CONVOI_TRANSPORTED_GOODS );
 
 		// add delivered goods to halt's statistics
 		halt->book( sum_menge, HALT_ARRIVED );
