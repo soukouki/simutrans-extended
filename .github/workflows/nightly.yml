@@ -158,12 +158,12 @@ jobs:
           file: windows.zip
           version: tags/Nightly
       - run: |
-          unzip ./windows.zip -d ./simutrans
-          mv ./windows/* .
+          unzip ./windows.zip -d .
+          mv ./windows/* ./simutrans
           rm -r ./windows
           
-          unzip ./linux.zip -d ./simutrans
-          mv ./linux/* .
+          unzip ./linux.zip -d .
+          mv ./linux/* ./simutrans
           rm -r ./linux
 
       #Get paksets
@@ -175,7 +175,7 @@ jobs:
           file: pak128.britain-ex-nightly.zip
           version: tags/Nightly
       #TODO pak192.comic
-      - run: unzip pak128.britain-ex-nightly.zip -d ./simutrans/pak128.britain-ex
+      - run: unzip pak128.britain-ex-nightly.zip -d ./simutrans/
 
       - run: zip -r ./simutrans-extended.zip ./simutrans/
 
