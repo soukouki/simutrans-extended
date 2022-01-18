@@ -111,6 +111,27 @@ gui_settings_t::gui_settings_t()
 		buttons[ IDBTN_CHANGE_FONT ].set_image_position_right(true);
 	}
 	add_component( buttons + IDBTN_CHANGE_FONT );
+	
+	// screen scale number input
+	add_table(3,1)->set_spacing(scr_size(0,0));
+	{
+		new_component<gui_label_t>("Screen scale: ");
+		
+		add_table(2,0);
+		{
+			screen_scale_numinp.init(dr_get_screen_scale(), 25, 400, 25, false);
+			screen_scale_numinp.add_listener(this);
+			add_component(&screen_scale_numinp);
+
+			screen_scale_auto.init(button_t::roundbox_state, "Auto");
+			screen_scale_auto.add_listener(this);
+			add_component(&screen_scale_auto);
+		}
+		end_table();
+		
+		new_component<gui_fill_t>();
+	}
+	end_table();
 
 	// position of menu
 	add_table(5,1)->set_spacing(scr_size(0,0));
@@ -356,6 +377,21 @@ void gui_settings_t::draw(scr_coord offset)
 
 	// All components are updated, now draw them...
 	gui_aligned_container_t::draw(offset);
+}
+
+
+bool gui_settings_t::action_triggered(gui_action_creator_t *comp, value_t)
+{
+	if (comp == &screen_scale_numinp) {
+		const sint16 new_value = screen_scale_numinp.get_value();
+		dr_set_screen_scale(new_value);
+	}
+	else if (comp == &screen_scale_auto) {
+		dr_set_screen_scale(-1);
+		screen_scale_numinp.set_value(dr_get_screen_scale());
+	}
+
+	return true;
 }
 
 
@@ -776,8 +812,7 @@ void label_settings_t::draw(scr_coord offset)
 
 traffic_settings_t::traffic_settings_t()
 {
-	set_table_layout( 1, 0 );
-	add_table( 2, 0 );
+	set_table_layout( 2, 0 );
 
 	// Pedestrians in towns checkbox
 	buttons[IDBTN_PEDESTRIANS_IN_TOWNS].init(button_t::square_state, "6LIGHT_CHOOSE");
@@ -815,8 +850,6 @@ traffic_settings_t::traffic_settings_t()
 	buttons[IDBTN_SHOW_SCHEDULES_STOP].init( button_t::square_state ,  "Highlite schedule" );
 	buttons[IDBTN_SHOW_SCHEDULES_STOP].set_tooltip("Highlight the locations of stops on the current schedule");
 	add_component(buttons+IDBTN_SHOW_SCHEDULES_STOP, 2);
-
-	end_table();
 }
 
 bool traffic_settings_t::action_triggered( gui_action_creator_t *comp, value_t v )
