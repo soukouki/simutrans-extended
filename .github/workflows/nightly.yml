@@ -159,7 +159,12 @@ jobs:
           version: tags/Nightly
       - run: |
           unzip ./windows.zip -d ./simutrans
+          mv ./windows/* .
+          rm -r ./windows
+          
           unzip ./linux.zip -d ./simutrans
+          mv ./linux/* .
+          rm -r ./linux
 
       #Get paksets
       - name: Get pak128.britain-ex
