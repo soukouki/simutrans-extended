@@ -172,7 +172,7 @@ jobs:
       #TODO pak192.comic
       - run: unzip pak128.britain-ex-nightly.zip -d ./simutrans/pak128.britain-ex
 
-      - run: zip ./simutrans-extended.zip ./simutrans/
+      - run: zip -r ./simutrans-extended.zip ./simutrans/
 
       - name: Deploy
         uses: svenstaro/upload-release-action@v2
