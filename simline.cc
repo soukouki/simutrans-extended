@@ -93,7 +93,10 @@ simline_t::simline_t(player_t* player, linetype type, loadsave_t *file)
 	this->schedule = NULL;
 	this->player = player;
 	withdraw = false;
+
+	init_financial_history();
 	create_schedule();
+
 	rdwr(file);
 
 	// now self has the right id but the this-pointer is not assigned to the quickstone handle yet
