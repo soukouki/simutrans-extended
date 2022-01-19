@@ -61,9 +61,23 @@ public:
 		MAX_LINE_TYPE
 	};
 
-	enum line_fireight_group { all_ftype = 0, all_pas = 1, all_mail = 2, all_freight = 3 };
+	enum line_fireight_group {
+		all_ftype = 0,
+		all_pas = 1,
+		all_mail = 2,
+		all_freight = 3
+	};
 
-	enum states { line_normal_state = 0, line_no_convoys = 1, line_loss_making = 2, line_nothing_moved = 4, line_overcrowded = 8, line_missing_scheduled_slots = 16, line_has_obsolete_vehicles = 32, line_has_upgradeable_vehicles = 64	};
+	enum states {
+		line_normal_state             = 0,
+		line_no_convoys               = 1 << 0,
+		line_loss_making              = 1 << 1,
+		line_nothing_moved            = 1 << 2,
+		line_overcrowded              = 1 << 3,
+		line_missing_scheduled_slots  = 1 << 4,
+		line_has_obsolete_vehicles    = 1 << 5,
+		line_has_upgradeable_vehicles = 1 << 6
+	};
 
 	static const uint linetype_to_stationtype[simline_t::MAX_LINE_TYPE];
 
@@ -137,6 +151,11 @@ private:
 	times_history_map journey_times_history;
 
 	uint8 state;
+
+public:
+	// @author: jamespetts
+	uint32 rolling_average[MAX_LINE_COST];
+	uint16 rolling_average_count[MAX_LINE_COST];
 
 public:
 	simline_t(player_t *player, linetype type);
@@ -268,10 +287,6 @@ public:
 	bool carries_this_or_lower_class(uint8 catg, uint8 g_class);
 
 	int get_replacing_convoys_count() const;
-
-	// @author: jamespetts
-	uint32 rolling_average[MAX_LINE_COST];
-	uint16 rolling_average_count[MAX_LINE_COST];
 
 	//@author: jamespetts
 	bool has_overcrowded() const;
