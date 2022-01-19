@@ -1732,11 +1732,11 @@ void settings_t::rdwr(loadsave_t *file)
 			}
 #endif
 			if( file->is_version_ex_equal(14, 46) && file->is_loading() ) {
-				// Special rescue for broken setting. load default
+				// Special rescue for broken setting
 				uint32 dummy = 0;
 				file->rdwr_long(dummy);
-				max_speed_drive_by_sight_tram_kmh = 999;
-				max_speed_drive_by_sight_tram = kmh_to_speed(max_speed_drive_by_sight_tram_kmh);
+				max_speed_drive_by_sight_tram = speed_to_kmh(dummy);
+				max_speed_drive_by_sight_tram_kmh = speed_to_kmh(max_speed_drive_by_sight_tram);
 			}
 			else if (file->is_version_ex_atleast(14, 47)) {
 				file->rdwr_long(max_speed_drive_by_sight_tram_kmh);
