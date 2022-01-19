@@ -4215,7 +4215,7 @@ void convoi_t::rdwr(loadsave_t *file)
 			{
 			case CONVOI_MAIL_DISTANCE:
 			case CONVOI_PAYLOAD_DISTANCE:
-				if( file->is_version_ex_less(14,47) && file->is_loading() ) {
+				if( file->is_version_ex_less(14,48) && file->is_loading() ) {
 					for (int k = MAX_MONTHS-1; k>=0; k--)
 					{
 						financial_history[k][j] = 0;

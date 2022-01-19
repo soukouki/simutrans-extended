@@ -1384,7 +1384,7 @@ void schedule_list_gui_t::rdwr( loadsave_t *file )
 	else if (file->is_version_ex_less(14,25)) {
 		chart_records = 12;
 	}
-	else if (file->is_version_ex_less(14,47)) {
+	else if (file->is_version_ex_less(14,48)) {
 		chart_records = 13;
 	}
 	for (int i=0; i<chart_records; i++) {
