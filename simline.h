@@ -125,13 +125,6 @@ private:
 	 */
 	sint64 financial_history[MAX_MONTHS][MAX_LINE_COST];
 
-	/**
-	 * creates empty schedule with type depending on line-type
-	 */
-	void create_schedule();
-
-	void init_financial_history();
-
 	/*
 	 * whether the next convoy applied to this line should have its
 	 * reverse_schedule flag set. Only applies to bidirectional schedules.
@@ -163,6 +156,7 @@ public:
 
 	~simline_t();
 
+public:
 	linehandle_t get_handle() const { return self; }
 
 	/**
@@ -327,6 +321,15 @@ public:
 	}
 
 	sint64 calc_departures_scheduled();
+
+private:
+	/**
+	 * creates empty schedule with type depending on line-type
+	 */
+	void create_schedule();
+
+	void init_financial_history();
+
 };
 
 

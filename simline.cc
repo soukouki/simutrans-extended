@@ -95,13 +95,25 @@ simline_t::simline_t(player_t* player, linetype type, loadsave_t *file) :
 	player(player),
 	type(type),
 	withdraw(false),
+	name(""),
 	self(linehandle_t()), // id will be read and assigned during rdwr
 	state_color(SYSCOL_TEXT),
 	start_reversed(false),
 	livery_scheme_index(0),
 	state(line_normal_state)
 {
-	init_financial_history();
+	for (uint32 j = 0; j< MAX_LINE_COST; ++j) {
+		for (uint32 i = 0; i < MAX_MONTHS; ++i) {
+			financial_history[i][j] = 0;
+		}
+	}
+
+	for(uint8 i = 0; i < MAX_LINE_COST; i ++)
+	{
+		rolling_average[i] = 0;
+		rolling_average_count[i] = 0;
+	}
+
 	create_schedule();
 
 	rdwr(file);
