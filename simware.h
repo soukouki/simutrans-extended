@@ -73,10 +73,12 @@ private:
 	 */
 	koord zielpos;
 
+public:
 	// The time at which this packet arrived at the current station
 	// @author: jamespetts
 	sint64 arrival_time;
 
+private:
 	/**
 	 * Update target (zielpos) for factory-going goods (after loading or rotating)
 	 */
