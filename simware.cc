@@ -24,33 +24,53 @@ const goods_desc_t *ware_t::index_to_desc[256];
 
 
 
-ware_t::ware_t() : ziel(), zwischenziel(), zielpos(-1, -1)
+ware_t::ware_t() :
+	menge(0),
+	index(0),
+	is_commuting_trip(false),
+	g_class(0),
+	comfort_preference_percentage(0),
+	ziel(),
+	zwischenziel(),
+	origin(halthandle_t()),
+	last_transfer(halthandle_t()),
+	zielpos(-1, -1),
+	arrival_time(0)
 {
-	menge = 0;
-	index = 0;
-	arrival_time = 0;
-	g_class = 0;
 }
 
 
-ware_t::ware_t(const goods_desc_t *wtyp) : ziel(), zwischenziel(), zielpos(-1, -1)
+ware_t::ware_t(const goods_desc_t *wtyp) :
+	menge(0),
+	index(wtyp->get_index()),
+	is_commuting_trip(false),
+	g_class(0),
+	comfort_preference_percentage(0),
+	ziel(),
+	zwischenziel(),
+	origin(halthandle_t()),
+	last_transfer(halthandle_t()),
+	zielpos(-1, -1),
+	arrival_time(0)
 {
 	//This constructor is called from simcity.cc
-	menge = 0;
-	index = wtyp->get_index();
-	arrival_time = 0;
-	g_class = 0;
 }
 
 // Constructor for new revenue system: packet of cargo keeps track of its origin.
 //@author: jamespetts
-ware_t::ware_t(const goods_desc_t *wtyp, halthandle_t o) : ziel(), zwischenziel(), zielpos(-1, -1)
+ware_t::ware_t(const goods_desc_t *wtyp, halthandle_t o) :
+	menge(0),
+	index(wtyp->get_index()),
+	is_commuting_trip(false),
+	g_class(0),
+	comfort_preference_percentage(0),
+	ziel(),
+	zwischenziel(),
+	origin(o),
+	last_transfer(halthandle_t()),
+	zielpos(-1, -1),
+	arrival_time(0)
 {
-	menge = 0;
-	index = wtyp->get_index();
-	origin = o;
-	arrival_time = 0;
-	g_class = 0;
 }
 
 
