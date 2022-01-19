@@ -384,6 +384,12 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	cont_line_info.new_component<gui_divider_t>();
 	cont_line_info.add_component(&cont_line_capacity_by_catg);
 
+	cont_line_info.new_component<gui_divider_t>();
+	// Transport density
+	cont_line_info.new_component<gui_label_t>("Transportation density");
+	cont_transport_density.set_table_layout(4,0);
+	cont_line_info.add_component(&cont_transport_density);
+
 	scrolly_line_info.set_pos(scr_coord(0, 8 + SCL_HEIGHT + D_BUTTON_HEIGHT + D_BUTTON_HEIGHT + 2));
 	add_component(&scrolly_line_info);
 
@@ -1167,6 +1173,60 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		}
 		chart.set_visible(true);
 
+		// update transportation density
+		cont_transport_density.set_visible(true);
+		cont_transport_density.remove_all();
+		if (float line_distance = new_line->get_travel_distance()*world()->get_settings().get_meters_per_tile()/100.0) {
+			cont_transport_density.new_component<gui_empty_t>();
+			cont_transport_density.new_component<gui_label_t>("Last Month", gui_label_t::centered);
+			cont_transport_density.new_component<gui_label_t>("Yearly average", gui_label_t::centered);
+			cont_transport_density.new_component<gui_empty_t>();
+			// pax
+			if (new_line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS)) {
+				cont_transport_density.new_component<gui_image_t>()->set_image(skinverwaltung_t::passengers->get_image_id(0), true);
+				sint64 hist_sum=new_line->get_finance_history(1, LINE_PAX_DISTANCE);
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance);
+				for (uint8 i=2; i < MAX_MONTHS; i++) {
+					hist_sum += new_line->get_finance_history(2, LINE_PAX_DISTANCE);
+				}
+				// yearly average
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance/(MAX_MONTHS-1));
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%s%s", translator::translate(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)->get_mass()), translator::translate("/mon"));
+			}
+			// mail
+			if (new_line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_MAIL)) {
+				cont_transport_density.new_component<gui_image_t>()->set_image(skinverwaltung_t::mail->get_image_id(0), true);
+				sint64 hist_sum = new_line->get_finance_history(1, LINE_MAIL_DISTANCE);
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance);
+				for (uint8 i=2; i < MAX_MONTHS; i++) {
+					hist_sum += new_line->get_finance_history(2, LINE_MAIL_DISTANCE);
+				}
+				// yearly average
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance/(MAX_MONTHS-1));
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%s%s", translator::translate("kg"), translator::translate("/mon"));
+			}
+			//
+			bool any_freight = false;
+			for (uint8 catg_index = goods_manager_t::INDEX_NONE+1; catg_index < goods_manager_t::get_max_catg_index(); catg_index++)
+			{
+				if (new_line->get_goods_catg_index().is_contained(catg_index)) {
+					any_freight=true;
+					break;
+				}
+			}
+			if (any_freight) {
+				cont_transport_density.new_component<gui_image_t>()->set_image(skinverwaltung_t::goods->get_image_id(0), true);
+				sint64 hist_sum = new_line->get_finance_history(1, LINE_PAYLOAD_DISTANCE);
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance);
+				for (uint8 i=2; i < MAX_MONTHS; i++) {
+					hist_sum += new_line->get_finance_history(2, LINE_PAYLOAD_DISTANCE);
+				}
+				// yearly average
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance/(MAX_MONTHS-1));
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%s%s", translator::translate("tonnen"), translator::translate("/mon"));
+			}
+		}
+
 		// has this line a single running convoi?
 		if(  new_line.is_bound()  &&  new_line->count_convoys() > 0  ) {
 			// set this schedule as current to show on minimap if possible
@@ -1186,6 +1246,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		line_convoys.clear();
 		cont.remove_all();
 		cont_times_history.remove_all();
+		cont_transport_density.remove_all();
 		cont_line_capacity_by_catg.set_line(linehandle_t());
 		scrolly_convois.set_visible(false);
 		scrolly_haltestellen.set_visible(false);
@@ -1193,6 +1254,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_line_info.set_visible(false);
 		inp_name.set_visible(false);
 		cont_times_history.set_visible(false);
+		cont_transport_density.set_visible(false);
 		cont_haltlist.set_visible(false);
 		scl.set_selection(-1);
 		bt_delete_line.disable();
