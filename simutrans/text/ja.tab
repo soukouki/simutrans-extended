@@ -1993,8 +1993,8 @@ transparent station coverage
 駅の有効範囲は半透明色で表示する
 Transport %li passengers
 月に %li人以上の旅客を輸送
-Transported
-輸送実績
+Travelled
+旅客輸送達成数
 Trees disabled!
 樹木は使用できません！
 TrolleyBus_tab
@@ -4265,3 +4265,5 @@ Power: %4d kW\n
 #\n軸重制限:
 #\nMax. weight:
 #重量制限:
+#Transported
+#輸送実績

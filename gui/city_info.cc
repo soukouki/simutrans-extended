@@ -157,7 +157,7 @@ const char *hist_type[MAX_CITY_HISTORY] =
 	"Growth",
 	"Buildings",
 	"Verkehrsteilnehmer",
-	"Transported",
+	"Travelled",
 	"Passagiere",
 	"Walked",
 	"sended",
