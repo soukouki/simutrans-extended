@@ -127,7 +127,7 @@ void factory_chart_t::set_factory(const fabrik_t *_factory)
 	prod_chart.set_background(SYSCOL_CHART_BACKGROUND);
 	prod_chart.set_ltr(env_t::left_to_right_graphs);
 	for(  int s=0;  s<MAX_FAB_STAT;  ++s  ) {
-		uint16 curve = prod_chart.add_curve(color_idx_to_rgb(prod_color[s]), factory->get_stats(), MAX_FAB_STAT, s, MAX_MONTH, chart_type[s], false, true, (chart_type[s] == 1) ? 1 : 0, prod_convert[s]);
+		uint16 curve = prod_chart.add_curve(color_idx_to_rgb(prod_color[s]), factory->get_stats(), MAX_FAB_STAT, s, MAX_MONTH, chart_type[s], false, true, (s==0) ? 2 : 0, prod_convert[s]);
 		if (s==1 && factory->get_desc()->is_electricity_producer()) {
 			// if power plant, switch label to output
 			prod_buttons[s].init(button_t::box_state, prod_type[MAX_FAB_STAT], scr_coord(D_MARGIN_LEFT + (D_H_SPACE + D_BUTTON_WIDTH)*button_pos[s].x, offset_below_chart + (D_H_SPACE + D_BUTTON_HEIGHT)*button_pos[s].y), D_BUTTON_SIZE);

@@ -1064,7 +1064,7 @@ public:
 	/**
 	* Removes vehicles at position i
 	*/
-	vehicle_t * remove_vehicle_bei(unsigned short i);
+	vehicle_t * remove_vehicle_at(unsigned short i);
 
 	const minivec_tpl<uint8> &get_goods_catg_index() const { return goods_catg_index; }
 
