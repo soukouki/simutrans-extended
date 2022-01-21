@@ -27,8 +27,6 @@ public:
 	void rdwr( loadsave_t *file ) OVERRIDE;
 	uint32 get_rdwr_id() OVERRIDE { return magic_line_schedule_rdwr_dummy; }
 
-	bool has_min_sizer() const OVERRIDE {return true;}
-
 private:
 	linehandle_t line;
 };

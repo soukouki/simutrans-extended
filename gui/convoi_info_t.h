@@ -161,8 +161,6 @@ public:
 	void rdwr( loadsave_t *file ) OVERRIDE;
 
 	uint32 get_rdwr_id() OVERRIDE { return magic_convoi_info; }
-
-	bool has_min_sizer() const OVERRIDE {return true;}
 };
 
 #endif
