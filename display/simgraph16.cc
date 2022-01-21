@@ -4443,6 +4443,29 @@ void display_veh_form_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_
 	}
 }
 
+bool is_dark_color(PIXVAL color)
+{
+	return (get_color_brightness_index(color) < 0);
+}
+
+bool is_dark_color(uint32 rgb)
+{
+	uint8 r = rgb>>16;
+	uint8 g = (rgb>>8) & 0xFF;
+	uint8 b = rgb & 0xFF;
+
+	return ((( (r*299) + (g*587) + (b*114) ) / 1000) < 128);
+}
+
+sint8 get_color_brightness_index(PIXVAL color)
+{
+	uint8 r = (color >> 11) << 3;
+	uint8 g = ((color >> 5) << 2) & 0xFF;
+	uint8 b = (color << 3) & 0xFF;
+
+	return ((((r*299) + (g*587) + (b*114)) / 1000) - 128);
+}
+
 // --------------------------------- text rendering stuff ------------------------------
 
 

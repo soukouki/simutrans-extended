@@ -9227,7 +9227,7 @@ bool tool_change_line_t::init( player_t *player )
 						sint64 transported = 0, capacity = 0;
 						for(  int i=0;  i<6;  i++  ) {
 							capacity += line->get_finance_history( i , LINE_CAPACITY );
-							transported += line->get_finance_history( i , LINE_TRANSPORTED_GOODS );
+							transported += line->get_finance_history( i , LINE_PAX_DISTANCE );
 						}
 						// sanity check for non-moving lines
 						if(  capacity == 0  ) {

@@ -54,12 +54,12 @@ static const uint8 physics_curves_color[MAX_PHYSICS_CURVES] =
 
 static const uint8 curves_type[MAX_PHYSICS_CURVES] =
 {
-	KMPH,
-	KMPH,
-	KMPH,
-	KMPH,
-	FORCE,
-	FORCE
+	gui_chart_t::KMPH,
+	gui_chart_t::KMPH,
+	gui_chart_t::KMPH,
+	gui_chart_t::KMPH,
+	gui_chart_t::FORCE,
+	gui_chart_t::FORCE
 };
 
 static const gui_chart_t::chart_marker_t marker_type[MAX_PHYSICS_CURVES] = {

@@ -1338,7 +1338,7 @@ DBG_MESSAGE("ai_passenger_t::do_passenger_ki()","using %s on %s",road_vehicle->g
 				// next: check for stuck convois ...
 
 				sint64 free_cap = line->get_finance_history(0,LINE_CAPACITY);
-				sint64 used_cap = line->get_finance_history(0,LINE_TRANSPORTED_GOODS);
+				sint64 used_cap = line->get_finance_history(0,LINE_PAX_DISTANCE);
 
 				if(free_cap+used_cap==0) {
 					continue;

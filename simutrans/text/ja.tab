@@ -96,7 +96,7 @@ Maximize height levels
 Networks
 路線図
 Queueing
-待機の増減
+待機数の増減
 Road toll
 通行料
 Scenario
@@ -296,7 +296,7 @@ Show level of city buildings
 Show speedlimit of ways
 軌道/道路の制限速度を表示
 Show the change of waiting at halts
-先月と比べた待機数の増減を表示
+前月と比べた待機数の増減を表示
 Show the owenership of infrastructure
 軌道/道路の所有者を表示
 Show transported freight/freight network
@@ -1244,7 +1244,7 @@ LARGE_NUMBER_STRING
 LARGE_NUMBER_VALUE
 1e8
 Last Month
-先月
+前月
 Last used tools
 最後に使用したツール
 Last Year
@@ -1993,8 +1993,8 @@ transparent station coverage
 駅の有効範囲は半透明色で表示する
 Transport %li passengers
 月に %li人以上の旅客を輸送
-Transported
-輸送実績
+Travelled
+旅客輸送達成数
 Trees disabled!
 樹木は使用できません！
 TrolleyBus_tab
@@ -4072,9 +4072,9 @@ by_potential_pax_number
 by_potential_mail_users
 郵便需要度
 by_pax_happy_last_month
-先月の乗車数
+前月の乗車数
 by_mail_delivered_last_month
-先月の郵便発送数
+前月の郵便発送数
 show_mutual_use
 利用中の他社駅も表示
 Also shows the stops of other players you are using
@@ -4167,6 +4167,32 @@ helptxt_ground_info_toggler
 占有されていないタイルをクリックすると土地情報を情報ウィンドウを開きます
 helptxt_tree_info_toggler
 樹木、岩石、鳥の群れなどのオブジェクトをクリックすると専用の情報ウィンドウを開きます
+travel_distance
+運行距離
+Pax-km
+旅客輸送量
+Mail-km
+郵便輸送量
+Freight-km
+貨物輸送量
+pkm
+人km
+kgkm
+kg・km
+tkm
+トンkm
+A measure of the amount of passengers transported, expressed in passenger-kilometre
+旅客の輸送量を示す指標。輸送人数と輸送距離の積。
+A measure of the amount of mail transported, expressed in tonne-kilometre
+郵便物の輸送量を示す指標。貨物の重量と輸送距離の積。
+A measure of the amount of freight transported, expressed in tonne-kilometre
+貨物の輸送量を示す指標。貨物の重量と輸送距離の積。
+Transportation density
+輸送密度
+Yearly average
+年間平均
+/mon
+/月
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
@@ -4239,3 +4265,5 @@ Power: %4d kW\n
 #\n軸重制限:
 #\nMax. weight:
 #重量制限:
+#Transported
+#輸送実績
