@@ -841,6 +841,7 @@ void halt_info_t::init(halthandle_t halt)
 		button_t *b = container_chart.new_component<button_t>();
 		b->init(button_t::box_state_automatic | button_t::flexible, cost_type[cost]);
 		b->background_color = color_idx_to_rgb(cost_type_color[cost]);
+		b->set_tooltip(cost_tooltip[cost]);
 		b->pressed = false;
 
 		button_to_chart.append(b, &chart, curve);
