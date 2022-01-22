@@ -74,6 +74,21 @@ void display_mark_img_dirty(image_id, scr_coord_val, scr_coord_val)
 {
 }
 
+bool is_dark_color(PIXVAL)
+{
+	return true;
+}
+
+bool is_dark_color(uint32)
+{
+	return true;
+}
+
+sint8 get_color_brightness_index(PIXVAL)
+{
+	return 0;
+}
+
 bool display_load_font(const char*, bool)
 {
 	return true;

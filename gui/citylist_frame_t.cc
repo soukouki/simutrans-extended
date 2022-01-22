@@ -89,21 +89,21 @@ const uint8 citylist_frame_t::hist_type_color[karte_t::MAX_WORLD_COST] =
 
 const uint8 citylist_frame_t::hist_type_type[karte_t::MAX_WORLD_COST] =
 {
-	STANDARD,
-	STANDARD,
-	STANDARD,
-	STANDARD,
-	STANDARD,
-	STANDARD,
-	STANDARD,
-	STANDARD,
-	PERCENT,
-	STANDARD,
-	PERCENT,
-	STANDARD,
-	PERCENT,
-	STANDARD,
-	PERCENT
+	gui_chart_t::STANDARD,
+	gui_chart_t::STANDARD,
+	gui_chart_t::STANDARD,
+	gui_chart_t::STANDARD,
+	gui_chart_t::STANDARD,
+	gui_chart_t::STANDARD,
+	gui_chart_t::STANDARD,
+	gui_chart_t::STANDARD,
+	gui_chart_t::PERCENT,
+	gui_chart_t::STANDARD,
+	gui_chart_t::PERCENT,
+	gui_chart_t::STANDARD,
+	gui_chart_t::PERCENT,
+	gui_chart_t::STANDARD,
+	gui_chart_t::PERCENT
 };
 
 char citylist_frame_t::name_filter[256] = "";
@@ -218,7 +218,7 @@ citylist_frame_t::citylist_frame_t() :
 	container_year.add_table(4,0);
 	for (int i = 0; i<karte_t::MAX_WORLD_COST; i++) {
 		sint16 curve = chart.add_curve(color_idx_to_rgb(hist_type_color[i]), welt->get_finance_history_year(), karte_t::MAX_WORLD_COST, i,
-			MAX_WORLD_HISTORY_YEARS, hist_type_type[i], false, true, (hist_type_type[i]==PERCENT && i != karte_t::WORLD_CAR_OWNERSHIP) ? 2 : 0);
+			MAX_WORLD_HISTORY_YEARS, hist_type_type[i], false, true, (hist_type_type[i]==gui_chart_t::PERCENT && i != karte_t::WORLD_CAR_OWNERSHIP) ? 2 : 0);
 		// add button
 		buttons[i] = container_year.new_component<button_t>();
 		buttons[i]->init(button_t::box_state_automatic | button_t::flexible, hist_type[i]);
@@ -240,7 +240,7 @@ citylist_frame_t::citylist_frame_t() :
 	container_month.add_table(4,0);
 	for (int i = 0; i<karte_t::MAX_WORLD_COST; i++) {
 		sint16 curve = mchart.add_curve(color_idx_to_rgb(hist_type_color[i]), welt->get_finance_history_month(), karte_t::MAX_WORLD_COST, i,
-			MAX_WORLD_HISTORY_MONTHS, hist_type_type[i], false, true, (hist_type_type[i] == PERCENT && i != karte_t::WORLD_CAR_OWNERSHIP) ? 2 : 0);
+			MAX_WORLD_HISTORY_MONTHS, hist_type_type[i], false, true, (hist_type_type[i]==gui_chart_t::PERCENT && i != karte_t::WORLD_CAR_OWNERSHIP) ? 2 : 0);
 
 		// add button
 		container_month.add_component(buttons[i]);

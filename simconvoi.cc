@@ -1829,7 +1829,7 @@ void convoi_t::step()
 						{
 							if(vehicle[k]->get_desc() == replace->get_replacing_vehicle(i))
 							{
-								veh = remove_vehicle_bei(k);
+								veh = remove_vehicle_at(k);
 								break;
 							}
 						}
@@ -1854,7 +1854,7 @@ void convoi_t::step()
 									{
 										veh = vehicle_builder_t::build(get_pos(), get_owner(), NULL, replace->get_replacing_vehicle(i), true);
 										upgrade_vehicle(j, veh);
-										remove_vehicle_bei(j);
+										remove_vehicle_at(j);
 										goto end_loop;
 									}
 								}
@@ -1894,7 +1894,7 @@ end_loop:
 						}
 						else
 						{
-							vehicle_t* old_veh = remove_vehicle_bei(a);
+							vehicle_t* old_veh = remove_vehicle_at(a);
 							old_veh->discard_cargo();
 							old_veh->set_leading(false);
 							old_veh->set_last(false);
@@ -2996,7 +2996,7 @@ void convoi_t::upgrade_vehicle(uint16 i, vehicle_t* v)
 DBG_MESSAGE("convoi_t::upgrade_vehicle()","now %i of %i total vehicles.",i,max_vehicle);
 }
 
-vehicle_t *convoi_t::remove_vehicle_bei(uint16 i)
+vehicle_t *convoi_t::remove_vehicle_at(uint16 i)
 {
 	vehicle_t *v = NULL;
 	if(i<vehicle_count) {
@@ -4213,6 +4213,16 @@ void convoi_t::rdwr(loadsave_t *file)
 		{
 			switch (j)
 			{
+			case CONVOI_MAIL_DISTANCE:
+			case CONVOI_PAYLOAD_DISTANCE:
+				if( file->is_version_ex_less(14,48) && file->is_loading() ) {
+					for (int k = MAX_MONTHS-1; k>=0; k--)
+					{
+						financial_history[k][j] = 0;
+					}
+					continue;
+				}
+				break;
 			case CONVOI_AVERAGE_SPEED:
 			case CONVOI_COMFORT:
 				if (file->get_extended_version() < 2)
@@ -5710,6 +5720,12 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
 
 		// Finally, get the fare.
 		fare = goods->get_total_fare(revenue_distance_meters, starting_distance_meters, comfort, catering_level, g_class, journey_tenths);
+
+		// add transportation measurement to statistics
+		// passenger-km(x10 for precision)
+		const sint64 pas_distance = ware.menge*revenue_distance_meters/100;
+		book(pas_distance, convoi_t::CONVOI_PAX_DISTANCE);
+		get_owner()->book_transported(pas_distance, front()->get_waytype(), 0);
 	}
 	else if(ware.is_mail())
 	{
@@ -5717,12 +5733,25 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
 		const uint8 catering_level = get_catering_level(goods->get_catg_index());
 		// Finally, get the fare.
 		fare = goods->get_total_fare(revenue_distance_meters, starting_distance_meters, 0u, catering_level, g_class, journey_tenths);
+
+		// add transportation measurement to statistics
+		// kg-kilometre(x10 for precision)
+		const sint64 mail_distance = ware.menge*goods->get_weight_per_unit()*revenue_distance_meters / 100;
+		book(mail_distance, convoi_t::CONVOI_MAIL_DISTANCE); // in kg-km/10
+		// tonne-kilometre(x10 for precision)
+		get_owner()->book_transported(mail_distance/10, front()->get_waytype(), 1);
 	}
 	else
 	{
 		// Freight ignores comfort and catering and TPO.
 		// So here we can skip the complicated version for speed.
 		fare = goods->get_total_fare(revenue_distance_meters, starting_distance_meters);
+
+		// add transportation measurement to statistics
+		// tonne-kilometre(x10 for precision)
+		const sint64 payload_distance = ware.menge*goods->get_weight_per_unit()*revenue_distance_meters/100000;
+		book(payload_distance, convoi_t::CONVOI_PAYLOAD_DISTANCE);
+		get_owner()->book_transported(payload_distance, front()->get_waytype(), 2);
 	}
 	// Note that fare comes out in units of 1/4096 of a simcent, for computational precision
 

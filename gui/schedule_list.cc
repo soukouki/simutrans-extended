@@ -55,10 +55,11 @@ uint16 schedule_list_gui_t::livery_scheme_index = 0;
 static const char *cost_type[MAX_LINE_COST] =
 {
 	"Free Capacity",
-	"Transported",
+	"Pax-km",
+	"Mail-km",
+	"Freight-km", // ton-km
 	"Distance",
 	"Average speed",
-//	"Maxspeed",
 	"Comfort",
 	"Revenue",
 	"Operation",
@@ -73,7 +74,9 @@ static const char *cost_type[MAX_LINE_COST] =
 const uint8 cost_type_color[MAX_LINE_COST] =
 {
 	COL_FREE_CAPACITY,
+	COL_LIGHT_PURPLE,
 	COL_TRANSPORTED,
+	COL_BROWN,
 	COL_DISTANCE,
 	COL_AVERAGE_SPEED,
 	COL_COMFORT,
@@ -83,7 +86,6 @@ const uint8 cost_type_color[MAX_LINE_COST] =
 	COL_TOLL,
 	COL_PROFIT,
 	COL_VEHICLE_ASSETS,
-	//COL_COUNVOI_COUNT,
 	COL_MAXSPEED,
 	COL_LILAC
 };
@@ -93,12 +95,16 @@ static uint8 tabs_to_lineindex[8];
 static uint8 max_idx=0;
 
 static uint8 statistic[MAX_LINE_COST]={
-	LINE_CAPACITY, LINE_TRANSPORTED_GOODS, LINE_DISTANCE, LINE_AVERAGE_SPEED, LINE_COMFORT, LINE_REVENUE, LINE_OPERATIONS, LINE_REFUNDS, LINE_WAYTOLL, LINE_PROFIT, LINE_CONVOIS, LINE_DEPARTURES, LINE_DEPARTURES_SCHEDULED
-//std	LINE_CAPACITY, LINE_TRANSPORTED_GOODS, LINE_REVENUE, LINE_OPERATIONS, LINE_PROFIT, LINE_CONVOIS, LINE_DISTANCE, LINE_MAXSPEED, LINE_WAYTOLL
+	LINE_CAPACITY, LINE_PAX_DISTANCE, LINE_MAIL_DISTANCE, LINE_PAYLOAD_DISTANCE,
+	LINE_DISTANCE, LINE_AVERAGE_SPEED, LINE_COMFORT, LINE_REVENUE,
+	LINE_OPERATIONS, LINE_REFUNDS, LINE_WAYTOLL, LINE_PROFIT,
+	LINE_CONVOIS, LINE_DEPARTURES, LINE_DEPARTURES_SCHEDULED
 };
 
 static uint8 statistic_type[MAX_LINE_COST]={
-	STANDARD, STANDARD, DISTANCE, STANDARD, STANDARD, MONEY, MONEY, MONEY, MONEY, MONEY, STANDARD, STANDARD, STANDARD
+	gui_chart_t::STANDARD, gui_chart_t::PAX_KM, gui_chart_t::KG_KM, gui_chart_t::TON_KM,
+	gui_chart_t::DISTANCE, gui_chart_t::STANDARD, gui_chart_t::STANDARD, gui_chart_t::MONEY,
+	gui_chart_t::MONEY, gui_chart_t::MONEY, gui_chart_t::MONEY, gui_chart_t::MONEY, gui_chart_t::STANDARD, gui_chart_t::STANDARD, gui_chart_t::STANDARD
 };
 
 static const char * line_alert_helptexts[5] =
@@ -377,6 +383,12 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 
 	cont_line_info.new_component<gui_divider_t>();
 	cont_line_info.add_component(&cont_line_capacity_by_catg);
+
+	cont_line_info.new_component<gui_divider_t>();
+	// Transport density
+	cont_line_info.new_component<gui_label_t>("Transportation density");
+	cont_transport_density.set_table_layout(4,0);
+	cont_line_info.add_component(&cont_transport_density);
 
 	scrolly_line_info.set_pos(scr_coord(0, 8 + SCL_HEIGHT + D_BUTTON_HEIGHT + D_BUTTON_HEIGHT + 2));
 	add_component(&scrolly_line_info);
@@ -1153,12 +1165,67 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		// chart
 		chart.remove_curves();
 		for(i=0; i<MAX_LINE_COST; i++)  {
-			chart.add_curve(color_idx_to_rgb(cost_type_color[i]), new_line->get_finance_history(), MAX_LINE_COST, statistic[i], MAX_MONTHS, statistic_type[i], filterButtons[i].pressed, true, statistic_type[i] == MONEY ? 2 : 0);
+			const uint8 precision = statistic_type[i] == gui_chart_t::MONEY ? 2 : (statistic_type[i]==gui_chart_t::PAX_KM || statistic_type[i]==gui_chart_t::KG_KM || statistic_type[i]==gui_chart_t::TON_KM) ? 1 : 0;
+			chart.add_curve(color_idx_to_rgb(cost_type_color[i]), new_line->get_finance_history(), MAX_LINE_COST, statistic[i], MAX_MONTHS, statistic_type[i], filterButtons[i].pressed, true, precision);
 			if (bFilterStates & (1 << i)) {
 				chart.show_curve(i);
 			}
 		}
 		chart.set_visible(true);
+
+		// update transportation density
+		cont_transport_density.set_visible(true);
+		cont_transport_density.remove_all();
+		if (float line_distance = new_line->get_travel_distance()*world()->get_settings().get_meters_per_tile()/100.0) {
+			cont_transport_density.new_component<gui_empty_t>();
+			cont_transport_density.new_component<gui_label_t>("Last Month", gui_label_t::centered);
+			cont_transport_density.new_component<gui_label_t>("Yearly average", gui_label_t::centered);
+			cont_transport_density.new_component<gui_empty_t>();
+			// pax
+			if (new_line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS)) {
+				cont_transport_density.new_component<gui_image_t>()->set_image(skinverwaltung_t::passengers->get_image_id(0), true);
+				sint64 hist_sum=new_line->get_finance_history(1, LINE_PAX_DISTANCE);
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance);
+				for (uint8 i=2; i < MAX_MONTHS; i++) {
+					hist_sum += new_line->get_finance_history(2, LINE_PAX_DISTANCE);
+				}
+				// yearly average
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance/(MAX_MONTHS-1));
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%s%s", translator::translate(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)->get_mass()), translator::translate("/mon"));
+			}
+			// mail
+			if (new_line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_MAIL)) {
+				cont_transport_density.new_component<gui_image_t>()->set_image(skinverwaltung_t::mail->get_image_id(0), true);
+				sint64 hist_sum = new_line->get_finance_history(1, LINE_MAIL_DISTANCE);
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance);
+				for (uint8 i=2; i < MAX_MONTHS; i++) {
+					hist_sum += new_line->get_finance_history(2, LINE_MAIL_DISTANCE);
+				}
+				// yearly average
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance/(MAX_MONTHS-1));
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%s%s", translator::translate("kg"), translator::translate("/mon"));
+			}
+			//
+			bool any_freight = false;
+			for (uint8 catg_index = goods_manager_t::INDEX_NONE+1; catg_index < goods_manager_t::get_max_catg_index(); catg_index++)
+			{
+				if (new_line->get_goods_catg_index().is_contained(catg_index)) {
+					any_freight=true;
+					break;
+				}
+			}
+			if (any_freight) {
+				cont_transport_density.new_component<gui_image_t>()->set_image(skinverwaltung_t::goods->get_image_id(0), true);
+				sint64 hist_sum = new_line->get_finance_history(1, LINE_PAYLOAD_DISTANCE);
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance);
+				for (uint8 i=2; i < MAX_MONTHS; i++) {
+					hist_sum += new_line->get_finance_history(2, LINE_PAYLOAD_DISTANCE);
+				}
+				// yearly average
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%.1f", hist_sum/line_distance/(MAX_MONTHS-1));
+				cont_transport_density.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right)->buf().printf("%s%s", translator::translate("tonnen"), translator::translate("/mon"));
+			}
+		}
 
 		// has this line a single running convoi?
 		if(  new_line.is_bound()  &&  new_line->count_convoys() > 0  ) {
@@ -1179,6 +1246,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		line_convoys.clear();
 		cont.remove_all();
 		cont_times_history.remove_all();
+		cont_transport_density.remove_all();
 		cont_line_capacity_by_catg.set_line(linehandle_t());
 		scrolly_convois.set_visible(false);
 		scrolly_haltestellen.set_visible(false);
@@ -1186,6 +1254,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_line_info.set_visible(false);
 		inp_name.set_visible(false);
 		cont_times_history.set_visible(false);
+		cont_transport_density.set_visible(false);
 		cont_haltlist.set_visible(false);
 		scl.set_selection(-1);
 		bt_delete_line.disable();
@@ -1312,8 +1381,11 @@ void schedule_list_gui_t::rdwr( loadsave_t *file )
 	if(  file->is_version_less(112, 8)  ) {
 		chart_records = 8;
 	}
-	else if (file->get_extended_version() < 14 || (file->get_extended_version() == 14 && file->get_extended_revision() < 25)) {
+	else if (file->is_version_ex_less(14,25)) {
 		chart_records = 12;
+	}
+	else if (file->is_version_ex_less(14,48)) {
+		chart_records = 13;
 	}
 	for (int i=0; i<chart_records; i++) {
 		bool b = filterButtons[i].pressed;

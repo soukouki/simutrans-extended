@@ -4614,7 +4614,7 @@ Trams are not available yet!
 Trams are not yet available.
 TRAMTOOLS
 Trams/light rail tools
-Transported
+Travelled
 Transported
 Travellers now\nuse %s's\nbusses between\n%s \nand %s.\n
 Passengers now\nuse %s's\nbuses between\n%s \nand %s.\n
@@ -6246,3 +6246,28 @@ Bridges cannot be built over large buildings.
 Bridges cannot be built over these buildings.
 Cannot build pier on large buildings
 Elevated way supports cannot be built over these buildings.
+Pax-km
+Passenger km
+Mail-km
+Mail tonne km
+Freight-km
+Freight tonne km
+pkm
+ pass. km
+kgkm
+ kg km
+tkm
+ t km
+A measure of the amount of passengers transported, expressed in passenger-kilometre
+A measure of the amount of passengers transported, expressed in passenger kilometres
+A measure of the amount of mail transported, expressed in tonne-kilometre
+A measure of the amount of mail transported, expressed in tonne kilometres
+A measure of the amount of freight transported, expressed in tonne-kilometre
+A measure of the amount of freight transported, expressed in tonne kilometres
+Transportation density
+Transportation density
+Yearly average
+Yearly average
+/mon
+/month
+
