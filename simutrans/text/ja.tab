@@ -4193,6 +4193,12 @@ Handling mails
 郵便取扱量
 Handling goods
 貨物取扱量
+pax_handled_last_month
+前月旅客利用者
+mail_handled_last_month
+前月郵便取扱量
+goods_handled_last_month
+前月貨物取扱量
 The number of visitors that getting on and off
 この駅で乗り降りした旅行者の数
 The number of commuters that getting on and off
