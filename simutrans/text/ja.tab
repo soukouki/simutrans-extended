@@ -4197,10 +4197,12 @@ The number of visitors that getting on and off
 この駅で乗り降りした旅行者の数
 The number of commuters that getting on and off
 この駅で乗り降りした通勤利用者の数
-The number of mails that handling at this stop
-この駅で取り扱いをした郵便物の総数
-The number of goods that handling at this stop
-この駅で取り扱いをした貨物の総数
+The number of passengers at the stop last month
+前月の旅客利用者数
+The number of mail that handling at the stop last month
+前月の郵便物取扱量
+The number of goods that handling at the stop last month
+前月の貨物取扱量（トン）
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
