@@ -477,10 +477,10 @@ bool pier_builder_t::append_route_stack(vector_tpl<pier_route_elem> &route, play
                 match_tree[i].append(n);
                 continue;
             }
+            uint64 existingsupport=0;
             //if buildable already, add null match
             if(const grund_t *gr = welt->lookup(row_pos + koord3d(0,0,1))){
                 //only thing not already tested is existing support
-                uint64 existingsupport=0;
                 if(const grund_t *gr2=pier_t::ground_below(gr)){
                     existingsupport=pier_t::get_support_mask_total(gr2);
                 }
@@ -498,7 +498,7 @@ bool pier_builder_t::append_route_stack(vector_tpl<pier_route_elem> &route, play
             get_params_from_pos(params,row_pos,player);
             params.autogroup=match_tree[lasti][j].desc->get_auto_group();
             params.support_avail=-1;
-            params.support_needed=match_tree[lasti][j].desc->get_base_mask(match_tree[lasti][j].rotation);
+            params.support_needed=match_tree[lasti][j].desc->get_base_mask(match_tree[lasti][j].rotation) & ~existingsupport;
             match_row.clear();
             get_desc_context(elem.desc,elem.rotation,params,false,&match_row,0,match_tree[lasti][j].match + 4 * match_tree[lasti][j].desc->get_maintenance());
             //append results, removing duplacates and marking path upwards
