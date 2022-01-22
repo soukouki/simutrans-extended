@@ -1739,7 +1739,7 @@ void minimap_t::draw(scr_coord pos)
 			radius = number_to_radius( pax_origin );
 		}
 		else if( mode & MAP_TRANSFER  ) {
-			const sint32 transfer = (sint32)(station->get_finance_history( 1, HALT_ARRIVED ) + station->get_finance_history( 1, HALT_DEPARTED ));
+			const sint32 transfer = (sint32)(station->get_finance_history(1, HALT_VISITORS) + station->get_finance_history(1, HALT_COMMUTERS));
 			if(  transfer > max_transfer  ) {
 				max_transfer = transfer;
 			}

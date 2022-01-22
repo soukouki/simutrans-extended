@@ -103,8 +103,6 @@ Scenario
 シナリオ
 Start this as a server
 このゲームをサーバーとして開始します。
-Transfers
-乗降数
 #_________________________________climates_text_________________________________
 #_________________________________climates_text_________________________________
 arctic
@@ -3309,10 +3307,6 @@ The number of passengers who decline to travel because the journey would take to
 許容できる旅行時間よりも所要時間が長すぎるため、旅行を取り止めた旅客の人数を表します。
 The number of passengers who have travelled successfully from this stop
 この停留所/駅からの移動に成功した旅客の人数を表します。
-The number of passengers/units of mail/goods that have arrived at this stop
-この停留所/駅に到着した旅客/郵便/貨物の数を表します。
-The number of passengers/units of mail/goods that have departed from this stop
-この停留所/駅から出発した旅客/郵便/貨物の数を表します。
 The number of passengers/units of mail/goods waiting at this stop
 駅/停留所で待機している旅客/郵便/貨物の数を表します。
 The number of private car trips in the region overall
@@ -3407,6 +3401,8 @@ transferring
 移動中
 transfers
 移動中の旅客/貨物
+Transfers
+乗降客数
 Transformer only next to factory or in city!
 変電所は産業の隣接マスか市域内にのみ建設できます。
 Transshipment time:
@@ -4193,6 +4189,18 @@ Yearly average
 年間平均
 /mon
 /月
+Handling mails
+郵便取扱量
+Handling goods
+貨物取扱量
+The number of visitors that getting on and off
+この駅で乗り降りした旅行者の数
+The number of commuters that getting on and off
+この駅で乗り降りした通勤利用者の数
+The number of mails that handling at this stop
+この駅で取り扱いをした郵便物の総数
+The number of goods that handling at this stop
+この駅で取り扱いをした貨物の総数
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
@@ -4267,3 +4275,7 @@ Power: %4d kW\n
 #重量制限:
 #Transported
 #輸送実績
+#The number of passengers/units of mail/goods that have arrived at this stop
+#この停留所/駅に到着した旅客/郵便/貨物の数を表します。
+#The number of passengers/units of mail/goods that have departed from this stop
+#この停留所/駅から出発した旅客/郵便/貨物の数を表します。

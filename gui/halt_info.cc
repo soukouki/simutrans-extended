@@ -68,8 +68,10 @@ static const char cost_type[MAX_HALT_COST][64] =
 	"Mail delivered",
 	"No route (mail)",
 	"hl_btn_sort_waiting",
-	"Arrived",
-	"Departed",
+	"Visiting trip",
+	"Commuting trip",
+	"Handling mails",
+	"Handling goods",
 	"Convoys"
 };
 
@@ -83,8 +85,10 @@ static const char cost_tooltip[MAX_HALT_COST][128] =
 	"The amount of mail successfully delivered from this stop",
 	"The amount of mail which could not find a route to its destination",
 	"The number of passengers/units of mail/goods waiting at this stop",
-	"The number of passengers/units of mail/goods that have arrived at this stop",
-	"The number of passengers/units of mail/goods that have departed from this stop",
+	"The number of visitors that getting on and off",
+	"The number of commuters that getting on and off",
+	"The number of mails that handling at this stop",
+	"The number of goods that handling at this stop",
 	"The number of convoys that have serviced this stop"
 };
 
@@ -97,8 +101,10 @@ const uint8 index_of_haltinfo[MAX_HALT_COST] = {
 	HALT_MAIL_DELIVERED,
 	HALT_MAIL_NOROUTE,
 	HALT_WAITING,
-	HALT_ARRIVED,
-	HALT_DEPARTED,
+	HALT_VISITORS,
+	HALT_COMMUTERS,
+	HALT_MAIL_HANDLING_VOLUME,
+	HALT_GOODS_HANDLING_VOLUME,
 	HALT_CONVOIS_ARRIVED
 };
 
@@ -115,8 +121,10 @@ const uint8 cost_type_color[MAX_HALT_COST] =
 	COL_MAIL_DELIVERED,
 	COL_MAIL_NOROUTE,
 	COL_WAITING,
-	COL_ARRIVED,
-	COL_PASSENGERS,
+	COL_LIGHT_PURPLE,
+	COL_COMMUTER,
+	COL_YELLOW,
+	COL_BROWN,
 	COL_TURQUOISE
 };
 
@@ -836,7 +844,9 @@ void halt_info_t::init(halthandle_t halt)
 
 	container_chart.add_table(4, int((MAX_HALT_COST + 3) / 4))->set_force_equal_columns(true);
 	for (int cost = 0; cost < MAX_HALT_COST; cost++) {
-		uint16 curve = chart.add_curve(color_idx_to_rgb(cost_type_color[cost]), halt->get_finance_history(), MAX_HALT_COST, index_of_haltinfo[cost], MAX_MONTHS, 0, false, true, 0);
+		const uint8 precision = index_of_haltinfo[cost]== HALT_GOODS_HANDLING_VOLUME ? 2 : 0;
+		uint16 curve = chart.add_curve(color_idx_to_rgb(cost_type_color[cost]), halt->get_finance_history(), MAX_HALT_COST,
+			index_of_haltinfo[cost], MAX_MONTHS, index_of_haltinfo[cost]==HALT_GOODS_HANDLING_VOLUME ? gui_chart_t::TONNEN : 0, false, true, precision);
 
 		button_t *b = container_chart.new_component<button_t>();
 		b->init(button_t::box_state_automatic | button_t::flexible, cost_type[cost]);
