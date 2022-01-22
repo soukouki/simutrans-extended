@@ -40,6 +40,8 @@ static sint32 max_tourist_ziele = 1;
 static sint32 max_waiting = 1;
 static sint32 max_origin = 1;
 static sint32 max_transfer = 1;
+static sint32 max_mail_volume = 1;
+static sint32 max_goods_volume = 1;
 static sint32 max_service = 1;
 
 static sint32 max_building_level = 0;
@@ -1295,7 +1297,7 @@ void minimap_t::init()
 
 	calc_map_size();
 	max_building_level = max_cargo = max_passed = 0;
-	max_tourist_ziele = max_waiting = max_origin = max_transfer = max_service = 1;
+	max_tourist_ziele = max_waiting = max_origin = max_transfer = max_mail_volume = max_goods_volume = max_service = 1;
 	last_schedule_counter = world->get_schedule_counter()-1;
 	set_selected_cnv(convoihandle_t());
 }
@@ -1655,12 +1657,28 @@ void minimap_t::draw(scr_coord pos)
 				}
 			}
 		}
-		else if(  mode & MAP_TRANSFER  ) {
+		else if(  mode&MAP_TRANSFER  ||  mode&MAP_MAIL_HANDLING_VOLUME  ||  mode&MAP_GOODS_HANDLING_VOLUME    ) {
 			FOR( const vector_tpl<halthandle_t>, halt, haltestelle_t::get_alle_haltestellen() ) {
-				if(  halt->is_transfer(goods_manager_t::INDEX_PAS, goods_manager_t::passengers->get_number_of_classes() - 1, max_classes)  ||  halt->is_transfer(goods_manager_t::INDEX_MAIL, goods_manager_t::mail->get_number_of_classes() - 1, max_classes)  ) {
-					stop_cache.append( halt );
+				if(  mode & MAP_TRANSFER  ){
+					if( !halt->get_pax_enabled() ) {
+						continue;
+					}
+					if (halt->is_transfer(goods_manager_t::INDEX_PAS, goods_manager_t::passengers->get_number_of_classes()-1, max_classes) ) {
+						stop_cache.append(halt);
+					}
 				}
-				else {
+				if(  mode & MAP_MAIL_HANDLING_VOLUME  ) {
+					if( !halt->get_mail_enabled() ) {
+						continue;
+					}
+					if(  halt->is_transfer(goods_manager_t::INDEX_MAIL, goods_manager_t::mail->get_number_of_classes()-1, max_classes)  ) {
+						stop_cache.append( halt );
+					}
+				}
+				if(  mode & MAP_GOODS_HANDLING_VOLUME  ) {
+					if( !halt->get_ware_enabled() ) {
+						continue;
+					}
 					// goods transfer?
 					bool transfer = false;
 					for(  int i=goods_manager_t::INDEX_NONE+1  &&  !transfer;  i<goods_manager_t::get_max_catg_index();  i ++  ) {
@@ -1745,6 +1763,22 @@ void minimap_t::draw(scr_coord pos)
 			}
 			color = calc_severity_color_log( transfer, max_transfer );
 			radius = number_to_radius( transfer );
+		}
+		else if( mode & MAP_MAIL_HANDLING_VOLUME  ) {
+			const sint32 mail_transfer = (sint32)station->get_finance_history(1, HALT_MAIL_HANDLING_VOLUME)*10;
+			if(  mail_transfer > max_mail_volume  ) {
+				max_mail_volume = mail_transfer;
+			}
+			color = calc_severity_color_log( mail_transfer, max_mail_volume);
+			radius = number_to_radius( mail_transfer );
+		}
+		else if( mode & MAP_GOODS_HANDLING_VOLUME  ) {
+			const sint32 goods_transfer = (sint32)station->get_finance_history(1, HALT_GOODS_HANDLING_VOLUME)/10;
+			if(  goods_transfer > max_goods_volume) {
+				max_goods_volume = goods_transfer;
+			}
+			color = calc_severity_color_log( goods_transfer, max_goods_volume);
+			radius = number_to_radius( goods_transfer );
 		}
 		else {
 			const int stype = station->get_station_type();
