@@ -110,20 +110,18 @@ void city_info_t::init()
 
 	set_table_layout(1,0);
 
-	// add city name input field
-	name_input.add_listener( this );
-	add_component(&name_input);
-
-	add_table(1,0)->set_alignment(ALIGN_TOP);
+	add_table(3,0)->set_alignment(ALIGN_TOP);
 	{
-		add_table(1,0)->set_spacing(scr_size(D_H_SPACE, 0));
+		// add city name input field
+		name_input.add_listener( this );
+		add_component(&name_input);
 
 		// add "allow city growth" button below city info
 		allow_growth.init( button_t::square_state, "Allow city growth");
 		allow_growth.pressed = city->get_citygrowth();
 		allow_growth.add_listener( this );
 		add_component(&allow_growth);
-		end_table();
+		new_component<gui_fill_t>();
 	}
 	end_table();
 
@@ -560,9 +558,6 @@ void city_info_t::draw(scr_coord pos, scr_size size)
 			update_stats();
 		}
 	}
-	const scr_coord_val margin_above_tab = name_input.get_pos().y + name_input.get_size().h + D_V_SPACE * 2 + allow_growth.get_pos().y + allow_growth.get_size().h;
-	tabs.set_pos(scr_coord(0, margin_above_tab));
-	tabs.set_size(scr_size(tabs.get_size().w, get_client_windowsize().h-margin_above_tab));
 	gui_frame_t::draw(pos, size);
 }
 
@@ -591,6 +586,7 @@ bool city_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		bt_show_hide_legend.set_text(bt_show_hide_legend.pressed ? "-" : "+");
 		lb_collapsed.set_visible(!bt_show_hide_legend.pressed);
 		cont_minimap_legend.set_visible(bt_show_hide_legend.pressed);
+		resize(scr_coord(0,0));
 		return true;
 	}
 	return false;
