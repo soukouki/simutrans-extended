@@ -912,6 +912,29 @@ bool halt_info_t::is_weltpos()
 }
 
 
+void halt_info_t::activate_chart_buttons()
+{
+	for (uint8 i = 0; i<MAX_HALT_COST; i++) {
+		switch (chart_freight_type[i]) {
+			case halt_info_t::ft_pax:
+				button_to_chart[i]->get_button()->set_visible( halt->get_pax_enabled() );
+				break;
+			case halt_info_t::ft_mail:
+				button_to_chart[i]->get_button()->set_visible( halt->get_mail_enabled() );
+				break;
+			case halt_info_t::ft_goods:
+				button_to_chart[i]->get_button()->set_visible( halt->get_ware_enabled() );
+				break;
+			case halt_info_t::ft_others:
+			default:
+				// nothing to do
+				break;
+		}
+		button_to_chart[i]->update();
+	}
+}
+
+
 void halt_info_t::update_components()
 {
 	indicator_color.set_color(halt->get_status_farbe());
@@ -1074,6 +1097,9 @@ void halt_info_t::update_components()
 	evaluation_mail.set_visible(halt->get_mail_enabled());
 
 	container_top->set_size(container_top->get_size());
+
+	// chart buttons
+	activate_chart_buttons();
 
 	// buffer update now only when needed by halt itself => dedicated buffer for this
 	int old_len = freight_info.len();

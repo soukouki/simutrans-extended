@@ -232,6 +232,8 @@ private:
 
 	void init(halthandle_t halt);
 
+	void activate_chart_buttons();
+
 	// for departure board
 	// return a its destination/origin stop
 	halthandle_t get_convoy_target_halt(convoihandle_t cnv);
