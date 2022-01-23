@@ -238,6 +238,13 @@ private:
 
 public:
 	enum sort_mode_t { by_destination = 0, by_via = 1, by_amount_via = 2, by_amount = 3, by_origin = 4, by_origin_sum = 5, by_destination_detil = 6, by_class_detail = 7, by_class_via = 8, by_line = 9, by_line_via = 10, SORT_MODES = 11 };
+	enum halt_freight_type_t { // freight capacity type (for chart/list)
+		ft_pax    = 0,
+		ft_mail   = 1,
+		ft_goods  = 2,
+		ft_others = 3
+	};
+
 
 	halt_info_t(halthandle_t halt = halthandle_t());
 

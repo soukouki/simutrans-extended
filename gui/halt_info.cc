@@ -128,6 +128,24 @@ const uint8 cost_type_color[MAX_HALT_COST] =
 	COL_TURQUOISE
 };
 
+static const halt_info_t::halt_freight_type_t chart_freight_type[MAX_HALT_COST] =
+{
+	halt_info_t::ft_pax,
+	halt_info_t::ft_pax,
+	halt_info_t::ft_pax,
+	halt_info_t::ft_pax,
+	halt_info_t::ft_pax,
+	halt_info_t::ft_mail,
+	halt_info_t::ft_mail,
+	halt_info_t::ft_others,
+	halt_info_t::ft_pax,
+	halt_info_t::ft_pax,
+	halt_info_t::ft_mail,
+	halt_info_t::ft_goods,
+	halt_info_t::ft_others
+};
+
+
 struct type_symbol_t {
 	haltestelle_t::stationtyp type;
 	const skin_desc_t **desc;
@@ -845,12 +863,15 @@ void halt_info_t::init(halthandle_t halt)
 	container_chart.add_table(4, int((MAX_HALT_COST + 3) / 4))->set_force_equal_columns(true);
 	for (int cost = 0; cost < MAX_HALT_COST; cost++) {
 		const uint8 precision = index_of_haltinfo[cost]== HALT_GOODS_HANDLING_VOLUME ? 2 : 0;
+		const gui_chart_t::chart_marker_t marker_type = chart_freight_type[cost]==halt_info_t::ft_pax ? gui_chart_t::round_box
+			: chart_freight_type[cost]==halt_info_t::ft_mail ? gui_chart_t::square : chart_freight_type[cost] == halt_info_t::ft_goods ? gui_chart_t::diamond : gui_chart_t::cross;
 		uint16 curve = chart.add_curve(color_idx_to_rgb(cost_type_color[cost]), halt->get_finance_history(), MAX_HALT_COST,
-			index_of_haltinfo[cost], MAX_MONTHS, index_of_haltinfo[cost]==HALT_GOODS_HANDLING_VOLUME ? gui_chart_t::TONNEN : 0, false, true, precision);
+			index_of_haltinfo[cost], MAX_MONTHS, index_of_haltinfo[cost]==HALT_GOODS_HANDLING_VOLUME ? gui_chart_t::TONNEN : 0, false, true, precision, 0, marker_type);
 
 		button_t *b = container_chart.new_component<button_t>();
 		b->init(button_t::box_state_automatic | button_t::flexible, cost_type[cost]);
 		b->background_color = color_idx_to_rgb(cost_type_color[cost]);
+		b->set_tooltip(cost_tooltip[cost]);
 		b->pressed = false;
 
 		button_to_chart.append(b, &chart, curve);
