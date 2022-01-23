@@ -354,7 +354,7 @@ void finance_t::rdwr(loadsave_t *file)
 	sint64 dummy = 0;
 
 	// calc finance history for TT_ALL to save it correctly
-	if( ! file->is_loading() ) { 
+	if( ! file->is_loading() ) {
 		calc_finance_history();
 	}
 
