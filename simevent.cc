@@ -64,6 +64,14 @@ void change_drag_start(scr_coord_val x, scr_coord_val y)
 }
 
 
+// since finger events work with absolute coordinates
+void set_click_xy(scr_coord_val x, scr_coord_val y)
+{
+	cx = x;
+	cy = y;
+}
+
+
 static void fill_event(event_t* const ev)
 {
 	// variables for detecting double-clicks and triple-clicks
@@ -268,30 +276,6 @@ void display_poll_event(event_t* const ev)
 	}
 	else {
 		last_meta_class = EVENT_NONE;
-		GetEventsNoWait();
-		fill_event(ev);
-		// prepare for next event
-		sys_event.type = SIM_NOEVENT;
-		sys_event.code = 0;
-	}
-}
-
-
-void display_get_event(event_t* const ev)
-{
-	if(  !queued_events.empty()  ) {
-		// We have a queued (injected programatically) event, return it.
-		event_t *elem = queued_events.remove_first();
-		*ev = *elem;
-		delete elem;
-		return ;
-	}
-	// if there is any pending meta-event, consume it instead of fetching a new event from the system
-	if(  meta_event.ev_class!=EVENT_NONE  ) {
-		*ev = meta_event;
-		meta_event.ev_class = EVENT_NONE;
-	}
-	else {
 		GetEvents();
 		fill_event(ev);
 		// prepare for next event

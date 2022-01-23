@@ -163,7 +163,6 @@ int get_mouse_y();
 void ex_ord_update_mx_my();
 
 void GetEvents();
-void GetEventsNoWait();
 
 uint32 dr_time();
 void dr_sleep(uint32 millisec);

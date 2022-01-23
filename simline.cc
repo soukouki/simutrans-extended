@@ -26,7 +26,7 @@
 line_cost_t convoi_to_line_catgory_[convoi_t::MAX_CONVOI_COST] =
 {
 	LINE_CAPACITY,
-	LINE_TRANSPORTED_GOODS,
+	LINE_PAX_DISTANCE,
 	LINE_AVERAGE_SPEED,
 	LINE_COMFORT,
 	LINE_REVENUE,
@@ -34,8 +34,9 @@ line_cost_t convoi_to_line_catgory_[convoi_t::MAX_CONVOI_COST] =
 	LINE_PROFIT,
 	LINE_DISTANCE,
 	LINE_REFUNDS,
-//	LINE_MAXSPEED,
-	LINE_WAYTOLL
+	LINE_WAYTOLL,
+	LINE_MAIL_DISTANCE,
+	LINE_PAYLOAD_DISTANCE
 };
 
 line_cost_t simline_t::convoi_to_line_catgory(convoi_t::convoi_cost_t cnv_cost)
@@ -178,6 +179,7 @@ void simline_t::set_name(const char *new_name)
 
 void simline_t::create_schedule()
 {
+	recalc_status();
 	switch(type) {
 		case simline_t::truckline:       set_schedule(new truck_schedule_t()); break;
 		case simline_t::trainline:       set_schedule(new train_schedule_t()); break;
@@ -370,7 +372,11 @@ void simline_t::rdwr(loadsave_t *file)
 #ifdef SPECIAL_RESCUE_12_2
 				if(((j == LINE_AVERAGE_SPEED || j == LINE_COMFORT) && file->get_extended_version() <= 1) || (j == LINE_REFUNDS && file->get_extended_version() < 8) || ((j == LINE_DEPARTURES || j == LINE_DEPARTURES_SCHEDULED) && (file->get_extended_version() < 12 || file->is_loading())))
 #else
-				if(((j == LINE_AVERAGE_SPEED || j == LINE_COMFORT) && file->get_extended_version() <= 1) || (j == LINE_REFUNDS && file->get_extended_version() < 8) || ((j == LINE_DEPARTURES || j == LINE_DEPARTURES_SCHEDULED) && file->get_extended_version() < 12))
+				if(((j == LINE_AVERAGE_SPEED || j == LINE_COMFORT) && file->get_extended_version() <= 1)
+					|| (j == LINE_REFUNDS && file->get_extended_version() < 8)
+					|| ((j == LINE_DEPARTURES || j == LINE_DEPARTURES_SCHEDULED) && file->get_extended_version() < 12)
+					|| ((j == LINE_MAIL_DISTANCE || j == LINE_PAYLOAD_DISTANCE) && file->is_version_ex_less(14, 47))
+					)
 #endif
 				{
 					// Versions of Extended saves with 1 and below

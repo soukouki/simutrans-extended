@@ -6222,3 +6222,17 @@ switch_sb
 Change signalbox
 open_signal_connector_gui
 Reassign this signal to a different signalbox
+ground_info
+Land
+tree_info
+Trees
+fare_chart
+Price/distance
+has_no_class
+n/a
+no_speed_bonus
+Time insensitive
+fare_short
+120km
+fare_long
+1,200km

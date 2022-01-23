@@ -105,13 +105,16 @@ const char *halt_list_frame_t::sort_text[SORT_MODES] = {
 	"by_potential_pax_number",
 	"by_potential_mail_users",
 	"by_pax_happy_last_month",
+	"pax_handled_last_month",
 	"by_mail_delivered_last_month",
+	"mail_handled_last_month",
+	"goods_handled_last_month",
 	"by_convoy_arrivals_last_month",
-	"by_region"
-	, "by_surrounding_population"
-	, "by_surrounding_mail_demand"
-	, "by_surrounding_visitor_demand"
-	, "by_surrounding_jobs"
+	"by_region",
+	"by_surrounding_population",
+	"by_surrounding_mail_demand",
+	"by_surrounding_visitor_demand",
+	"by_surrounding_jobs"
 };
 
 
@@ -125,12 +128,14 @@ const char *halt_list_frame_t::display_mode_text[halt_list_stats_t::HALTLIST_MOD
 	"hl_waiting_goods",
 	"hl_pax_evaluation",
 	"hl_mail_evaluation",
+	"pax_handled_last_month",
+	"mail_handled_last_month",
 	"hl_goods_needed",
-	"hl_products"
-	, "coverage_population"
-	, "coverage_mail_demands"
-	, "coverage_visitor_demands"
-	, "coverage_jobs"
+	"hl_products",
+	"coverage_population",
+	"coverage_mail_demands",
+	"coverage_visitor_demands",
+	"coverage_jobs"
 };
 
 
@@ -219,6 +224,27 @@ bool halt_list_frame_t::compare_halts(halthandle_t const halt1, halthandle_t con
 			const int delivered_a = halt1->get_mail_enabled() ? halt1->get_finance_history(1, HALT_MAIL_DELIVERED) : -1;
 			const int delivered_b = halt2->get_mail_enabled() ? halt2->get_finance_history(1, HALT_MAIL_DELIVERED) : -1;
 			order = (int)(delivered_a - delivered_b);
+			break;
+		}
+		case by_pax_handled_last_month:
+		{
+			const int hist_a = halt1->get_pax_enabled() ? halt1->get_finance_history(1, HALT_VISITORS)+halt2->get_finance_history(1, HALT_COMMUTERS) : -1;
+			const int hist_b = halt2->get_pax_enabled() ? halt2->get_finance_history(1, HALT_VISITORS)+halt2->get_finance_history(1, HALT_COMMUTERS) : -1;
+			order = (int)(hist_a - hist_b);
+			break;
+		}
+		case by_mail_handled_last_month:
+		{
+			const int hist_a = halt1->get_mail_enabled() ? halt1->get_finance_history(1, HALT_MAIL_HANDLING_VOLUME) : -1;
+			const int hist_b = halt2->get_mail_enabled() ? halt2->get_finance_history(1, HALT_MAIL_HANDLING_VOLUME) : -1;
+			order = (int)(hist_a - hist_b);
+			break;
+		}
+		case by_goods_handled_last_month:
+		{
+			const int hist_a = halt1->get_ware_enabled() ? halt1->get_finance_history(1, HALT_GOODS_HANDLING_VOLUME) : -1;
+			const int hist_b = halt2->get_ware_enabled() ? halt2->get_finance_history(1, HALT_GOODS_HANDLING_VOLUME) : -1;
+			order = (int)(hist_a - hist_b);
 			break;
 		}
 		case by_convoy_arrivals_last_month:

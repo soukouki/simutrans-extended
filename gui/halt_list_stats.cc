@@ -147,6 +147,37 @@ void gui_halt_stats_t::update_table()
 			}
 			break;
 		}
+		case halt_list_stats_t::hl_pax_volume:
+		case halt_list_stats_t::hl_mail_volume:
+		{
+			// last month record
+			const uint8 freight_type = display_mode == halt_list_stats_t::hl_pax_volume ? 0 : 1;
+			if ((freight_type == 0 && halt->get_pax_enabled()) || (freight_type == 1 && halt->get_mail_enabled()) ) {
+				add_table(2,1);
+				const PIXVAL colval = freight_type ? goods_manager_t::mail->get_color() : goods_manager_t::passengers->get_color();
+
+				num[0] = freight_type ? halt->get_finance_history(1, HALT_MAIL_HANDLING_VOLUME) : halt->get_finance_history(1, HALT_VISITORS);
+				num[1] = freight_type ? 0 : halt->get_finance_history(1, HALT_COMMUTERS);
+				const sint64 sum = num[0]+num[1];
+
+				bandgraph.clear();
+				bandgraph.add_color_value(&num[0], colval);
+				bandgraph.add_color_value(&num[1], color_idx_to_rgb(COL_COMMUTER));
+				add_component(&bandgraph);
+				bandgraph.set_size(scr_size(min(256, (sum + (HISTBAR_SCALE_FACTOR-1))/HISTBAR_SCALE_FACTOR), D_LABEL_HEIGHT*2/3));
+
+				gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+				lb->buf().append(sum, 0);
+				lb->init(SYSCOL_TEXT, gui_label_t::left);
+				lb->update();
+
+				end_table();
+			}
+			else {
+				new_component<gui_label_t>("-", COL_INACTIVE);
+			}
+			break;
+		}
 		case halt_list_stats_t::hl_location:
 		{
 			add_table(4,1);
@@ -254,13 +285,18 @@ void gui_halt_stats_t::update_table()
 			break;
 		}
 		case halt_list_stats_t::hl_goods_needed:
-			if (halt->get_ware_enabled()) {
-				new_component<gui_halt_goods_demand_t>(halt, false);
-			}
-			break;
 		case halt_list_stats_t::hl_products:
 			if (halt->get_ware_enabled()) {
-				new_component<gui_halt_goods_demand_t>(halt, true);
+				add_table(2,1);
+				gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+				lb->buf().append(halt->get_finance_history(1, HALT_GOODS_HANDLING_VOLUME) / 10, 1);
+				lb->buf().append(translator::translate("tonnen"));
+				lb->init(SYSCOL_TEXT, gui_label_t::right);
+				lb->set_fixed_width((D_BUTTON_WIDTH * 3) >> 2);
+				lb->update();
+
+				new_component<gui_halt_goods_demand_t>(halt, display_mode==halt_list_stats_t::hl_goods_needed ? false:true);
+				end_table();
 			}
 			break;
 		case halt_list_stats_t::coverage_visitor_demands:
@@ -397,6 +433,10 @@ void gui_halt_stats_t::draw(scr_coord offset)
 			case halt_list_stats_t::hl_serve_lines:
 			case halt_list_stats_t::hl_pax_evaluation:
 			case halt_list_stats_t::hl_mail_evaluation:
+			case halt_list_stats_t::hl_pax_volume:
+			case halt_list_stats_t::hl_mail_volume:
+			case halt_list_stats_t::hl_goods_needed:
+			case halt_list_stats_t::hl_products:
 				// update once at the beginning of the month
 				if (update_seed != (sint32)world()->get_current_month()) {
 					update_flag = true;
@@ -412,8 +452,6 @@ void gui_halt_stats_t::draw(scr_coord offset)
 				break;
 			case halt_list_stats_t::hl_waiting_detail:
 			case halt_list_stats_t::hl_location:
-			case halt_list_stats_t::hl_goods_needed:
-			case halt_list_stats_t::hl_products:
 			default:
 				// No automatic updates or components do their own updates.
 				update_flag = false;

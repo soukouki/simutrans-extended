@@ -1418,16 +1418,24 @@ DBG_DEBUG("fabrik_t::rdwr()","loading factory '%s'",s);
 		ware.rdwr( file );
 
 		if(  file->is_loading()  ) {
-
+			if (!ware_name) {
+				dbg->fatal("fabrik_t::rdwr", "Invalid ware at input slot %d of factory at %s", i, pos.get_fullstr());
+			}
 			ware.set_typ( goods_manager_t::get_info(ware_name) );
 
-			if (!desc || !desc->get_supplier(i)) {
-				if (desc) dbg->warning("fabrik_t::rdwr()", "Factory at %s requested producer for %s but has none!", pos_origin.get_fullstr(), ware_name);
+			if(  !desc  ||  !desc->get_supplier(i)  ) {
+			// Maximum in-transit is always 0 on load.
+			if(  welt->get_settings().get_just_in_time() < 2  ) {
+				ware.max_transit = 0;
+			}
+
+				if (desc) {
+					dbg->warning( "fabrik_t::rdwr()", "Factory at %s requested producer for %s but has none!", pos_origin.get_fullstr(), ware_name);
+				}
 				ware.menge = 0;
 			}
 
 			else {
-
 				// Inputs used to be with respect to actual units of production. They now are normalized with respect to factory production so require conversion.
 				const uint32 prod_factor = desc ? desc->get_supplier(i)->get_consumption() : 1;
 				if(  file->is_version_less(120, 1)  ) {
@@ -1524,11 +1532,18 @@ DBG_DEBUG("fabrik_t::rdwr()","loading factory '%s'",s);
 			file->rdwr_long(abgabe_letzt);
 		}
 		ware.rdwr( file );
-		if (file->is_loading()) {
-			ware.set_typ(goods_manager_t::get_info(ware_name));
+		if(  file->is_loading()  ) {
+			if (ware_name && goods_manager_t::get_info(ware_name)) {
+				ware.set_typ( goods_manager_t::get_info(ware_name));
+			}
+			else {
+				dbg->fatal("fabrik_t::rdwr", "Invalid ware %s at output slot %d of factory at %s", ware_name ? ware_name : "", i, pos.get_fullstr());
+			}
 
-			if (!desc || !desc->get_product(i)) {
-				if (desc) dbg->warning("fabrik_t::rdwr()", "Factory at %s requested consumer for %s but has none!", pos_origin.get_fullstr(), ware_name);
+			if(  !desc  ||  !desc->get_product(i)  ) {
+				if (desc) {
+					dbg->warning( "fabrik_t::rdwr()", "Factory at %s requested consumer for %s but has none!", pos_origin.get_fullstr(), ware_name );
+				}
 				ware.menge = 0;
 			}
 			else {

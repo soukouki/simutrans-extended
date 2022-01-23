@@ -60,7 +60,7 @@ private:
 	button_t bt_new_line, bt_edit_line, bt_delete_line, bt_withdraw_line, bt_line_class_manager, bt_mode_convois, bt_show_halt_name;
 	button_t sort_order;
 	gui_container_t cont, cont_charts, cont_convoys;
-	gui_aligned_container_t cont_times_history, cont_line_info, cont_tab_haltlist;
+	gui_aligned_container_t cont_times_history, cont_line_info, cont_tab_haltlist, cont_transport_density;
 	gui_line_waiting_status_t cont_haltlist;
 	gui_convoy_loading_info_t cont_line_capacity_by_catg;
 	gui_scrollpane_t scrolly_convois, scrolly_haltestellen, scroll_times_history, scrolly_line_info;

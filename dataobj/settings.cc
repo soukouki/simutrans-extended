@@ -984,7 +984,7 @@ void settings_t::rdwr(loadsave_t *file)
 			random_counter = get_random_seed( );
 			file->rdwr_long( random_counter );
 			if(  !env_t::networkmode  ||  env_t::server  ) {
-				frames_per_second = clamp(env_t::fps, 5u, 100u); // update it on the server to the current setting
+				frames_per_second = clamp(env_t::fps, env_t::min_fps, env_t::max_fps); // update it on the server to the current setting
 				frames_per_step = env_t::network_frames_per_step;
 			}
 			file->rdwr_long( frames_per_second );
@@ -1731,8 +1731,7 @@ void settings_t::rdwr(loadsave_t *file)
 				max_speed_drive_by_sight = kmh_to_speed(max_speed_drive_by_sight_kmh);
 			}
 #endif
-			if ((file->get_extended_version() == 14 && file->get_extended_revision()) >= 31 || file->get_extended_version() >= 15)
-			{
+			if (file->is_version_ex_atleast(14, 46)) {
 				file->rdwr_long(max_speed_drive_by_sight_tram);
 				max_speed_drive_by_sight_tram = kmh_to_speed(max_speed_drive_by_sight_tram);
 			}

@@ -127,16 +127,18 @@ map_button_t button_init[MAP_MAX_BUTTONS] = {
 	{ COL_LIGHT_GREEN,  COL_DARK_GREEN,  "Factories", "Highlite factories", minimap_t::MAP_FACTORIES },
 	{ COL_LIGHT_GREEN,  COL_DARK_GREEN,  "Depots", "Highlite depots", minimap_t::MAP_DEPOT },
 	{ COL_LIGHT_GREEN,  COL_DARK_GREEN,  "Convoys", "Show convoys", minimap_t::MAP_CONVOYS },
+	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Passengers", "The number of passengers at the stop last month", minimap_t::MAP_TRANSFER },
+	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Handling mails", "The number of mail that handling at the stop last month", minimap_t::MAP_MAIL_HANDLING_VOLUME },
+	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Handling goods", "The number of goods that handling at the stop last month", minimap_t::MAP_GOODS_HANDLING_VOLUME },
 	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Status", "Show capacity and if halt is overcrowded", minimap_t::MAP_STATUS },
 	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "hl_btn_sort_waiting", "Show how many people/much is waiting at halts", minimap_t::MAP_WAITING },
 	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Queueing", "Show the change of waiting at halts", minimap_t::MAP_WAITCHANGE },
 	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Service", "Show how many convoi reach a station", minimap_t::MAP_SERVICE },
-	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Transfers", "Sum of departure/arrivals at halts", minimap_t::MAP_TRANSFER },
 	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Origin", "Show initial passenger departure", minimap_t::MAP_ORIGIN },
 	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "map_btn_freight", "Show transported freight/freight network", minimap_t::MAP_FREIGHT },
 	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "Traffic", "Show usage of network", minimap_t::MAP_TRAFFIC },
 	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "Wear", "Show the condition of ways", minimap_t::MAP_CONDITION },
-	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "Congestion", "Show how congested that roads are", minimap_t::MAP_CONGESTION }, // TODO: Add translation text for this
+	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "Congestion", "Show how congested that roads are", minimap_t::MAP_CONGESTION },
 	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "Speedlimit", "Show speedlimit of ways", minimap_t::MAX_SPEEDLIMIT },
 	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "Weight limit", "Show the weight limit of ways", minimap_t::MAP_WEIGHTLIMIT },
 	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "Tracks", "Highlight railroad tracks", minimap_t::MAP_TRACKS },
@@ -348,6 +350,9 @@ map_frame_t::map_frame_t() :
 		filter_buttons[index].add_listener(this);
 		filter_container.add_component(filter_buttons + index);
 	}
+	filter_buttons[6].set_image(skinverwaltung_t::passengers->get_image_id(0));
+	filter_buttons[7].set_image(skinverwaltung_t::mail->get_image_id(0));
+	filter_buttons[8].set_image(skinverwaltung_t::goods->get_image_id(0));
 	filter_container.end_table();
 	update_buttons();
 
