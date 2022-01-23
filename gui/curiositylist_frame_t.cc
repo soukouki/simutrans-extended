@@ -42,11 +42,23 @@ curiositylist_frame_t::curiositylist_frame_t(stadt_t* city) :
 		// 1st row
 		new_component<gui_label_t>("hl_txt_sort");
 
-		add_table(2, 1);
+		add_table(4,1);
 		{
 			new_component<gui_label_t>("Filter:");
 			name_filter_input.set_text(name_filter, lengthof(name_filter));
+			name_filter_input.set_rigid(false);
 			add_component(&name_filter_input);
+
+			lb_target_city.set_visible(false);
+			lb_target_city.set_rigid(false);
+			lb_target_city.set_color(SYSCOL_TEXT_HIGHLIGHT);
+			add_component(&lb_target_city);
+
+			bt_cansel_cityfilter.init(button_t::roundbox, "reset");
+			bt_cansel_cityfilter.add_listener(this);
+			bt_cansel_cityfilter.set_visible(false);
+			bt_cansel_cityfilter.set_rigid(false);
+			add_component(&bt_cansel_cityfilter);
 		}
 		end_table();
 
@@ -101,6 +113,8 @@ curiositylist_frame_t::curiositylist_frame_t(stadt_t* city) :
 	}
 	end_table();
 
+	set_cityfilter(city);
+
 	set_alignment(ALIGN_STRETCH_V | ALIGN_STRETCH_H);
 	add_component(&scrolly);
 	fill_list();
@@ -144,8 +158,22 @@ void curiositylist_frame_t::fill_list()
 void curiositylist_frame_t::set_cityfilter(stadt_t *city)
 {
 	filter_city = city;
-	filter_within_network.pressed = false;
-	curiositylist_stats_t::filter_own_network = false;
+	if (city) {
+		filter_within_network.pressed = false;
+		curiositylist_stats_t::filter_own_network = false;
+		name_filter[0] = '\0';
+		name_filter_input.set_visible(false);
+		lb_target_city.buf().printf("%s>%s", translator::translate("City"), city->get_name());
+		lb_target_city.update();
+		lb_target_city.set_visible(true);
+		bt_cansel_cityfilter.set_visible(true);
+	}
+	else {
+		name_filter_input.set_visible(true);
+		lb_target_city.set_visible(false);
+		bt_cansel_cityfilter.set_visible(false);
+	}
+	resize(scr_size(0,0));
 	fill_list();
 }
 
@@ -171,6 +199,9 @@ bool curiositylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t
 		curiositylist_stats_t::filter_own_network = !curiositylist_stats_t::filter_own_network;
 		filter_within_network.pressed = curiositylist_stats_t::filter_own_network;
 		fill_list();
+	}
+	else if (comp == &bt_cansel_cityfilter) {
+		set_cityfilter(NULL);
 	}
 	return true;
 }
