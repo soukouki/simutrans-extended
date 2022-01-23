@@ -114,19 +114,9 @@ void city_info_t::init()
 	name_input.add_listener( this );
 	add_component(&name_input);
 
-	lb_size.set_align(gui_label_t::centered);
-	lb_buildings.set_align(gui_label_t::centered);
-
 	add_table(1,0)->set_alignment(ALIGN_TOP);
 	{
 		add_table(1,0)->set_spacing(scr_size(D_H_SPACE, 0));
-		add_component(&lb_border);
-
-		new_component<gui_margin_t>(LINESPACE/3);
-
-		add_component(&lb_powerdemand);
-
-		new_component<gui_margin_t>(LINESPACE/3);
 
 		// add "allow city growth" button below city info
 		allow_growth.init( button_t::square_state, "Allow city growth");
@@ -208,13 +198,15 @@ void city_info_t::init()
 
 	// passenger destination mapping
 	cont_destination_map.set_table_layout(1,0);
-	cont_destination_map.add_component(&pax_map);
+	cont_destination_map.set_alignment(ALIGN_TOP);
 
 	bt_show_contour.init(button_t::square_state, "Show contour");
 	bt_show_contour.set_tooltip("Color-coded terrain according to altitude.");
 	bt_show_contour.add_listener(this);
 	bt_show_contour.pressed=true;
 	cont_destination_map.add_component(&bt_show_contour);
+
+	cont_destination_map.add_component(&pax_map);
 
 	cont_destination_map.add_table(3,1)->set_alignment(ALIGN_TOP);
 	{
@@ -359,7 +351,6 @@ void city_info_t::update_labels()
 	const koord lr = c->get_rechtsunten();
 	lb_border.buf().printf( "%d,%d - %d,%d", ul.x, ul.y, lr.x , lr.y); lb_border.update();
 
-	lb_powerdemand.buf().printf("%s: ", translator::translate("Power demand"));
 	const uint32 power_demand = (c->get_power_demand())>>POWER_TO_MW;
 	if(power_demand == 0)
 	{
@@ -384,6 +375,26 @@ void city_info_t::update_stats()
 {
 	scr_coord_val value_cell_width = max(proportional_string_width(translator::translate("This Year")), proportional_string_width(translator::translate("Last Year")));
 	cont_city_stats.remove_all();
+
+	cont_city_stats.add_table(4,0);
+	{
+		// area
+		cont_city_stats.new_component<gui_label_t>("City size");
+		cont_city_stats.add_component(&lb_size);
+		cont_city_stats.add_component(&lb_border);
+		cont_city_stats.new_component<gui_fill_t>();
+
+		cont_city_stats.new_component<gui_label_t>("Population density");
+		cont_city_stats.add_component(&lb_buildings);
+		cont_city_stats.new_component<gui_empty_t>();
+		cont_city_stats.new_component<gui_fill_t>();
+
+		cont_city_stats.new_component<gui_label_t>("Power demand");
+		cont_city_stats.add_component(&lb_powerdemand);
+		cont_city_stats.new_component<gui_empty_t>();
+		cont_city_stats.new_component<gui_fill_t>();
+	}
+	cont_city_stats.end_table();
 
 	cont_city_stats.new_component<gui_heading_t>("Statistics", SYSCOL_TEXT, env_t::default_window_title_color, 1)->set_width(D_DEFAULT_WIDTH - D_MARGINS_X - D_H_SPACE);
 	cont_city_stats.add_table(6,0)->set_spacing(scr_size(D_H_SPACE*2,1));
@@ -419,20 +430,8 @@ void city_info_t::update_stats()
 			cont_city_stats.new_component<gui_data_bar_t>()->init((sint64)city->get_visitor_demand_by_class(c), city->get_city_visitor_demand(), value_cell_width*2, goods_manager_t::passengers->get_color(), false, true);
 			cont_city_stats.new_component<gui_fill_t>();
 		}
-		cont_city_stats.new_component_span<gui_border_t>(5);
-		cont_city_stats.new_component<gui_fill_t>();
-
-		// area
-		cont_city_stats.new_component_span<gui_label_t>("City size",2);
-		cont_city_stats.add_component(&lb_size);
-		cont_city_stats.new_component_span<gui_empty_t>(2);
-		cont_city_stats.new_component<gui_fill_t>();
-
-		cont_city_stats.new_component_span<gui_label_t>("Population density",2);
-		cont_city_stats.add_component(&lb_buildings);
-		cont_city_stats.new_component_span<gui_empty_t>(2);
-		cont_city_stats.new_component<gui_fill_t>();
-
+		//cont_city_stats.new_component_span<gui_border_t>(5);
+		//cont_city_stats.new_component<gui_fill_t>();
 	}
 	cont_city_stats.end_table();
 	cont_city_stats.new_component<gui_margin_t>(0, D_V_SPACE);
