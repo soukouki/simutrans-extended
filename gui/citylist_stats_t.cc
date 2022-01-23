@@ -217,6 +217,7 @@ void gui_city_stats_t::update_table()
 			}
 			end_table();
 			break;
+#ifdef DEBUG
 		case citylist_stats_t::dbg_demands:
 			add_table(2,1);
 			{
@@ -230,6 +231,7 @@ void gui_city_stats_t::update_table()
 			}
 			end_table();
 			break;
+#endif // DEBUG
 		case citylist_stats_t::goods_demand:
 		case citylist_stats_t::goods_product:
 			if (!city->get_city_factories().get_count()) {
