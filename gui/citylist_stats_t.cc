@@ -324,8 +324,6 @@ void citylist_stats_t::update_label()
 	lb_name.buf().printf("%s ", city->get_name());
 	lb_name.update();
 
-	const bool allow_citygrowth = city->get_citygrowth();
-
 	set_size(size);
 }
 

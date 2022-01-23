@@ -96,8 +96,8 @@ const uint8 pax_dest_color[PAX_DEST_COLOR_LEGENDS] =
 city_info_t::city_info_t(stadt_t* city) :
 	gui_frame_t( name, NULL ),
 	city(city),
-	scrolly_stats(&cont_city_stats, true),
-	pax_map(city)
+	pax_map(city),
+	scrolly_stats(&cont_city_stats, true)
 {
 	if (city) {
 		init();
