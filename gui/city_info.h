@@ -50,7 +50,7 @@ public:
 		pax_dest_old(0, 0),
 		pax_dest_new(0, 0)
 	{
-		minimaps_size = scr_size(PAX_DESTINATIONS_SIZE, PAX_DESTINATIONS_SIZE); // default minimaps size
+		minimaps_size = scr_size(world()->get_size().x, world()->get_size().y); // default minimaps size
 		minimap2_offset = scr_coord(minimaps_size.w + D_H_SPACE, 0);
 	}
 	scr_size get_min_size() const OVERRIDE { return scr_size(PAX_DEST_MIN_SIZE * 2 + D_H_SPACE, PAX_DEST_MIN_SIZE); }
