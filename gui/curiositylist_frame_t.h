@@ -8,6 +8,7 @@
 
 
 #include "simwin.h"
+#include "../simcity.h"
 #include "gui_frame.h"
 #include "components/action_listener.h"
 #include "components/gui_combobox.h"
@@ -28,6 +29,7 @@ private:
 	gui_scrolled_list_t scrolly;
 	gui_aligned_container_t list;
 
+	stadt_t *filter_city;
 	uint32 attraction_count;
 
 	void fill_list();
@@ -37,7 +39,7 @@ private:
 	gui_textinput_t name_filter_input;
 
 public:
-	curiositylist_frame_t();
+	curiositylist_frame_t(stadt_t *filter_city = NULL);
 
 	const char *get_help_filename() const OVERRIDE {return "curiositylist_filter.txt"; }
 
@@ -52,6 +54,8 @@ public:
 	void rdwr(loadsave_t* file) OVERRIDE;
 
 	uint32 get_rdwr_id() OVERRIDE { return magic_curiositylist; }
+
+	void set_cityfilter(stadt_t *city);
 };
 
 #endif

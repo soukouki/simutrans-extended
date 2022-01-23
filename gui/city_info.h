@@ -27,7 +27,7 @@ template <class T> class sparse_tpl;
 class gui_city_minimap_t;
 
 #define PAX_DEST_MIN_SIZE (16)      ///< minimum width/height of the minimap
-#define PAX_DEST_VERTICAL (4.0/3.0) ///< aspect factor where minimaps change to over/under instead of left/right
+#define PAX_DEST_VERTICAL (1.0/1.5) ///< aspect factor where minimaps change to over/under instead of left/right
 #define PAX_DEST_COLOR_LEGENDS 8
 
 /**
@@ -50,7 +50,7 @@ public:
 		pax_dest_old(0, 0),
 		pax_dest_new(0, 0)
 	{
-		minimaps_size = scr_size(world()->get_size().x, world()->get_size().y); // default minimaps size
+		minimaps_size = scr_size(min(200,world()->get_size().x), min(200,world()->get_size().y)); // default minimaps size
 		minimap2_offset = scr_coord(minimaps_size.w + D_H_SPACE, 0);
 	}
 	scr_size get_min_size() const OVERRIDE { return scr_size(PAX_DEST_MIN_SIZE * 2 + D_H_SPACE, PAX_DEST_MIN_SIZE); }
@@ -168,7 +168,7 @@ private:
 
 	gui_textinput_t name_input;    ///< Input field where the name of the city can be changed
 	button_t allow_growth;         ///< Checkbox to enable/disable city growth
-	button_t bt_show_contour, bt_show_hide_legend;
+	button_t bt_show_contour, bt_show_hide_legend, bt_city_attraction;
 	gui_label_t lb_collapsed;
 	gui_label_buf_t lb_size, lb_buildings, lb_border, lb_powerdemand;
 

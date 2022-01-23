@@ -15,8 +15,10 @@
 #include "../utils/simstring.h"
 #include "../tpl/array2d_tpl.h"
 
+#include "simwin.h"
 #include "city_info.h"
 #include "minimap.h"
+#include "curiositylist_frame_t.h"
 #include "components/gui_button_to_chart.h"
 #include "components/gui_image.h"
 #include "components/gui_colorbox.h"
@@ -110,7 +112,7 @@ void city_info_t::init()
 
 	set_table_layout(1,0);
 
-	add_table(3,0)->set_alignment(ALIGN_TOP);
+	add_table(2,0)->set_alignment(ALIGN_TOP);
 	{
 		// add city name input field
 		name_input.add_listener( this );
@@ -121,7 +123,6 @@ void city_info_t::init()
 		allow_growth.pressed = city->get_citygrowth();
 		allow_growth.add_listener( this );
 		add_component(&allow_growth);
-		new_component<gui_fill_t>();
 	}
 	end_table();
 
@@ -197,6 +198,14 @@ void city_info_t::init()
 	// passenger destination mapping
 	cont_destination_map.set_table_layout(1,0);
 	cont_destination_map.set_alignment(ALIGN_TOP);
+	
+	bt_city_attraction.init(button_t::roundbox, "city_attraction", scr_coord(0,0), D_WIDE_BUTTON_SIZE);
+	if (skinverwaltung_t::open_window) {
+		bt_city_attraction.set_image(skinverwaltung_t::open_window->get_image_id(0));
+	}
+	bt_city_attraction.set_tooltip("fix_me!");
+	bt_city_attraction.add_listener(this);
+	bt_city_attraction.pressed = false;
 
 	bt_show_contour.init(button_t::square_state, "Show contour");
 	bt_show_contour.set_tooltip("Color-coded terrain according to altitude.");
@@ -393,6 +402,7 @@ void city_info_t::update_stats()
 		cont_city_stats.new_component<gui_fill_t>();
 	}
 	cont_city_stats.end_table();
+	cont_city_stats.add_component(&bt_city_attraction);
 
 	cont_city_stats.new_component<gui_heading_t>("Statistics", SYSCOL_TEXT, env_t::default_window_title_color, 1)->set_width(D_DEFAULT_WIDTH - D_MARGINS_X - D_H_SPACE);
 	cont_city_stats.add_table(6,0)->set_spacing(scr_size(D_H_SPACE*2,1));
@@ -587,6 +597,17 @@ bool city_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		lb_collapsed.set_visible(!bt_show_hide_legend.pressed);
 		cont_minimap_legend.set_visible(bt_show_hide_legend.pressed);
 		resize(scr_coord(0,0));
+		return true;
+	}
+	if(  comp==&bt_city_attraction  ) {
+		curiositylist_frame_t *win = dynamic_cast<curiositylist_frame_t*>( win_get_magic(magic_curiositylist) );
+		if (!win) {
+			create_win(-1, -1, new curiositylist_frame_t(city), w_info, magic_curiositylist);
+		}
+		else {
+			win->set_cityfilter(city);
+			top_win(win);
+		}
 		return true;
 	}
 	return false;

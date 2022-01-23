@@ -29,9 +29,10 @@ public:
 	attraction_item_t(uint8 i) : gui_scrolled_list_t::const_text_scrollitem_t(translator::translate(sort_text[i]), SYSCOL_TEXT) { }
 };
 
-curiositylist_frame_t::curiositylist_frame_t() :
+curiositylist_frame_t::curiositylist_frame_t(stadt_t* city) :
 	gui_frame_t(translator::translate("curlist_title")),
-	scrolly(gui_scrolled_list_t::windowskin, curiositylist_stats_t::compare)
+	scrolly(gui_scrolled_list_t::windowskin, curiositylist_stats_t::compare),
+	filter_city(city)
 {
 	attraction_count = 0;
 
@@ -120,6 +121,9 @@ void curiositylist_frame_t::fill_list()
 		if (curiositylist_stats_t::region_filter && (curiositylist_stats_t::region_filter - 1) != welt->get_region(geb->get_pos().get_2d())) {
 			continue;
 		}
+		if (filter_city!=NULL && filter_city!=geb->get_stadt()) {
+			continue;
+		}
 		if (last_name_filter[0] != 0 && !utf8caseutf8(geb->get_tile()->get_desc()->get_name(), name_filter)) {
 			continue;
 		}
@@ -137,6 +141,13 @@ void curiositylist_frame_t::fill_list()
 	scrolly.set_size(scrolly.get_size());
 }
 
+void curiositylist_frame_t::set_cityfilter(stadt_t *city)
+{
+	filter_city = city;
+	filter_within_network.pressed = false;
+	curiositylist_stats_t::filter_own_network = false;
+	fill_list();
+}
 
 /**
  * This method is called if an action is triggered
