@@ -918,12 +918,21 @@ void halt_info_t::activate_chart_buttons()
 		switch (chart_freight_type[i]) {
 			case halt_info_t::ft_pax:
 				button_to_chart[i]->get_button()->set_visible( halt->get_pax_enabled() );
+				if (!halt->get_pax_enabled()) {
+					button_to_chart[i]->get_button()->pressed = false;
+				}
 				break;
 			case halt_info_t::ft_mail:
 				button_to_chart[i]->get_button()->set_visible( halt->get_mail_enabled() );
+				if (!halt->get_mail_enabled()) {
+					button_to_chart[i]->get_button()->pressed = false;
+				}
 				break;
 			case halt_info_t::ft_goods:
 				button_to_chart[i]->get_button()->set_visible( halt->get_ware_enabled() );
+				if (!halt->get_ware_enabled()) {
+					button_to_chart[i]->get_button()->pressed = false;
+				}
 				break;
 			case halt_info_t::ft_others:
 			default:
