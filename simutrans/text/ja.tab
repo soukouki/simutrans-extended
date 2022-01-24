@@ -281,20 +281,20 @@ Please click on the map to add\nwaypoints or stops to this\nschedule.
 マップをクリックして、中継点または\n駅をスケジュールに追加してください。
 Set tile climate
 地面タイルの気候を%sに変更します。
-Show capacity and if halt is overcrowded
-各駅/停留所の待合室定員の大きさと混雑度を表示
 Show how many convoi reach a station
 駅に到着した車両の数を表示
 Show how many people/much is waiting at halts
-待機量を表示
+現在の旅客待機量を円の大きさで表示し、混雑度を色で表します。紫は過度の混雑状態を示します。
+Show how many mails are waiting at halts
+現在の郵便待機量を円の大きさで表示し、混雑度を色で表します。
+Show how many goods are waiting at halts
+現在の貨物待機量を円の大きさで表示し、混雑度を色で表します。
 Show initial passenger departure
 旅客および郵便の発生源を表示
 Show level of city buildings
 市内建築物の旅客度/郵便度を表示
 Show speedlimit of ways
 軌道/道路の制限速度を表示
-Show the change of waiting at halts
-前月と比べた待機数の増減を表示
 Show the owenership of infrastructure
 軌道/道路の所有者を表示
 Show transported freight/freight network
@@ -4287,3 +4287,7 @@ Power: %4d kW\n
 #この停留所/駅に到着した旅客/郵便/貨物の数を表します。
 #The number of passengers/units of mail/goods that have departed from this stop
 #この停留所/駅から出発した旅客/郵便/貨物の数を表します。
+#Show capacity and if halt is overcrowded
+#各駅/停留所の待合室定員の大きさと混雑度を表示
+#Show the change of waiting at halts
+#前月と比べた待機数の増減を表示
