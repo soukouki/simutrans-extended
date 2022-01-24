@@ -206,7 +206,7 @@ void city_info_t::init()
 	// passenger destination mapping
 	cont_destination_map.set_table_layout(1,0);
 	cont_destination_map.set_alignment(ALIGN_TOP);
-	
+
 	bt_show_contour.init(button_t::square_state, "Show contour");
 	bt_show_contour.set_tooltip("Color-coded terrain according to altitude.");
 	bt_show_contour.add_listener(this);
