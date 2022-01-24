@@ -78,7 +78,7 @@ const char *pax_dest_type[PAX_DEST_COLOR_LEGENDS] =
 	"Verkehrsteilnehmer",
 	"Walked",
 	"Turned away",
-	"No route",
+	"No Route",
 	"destination_unavailable"
 };
 
@@ -125,6 +125,14 @@ void city_info_t::init()
 		add_component(&allow_growth);
 	}
 	end_table();
+
+	bt_city_attraction.init(button_t::roundbox, "City attractions", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+	if (skinverwaltung_t::open_window) {
+		bt_city_attraction.set_image(skinverwaltung_t::open_window->get_image_id(0));
+	}
+	bt_city_attraction.set_tooltip("Open the list of attraction buildings in this city");
+	bt_city_attraction.add_listener(this);
+	bt_city_attraction.pressed = false;
 
 	// tab (month/year)
 	container_chart.set_table_layout(1, 0);
@@ -199,14 +207,6 @@ void city_info_t::init()
 	cont_destination_map.set_table_layout(1,0);
 	cont_destination_map.set_alignment(ALIGN_TOP);
 	
-	bt_city_attraction.init(button_t::roundbox, "city_attraction", scr_coord(0,0), D_WIDE_BUTTON_SIZE);
-	if (skinverwaltung_t::open_window) {
-		bt_city_attraction.set_image(skinverwaltung_t::open_window->get_image_id(0));
-	}
-	bt_city_attraction.set_tooltip("fix_me!");
-	bt_city_attraction.add_listener(this);
-	bt_city_attraction.pressed = false;
-
 	bt_show_contour.init(button_t::square_state, "Show contour");
 	bt_show_contour.set_tooltip("Color-coded terrain according to altitude.");
 	bt_show_contour.add_listener(this);
@@ -438,8 +438,6 @@ void city_info_t::update_stats()
 			cont_city_stats.new_component<gui_data_bar_t>()->init((sint64)city->get_visitor_demand_by_class(c), city->get_city_visitor_demand(), value_cell_width*2, goods_manager_t::passengers->get_color(), false, true);
 			cont_city_stats.new_component<gui_fill_t>();
 		}
-		//cont_city_stats.new_component_span<gui_border_t>(5);
-		//cont_city_stats.new_component<gui_fill_t>();
 	}
 	cont_city_stats.end_table();
 	cont_city_stats.new_component<gui_margin_t>(0, D_V_SPACE);
@@ -477,7 +475,7 @@ void city_info_t::update_stats()
 		cont_city_stats.new_component<gui_fill_t>();
 
 		cont_city_stats.new_component<gui_empty_t>();
-		cont_city_stats.new_component<gui_label_t>("pas_transportation_ratio")->set_tooltip("helptxt_pas_transportation_ratio");
+		cont_city_stats.new_component<gui_label_t>("pax_transportation_ratio")->set_tooltip("helptxt_pax_transportation_ratio");
 		cont_city_stats.add_component(&transportation_this_year);
 		cont_city_stats.add_component(&transportation_last_year);
 		cont_city_stats.new_component<gui_fill_t>();
