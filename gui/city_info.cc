@@ -589,6 +589,7 @@ bool city_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		// terrain heights color scale
 		bt_show_contour.pressed = !bt_show_contour.pressed;
 		pax_map.set_show_contour(bt_show_contour.pressed);
+		resize(scr_coord(0,0));
 		return true;
 	}
 	if(  comp==&bt_show_hide_legend  ) {
