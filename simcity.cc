@@ -4868,6 +4868,9 @@ uint32 stadt_t::get_jobs_by_class(uint8 p_class)
 			sum += building->get_adjusted_jobs_by_class(p_class);
 		}
 	}
+	FOR(vector_tpl<fabrik_t*>, factory, city_factories) {
+		sum += factory->get_building()->get_adjusted_jobs_by_class(p_class);
+	}
 	return sum;
 }
 
@@ -4880,6 +4883,9 @@ uint32 stadt_t::get_visitor_demand_by_class(uint8 p_class)
 		if (building && building == building->get_first_tile()) {
 			sum += building->get_adjusted_visitor_demand_by_class(p_class);
 		}
+	}
+	FOR(vector_tpl<fabrik_t*>, factory, city_factories) {
+		sum += factory->get_building()->get_adjusted_visitor_demand_by_class(p_class);
 	}
 	return sum;
 }
