@@ -915,7 +915,7 @@ color_gui_t::color_gui_t() :
 	resize( scr_coord( 0, 0 ) );
 }
 
-bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t p)
+bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t)
 {
 	bool reflesh_toolbar_pos_btn = false;
 	for(  uint8 i=0; i<4; i++  ) {
