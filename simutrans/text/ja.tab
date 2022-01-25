@@ -4231,6 +4231,8 @@ too_slow_and_use_privatecar
 公共交通機関が不便すぎるので自家用車で移動
 destination_unavailable
 利用不可能な目的地
+(ci_demands)
+需要
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
