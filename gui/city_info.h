@@ -222,12 +222,6 @@ public:
 
 	void update_data();
 
-	/**
-	 * Does this window need a min size button in the title bar?
-	 * @return true if such a button is needed
-	 */
-	bool has_min_sizer() const OVERRIDE {return true;}
-
 	void rdwr(loadsave_t *file) OVERRIDE;
 
 	uint32 get_rdwr_id() OVERRIDE { return magic_city_info_t; }
