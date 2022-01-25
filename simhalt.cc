@@ -4985,7 +4985,8 @@ void haltestelle_t::recalc_status()
 	}
 	else
 	{
-		status_color = color_idx_to_rgb( (financial_history[0][HALT_VISITORS]+financial_history[0][HALT_COMMUTERS] == 0) ? COL_YELLOW : COL_GREEN );
+		const sint64 total_usage_this_month = financial_history[0][HALT_VISITORS] + financial_history[0][HALT_COMMUTERS]+ financial_history[0][HALT_MAIL_HANDLING_VOLUME] + financial_history[0][HALT_GOODS_HANDLING_VOLUME];
+		status_color = color_idx_to_rgb( (total_usage_this_month+total_sum == 0) ? COL_YELLOW : COL_GREEN );
 	}
 
 	if((station_type & airstop) && has_no_control_tower())

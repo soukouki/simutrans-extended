@@ -95,8 +95,6 @@ Maximize height levels
 高さを最大化する
 Networks
 路線図
-Queueing
-待機数の増減
 Road toll
 通行料
 Scenario
@@ -4291,3 +4289,5 @@ Power: %4d kW\n
 #各駅/停留所の待合室定員の大きさと混雑度を表示
 #Show the change of waiting at halts
 #前月と比べた待機数の増減を表示
+#Queueing
+#待機数の増減
