@@ -129,6 +129,7 @@ void city_info_t::init()
 	bt_city_attraction.init(button_t::roundbox, "City attractions", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
 	if (skinverwaltung_t::open_window) {
 		bt_city_attraction.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		bt_city_attraction.set_image_position_right(true);
 	}
 	bt_city_attraction.set_tooltip("Open the list of attraction buildings in this city");
 	bt_city_attraction.add_listener(this);
