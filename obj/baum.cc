@@ -326,7 +326,7 @@ bool baum_t::register_desc(tree_desc_t *desc)
 void baum_t::calc_off(uint8 slope, sint8 x_, sint8 y_)
 {
 	const sint16 random = (sint16)( get_pos().x + get_pos().y + get_pos().z + slope + tree_id + purchase_time );
-	
+
 	// point on tile (imaginary origin at sw corner, x axis: north, y axis: east
 	sint16 x = x_==-128 ? (random + tree_id) & 31  : x_;
 	sint16 y = y_==-128 ? (random + purchase_time) & 31 : y_;
