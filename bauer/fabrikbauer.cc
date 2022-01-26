@@ -147,7 +147,7 @@ public:
 					return false;
 				}
 				// Do not build in the exclusion zone of another factory.
-				if(  is_factory_at(k.x, k.y)  ) {
+				if( is_factory_at(k.x, k.y)  ) {
 					return false;
 				}
 				if(  0 <= x  &&  x < w  &&  0 <= y  &&  y < h  ) {
@@ -273,9 +273,9 @@ DBG_MESSAGE("factory_builder_t::get_random_consumer()","No suitable consumer fou
 }
 
 
-const factory_desc_t *factory_builder_t::get_desc(const char *fabtype)
+const factory_desc_t *factory_builder_t::get_desc(const char *factory_name)
 {
-	return desc_table.get(fabtype);
+	return desc_table.get(factory_name);
 }
 
 
