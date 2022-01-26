@@ -17,6 +17,7 @@ class koord;
 class scr_coord;
 class scr_size;
 
+
 class obj_info_t
 {
 public:

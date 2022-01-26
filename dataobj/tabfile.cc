@@ -3,7 +3,6 @@
  * (see LICENSE.txt)
  */
 
-#include "../sys/simsys.h"
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -13,6 +12,7 @@
 #define dr_fopen fopen
 #endif
 
+#include "../sys/simsys.h"
 #include "../simdebug.h"
 #include "../descriptor/image.h"
 #include "koord.h"
@@ -115,6 +115,7 @@ const koord &tabfileobj_t::get_koord(const char *key, koord def)
 	return ret;
 }
 
+
 const scr_size &tabfileobj_t::get_scr_size(const char *key, scr_size def)
 {
 	static scr_size ret;
@@ -149,11 +150,11 @@ PIXVAL tabfileobj_t::get_color(const char *key, PIXVAL def, uint32 *color_rgb)
 		else {
 			// this inputs also hex correct
 			uint8 index = (uint8)strtoul( value, NULL, 0 );
-			//we save in settings as RGB888
+			// we save in settings as RGB888
 			if (color_rgb) {
 				*color_rgb = get_color_rgb(index);
 			}
-			//but the functions expect in the system colour (like RGB565)
+			// but the functions expect in the system colour (like RGB565)
 			return color_idx_to_rgb(index);
 		}
 #else
@@ -227,12 +228,14 @@ int *tabfileobj_t::get_ints(const char *key)
 		result[0] = 0;
 		return result;
 	}
+
 	// Determine number
 	for(tmp = value; *tmp; tmp++) {
 		if(*tmp == ',') {
 			count++;
 		}
 	}
+
 	// Create result vector and fill
 	result = new int[count + 1];
 
@@ -245,6 +248,7 @@ int *tabfileobj_t::get_ints(const char *key)
 			do {
 				tmp ++;
 			} while ( *tmp>0  &&  *tmp<=32  );
+
 			// this inputs also hex correct
 			result[count++] = strtol( tmp, NULL, 0 );
 		}
