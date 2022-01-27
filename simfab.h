@@ -666,7 +666,7 @@ public:
 	enum {
 		nothing, good, water_resource, medium, water_resource_full, storage_full,
 		inactive, shipment_stuck, material_shortage, no_material, bad,
-		mat_overstocked, stuck, missing_connection, staff_shortage,
+		mat_overstocked, stuck, missing_connections, missing_consumer, material_not_available, staff_shortage,
 		MAX_FAB_STATUS
 	};
 	static uint8 status_to_color[MAX_FAB_STATUS];
