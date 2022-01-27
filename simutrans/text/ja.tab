@@ -712,7 +712,9 @@ chooses a random map
 citicens
 住民
 City attraction
-都市内施設
+都市内向け施設
+City attractions
+市内の観光施設
 City industries
 産業チェーンの数
 City list
@@ -4219,8 +4221,6 @@ pax_transportation_ratio
 旅客移動手段比率
 helptxt_pax_transportation_ratio
 旅客が目的地まで移動した交通手段の比率
-City attractions
-都市のランドマーク
 Open the list of attraction buildings in this city
 この都市にあるアトラクションビルディングの一覧を別ウィンドウで表示します
 too_slow_and_gave_up
