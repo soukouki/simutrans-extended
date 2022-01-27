@@ -33,7 +33,7 @@ static const char factory_status_type[fabrik_t::MAX_FAB_STATUS][64] =
 	"Material shortage", "No material",
 	"stop_some_goods_arrival", "Fully stocked",
 	"fab_stuck",
-	"missing_connection",
+	"missing_connection", "missing_connection", "material_not_available",
 	"staff_shortage"
 };
 
@@ -45,7 +45,8 @@ static const int fab_alert_level[fabrik_t::MAX_FAB_STATUS] =
 	2, 2,
 	3, 3,
 	4,
-	4, 0
+	4, 4, 4,
+	0
 };
 
 sint16 fabrik_info_t::tabstate = 0;
