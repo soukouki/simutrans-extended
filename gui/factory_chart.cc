@@ -348,10 +348,8 @@ void factory_goods_chart_t::set_factory(const fabrik_t *_factory)
 						chart_col = display_blend_colors(chart_col, color_idx_to_rgb(COL_WHITE), s*20);
 					}
 				}
-				else {
-					if (s<3) {
-						chart_col = display_blend_colors(chart_col, color_idx_to_rgb(COL_BLACK), 54-(18*s));
-					}
+				else if (s < 3) {
+					chart_col = display_blend_colors(chart_col, color_idx_to_rgb(COL_BLACK), 54-(18*s));
 				}
 				goods_chart.add_curve(chart_col, input[g].get_stats(), MAX_FAB_GOODS_STAT, s, MAX_MONTH, false, false, true, 0, goods_convert[s], gui_chart_t::chart_marker_t(s%MAX_FAB_GOODS_STAT));
 				goods_buttons[goods_button_count].init(button_t::box_state, input_type[s], scr_coord(D_MARGIN_LEFT + (D_H_SPACE + D_BUTTON_WIDTH)*(s % 2 + 1), offset_below_chart + (D_H_SPACE + D_BUTTON_HEIGHT)*(goods_label_row + s / 2)), D_BUTTON_SIZE);
@@ -385,10 +383,8 @@ void factory_goods_chart_t::set_factory(const fabrik_t *_factory)
 						chart_col = display_blend_colors(chart_col, color_idx_to_rgb(COL_WHITE), s * 24);
 					}
 				}
-				else {
-					if (s < 2) {
-						chart_col = display_blend_colors(chart_col, color_idx_to_rgb(COL_BLACK), 40-(20*s));
-					}
+				else if (s < 2) {
+					chart_col = display_blend_colors(chart_col, color_idx_to_rgb(COL_BLACK), 40-(20*s));
 				}
 				goods_chart.add_curve(chart_col, output[g].get_stats(), MAX_FAB_GOODS_STAT, s, MAX_MONTH, false, false, true, 0, goods_convert[s], gui_chart_t::chart_marker_t(s));
 				goods_buttons[goods_button_count].init(button_t::box_state, output_type[s], scr_coord(D_MARGIN_LEFT + (D_H_SPACE + D_BUTTON_WIDTH)*(s + 1), offset_below_chart + (D_H_SPACE + D_BUTTON_HEIGHT)*goods_label_row), D_BUTTON_SIZE);
