@@ -202,7 +202,7 @@ const pier_desc_t *pier_builder_t::get_desc_bad_load(koord3d pos,player_t *owner
         }
         params.below_way_ribi|=gr->get_weg_nr(0)->get_ribi_unmasked();
         params.need_clearence|=!gr->get_weg_nr(0)->is_low_clearence(owner);
-        if(gr->get_weg_nr(0)){
+        if(gr->get_weg_nr(1)){
             params.below_way_ribi|=gr->get_weg_nr(1)->get_ribi_unmasked();
             params.need_clearence|=!gr->get_weg_nr(1)->is_low_clearence(owner);
         }
