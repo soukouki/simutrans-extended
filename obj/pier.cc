@@ -29,8 +29,36 @@ pier_t::pier_t(koord3d pos, player_t *player, const pier_desc_t *desc, uint8 rot
 	this->rotation = rot;
 	this->bad_load = false;
 	set_owner(player);
-	player_t::book_construction_costs( get_owner(), -desc->get_value(), get_pos().get_2d(), desc->get_waytype());
-	calc_image();
+
+	//discount cost if adjacent to pier
+	sint32 value=desc->get_value();
+	{
+		ribi_t::ribi adj_dir_str = ribi_t::none;
+		ribi_t::ribi adj_dir_diag = ribi_t::none;
+		for(uint8 i = 0; i < 8; i++){
+			if(grund_t *gr = welt->lookup(pos + koord3d(koord::neighbours[i],0))){
+				for(uint8 j=0; j < gr->get_top(); j++){
+					if(gr->obj_bei(j)->get_typ()==obj_t::pier){
+						pier_t *adj = (pier_t *)gr->obj_bei(j);
+						if(adj->get_desc()==get_desc()){
+							if(i%2){
+								adj_dir_str |= ribi_t::nesw[i/2];
+							}else{
+								adj_dir_diag |= ribi_t::nesw[i/2];
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+		if(adj_dir_str  == ribi_t::all || ribi_t::is_threeway(adj_dir_str)  || ribi_t::is_bend(adj_dir_str) ||
+		   adj_dir_diag == ribi_t::all || ribi_t::is_threeway(adj_dir_diag) || ribi_t::is_bend(adj_dir_diag)){
+						value = ( value * welt->get_settings().get_parallel_piers_cost_percentage() ) / 100ll;
+		}
+	}
+	player_t::book_construction_costs( get_owner(), -value, get_pos().get_2d(), desc->get_waytype());
+	calc_image();	
 }
 
 void pier_t::calc_image(){
