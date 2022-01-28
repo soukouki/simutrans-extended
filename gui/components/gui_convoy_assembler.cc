@@ -2094,7 +2094,7 @@ void gui_convoy_assembler_t::update_tabs()
 	vehicle_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Relevant"), SYSCOL_TEXT);
 
 	FOR(vector_tpl<goods_desc_t const*>, const i, welt->get_goods_list()) {
-		vehicle_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(i->get_name()), SYSCOL_TEXT);
+		vehicle_filter.new_component<gui_scrolled_list_t::img_label_scrollitem_t>(translator::translate(i->get_name()), SYSCOL_TEXT, i->get_catg_symbol());
 	}
 
 	if (selected_filter > vehicle_filter.count_elements()) {
