@@ -33,8 +33,7 @@ static const char factory_status_type[fabrik_t::MAX_FAB_STATUS][64] =
 	"Material shortage", "No material",
 	"stop_some_goods_arrival", "Fully stocked",
 	"fab_stuck",
-	"missing_connection", "missing_connection", "material_not_available",
-	"staff_shortage"
+	"missing_connection", "missing_connection", "material_not_available"
 };
 
 static const int fab_alert_level[fabrik_t::MAX_FAB_STATUS] =
@@ -45,8 +44,7 @@ static const int fab_alert_level[fabrik_t::MAX_FAB_STATUS] =
 	2, 2,
 	3, 3,
 	4,
-	4, 4, 4,
-	0
+	4, 4, 4
 };
 
 sint16 fabrik_info_t::tabstate = 0;
@@ -260,20 +258,20 @@ void fabrik_info_t::draw(scr_coord pos, scr_size size)
 	top += D_BUTTON_HEIGHT+D_V_SPACE;
 
 	// status color bar
-	if (fab->get_status() >= fabrik_t::staff_shortage) {
+	if (fab->is_staff_shortage()) {
 		display_ddd_box_clip_rgb(pos.x + D_MARGIN_LEFT - 1, top + 1, D_INDICATOR_WIDTH + 2, D_INDICATOR_HEIGHT + 2, COL_STAFF_SHORTAGE, COL_STAFF_SHORTAGE);
 	}
-	PIXVAL indikatorfarbe = color_idx_to_rgb(fabrik_t::status_to_color[fab->get_status() % fabrik_t::staff_shortage]);
+	PIXVAL indikatorfarbe = color_idx_to_rgb(fabrik_t::status_to_color[fab->get_status()]);
 	display_fillbox_wh_clip_rgb(pos.x + D_MARGIN_LEFT, top + 2, D_INDICATOR_WIDTH, D_INDICATOR_HEIGHT, indikatorfarbe, true);
 	// Status line written text
-	if(skinverwaltung_t::alerts && fab_alert_level[fab->get_status() % fabrik_t::staff_shortage]){
+	if(skinverwaltung_t::alerts && fab_alert_level[fab->get_status()]){
 		left += D_H_SPACE * 2;
-		display_color_img(skinverwaltung_t::alerts->get_image_id(fab_alert_level[fab->get_status() % fabrik_t::staff_shortage]), pos.x + left, top, 0, false, false);
+		display_color_img(skinverwaltung_t::alerts->get_image_id(fab_alert_level[fab->get_status()]), pos.x + left, top, 0, false, false);
 		left += 13;
 	}
 	prod_buf.clear();
-	if (factory_status_type[fab->get_status() % fabrik_t::staff_shortage]) {
-		prod_buf.append(translator::translate(factory_status_type[fab->get_status()%fabrik_t::staff_shortage]));
+	if (factory_status_type[fab->get_status()]) {
+		prod_buf.append(translator::translate(factory_status_type[fab->get_status()]));
 	}
 	display_proportional_rgb(pos.x + left, top, prod_buf, ALIGN_LEFT, indikatorfarbe, true);
 
@@ -317,7 +315,7 @@ void fabrik_info_t::draw(scr_coord pos, scr_size size)
 
 	factory_status.clear();
 	factory_status.append("");
-	if (fab->get_status() >= fabrik_t::staff_shortage) {
+	if (fab->is_staff_shortage()) {
 		factory_status.append(translator::translate("staff_shortage"));
 	}
 	lbl_factory_status.set_color(COL_STAFF_SHORTAGE);
