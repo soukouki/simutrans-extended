@@ -58,7 +58,7 @@ pier_t::pier_t(koord3d pos, player_t *player, const pier_desc_t *desc, uint8 rot
 		}
 	}
 	player_t::book_construction_costs( get_owner(), -value, get_pos().get_2d(), desc->get_waytype());
-	calc_image();	
+	calc_image();
 }
 
 void pier_t::calc_image(){
