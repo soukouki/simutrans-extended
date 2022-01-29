@@ -2920,11 +2920,19 @@ sint32 rail_vehicle_t::block_reserver(route_t *route, uint16 start_index, uint16
 
 		bool last_signal_was_track_circuit_block = false;
 
+		halthandle_t train_halt = haltestelle_t::get_halt(cnv->get_pos(), cnv->get_owner());
+		halthandle_t signal_halt;
+
 		FOR(slist_tpl<grund_t*>, const g, signs)
 		{
 			if(signal_t* const signal = g->find<signal_t>())
 			{
-				if(((counter -- > 0 || (pre_signals.empty() && (!starting_at_signal || signs.get_count() == 1)) || (reached_end_of_loop && (early_platform_index == INVALID_INDEX || last_stop_signal_index < early_platform_index))) && (signal->get_desc()->get_working_method() != token_block || starting_at_signal || ((start_index == first_stop_signal_index) && (first_stop_signal_index == last_stop_signal_index))) && ((route->at(route->get_count() - 1) != signal->get_pos()) || signal->get_desc()->get_working_method() == token_block)))
+				signal_halt = haltestelle_t::get_halt(g->get_pos(), cnv->get_owner());
+				if(((counter -- > 0 || (pre_signals.empty() && (!starting_at_signal || signs.get_count() == 1)) ||
+					(reached_end_of_loop && (early_platform_index == INVALID_INDEX ||
+						last_stop_signal_index < early_platform_index))) && (signal->get_desc()->get_working_method() != token_block ||
+							starting_at_signal || signal_halt == train_halt || ((start_index == first_stop_signal_index) && (first_stop_signal_index == last_stop_signal_index)))
+					&& ((route->at(route->get_count() - 1) != signal->get_pos()) || signal->get_desc()->get_working_method() == token_block)))
 				{
 					const bool use_no_choose_aspect = choose_route_identical_to_main_route || (signal->get_desc()->is_choose_sign() && !is_choosing && choose_return == 0);
 
