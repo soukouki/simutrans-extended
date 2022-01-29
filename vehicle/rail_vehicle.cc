@@ -3262,7 +3262,7 @@ void rail_vehicle_t::leave_tile()
 						grund_t* gr_this_tile = welt->lookup(this_tile);
 						if (gr_previous_tile && gr_this_tile)
 						{
-							if (gr_previous_tile->get_halt().is_bound() && gr_previous_tile->get_halt() == dest_halt && !gr_this_tile->get_halt().is_bound())
+							if (gr_previous_tile->get_halt().is_bound() && gr_previous_tile->get_halt() == dest_halt && !gr_this_tile->get_halt().is_bound() && working_method != one_train_staff && working_method != token_block)
 							{
 								unreserve_in_rear();
 							}
