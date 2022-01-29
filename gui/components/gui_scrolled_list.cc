@@ -64,6 +64,25 @@ void gui_scrolled_list_t::const_text_scrollitem_t::draw(scr_coord pos)
 }
 
 
+
+// draws a single line of text
+void gui_scrolled_list_t::img_label_scrollitem_t::draw(scr_coord pos)
+{
+	pos += get_pos();
+	const scr_coord_val text_offset_lef = (img == IMG_EMPTY) ? D_H_SPACE : D_H_SPACE+14;
+	if(selected) {
+		// selected element
+		display_fillbox_wh_clip_rgb( pos.x+D_H_SPACE/2, pos.y-1, get_size().w-D_H_SPACE, get_size().h + 1, (focused ? SYSCOL_LIST_BACKGROUND_SELECTED_F : SYSCOL_LIST_BACKGROUND_SELECTED_NF), true);
+		display_proportional_clip_rgb(pos.x + text_offset_lef, pos.y, get_text(), ALIGN_LEFT, (focused ? SYSCOL_LIST_TEXT_SELECTED_FOCUS : SYSCOL_LIST_TEXT_SELECTED_NOFOCUS), true);
+	}
+	else {
+		// normal text
+		display_proportional_clip_rgb(pos.x + text_offset_lef, pos.y, get_text(), ALIGN_LEFT, get_color(), true);
+	}
+	display_color_img(img, pos.x + D_H_SPACE-1, pos.y + D_GET_CENTER_ALIGN_OFFSET(10, D_LABEL_HEIGHT), 0, false, false);
+}
+
+
 gui_scrolled_list_t::gui_scrolled_list_t(enum type type, item_compare_func cmp) :
 	gui_scrollpane_t(NULL, true),
 	item_list(container.get_components())

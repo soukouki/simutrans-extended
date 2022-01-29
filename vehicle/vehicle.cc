@@ -899,6 +899,22 @@ uint16 vehicle_t::unload_cargo(halthandle_t halt, sint64 & revenue_from_unloadin
 							total_freight -= tmp.menge;
 							cnv->invalidate_weight_summary();
 
+							if (tmp.is_passenger()) {
+								if (tmp.is_commuting_trip) {
+									halt->book(tmp.menge, HALT_COMMUTERS);
+								}
+								else {
+									halt->book(tmp.menge, HALT_VISITORS);
+								}
+							}
+							else if (tmp.is_mail()) {
+								halt->book(menge, HALT_MAIL_HANDLING_VOLUME);
+							}
+							else {
+								const sint64 unloading_volume = menge * tmp.get_desc()->get_weight_per_unit();
+								halt->book(unloading_volume / 10, HALT_GOODS_HANDLING_VOLUME);
+							}
+
 							// Calculate the revenue for each packet.
 							// Also, add to the "apportioned revenues" for way tolls.
 
@@ -1013,9 +1029,6 @@ uint16 vehicle_t::unload_cargo(halthandle_t halt, sint64 & revenue_from_unloadin
 			// book delivered goods to destination
 			get_owner()->book_delivered( sum_delivered, get_desc()->get_waytype(), index );
 		}
-
-		// add delivered goods to halt's statistics
-		halt->book( sum_menge, HALT_ARRIVED );
 	}
 	return sum_menge;
 }

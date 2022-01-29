@@ -95,16 +95,12 @@ Maximize height levels
 高さを最大化する
 Networks
 路線図
-Queueing
-待機数の増減
 Road toll
 通行料
 Scenario
 シナリオ
 Start this as a server
 このゲームをサーバーとして開始します。
-Transfers
-乗降数
 #_________________________________climates_text_________________________________
 #_________________________________climates_text_________________________________
 arctic
@@ -283,20 +279,20 @@ Please click on the map to add\nwaypoints or stops to this\nschedule.
 マップをクリックして、中継点または\n駅をスケジュールに追加してください。
 Set tile climate
 地面タイルの気候を%sに変更します。
-Show capacity and if halt is overcrowded
-各駅/停留所の待合室定員の大きさと混雑度を表示
 Show how many convoi reach a station
 駅に到着した車両の数を表示
 Show how many people/much is waiting at halts
-待機量を表示
+現在の旅客待機量を円の大きさで表示し、混雑度を色で表します。紫は過度の混雑状態を示します。
+Show how many mails are waiting at halts
+現在の郵便待機量を円の大きさで表示し、混雑度を色で表します。
+Show how many goods are waiting at halts
+現在の貨物待機量を円の大きさで表示し、混雑度を色で表します。
 Show initial passenger departure
 旅客および郵便の発生源を表示
 Show level of city buildings
 市内建築物の旅客度/郵便度を表示
 Show speedlimit of ways
 軌道/道路の制限速度を表示
-Show the change of waiting at halts
-前月と比べた待機数の増減を表示
 Show the owenership of infrastructure
 軌道/道路の所有者を表示
 Show transported freight/freight network
@@ -3309,10 +3305,6 @@ The number of passengers who decline to travel because the journey would take to
 許容できる旅行時間よりも所要時間が長すぎるため、旅行を取り止めた旅客の人数を表します。
 The number of passengers who have travelled successfully from this stop
 この停留所/駅からの移動に成功した旅客の人数を表します。
-The number of passengers/units of mail/goods that have arrived at this stop
-この停留所/駅に到着した旅客/郵便/貨物の数を表します。
-The number of passengers/units of mail/goods that have departed from this stop
-この停留所/駅から出発した旅客/郵便/貨物の数を表します。
 The number of passengers/units of mail/goods waiting at this stop
 駅/停留所で待機している旅客/郵便/貨物の数を表します。
 The number of private car trips in the region overall
@@ -3407,6 +3399,8 @@ transferring
 移動中
 transfers
 移動中の旅客/貨物
+Transfers
+乗降客数
 Transformer only next to factory or in city!
 変電所は産業の隣接マスか市域内にのみ建設できます。
 Transshipment time:
@@ -4193,6 +4187,26 @@ Yearly average
 年間平均
 /mon
 /月
+Handling mails
+郵便取扱量
+Handling goods
+貨物取扱量
+pax_handled_last_month
+前月旅客利用者
+mail_handled_last_month
+前月郵便取扱量
+goods_handled_last_month
+前月貨物取扱量
+The number of visitors that getting on and off
+この駅で乗り降りした旅行者の数
+The number of commuters that getting on and off
+この駅で乗り降りした通勤利用者の数
+The number of passengers at the stop last month
+前月の旅客利用者数
+The number of mail that handling at the stop last month
+前月の郵便物取扱量
+The number of goods that handling at the stop last month
+前月の貨物取扱量（トン）
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
@@ -4267,3 +4281,13 @@ Power: %4d kW\n
 #重量制限:
 #Transported
 #輸送実績
+#The number of passengers/units of mail/goods that have arrived at this stop
+#この停留所/駅に到着した旅客/郵便/貨物の数を表します。
+#The number of passengers/units of mail/goods that have departed from this stop
+#この停留所/駅から出発した旅客/郵便/貨物の数を表します。
+#Show capacity and if halt is overcrowded
+#各駅/停留所の待合室定員の大きさと混雑度を表示
+#Show the change of waiting at halts
+#前月と比べた待機数の増減を表示
+#Queueing
+#待機数の増減
