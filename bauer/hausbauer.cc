@@ -493,20 +493,30 @@ void hausbauer_t::remove( player_t *player, const gebaeude_t *gb, bool map_gener
 							slope_t::type gr_slope=gr->get_grund_hang();
 							welt->access(gr_pos.get_2d())->kartenboden_setzen(new boden_t(gr_pos,gr_slope));
 						}else{
-							const koord newk = k+pos.get_2d();
-							sint8 new_hgt;
-							const uint8 new_slope = welt->recalc_natural_slope(newk,new_hgt);
-							// test for ground at new height
-							const grund_t *gr2 = welt->lookup(koord3d(newk,new_hgt));
-							if(  (gr2==NULL  ||  gr2==gr) &&  new_slope!=slope_t::flat  ) {
-								// and for ground above new sloped tile
-								gr2 = welt->lookup(koord3d(newk, new_hgt+1));
-							}
-							bool ground_recalc = true;
-							if(  gr2  &&  gr2!=gr  ) {
-								// there is another ground below or above
-								// => do not change height, keep foundation
-								welt->access(newk)->kartenboden_setzen( new boden_t( gr->get_pos(), slope_t::flat ) );
+						const koord newk = k+pos.get_2d();
+						sint8 new_hgt;
+						const uint8 new_slope = welt->recalc_natural_slope(newk,new_hgt);
+						// test for ground at new height
+						const grund_t *gr2 = welt->lookup(koord3d(newk,new_hgt));
+						if(  (gr2==NULL  ||  gr2==gr) &&  new_slope!=slope_t::flat  ) {
+							// and for ground above new sloped tile
+							gr2 = welt->lookup(koord3d(newk, new_hgt+1));
+						}
+						bool ground_recalc = true;
+						if(  gr2  &&  gr2!=gr  ) {
+							// there is another ground below or above
+							// => do not change height, keep foundation
+							welt->access(newk)->kartenboden_setzen( new boden_t( gr->get_pos(), slope_t::flat ) );
+							ground_recalc = false;
+						}
+						else if(  new_hgt <= welt->get_water_hgt(newk)  &&  new_slope == slope_t::flat  ) {
+							wasser_t* sea = new wasser_t( koord3d( newk, new_hgt) );
+							welt->access(newk)->kartenboden_setzen( sea );
+							welt->calc_climate( newk, true );
+							sea->recalc_water_neighbours();
+						}
+						else {
+							if(  gr->get_grund_hang() == new_slope  && new_hgt == pos.z  ) {
 								ground_recalc = false;
 							}
 							else if(  new_hgt <= welt->get_water_hgt(newk)  &&  new_slope == slope_t::flat  ) {
@@ -531,6 +541,8 @@ void hausbauer_t::remove( player_t *player, const gebaeude_t *gb, bool map_gener
 									gr->calc_image();
 								}
 							}
+							welt->set_grid_hgt( newk, new_hgt+corner_nw(new_slope) );
+              }
 						}
 					}
 					else if (wasser_t* sea = dynamic_cast<wasser_t*>(gr)) {

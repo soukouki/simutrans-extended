@@ -276,6 +276,10 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	add_component(&bt_show_all);
 
 	bt_class_management.set_typ(button_t::roundbox);
+	if (skinverwaltung_t::open_window) {
+		bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		bt_class_management.set_image_position_right(true);
+	}
 	bt_class_management.set_text("class_manager");
 	bt_class_management.add_listener(this);
 	bt_class_management.set_tooltip("see_and_change_the_class_assignments");
@@ -2090,7 +2094,7 @@ void gui_convoy_assembler_t::update_tabs()
 	vehicle_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Relevant"), SYSCOL_TEXT);
 
 	FOR(vector_tpl<goods_desc_t const*>, const i, welt->get_goods_list()) {
-		vehicle_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(i->get_name()), SYSCOL_TEXT);
+		vehicle_filter.new_component<gui_scrolled_list_t::img_label_scrollitem_t>(translator::translate(i->get_name()), SYSCOL_TEXT, i->get_catg_symbol());
 	}
 
 	if (selected_filter > vehicle_filter.count_elements()) {

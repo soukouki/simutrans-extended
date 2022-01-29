@@ -191,7 +191,8 @@ const char *check_tile( const grund_t *gr, const player_t *player, waytype_t wt,
 	}
 
 	if(  !slope_t::is_way(gr->get_weg_hang())  ) {
-		return "Bruecke muss an\nsingleem\nHang beginnen!\n";
+		// it's not a straight slope
+		return "Bruecke muss an\neinfachem\nHang beginnen!\n";
 	}
 
 	if(  gr->is_halt()  ||  gr->get_depot() || gr->get_signalbox() )

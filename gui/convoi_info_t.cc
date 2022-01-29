@@ -245,6 +245,10 @@ void convoi_info_t::init(convoihandle_t cnv)
 		replace_button.add_listener(this);
 
 		details_button.init(button_t::roundbox | button_t::flexible, "Details");
+		if (skinverwaltung_t::open_window) {
+			details_button.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			details_button.set_image_position_right(true);
+		}
 		details_button.set_tooltip("Vehicle details");
 		details_button.add_listener(this);
 		add_component(&details_button);
@@ -949,10 +953,6 @@ bool convoi_info_t::infowin_event(const event_t *ev)
 {
 	if(  ev->ev_class == INFOWIN  &&  ev->ev_code == WIN_CLOSE  ) {
 		minimap_t::get_instance()->set_selected_cnv(convoihandle_t());
-	}
-
-	if(  ev->ev_class == INFOWIN  &&  ev->ev_code == WIN_TOP  ) {
-		minimap_t::get_instance()->set_selected_cnv(cnv);
 	}
 	return gui_frame_t::infowin_event(ev);
 }

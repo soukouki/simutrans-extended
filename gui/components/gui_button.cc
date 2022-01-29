@@ -392,20 +392,16 @@ void button_t::draw(scr_coord offset)
 				scr_rect area_text = area - gui_theme_t::gui_button_text_offset_right;
 				area_img.set_pos( area.get_pos() );
 				area_text.set_pos( gui_theme_t::gui_button_text_offset + area.get_pos() );
-				if(  img!=IMG_EMPTY  ) {
-					if(  text  ) {
-						area_img.set_pos( area.get_pos() + gui_theme_t::gui_button_text_offset );
-						area_text.x += w;
-						area_text.w -= (w+D_H_SPACE);
-					}
-					else {
-						// draw on center
-						area_img=area;
-					}
-					if( pressed && gui_theme_t::pressed_button_sinks ) area_img.y++;
-					display_img_aligned( img, area_img, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true );
-				}
 				if(  text  ) {
+					if( img != IMG_EMPTY ) {
+						area_text.w -= (w+D_H_SPACE);
+						if (!img_on_right) {
+							area_text.x += w;
+						}
+						else {
+							area_img.x += area_text.w;
+						}
+					}
 					if( type&box && pressed ) {
 						text_color = SYSCOL_COLORED_BUTTON_TEXT_SELECTED;
 					}
@@ -413,7 +409,19 @@ void button_t::draw(scr_coord offset)
 					if( pressed && gui_theme_t::pressed_button_sinks ) area_text.y++;
 					display_proportional_ellipsis_rgb( area_text, translated_text, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, text_color, true );
 				}
-
+				if(  img != IMG_EMPTY  ) {
+					if(  text  ) {
+						if ( !img_on_right ) {
+							area_img.x += gui_theme_t::gui_button_text_offset.w;
+						}
+					}
+					else {
+						// image on center
+						area_img=area;
+					}
+					if( pressed && gui_theme_t::pressed_button_sinks ) area_img.y++;
+					display_img_aligned( img, area_img, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true );
+				}
 				if(  win_get_focus()==this  ) {
 					draw_focus_rect( area );
 				}

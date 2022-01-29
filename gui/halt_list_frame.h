@@ -37,7 +37,10 @@ public:
 		by_potential_pax,
 		by_potential_mail,
 		by_pax_happy_last_month,
+		by_pax_handled_last_month,
 		by_mail_delivered_last_month,
+		by_mail_handled_last_month,
+		by_goods_handled_last_month,
 		by_convoy_arrivals_last_month,
 		by_region,
 		by_surrounding_population,
@@ -161,8 +164,6 @@ public:
 	static void set_alle_ware_filter_an(int mode);
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
-
-	bool has_min_sizer() const OVERRIDE {return true;}
 
 	void map_rotate90( sint16 ) OVERRIDE { fill_list(); }
 

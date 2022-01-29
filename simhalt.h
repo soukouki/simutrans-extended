@@ -35,11 +35,11 @@
 #include "tpl/binary_heap_tpl.h"
 #include "tpl/minivec_tpl.h"
 
-#define MAX_HALT_COST				11 // Total number of cost items
+#define MAX_HALT_COST				13 // Total number of cost items
 #define MAX_MONTHS					12 // Max history
-#define MAX_HALT_NON_MONEY_TYPES	8 // number of non money types in HALT's financial statistic
-#define HALT_ARRIVED				0 // the amount of ware that arrived here
-#define HALT_DEPARTED				1 // the amount of ware that has departed from here
+//#define MAX_HALT_NON_MONEY_TYPES	8 // number of non money types in HALT's financial statistic
+#define HALT_VISITORS               0 // the amount of visitors that getting on and off
+#define HALT_COMMUTERS              1 // the amount of commuters that getting on and off
 #define HALT_WAITING				2 // the amount of ware waiting
 #define HALT_HAPPY					3 // number of happy passengers
 #define HALT_UNHAPPY				4 // number of unhappy passengers
@@ -49,6 +49,8 @@
 #define HALT_TOO_WAITING            8 // The number of passengers who waited so long at the station.
 #define HALT_MAIL_DELIVERED         9 // amount of delivered mail from here
 #define HALT_MAIL_NOROUTE          10 // amount of no-route mail
+#define HALT_MAIL_HANDLING_VOLUME  11 // the handling volume of mail
+#define HALT_GOODS_HANDLING_VOLUME 12 // the handling volume of goods
  /* NOTE - Standard has HALT_WALKED here as no. 7. In Extended, this is in cities, not stops.*/
 
 // This should be network safe multi-threadedly (this has been considered carefully and tested somewhat,

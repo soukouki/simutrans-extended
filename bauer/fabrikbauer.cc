@@ -147,7 +147,7 @@ public:
 					return false;
 				}
 				// Do not build in the exclusion zone of another factory.
-				if(  is_factory_at(k.x, k.y)  ) {
+				if( is_factory_at(k.x, k.y)  ) {
 					return false;
 				}
 				if(  0 <= x  &&  x < w  &&  0 <= y  &&  y < h  ) {
@@ -273,9 +273,9 @@ DBG_MESSAGE("factory_builder_t::get_random_consumer()","No suitable consumer fou
 }
 
 
-const factory_desc_t *factory_builder_t::get_desc(const char *fabtype)
+const factory_desc_t *factory_builder_t::get_desc(const char *factory_name)
 {
-	return desc_table.get(fabtype);
+	return desc_table.get(factory_name);
 }
 
 
@@ -839,7 +839,7 @@ int factory_builder_t::build_chain_link(const fabrik_t* origin_fab, const factor
 	// how much do we need?
 	sint32 consumption = origin_fab->get_base_production() * (supplier ? supplier->get_consumption() : 1);
 
-	slist_tpl<fabs_to_crossconnect_t> factories_to_correct;
+	slist_tpl<factories_to_crossconnect_t> factories_to_correct;
 	slist_tpl<fabrik_t *> new_factories;	      // since the cross-correction must be done later
 	slist_tpl<fabrik_t *> crossconnected_suppliers;	// also done after the construction of new chains
 
@@ -925,9 +925,9 @@ int factory_builder_t::build_chain_link(const fabrik_t* origin_fab, const factor
 								crossconnected_suppliers.append(fab);
 								for(auto const & consumer_pos : fab->get_consumers()) {
 									fabrik_t* consumer = fabrik_t::get_fab(consumer_pos);
-									slist_tpl<fabs_to_crossconnect_t>::iterator i = std::find(factories_to_correct.begin(), factories_to_correct.end(), fabs_to_crossconnect_t(consumer, 0));
+									slist_tpl<factories_to_crossconnect_t>::iterator i = std::find(factories_to_correct.begin(), factories_to_correct.end(), factories_to_crossconnect_t(consumer, 0));
 									if (i == factories_to_correct.end()) {
-										factories_to_correct.append(fabs_to_crossconnect_t(consumer, 1));
+										factories_to_correct.append(factories_to_crossconnect_t(consumer, 1));
 									}
 									else {
 										i->demand += 1;
@@ -1035,7 +1035,7 @@ int factory_builder_t::build_chain_link(const fabrik_t* origin_fab, const factor
 		 */
 		FOR(slist_tpl<fabrik_t*>, const fab, new_factories)
 		{
-			for(slist_tpl<fabs_to_crossconnect_t>::iterator fabs_to_correct = factories_to_correct.begin(), end = factories_to_correct.end(); fabs_to_correct != end;)
+			for(slist_tpl<factories_to_crossconnect_t>::iterator fabs_to_correct = factories_to_correct.begin(), end = factories_to_correct.end(); fabs_to_correct != end;)
 			{
 				fabs_to_correct->demand -= 1;
 				const uint count = fab->get_desc()->get_product_count();
