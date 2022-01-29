@@ -6236,3 +6236,53 @@ fare_short
 120km
 fare_long
 1,200km
+Pax-km
+Passenger km
+Mail-km
+Mail tonne km
+Freight-km
+Freight tonne km
+pkm
+ pass. km
+kgkm
+ kg km
+tkm
+ t km
+A measure of the amount of passengers transported, expressed in passenger-kilometre
+A measure of the amount of passengers transported, expressed in passenger kilometres
+A measure of the amount of mail transported, expressed in tonne-kilometre
+A measure of the amount of mail transported, expressed in tonne kilometres
+A measure of the amount of freight transported, expressed in tonne-kilometre
+A measure of the amount of freight transported, expressed in tonne kilometres
+Transportation density
+Transportation density
+Yearly average
+Yearly average
+/mon
+/month
+Handling mails
+Mail handled
+Handling goods
+Goods handled
+pax_handled_last_month
+Passengers handled last month
+mail_handled_last_month
+Mail handled last month
+goods_handled_last_month
+Goods handled last month
+The number of visitors that getting on and off
+Show the number of visiting passengers using this stop
+The number of commuters that getting on and off
+Show the number of commuting passengers using this stop
+The number of passengers at the stop last month
+Show the number of passengers who used each stop last month
+The number of mail that handling at the stop last month
+Show the amount of mail handled by each stop last month
+The number of goods that handling at the stop last month
+Show The amount of goods handled by each stop last month
+Show how many mails are waiting at halts
+Show the amount of mail waiting at each stop
+Show how many goods are waiting at halts
+Show the amount of goods waiting at each stop
+material_not_available
+Raw materials unavailable

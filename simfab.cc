@@ -3096,7 +3096,7 @@ void fabrik_t::recalc_factory_status()
 			if ((j.menge >> fabrik_t::precision_bits) == 0) {
 				status_ein |= FL_WARE_FEHLT_WAS;
 			}
-			// Does each input goods have one or more suppliers. If not, this factory will not be operational.
+			// Does each input goods have one or more suppliers? If not, this factory will not be operational.
 			bool found = false;
 			FOR(vector_tpl<koord>, k, suppliers)
 			{
