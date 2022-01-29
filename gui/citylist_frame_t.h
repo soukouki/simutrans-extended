@@ -29,7 +29,7 @@ class citylist_frame_t : public gui_frame_t, private action_listener_t
 {
 
  private:
-    static const char *sort_text[citylist_stats_t::SORT_MODES];
+	static const char *sort_text[citylist_stats_t::SORT_MODES];
 	static const char *display_mode_text[citylist_stats_t::CITYLIST_MODES];
 
 	static const char hist_type[karte_t::MAX_WORLD_COST][21];
