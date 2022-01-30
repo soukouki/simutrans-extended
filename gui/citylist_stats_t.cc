@@ -340,10 +340,10 @@ void citylist_stats_t::draw( scr_coord pos)
 {
 	update_label();
 	lb_name.set_fixed_width(name_width);
-	gui_aligned_container_t::draw(pos);
 	if (win_get_magic((ptrdiff_t)city)) {
-		display_blend_wh_rgb(pos.x + get_pos().x, pos.y+get_pos().y, get_size().w, get_size().h, SYSCOL_TEXT, 20);
+		display_blend_wh_rgb(pos.x + get_pos().x, pos.y+get_pos().y, get_size().w, get_size().h, SYSCOL_TEXT_HIGHLIGHT, 30);
 	}
+	gui_aligned_container_t::draw(pos);
 }
 
 
