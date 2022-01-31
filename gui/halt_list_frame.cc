@@ -834,7 +834,8 @@ void halt_list_frame_t::rdwr(loadsave_t* file)
 
 		default_sortmode = (sort_mode_t)sort_mode;
 		sortedby.set_selection(default_sortmode);
-		m_player = welt->get_player(player_nr);
+		m_player = filter_city ? welt->get_public_player() : welt->get_player(player_nr);
+		set_owner(m_player);
 		win_set_magic(this, magic_halt_list + player_nr);
 		filter_on.pressed = get_filter(any_filter);
 		sort_order.pressed = sortreverse;
