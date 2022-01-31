@@ -158,20 +158,15 @@ void curiositylist_frame_t::fill_list()
 void curiositylist_frame_t::set_cityfilter(stadt_t *city)
 {
 	filter_city = city;
+	name_filter_input.set_visible(filter_city==NULL);
+	bt_cansel_cityfilter.set_visible(filter_city!=NULL);
+	lb_target_city.set_visible(filter_city!=NULL);
 	if (city) {
 		filter_within_network.pressed = false;
 		curiositylist_stats_t::filter_own_network = false;
 		name_filter[0] = '\0';
-		name_filter_input.set_visible(false);
 		lb_target_city.buf().printf("%s>%s", translator::translate("City"), city->get_name());
 		lb_target_city.update();
-		lb_target_city.set_visible(true);
-		bt_cansel_cityfilter.set_visible(true);
-	}
-	else {
-		name_filter_input.set_visible(true);
-		lb_target_city.set_visible(false);
-		bt_cansel_cityfilter.set_visible(false);
 	}
 	resize(scr_size(0,0));
 	fill_list();
@@ -221,6 +216,7 @@ void curiositylist_frame_t::draw(scr_coord pos, scr_size size)
 void curiositylist_frame_t::rdwr(loadsave_t* file)
 {
 	scr_size size = get_windowsize();
+	uint32 townindex = 0;
 
 	size.rdwr(file);
 	scrolly.rdwr(file);
@@ -229,11 +225,22 @@ void curiositylist_frame_t::rdwr(loadsave_t* file)
 	file->rdwr_bool(curiositylist_stats_t::sortreverse);
 	file->rdwr_byte(curiositylist_stats_t::region_filter);
 	file->rdwr_bool(curiositylist_stats_t::filter_own_network);
+	if (file->is_saving()) {
+		townindex = welt->get_cities().index_of(filter_city);
+		file->rdwr_long(townindex);
+	}
 	if (file->is_loading()) {
+		if (file->is_version_ex_atleast(14, 50)) {
+			file->rdwr_long(townindex);
+			filter_city = welt->get_cities()[townindex];
+		}
 		sortedby.set_selection(curiositylist_stats_t::sort_mode);
 		region_selector.set_selection(curiositylist_stats_t::region_filter);
 		sort_order.pressed = curiositylist_stats_t::sortreverse;
 		filter_within_network.pressed = curiositylist_stats_t::filter_own_network;
+		if (filter_city!=NULL) {
+			set_cityfilter(filter_city);
+		}
 		fill_list();
 		set_windowsize(size);
 	}

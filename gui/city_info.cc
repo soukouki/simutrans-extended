@@ -19,6 +19,7 @@
 #include "city_info.h"
 #include "minimap.h"
 #include "curiositylist_frame_t.h"
+#include "halt_list_frame.h"
 #include "components/gui_button_to_chart.h"
 #include "components/gui_image.h"
 #include "components/gui_colorbox.h"
@@ -126,14 +127,23 @@ void city_info_t::init()
 	}
 	end_table();
 
-	bt_city_attraction.init(button_t::roundbox, "City attractions", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+	bt_city_attractions.init(button_t::roundbox, "City attractions", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
 	if (skinverwaltung_t::open_window) {
-		bt_city_attraction.set_image(skinverwaltung_t::open_window->get_image_id(0));
-		bt_city_attraction.set_image_position_right(true);
+		bt_city_attractions.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		bt_city_attractions.set_image_position_right(true);
 	}
-	bt_city_attraction.set_tooltip("Open the list of attraction buildings in this city");
-	bt_city_attraction.add_listener(this);
-	bt_city_attraction.pressed = false;
+	bt_city_attractions.set_tooltip("Open the list of attraction buildings in this city");
+	bt_city_attractions.add_listener(this);
+	bt_city_attractions.pressed = false;
+
+	bt_city_stops.init(button_t::roundbox, "City stops", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+	if (skinverwaltung_t::open_window) {
+		bt_city_stops.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		bt_city_stops.set_image_position_right(true);
+	}
+	bt_city_stops.set_tooltip("Open the list of stops in this city");
+	bt_city_stops.add_listener(this);
+	bt_city_stops.pressed = false;
 
 	// tab (month/year)
 	container_chart.set_table_layout(1, 0);
@@ -376,6 +386,8 @@ void city_info_t::update_labels()
 		lb_powerdemand.buf().append(" GW");
 	}
 	lb_powerdemand.update();
+
+	allow_growth.enable(welt->get_active_player() == welt->get_public_player());
 }
 
 
@@ -384,7 +396,7 @@ void city_info_t::update_stats()
 	scr_coord_val value_cell_width = max(proportional_string_width(translator::translate("This Year")), proportional_string_width(translator::translate("Last Year")));
 	cont_city_stats.remove_all();
 
-	cont_city_stats.add_table(4,0);
+	cont_city_stats.add_table(4,3);
 	{
 		// area
 		cont_city_stats.new_component<gui_label_t>("City size");
@@ -403,7 +415,13 @@ void city_info_t::update_stats()
 		cont_city_stats.new_component<gui_fill_t>();
 	}
 	cont_city_stats.end_table();
-	cont_city_stats.add_component(&bt_city_attraction);
+
+	cont_city_stats.add_table(2,1);
+	{
+		cont_city_stats.add_component(&bt_city_stops);
+		cont_city_stats.add_component(&bt_city_attractions);
+	}
+	cont_city_stats.end_table();
 
 	cont_city_stats.new_component<gui_heading_t>("Statistics", SYSCOL_TEXT, env_t::default_window_title_color, 1)->set_width(D_DEFAULT_WIDTH - D_MARGINS_X - D_H_SPACE);
 	cont_city_stats.add_table(6,0)->set_spacing(scr_size(D_H_SPACE*2,1));
@@ -599,10 +617,21 @@ bool city_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		resize(scr_coord(0,0));
 		return true;
 	}
-	if(  comp==&bt_city_attraction  ) {
+	if(  comp==&bt_city_attractions  ) {
 		curiositylist_frame_t *win = dynamic_cast<curiositylist_frame_t*>( win_get_magic(magic_curiositylist) );
 		if (!win) {
 			create_win(-1, -1, new curiositylist_frame_t(city), w_info, magic_curiositylist);
+		}
+		else {
+			win->set_cityfilter(city);
+			top_win(win);
+		}
+		return true;
+	}
+	if(  comp==&bt_city_stops  ) {
+		halt_list_frame_t *win = dynamic_cast<halt_list_frame_t*>( win_get_magic( magic_halt_list + 1/* public player*/ ) );
+		if (!win) {
+			create_win(-1, -1, new halt_list_frame_t(city), w_info, magic_halt_list+1/* public player*/);
 		}
 		else {
 			win->set_cityfilter(city);
