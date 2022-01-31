@@ -32,9 +32,6 @@ class gui_city_stats_t : public gui_aligned_container_t
 
 	int num[4];
 
-	// Get the total value of the previous quarter
-	sint64 get_cityhistory_last_quarter(int type);
-
 public:
 	gui_city_stats_t(stadt_t *c);
 

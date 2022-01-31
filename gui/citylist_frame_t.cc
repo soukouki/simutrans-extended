@@ -31,7 +31,7 @@ const char *citylist_frame_t::sort_text[citylist_stats_t::SORT_MODES] = {
 	"Passagierrate",
 	"Public transport users",
 	"ratio_pax",
-	"Mail sent this year:",
+	"sended",
 	"ratio_mail",
 	"Goods needed",
 	"ratio_goods",

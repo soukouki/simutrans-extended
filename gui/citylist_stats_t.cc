@@ -28,16 +28,6 @@ uint32 citylist_stats_t::world_max_value = 200;
 #define L_MAX_GRAPH_WIDTH 200
 #define L_VALUE_CELL_WIDTH proportional_string_width("88,888,888")
 
-sint64 gui_city_stats_t::get_cityhistory_last_quarter(int type)
-{
-	sint64 sum = 0;
-	const uint8 q_last_month_offset = world()->get_current_month()%3+1;
-	for (uint8 i = 0; i < 3; i++) {
-		sum += city->get_finance_history_month(i+q_last_month_offset, type);
-	}
-	return sum;
-}
-
 gui_city_stats_t::gui_city_stats_t(stadt_t *c)
 {
 	city = c;
@@ -132,11 +122,11 @@ void gui_city_stats_t::update_table()
 		case citylist_stats_t::pax_traffic:
 			add_table(3,1);
 			{
-				const sint64 sum = get_cityhistory_last_quarter(HIST_PAS_GENERATED);
+				const sint64 sum = city->get_cityhistory_last_quarter(HIST_PAS_GENERATED);
 
-				num[0] = get_cityhistory_last_quarter(HIST_PAS_TRANSPORTED);
-				num[1] = get_cityhistory_last_quarter(HIST_CITYCARS);
-				num[2] = get_cityhistory_last_quarter(HIST_PAS_WALKED);
+				num[0] = city->get_cityhistory_last_quarter(HIST_PAS_TRANSPORTED);
+				num[1] = city->get_cityhistory_last_quarter(HIST_CITYCARS);
+				num[2] = city->get_cityhistory_last_quarter(HIST_PAS_WALKED);
 				num[3] = max(0, sum - num[0] - num[1] - num[2]); // Gave up the move
 
 				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
@@ -166,8 +156,8 @@ void gui_city_stats_t::update_table()
 		case citylist_stats_t::mail_traffic:
 			add_table(3,1);
 			{
-				const sint64 sum = get_cityhistory_last_quarter(HIST_MAIL_GENERATED);
-				num[0] = get_cityhistory_last_quarter(HIST_MAIL_TRANSPORTED);
+				const sint64 sum = city->get_cityhistory_last_quarter(HIST_MAIL_GENERATED);
+				num[0] = city->get_cityhistory_last_quarter(HIST_MAIL_TRANSPORTED);
 				num[1] = max(0, sum - num[0]); // mail no route
 
 				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
@@ -193,8 +183,8 @@ void gui_city_stats_t::update_table()
 		case citylist_stats_t::goods_traffic:
 			add_table(3, 1);
 			{
-				const sint64 sum = get_cityhistory_last_quarter(HIST_GOODS_NEEDED);
-				num[0] = get_cityhistory_last_quarter(HIST_GOODS_RECEIVED);
+				const sint64 sum = city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED);
+				num[0] = city->get_cityhistory_last_quarter(HIST_GOODS_RECEIVED);
 				num[1] = max(0, sum - num[0]);
 				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
 
@@ -358,7 +348,6 @@ bool citylist_stats_t::infowin_event(const event_t *ev)
 	bool swallowed = gui_aligned_container_t::infowin_event(ev);
 
 	if (!swallowed  &&  IS_LEFTRELEASE(ev)) {
-		//city->open_info_window();
 		city->show_info();
 		swallowed = true;
 	}
@@ -395,27 +384,27 @@ bool citylist_stats_t::compare(const gui_component_t *aa, const gui_component_t 
 			case SORT_BY_VISITOR_DEMANDS:
 				return a->city->get_city_visitor_demand() < b->city->get_city_visitor_demand();
 			case SORT_BY_TRANSPORTED:
-				return a->city->get_finance_history_year(0, HIST_PAS_TRANSPORTED) < b->city->get_finance_history_year(0, HIST_PAS_TRANSPORTED);
+				return a->city->get_cityhistory_last_quarter(HIST_PAS_TRANSPORTED) < b->city->get_cityhistory_last_quarter(HIST_PAS_TRANSPORTED);
 			case SORT_BY_RATIO_PAX:
 			{
-				const uint64 a_temp = a->city->get_finance_history_year(0, HIST_PAS_GENERATED) ? 100*a->city->get_finance_history_year(0, HIST_PAS_TRANSPORTED)/a->city->get_finance_history_year(0, HIST_PAS_GENERATED) : 0;
-				const uint64 b_temp = b->city->get_finance_history_year(0, HIST_PAS_GENERATED) ? 100*b->city->get_finance_history_year(0, HIST_PAS_TRANSPORTED)/b->city->get_finance_history_year(0, HIST_PAS_GENERATED) : 0;
+				const uint64 a_temp = a->city->get_cityhistory_last_quarter(HIST_PAS_GENERATED) ? 100*a->city->get_cityhistory_last_quarter(HIST_PAS_TRANSPORTED)/a->city->get_cityhistory_last_quarter(HIST_PAS_GENERATED) : 0;
+				const uint64 b_temp = b->city->get_cityhistory_last_quarter(HIST_PAS_GENERATED) ? 100*b->city->get_cityhistory_last_quarter(HIST_PAS_TRANSPORTED)/b->city->get_cityhistory_last_quarter(HIST_PAS_GENERATED) : 0;
 				return a_temp < b_temp;
 			}
 			case SORT_BY_SENT:
-				return a->city->get_finance_history_year(0, HIST_MAIL_TRANSPORTED) < b->city->get_finance_history_year(0, HIST_MAIL_TRANSPORTED);
+				return a->city->get_cityhistory_last_quarter(HIST_MAIL_TRANSPORTED) < b->city->get_cityhistory_last_quarter(HIST_MAIL_TRANSPORTED);
 			case SORT_BY_RATIO_MAIL:
 			{
-				const uint64 a_temp = a->city->get_finance_history_year(0, HIST_MAIL_GENERATED) ? 100*a->city->get_finance_history_year(0, HIST_MAIL_TRANSPORTED)/a->city->get_finance_history_year(0, HIST_MAIL_GENERATED) : 0;
-				const uint64 b_temp = b->city->get_finance_history_year(0, HIST_MAIL_GENERATED) ? 100*b->city->get_finance_history_year(0, HIST_MAIL_TRANSPORTED)/b->city->get_finance_history_year(0, HIST_MAIL_GENERATED) : 0;
+				const uint64 a_temp = a->city->get_cityhistory_last_quarter(HIST_MAIL_GENERATED) ? 100*a->city->get_cityhistory_last_quarter(HIST_MAIL_TRANSPORTED)/a->city->get_cityhistory_last_quarter(HIST_MAIL_GENERATED) : 0;
+				const uint64 b_temp = b->city->get_cityhistory_last_quarter(HIST_MAIL_GENERATED) ? 100*b->city->get_cityhistory_last_quarter(HIST_MAIL_TRANSPORTED)/b->city->get_cityhistory_last_quarter(HIST_MAIL_GENERATED) : 0;
 				return a_temp < b_temp;
 			}
 			case SORT_BY_GOODS_DEMAND:
-				return a->city->get_finance_history_year(0, HIST_GOODS_NEEDED) < b->city->get_finance_history_year(0, HIST_GOODS_NEEDED);
+				return a->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED) < b->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED);
 			case SORT_BY_RATIO_GOODS:
 			{
-				const uint64 a_temp = a->city->get_finance_history_year(0, HIST_GOODS_NEEDED) ? 100 * a->city->get_finance_history_year(0, HIST_GOODS_RECEIVED) / a->city->get_finance_history_year(0, HIST_GOODS_NEEDED) : 0;
-				const uint64 b_temp = b->city->get_finance_history_year(0, HIST_GOODS_NEEDED) ? 100 * b->city->get_finance_history_year(0, HIST_GOODS_RECEIVED) / b->city->get_finance_history_year(0, HIST_GOODS_NEEDED) : 0;
+				const uint64 a_temp = a->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED) ? 100 * a->city->get_cityhistory_last_quarter(HIST_GOODS_RECEIVED) / a->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED) : 0;
+				const uint64 b_temp = b->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED) ? 100 * b->city->get_cityhistory_last_quarter(HIST_GOODS_RECEIVED) / b->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED) : 0;
 				return a_temp < b_temp;
 			}
 			case SORT_BY_LAND_AREA:
