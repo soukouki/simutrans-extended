@@ -4211,6 +4211,22 @@ The number of mail that handling at the stop last month
 前月の郵便物取扱量
 The number of goods that handling at the stop last month
 前月の貨物取扱量（トン）
+cl_general
+基本データ
+pax_traffic
+旅客流動量
+mail_traffic
+郵便流動量
+goods_traffic
+貨物流動量
+Passengers using public transportation in the last quarter
+前四半期の公共交通機関利用者数
+Percentage of users of public transportation
+公共交通機関利用者の割合
+Number of mail sent in the last quarter
+前四半期の郵便発送数
+Mail delivery success in the last quarter
+前四半期の郵便配達達成率
 pax_destination_mapping
 旅客目的地マッピング
 Open the color legend
@@ -4219,8 +4235,18 @@ pax_transportation_ratio
 旅客移動手段比率
 helptxt_pax_transportation_ratio
 旅客が目的地まで移動した交通手段の比率
+City stops
+市内の駅
+City attractions
+市内のランドマーク
+City factories
+市内の産業
+Open the list of stops in this city
+市内にある全てのプレイヤーの駅一覧を別ウィンドウで表示します
 Open the list of attraction buildings in this city
-この都市にあるアトラクションビルディングの一覧を別ウィンドウで表示します
+市内にある観光施設の一覧を別ウィンドウで表示します
+Open the list of factories in this city
+市内にある産業の一覧を別ウィンドウで表示します
 too_slow_and_gave_up
 移動に時間がかかりすぎるため移動を断念
 too_slow_and_use_privatecar
