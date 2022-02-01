@@ -401,6 +401,8 @@ bool citylist_stats_t::compare(const gui_component_t *aa, const gui_component_t 
 			}
 			case SORT_BY_GOODS_DEMAND:
 				return a->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED) < b->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED);
+			case SORT_BY_GOODS_RECEIVED:
+				return a->city->get_cityhistory_last_quarter(HIST_GOODS_RECEIVED) < b->city->get_cityhistory_last_quarter(HIST_GOODS_RECEIVED);
 			case SORT_BY_RATIO_GOODS:
 			{
 				const uint64 a_temp = a->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED) ? 100 * a->city->get_cityhistory_last_quarter(HIST_GOODS_RECEIVED) / a->city->get_cityhistory_last_quarter(HIST_GOODS_NEEDED) : 0;
