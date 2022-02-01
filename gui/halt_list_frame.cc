@@ -771,7 +771,7 @@ void halt_list_frame_t::rdwr(loadsave_t* file)
 	scr_size size = get_windowsize();
 	uint8 player_nr = m_player->get_player_nr();
 	uint8 sort_mode = default_sortmode;
-	uint32 townindex=0;
+	uint32 townindex=UINT32_MAX;
 
 	file->rdwr_byte(player_nr);
 	size.rdwr(file);
@@ -799,7 +799,9 @@ void halt_list_frame_t::rdwr(loadsave_t* file)
 			}
 		}
 
-		townindex = welt->get_cities().index_of(filter_city);
+		if (filter_city != NULL) {
+			townindex = welt->get_cities().index_of(filter_city);
+		}
 		file->rdwr_long(townindex);
 	}
 	else {
@@ -829,7 +831,9 @@ void halt_list_frame_t::rdwr(loadsave_t* file)
 		}
 		if (file->is_version_ex_atleast(14,50)) {
 			file->rdwr_long(townindex);
-			filter_city = welt->get_cities()[townindex];
+			if (townindex != UINT32_MAX) {
+				filter_city = welt->get_cities()[townindex];
+			}
 		}
 
 		default_sortmode = (sort_mode_t)sort_mode;

@@ -216,7 +216,7 @@ void curiositylist_frame_t::draw(scr_coord pos, scr_size size)
 void curiositylist_frame_t::rdwr(loadsave_t* file)
 {
 	scr_size size = get_windowsize();
-	uint32 townindex = 0;
+	uint32 townindex = UINT32_MAX;
 
 	size.rdwr(file);
 	scrolly.rdwr(file);
@@ -226,13 +226,17 @@ void curiositylist_frame_t::rdwr(loadsave_t* file)
 	file->rdwr_byte(curiositylist_stats_t::region_filter);
 	file->rdwr_bool(curiositylist_stats_t::filter_own_network);
 	if (file->is_saving()) {
-		townindex = welt->get_cities().index_of(filter_city);
+		if (filter_city != NULL) {
+			townindex = welt->get_cities().index_of(filter_city);
+		}
 		file->rdwr_long(townindex);
 	}
 	if (file->is_loading()) {
 		if (file->is_version_ex_atleast(14, 50)) {
 			file->rdwr_long(townindex);
-			filter_city = welt->get_cities()[townindex];
+			if (townindex != UINT32_MAX) {
+				filter_city = welt->get_cities()[townindex];
+			}
 		}
 		sortedby.set_selection(curiositylist_stats_t::sort_mode);
 		region_selector.set_selection(curiositylist_stats_t::region_filter);
