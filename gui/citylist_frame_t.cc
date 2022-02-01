@@ -426,12 +426,17 @@ void citylist_frame_t::rdwr(loadsave_t* file)
 	file->rdwr_byte(citylist_stats_t::region_filter);
 	file->rdwr_bool(citylist_stats_t::sortreverse);
 	file->rdwr_bool(citylist_stats_t::filter_own_network);
+	if (file->is_version_ex_atleast(14,50)) {
+		file->rdwr_byte(citylist_stats_t::display_mode);
+	}
 	if (file->is_loading()) {
 		sorteddir.pressed = citylist_stats_t::sortreverse;
 		filter_within_network.pressed = citylist_stats_t::filter_own_network;
 		sortedby.set_selection(citylist_stats_t::sort_mode);
 		region_selector.set_selection(citylist_stats_t::region_filter);
 		name_filter_input.set_text( name_filter, lengthof(name_filter) );
+		cb_display_mode.set_selection(citylist_stats_t::display_mode);
+		citylist_stats_t::recalc_wold_max();
 		fill_list();
 		set_windowsize(size);
 	}
