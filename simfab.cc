@@ -4123,9 +4123,9 @@ bool fabrik_t::is_connected_to_network(player_t *player) const
 	return false;
 }
 
-bool fabrik_t::has_goods_catg_demand(uint8 catg_index) const
+bool fabrik_t::has_goods_catg_demand(uint8 catg_index, uint8 check_option) const
 {
-	if (!output.empty()) {
+	if (!output.empty() && check_option!=1) {
 		for (uint32 index = 0; index < output.get_count(); index++) {
 			if (output[index].get_typ()->get_catg_index() == catg_index) {
 				return true;
@@ -4133,7 +4133,7 @@ bool fabrik_t::has_goods_catg_demand(uint8 catg_index) const
 		}
 	}
 
-	if (!input.empty()) {
+	if (!input.empty() && check_option != 2) {
 		for (uint32 index = 0; index < input.get_count(); index++) {
 			if (!desc->get_supplier(index))
 			{

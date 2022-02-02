@@ -747,7 +747,8 @@ public:
     bool is_connected_to_network(player_t *player) const;
 
 	// Returns whether this factory has potential demand for passed goods category
-	bool has_goods_catg_demand(uint8 catg_index = goods_manager_t::INDEX_NONE) const;
+	// 0=check input and output demand, 1=cehck only input, 2=check only output
+	bool has_goods_catg_demand(uint8 catg_index = goods_manager_t::INDEX_NONE, uint8 check_option = 0) const;
 
 
 	// Returns the operating rate to basic production. (x 10)
