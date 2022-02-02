@@ -345,6 +345,7 @@ bool pier_builder_t::get_desc_from_tos(const pier_desc_t *&tos, uint8 &rotation,
     if(params_top.requre_low_waydeck){
         params_top.below_way_ribi=tos->get_below_way_ribi(rotation);
     }
+    params_top.deck_obj_present=tos->get_deck_obj_mask();
     if(upper_layer){
         get_params_from_ground(params_top,gr,owner);
     }else if(topz - pos.z == 1){
@@ -455,6 +456,7 @@ bool pier_builder_t::append_route_stack(vector_tpl<pier_route_elem> &route, play
     top_params.on_deck=true;
     top_params.min_axle_load=base_desc->get_max_axle_load();
     top_params.support_avail=-1;
+    top_params.deck_obj_present=base_desc->get_deck_obj_mask();
 
     get_desc_context(elem.desc,elem.rotation,top_params,false,&(match_tree[0]),0,0);
     for(uint8 i = 1; i < match_tree.get_count(); i++){
