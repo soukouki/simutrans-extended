@@ -138,6 +138,9 @@ public:
 
 	sint32 menge; // in internal units shifted by precision_bits (see step)
 	sint32 max;
+	// returns goods chart value (convert internal value to display value)
+	sint32 get_storage() const { return (sint32)convert_goods(statistics[0][FAB_GOODS_STORAGE]); }
+	sint32 get_capacity(uint32 factor) const { return (sint32)convert_goods(max*factor); }
 	/// Cargo currently in transit from/to this slot. Equivalent to statistics[0][FAB_GOODS_TRANSIT].
 	sint32 get_in_transit() const { return (sint32)statistics[0][FAB_GOODS_TRANSIT]; }
 	/// Current limit on cargo in transit, depending on suppliers mean distance.
@@ -677,7 +680,7 @@ public:
 	uint32 get_total_out() const { return total_output; }
 
 	// return total storage occupancy for UI. should ignore the overflow of certain goods.
-	uint16 get_total_input_occupancy() const;
+	uint32 get_total_input_capacity() const;
 	uint32 get_total_output_capacity() const;
 
 	/**

@@ -6,16 +6,12 @@
 #include "factorylist_frame_t.h"
 #include "gui_theme.h"
 #include "../dataobj/translator.h"
+#include "../player/simplay.h"
+#include "../simworld.h"
+#include "../dataobj/environment.h"
 
-bool factorylist_frame_t::sortreverse = false;
 
-factorylist::sort_mode_t factorylist_frame_t::sortby = factorylist::by_name;
-static uint8 default_sortmode = 0;
-
-// filter by within current player's network
-bool factorylist_frame_t::filter_own_network = false;
-uint8 factorylist_frame_t::filter_goods_catg = goods_manager_t::INDEX_NONE;
-uint8 factorylist_frame_t::display_mode = 0;
+char factorylist_frame_t::name_filter[256];
 
 const char *factorylist_frame_t::sort_text[factorylist::SORT_MODES] = {
 	"Fabrikname",
@@ -30,54 +26,69 @@ const char *factorylist_frame_t::sort_text[factorylist::SORT_MODES] = {
 	"by_region"
 };
 
-const char *factorylist_frame_t::display_mode_text[FACTORYLIST_MODES] = {
+const char *factorylist_frame_t::display_mode_text[factorylist_stats_t::FACTORYLIST_MODES] =
+{
 	"fl_btn_operation",
 	"fl_btn_storage",
-	"fl_btn_demand",
+	"fl_stats_last_month",
+	"Goods needed",
+	"Output",
 	"fl_btn_region"
 };
 
 
+class playername_const_scroll_item_t : public gui_scrolled_list_t::const_text_scrollitem_t {
+public:
+	const uint8 player_nr;
+	playername_const_scroll_item_t( player_t *pl ) : gui_scrolled_list_t::const_text_scrollitem_t( pl->get_name(), color_idx_to_rgb(pl->get_player_color1()+env_t::gui_player_color_dark) ), player_nr(pl->get_player_nr()) { }
+};
+
 factorylist_frame_t::factorylist_frame_t() :
 	gui_frame_t( translator::translate("fl_title") ),
-	stats(sortby,sortreverse, filter_own_network, filter_goods_catg),
-	scrolly(&stats)
+	scrolly(gui_scrolled_list_t::windowskin, factorylist_stats_t::compare)
 {
+	old_factories_count = 0;
+
 	set_table_layout(1,0);
-	add_table(2, 2);
+	add_table(2,2);
 	{
-		new_component<gui_label_t>("hl_txt_sort"); // (1,1)
-
-		filter_within_network.init(button_t::square_state, "Within own network");
-		filter_within_network.set_tooltip("Show only connected to own transport network");
-		filter_within_network.add_listener(this);
-		filter_within_network.pressed = filter_own_network;
-		add_component(&filter_within_network); // (1,2)
-
+		new_component<gui_label_t>("hl_txt_sort");
 		add_table(3,1);
 		{
-			for (int i = 0; i < factorylist::SORT_MODES; i++) {
-				sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
-			}
-			sortedby.set_selection(default_sortmode);
-			sortedby.set_width_fixed(true);
-			sortedby.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
-			sortedby.add_listener(this);
-			add_component(&sortedby); // (2,1,1)
+			new_component<gui_label_t>("Filter:");
+			name_filter_input.set_text(name_filter, lengthof(name_filter));
+			name_filter_input.set_width(D_BUTTON_WIDTH);
+			add_component(&name_filter_input);
 
-			// sort asc/desc switching button
-			sorteddir.init(button_t::sortarrow_state, "");
-			sorteddir.set_tooltip(translator::translate("hl_btn_sorteddir"));
-			sorteddir.add_listener(this);
-			sorteddir.pressed = sortreverse;
-			add_component(&sorteddir); // (2,1,2)
-
-			new_component<gui_margin_t>(LINESPACE); // (2,1,3)
+			filter_within_network.init(button_t::square_state, "Within own network");
+			filter_within_network.set_tooltip("Show only connected to own transport network");
+			filter_within_network.add_listener(this);
+			filter_within_network.pressed = factorylist_stats_t::filter_own_network;
+			add_component(&filter_within_network);
 		}
 		end_table();
 
-		add_table(2, 1);
+		// 2nd row
+		add_table(2,1);
 		{
+			for (size_t i = 0; i < lengthof(sort_text); i++) {
+				sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
+			}
+			sortedby.set_selection(factorylist_stats_t::sort_mode);
+			sortedby.add_listener(this);
+			add_component(&sortedby);
+
+			sorteddir.init(button_t::sortarrow_state, NULL);
+			sorteddir.set_tooltip(translator::translate("hl_btn_sort_order"));
+			sorteddir.add_listener(this);
+			sorteddir.pressed = factorylist_stats_t::reverse;
+			add_component(&sorteddir);
+		}
+		end_table();
+
+		add_table(3,1);
+		{
+			new_component<gui_margin_t>(LINESPACE);
 			viewable_freight_types.append(NULL);
 			freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All freight types"), SYSCOL_TEXT);
 			for (int i = 0; i < goods_manager_t::get_max_catg_index(); i++) {
@@ -97,22 +108,26 @@ factorylist_frame_t::factorylist_frame_t() :
 					freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>(translator::translate(ware->get_name()), SYSCOL_TEXT, ware->get_catg_symbol());
 				}
 			}
-			freight_type_c.set_selection((filter_goods_catg == goods_manager_t::INDEX_NONE) ? 0 : filter_goods_catg);
-			set_filter_goods_catg(filter_goods_catg);
+			freight_type_c.set_selection((factorylist_stats_t::filter_goods_catg == goods_manager_t::INDEX_NONE) ? 0 : factorylist_stats_t::filter_goods_catg);
 
 			freight_type_c.add_listener(this);
-			add_component(&freight_type_c); // (2,2,1)
+			add_component(&freight_type_c);
 
-			btn_display_mode.init(button_t::roundbox, translator::translate(display_mode_text[display_mode]), scr_coord(BUTTON4_X, 14), D_BUTTON_SIZE);
-			btn_display_mode.add_listener(this);
-			add_component(&btn_display_mode); // (2,2,2)
+			// dummy for region filter
+			for (uint8 i = 0; i < factorylist_stats_t::FACTORYLIST_MODES; i++) {
+				cb_display_mode.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(display_mode_text[i]), SYSCOL_TEXT);
+			}
+			cb_display_mode.set_selection(factorylist_stats_t::display_mode);
+			cb_display_mode.set_width_fixed(true);
+			cb_display_mode.set_size(scr_size(D_WIDE_BUTTON_WIDTH, D_EDIT_HEIGHT));
+			cb_display_mode.add_listener(this);
+			add_component(&cb_display_mode);
 		}
-		end_table(); // (2,2)
+		end_table();
 
 	}
 	end_table();
 
-	scrolly.set_scroll_amount_y(LINESPACE+1);
 	add_component(&scrolly);
 	fill_list();
 
@@ -122,47 +137,42 @@ factorylist_frame_t::factorylist_frame_t() :
 }
 
 
-
 /**
  * This method is called if an action is triggered
  */
-bool factorylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
+bool factorylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 {
 	if (comp == &sortedby) {
-		int tmp = sortedby.get_selection();
-		if (tmp >= 0 && tmp < sortedby.count_elements())
-		{
-			sortedby.set_selection(tmp);
-			set_sortierung((factorylist::sort_mode_t)tmp);
-		}
-		else {
-			sortedby.set_selection(0);
-			set_sortierung(factorylist::by_name);
-		}
-		default_sortmode = (uint8)tmp;
-		fill_list();
+		factorylist_stats_t::sort_mode = v.i;
+		scrolly.sort(0);
 	}
 	else if (comp == &sorteddir) {
-		set_reverse(!get_reverse());
-		fill_list();
-		sorteddir.pressed = sortreverse;
+		factorylist_stats_t::reverse = !factorylist_stats_t::reverse;
+		sorteddir.pressed = factorylist_stats_t::reverse;
+		scrolly.sort(0);
+	}
+	else if (comp == &cb_display_mode) {
+		int tmp = cb_display_mode.get_selection();
+		if (tmp < 0 || tmp >= cb_display_mode.count_elements())
+		{
+			tmp = 0;
+		}
+		cb_display_mode.set_selection(tmp);
+		factorylist_stats_t::display_mode = tmp;
+		scrolly.sort(0);
+		resize(scr_coord(0,0));
 	}
 	else if (comp == &filter_within_network) {
-		filter_own_network = !filter_own_network;
-		filter_within_network.pressed = filter_own_network;
+		factorylist_stats_t::filter_own_network = !factorylist_stats_t::filter_own_network;
+		filter_within_network.pressed = factorylist_stats_t::filter_own_network;
 		fill_list();
-	}
-	else if (comp == &btn_display_mode) {
-		display_mode = (++display_mode)%FACTORYLIST_MODES;
-		btn_display_mode.set_text(translator::translate(display_mode_text[display_mode]));
-		stats.display_mode = display_mode;
 	}
 	else if (comp == &freight_type_c) {
 		if (freight_type_c.get_selection() > 0) {
-			filter_goods_catg = viewable_freight_types[freight_type_c.get_selection()]->get_catg_index();
+			factorylist_stats_t::filter_goods_catg = viewable_freight_types[freight_type_c.get_selection()]->get_catg_index();
 		}
 		else if (freight_type_c.get_selection() == 0) {
-			filter_goods_catg = goods_manager_t::INDEX_NONE;
+			factorylist_stats_t::filter_goods_catg = goods_manager_t::INDEX_NONE;
 		}
 		fill_list();
 	}
@@ -172,13 +182,36 @@ bool factorylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t /
 
 void factorylist_frame_t::fill_list()
 {
-	stats.sort(sortby, get_reverse(), get_filter_own_network(), filter_goods_catg);
-	stats.recalc_size();
+	old_factories_count = world()->get_fab_list().get_count(); // to avoid too many redraws ...
+	scrolly.clear_elements();
+	FOR(const vector_tpl<fabrik_t *>,fab,world()->get_fab_list()) {
+		//if (factorylist_stats_t::region_filter && (factorylist_stats_t::region_filter-1) != world()->get_region(fab->get_pos().get_2d())) {
+		//	continue;
+		//}
+		if (last_name_filter[0] != 0 && !utf8caseutf8(fab->get_name(), last_name_filter)) {
+			continue;
+		}
+		// filter by goods category
+		if (factorylist_stats_t::filter_goods_catg != goods_manager_t::INDEX_NONE && !fab->has_goods_catg_demand(factorylist_stats_t::filter_goods_catg)) {
+			continue;
+		}
+
+		if (!factorylist_stats_t::filter_own_network ||
+			(factorylist_stats_t::filter_own_network && fab->is_connected_to_network(world()->get_active_player()))) {
+			scrolly.new_component<factorylist_stats_t>(fab);
+		}
+	}
+	scrolly.sort(0);
+	scrolly.set_size(scrolly.get_size());
 }
+
 
 void factorylist_frame_t::draw(scr_coord pos, scr_size size)
 {
-	fill_list();
+	if(  world()->get_fab_list().get_count() != old_factories_count  ||  strcmp(last_name_filter, name_filter)  ) {
+		strcpy(last_name_filter, name_filter);
+		fill_list();
+	}
 
 	gui_frame_t::draw(pos,size);
 }
@@ -187,27 +220,34 @@ void factorylist_frame_t::draw(scr_coord pos, scr_size size)
 void factorylist_frame_t::rdwr(loadsave_t* file)
 {
 	scr_size size = get_windowsize();
-	uint8 sm = (uint8)sortby;
 
 	size.rdwr(file);
 	scrolly.rdwr(file);
-	//file->rdwr_str(name_filter, lengthof(name_filter));
-	file->rdwr_byte(sm);
-	file->rdwr_bool(sortreverse);
-	file->rdwr_bool(filter_own_network);
-	file->rdwr_byte(filter_goods_catg);
-	file->rdwr_byte(display_mode);
-	file->rdwr_byte(default_sortmode);
+	file->rdwr_byte(factorylist_stats_t::sort_mode);
+	file->rdwr_bool(factorylist_stats_t::reverse);
+	file->rdwr_bool(factorylist_stats_t::filter_own_network);
+	if (file->is_loading() && file->is_version_ex_less(14,50)) {
+		uint8 dummy=0;
+		file->rdwr_byte(dummy);
+	}
+	file->rdwr_byte(factorylist_stats_t::display_mode);
 
+	if (file->is_version_ex_atleast(14,50)) {
+		freight_type_c.rdwr(file);
+		file->rdwr_str(name_filter, lengthof(name_filter));
+	}
 	if (file->is_loading()) {
-		sortby = (factorylist::sort_mode_t)sm;
-		sortedby.set_selection(default_sortmode);
-		freight_type_c.set_selection((filter_goods_catg == goods_manager_t::INDEX_NONE) ? 0 : filter_goods_catg);
-		set_filter_goods_catg(filter_goods_catg);
-		sorteddir.pressed = sortreverse;
-		filter_within_network.pressed = filter_own_network;
-		btn_display_mode.set_text(translator::translate(display_mode_text[display_mode]));
-		stats.display_mode = display_mode;
+		sorteddir.pressed = factorylist_stats_t::reverse;
+		sortedby.set_selection(factorylist_stats_t::sort_mode);
+		filter_within_network.pressed = factorylist_stats_t::filter_own_network;
+		name_filter_input.set_text(name_filter, lengthof(name_filter));
+		if (freight_type_c.get_selection() > 0) {
+			factorylist_stats_t::filter_goods_catg = viewable_freight_types[freight_type_c.get_selection()]->get_catg_index();
+		}
+		else if (freight_type_c.get_selection() == 0) {
+			factorylist_stats_t::filter_goods_catg = goods_manager_t::INDEX_NONE;
+		}
+		cb_display_mode.set_selection(factorylist_stats_t::display_mode);
 		fill_list();
 		set_windowsize(size);
 	}
