@@ -54,12 +54,62 @@ factorylist_frame_t::factorylist_frame_t(stadt_t* city) :
 	add_table(2,3);
 	{
 		new_component<gui_label_t>("hl_txt_sort");
-		add_table(5,1);
+		add_table(3,1);
 		{
 			new_component<gui_label_t>("Filter:");
 			name_filter_input.set_text(name_filter, lengthof(name_filter));
 			name_filter_input.set_width(D_BUTTON_WIDTH);
 			add_component(&name_filter_input);
+
+
+			filter_within_network.init(button_t::square_state, "Within own network");
+			filter_within_network.set_tooltip("Show only connected to own transport network");
+			filter_within_network.add_listener(this);
+			filter_within_network.pressed = factorylist_stats_t::filter_own_network;
+			add_component(&filter_within_network);
+		}
+		end_table();
+
+		// 2nd row
+		for (size_t i = 0; i < lengthof(sort_text); i++) {
+			sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
+		}
+		sortedby.set_selection(factorylist_stats_t::sort_mode);
+		sortedby.add_listener(this);
+		add_component(&sortedby);
+
+		add_table(6,1);
+		{
+			sorteddir.init(button_t::sortarrow_state, NULL);
+			sorteddir.set_tooltip(translator::translate("hl_btn_sort_order"));
+			sorteddir.add_listener(this);
+			sorteddir.pressed = factorylist_stats_t::reverse;
+			add_component(&sorteddir);
+
+			new_component<gui_margin_t>(LINESPACE);
+			viewable_freight_types.append(NULL);
+			freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All freight types"), SYSCOL_TEXT);
+			for (int i = 0; i < goods_manager_t::get_max_catg_index(); i++) {
+				const goods_desc_t *freight_type = goods_manager_t::get_info_catg(i);
+				const int index = freight_type->get_catg_index();
+				if (index == goods_manager_t::INDEX_NONE || freight_type->get_catg() == 0) {
+					continue;
+				}
+				freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>(translator::translate(freight_type->get_catg_name()), SYSCOL_TEXT, freight_type->get_catg_symbol());
+				viewable_freight_types.append(freight_type);
+			}
+			for (int i = 0; i < goods_manager_t::get_count(); i++) {
+				const goods_desc_t *ware = goods_manager_t::get_info(i);
+				if (ware->get_catg() == 0 && ware->get_index() > 2) {
+					// Special freight: Each good is special
+					viewable_freight_types.append(ware);
+					freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>(translator::translate(ware->get_name()), SYSCOL_TEXT, ware->get_catg_symbol());
+				}
+			}
+			freight_type_c.set_selection((factorylist_stats_t::filter_goods_catg == goods_manager_t::INDEX_NONE) ? 0 : factorylist_stats_t::filter_goods_catg);
+
+			freight_type_c.add_listener(this);
+			add_component(&freight_type_c);
 
 			if (!welt->get_settings().regions.empty()) {
 				//region_selector
@@ -89,59 +139,6 @@ factorylist_frame_t::factorylist_frame_t(stadt_t* city) :
 			bt_cansel_cityfilter.set_visible(false);
 			bt_cansel_cityfilter.set_rigid(false);
 			add_component(&bt_cansel_cityfilter);
-		}
-		end_table();
-
-		// 2nd row
-		add_table(2,1);
-		{
-			for (size_t i = 0; i < lengthof(sort_text); i++) {
-				sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
-			}
-			sortedby.set_selection(factorylist_stats_t::sort_mode);
-			sortedby.add_listener(this);
-			add_component(&sortedby);
-
-			sorteddir.init(button_t::sortarrow_state, NULL);
-			sorteddir.set_tooltip(translator::translate("hl_btn_sort_order"));
-			sorteddir.add_listener(this);
-			sorteddir.pressed = factorylist_stats_t::reverse;
-			add_component(&sorteddir);
-		}
-		end_table();
-
-		add_table(3,1);
-		{
-			new_component<gui_margin_t>(LINESPACE);
-			viewable_freight_types.append(NULL);
-			freight_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All freight types"), SYSCOL_TEXT);
-			for (int i = 0; i < goods_manager_t::get_max_catg_index(); i++) {
-				const goods_desc_t *freight_type = goods_manager_t::get_info_catg(i);
-				const int index = freight_type->get_catg_index();
-				if (index == goods_manager_t::INDEX_NONE || freight_type->get_catg() == 0) {
-					continue;
-				}
-				freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>(translator::translate(freight_type->get_catg_name()), SYSCOL_TEXT, freight_type->get_catg_symbol());
-				viewable_freight_types.append(freight_type);
-			}
-			for (int i = 0; i < goods_manager_t::get_count(); i++) {
-				const goods_desc_t *ware = goods_manager_t::get_info(i);
-				if (ware->get_catg() == 0 && ware->get_index() > 2) {
-					// Special freight: Each good is special
-					viewable_freight_types.append(ware);
-					freight_type_c.new_component<gui_scrolled_list_t::img_label_scrollitem_t>(translator::translate(ware->get_name()), SYSCOL_TEXT, ware->get_catg_symbol());
-				}
-			}
-			freight_type_c.set_selection((factorylist_stats_t::filter_goods_catg == goods_manager_t::INDEX_NONE) ? 0 : factorylist_stats_t::filter_goods_catg);
-
-			freight_type_c.add_listener(this);
-			add_component(&freight_type_c);
-
-			filter_within_network.init(button_t::square_state, "Within own network");
-			filter_within_network.set_tooltip("Show only connected to own transport network");
-			filter_within_network.add_listener(this);
-			filter_within_network.pressed = factorylist_stats_t::filter_own_network;
-			add_component(&filter_within_network);
 		}
 		end_table();
 
