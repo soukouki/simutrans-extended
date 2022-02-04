@@ -342,7 +342,7 @@ void gui_factory_stats_t::update_table()
 			add_table(4,1);
 			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
 			lb->set_fixed_width(L_KOORD_LABEL_WIDTH);
-			lb->buf().append(fab->get_pos().get_fullstr());
+			lb->buf().append(fab->get_pos().get_2d().get_fullstr());
 			lb->set_align(gui_label_t::centered);
 			lb->update();
 
