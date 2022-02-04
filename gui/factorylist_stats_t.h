@@ -118,7 +118,6 @@ public:
 		FACTORYLIST_MODES
 	};
 
-	// TODO: add region filter
 	static uint8 sort_mode, region_filter, display_mode;
 	static bool reverse, filter_own_network;
 	static uint8 filter_goods_catg;

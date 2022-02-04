@@ -168,7 +168,7 @@ private:
 
 	gui_textinput_t name_input;    ///< Input field where the name of the city can be changed
 	button_t allow_growth;         ///< Checkbox to enable/disable city growth
-	button_t bt_show_contour, bt_show_hide_legend, bt_city_attractions, bt_city_stops;
+	button_t bt_show_contour, bt_show_hide_legend, bt_city_attractions, bt_city_stops, bt_city_factories;
 	gui_label_t lb_collapsed;
 	gui_label_buf_t lb_size, lb_buildings, lb_border, lb_powerdemand;
 

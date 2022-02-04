@@ -43,28 +43,52 @@ public:
 	playername_const_scroll_item_t( player_t *pl ) : gui_scrolled_list_t::const_text_scrollitem_t( pl->get_name(), color_idx_to_rgb(pl->get_player_color1()+env_t::gui_player_color_dark) ), player_nr(pl->get_player_nr()) { }
 };
 
-factorylist_frame_t::factorylist_frame_t() :
+factorylist_frame_t::factorylist_frame_t(stadt_t* city) :
 	gui_frame_t( translator::translate("fl_title") ),
-	scrolly(gui_scrolled_list_t::windowskin, factorylist_stats_t::compare)
+	scrolly(gui_scrolled_list_t::windowskin, factorylist_stats_t::compare),
+	filter_city(city)
 {
 	old_factories_count = 0;
 
 	set_table_layout(1,0);
-	add_table(2,2);
+	add_table(2,3);
 	{
 		new_component<gui_label_t>("hl_txt_sort");
-		add_table(3,1);
+		add_table(5,1);
 		{
 			new_component<gui_label_t>("Filter:");
 			name_filter_input.set_text(name_filter, lengthof(name_filter));
 			name_filter_input.set_width(D_BUTTON_WIDTH);
 			add_component(&name_filter_input);
 
-			filter_within_network.init(button_t::square_state, "Within own network");
-			filter_within_network.set_tooltip("Show only connected to own transport network");
-			filter_within_network.add_listener(this);
-			filter_within_network.pressed = factorylist_stats_t::filter_own_network;
-			add_component(&filter_within_network);
+			if (!welt->get_settings().regions.empty()) {
+				//region_selector
+				region_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All regions"), SYSCOL_TEXT);
+
+				for (uint8 r = 0; r < welt->get_settings().regions.get_count(); r++) {
+					region_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(welt->get_settings().regions[r].name.c_str()), SYSCOL_TEXT);
+				}
+				region_selector.set_selection(factorylist_stats_t::region_filter);
+				region_selector.set_width_fixed(true);
+				region_selector.set_rigid(false);
+				region_selector.set_size(scr_size(D_WIDE_BUTTON_WIDTH, D_EDIT_HEIGHT));
+				region_selector.add_listener(this);
+				add_component(&region_selector);
+			}
+			else {
+				new_component<gui_empty_t>();
+			}
+
+			lb_target_city.set_visible(false);
+			lb_target_city.set_rigid(false);
+			lb_target_city.set_color(SYSCOL_TEXT_HIGHLIGHT);
+			add_component(&lb_target_city);
+
+			bt_cansel_cityfilter.init(button_t::roundbox, "reset");
+			bt_cansel_cityfilter.add_listener(this);
+			bt_cansel_cityfilter.set_visible(false);
+			bt_cansel_cityfilter.set_rigid(false);
+			add_component(&bt_cansel_cityfilter);
 		}
 		end_table();
 
@@ -113,7 +137,18 @@ factorylist_frame_t::factorylist_frame_t() :
 			freight_type_c.add_listener(this);
 			add_component(&freight_type_c);
 
-			// dummy for region filter
+			filter_within_network.init(button_t::square_state, "Within own network");
+			filter_within_network.set_tooltip("Show only connected to own transport network");
+			filter_within_network.add_listener(this);
+			filter_within_network.pressed = factorylist_stats_t::filter_own_network;
+			add_component(&filter_within_network);
+		}
+		end_table();
+
+		// dummy
+		new_component<gui_margin_t>(LINESPACE);
+		add_table(2,1);
+		{
 			for (uint8 i = 0; i < factorylist_stats_t::FACTORYLIST_MODES; i++) {
 				cb_display_mode.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(display_mode_text[i]), SYSCOL_TEXT);
 			}
@@ -122,11 +157,15 @@ factorylist_frame_t::factorylist_frame_t() :
 			cb_display_mode.set_size(scr_size(D_WIDE_BUTTON_WIDTH, D_EDIT_HEIGHT));
 			cb_display_mode.add_listener(this);
 			add_component(&cb_display_mode);
+
+			// dummy
+			new_component<gui_margin_t>(LINESPACE);
 		}
 		end_table();
-
 	}
 	end_table();
+
+	set_cityfilter(city);
 
 	add_component(&scrolly);
 	fill_list();
@@ -145,6 +184,10 @@ bool factorylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v
 	if (comp == &sortedby) {
 		factorylist_stats_t::sort_mode = v.i;
 		scrolly.sort(0);
+	}
+	else if (comp == &region_selector) {
+		factorylist_stats_t::region_filter = max(0, v.i);
+		fill_list();
 	}
 	else if (comp == &sorteddir) {
 		factorylist_stats_t::reverse = !factorylist_stats_t::reverse;
@@ -176,6 +219,9 @@ bool factorylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v
 		}
 		fill_list();
 	}
+	else if (comp == &bt_cansel_cityfilter) {
+		set_cityfilter(NULL);
+	}
 	return true;
 }
 
@@ -185,9 +231,12 @@ void factorylist_frame_t::fill_list()
 	old_factories_count = world()->get_fab_list().get_count(); // to avoid too many redraws ...
 	scrolly.clear_elements();
 	FOR(const vector_tpl<fabrik_t *>,fab,world()->get_fab_list()) {
-		//if (factorylist_stats_t::region_filter && (factorylist_stats_t::region_filter-1) != world()->get_region(fab->get_pos().get_2d())) {
-		//	continue;
-		//}
+		if (factorylist_stats_t::region_filter && (factorylist_stats_t::region_filter-1) != world()->get_region(fab->get_pos().get_2d())) {
+			continue;
+		}
+		if (filter_city != NULL && filter_city != fab->get_city()) {
+			continue;
+		}
 		if (last_name_filter[0] != 0 && !utf8caseutf8(fab->get_name(), last_name_filter)) {
 			continue;
 		}
@@ -203,6 +252,24 @@ void factorylist_frame_t::fill_list()
 	}
 	scrolly.sort(0);
 	scrolly.set_size(scrolly.get_size());
+}
+
+void factorylist_frame_t::set_cityfilter(stadt_t *city)
+{
+	filter_city = city;
+	region_selector.set_visible(filter_city == NULL && !welt->get_settings().regions.empty());
+	bt_cansel_cityfilter.set_visible(filter_city != NULL);
+	lb_target_city.set_visible(filter_city != NULL);
+	if (city) {
+		filter_within_network.pressed = false;
+		factorylist_stats_t::filter_own_network = false;
+		factorylist_stats_t::region_filter = 0;
+		region_selector.set_selection(0);
+		lb_target_city.buf().printf("%s>%s", translator::translate("City"), city->get_name());
+		lb_target_city.update();
+	}
+	resize(scr_size(0, 0));
+	fill_list();
 }
 
 
@@ -233,6 +300,7 @@ void factorylist_frame_t::rdwr(loadsave_t* file)
 	file->rdwr_byte(factorylist_stats_t::display_mode);
 
 	if (file->is_version_ex_atleast(14,50)) {
+		file->rdwr_byte(factorylist_stats_t::region_filter);
 		freight_type_c.rdwr(file);
 		file->rdwr_str(name_filter, lengthof(name_filter));
 	}
@@ -248,6 +316,7 @@ void factorylist_frame_t::rdwr(loadsave_t* file)
 			factorylist_stats_t::filter_goods_catg = goods_manager_t::INDEX_NONE;
 		}
 		cb_display_mode.set_selection(factorylist_stats_t::display_mode);
+		region_selector.set_selection(factorylist_stats_t::region_filter);
 		fill_list();
 		set_windowsize(size);
 	}

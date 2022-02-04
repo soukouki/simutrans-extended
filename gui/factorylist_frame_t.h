@@ -8,6 +8,7 @@
 
 
 #include "simwin.h"
+#include "../simcity.h"
 #include "gui_frame.h"
 #include "components/gui_scrollpane.h"
 #include "components/gui_label.h"
@@ -25,10 +26,11 @@ private:
 	static const char *sort_text[factorylist::SORT_MODES];
 	static const char *display_mode_text[factorylist_stats_t::FACTORYLIST_MODES];
 
-	gui_combobox_t sortedby, freight_type_c, cb_display_mode;
+	gui_combobox_t sortedby, freight_type_c, cb_display_mode, region_selector;
 
 	button_t sorteddir;
-	button_t filter_within_network;
+	button_t filter_within_network, bt_cansel_cityfilter;
+	gui_label_buf_t lb_target_city;
 
 	gui_scrolled_list_t scrolly;
 
@@ -38,12 +40,13 @@ private:
 
 	void fill_list();
 
+	stadt_t *filter_city;
 	uint32 old_factories_count;
 
 	vector_tpl<const goods_desc_t *> viewable_freight_types;
 
 public:
-	factorylist_frame_t();
+	factorylist_frame_t(stadt_t *filter_city = NULL);
 
 	const char *get_help_filename() const OVERRIDE {return "factorylist_filter.txt"; }
 
@@ -56,6 +59,8 @@ public:
 	void rdwr(loadsave_t* file) OVERRIDE;
 
 	uint32 get_rdwr_id() OVERRIDE { return magic_factorylist; }
+
+	void set_cityfilter(stadt_t *city);
 };
 
 #endif

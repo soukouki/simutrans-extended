@@ -19,6 +19,7 @@
 #include "city_info.h"
 #include "minimap.h"
 #include "curiositylist_frame_t.h"
+#include "factorylist_frame_t.h"
 #include "halt_list_frame.h"
 #include "components/gui_button_to_chart.h"
 #include "components/gui_image.h"
@@ -113,7 +114,7 @@ void city_info_t::init()
 
 	set_table_layout(1,0);
 
-	add_table(2,0)->set_alignment(ALIGN_TOP);
+	add_table(3,0)->set_alignment(ALIGN_TOP);
 	{
 		// add city name input field
 		name_input.add_listener( this );
@@ -127,7 +128,7 @@ void city_info_t::init()
 	}
 	end_table();
 
-	bt_city_attractions.init(button_t::roundbox, "City attractions", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+	bt_city_attractions.init(button_t::roundbox, "City attractions", scr_coord(0,0), D_WIDE_BUTTON_SIZE);
 	if (skinverwaltung_t::open_window) {
 		bt_city_attractions.set_image(skinverwaltung_t::open_window->get_image_id(0));
 		bt_city_attractions.set_image_position_right(true);
@@ -135,6 +136,15 @@ void city_info_t::init()
 	bt_city_attractions.set_tooltip("Open the list of attraction buildings in this city");
 	bt_city_attractions.add_listener(this);
 	bt_city_attractions.pressed = false;
+
+	bt_city_factories.init(button_t::roundbox, "City factories", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+	if (skinverwaltung_t::open_window) {
+		bt_city_factories.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		bt_city_factories.set_image_position_right(true);
+	}
+	bt_city_factories.set_tooltip("Open the list of factories in this city");
+	bt_city_factories.add_listener(this);
+	bt_city_factories.pressed = false;
 
 	bt_city_stops.init(button_t::roundbox, "City stops", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
 	if (skinverwaltung_t::open_window) {
@@ -416,9 +426,10 @@ void city_info_t::update_stats()
 	}
 	cont_city_stats.end_table();
 
-	cont_city_stats.add_table(2,1);
+	cont_city_stats.add_table(3,1);
 	{
 		cont_city_stats.add_component(&bt_city_stops);
+		cont_city_stats.add_component(&bt_city_factories);
 		cont_city_stats.add_component(&bt_city_attractions);
 	}
 	cont_city_stats.end_table();
@@ -621,6 +632,17 @@ bool city_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		curiositylist_frame_t *win = dynamic_cast<curiositylist_frame_t*>( win_get_magic(magic_curiositylist) );
 		if (!win) {
 			create_win(-1, -1, new curiositylist_frame_t(city), w_info, magic_curiositylist);
+		}
+		else {
+			win->set_cityfilter(city);
+			top_win(win);
+		}
+		return true;
+	}
+	if(  comp==&bt_city_factories  ) {
+		factorylist_frame_t *win = dynamic_cast<factorylist_frame_t*>( win_get_magic(magic_factorylist) );
+		if (!win) {
+			create_win(-1, -1, new factorylist_frame_t(city), w_info, magic_factorylist);
 		}
 		else {
 			win->set_cityfilter(city);

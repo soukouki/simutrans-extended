@@ -58,7 +58,7 @@ curiositylist_frame_t::curiositylist_frame_t(stadt_t* city) :
 				region_selector.set_selection(curiositylist_stats_t::region_filter);
 				region_selector.set_width_fixed(true);
 				region_selector.set_rigid(false);
-				region_selector.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
+				region_selector.set_size(scr_size(D_WIDE_BUTTON_WIDTH, D_EDIT_HEIGHT));
 				region_selector.add_listener(this);
 				add_component(&region_selector);
 			}
@@ -85,7 +85,7 @@ curiositylist_frame_t::curiositylist_frame_t(stadt_t* city) :
 		}
 		sortedby.set_selection(curiositylist_stats_t::sort_mode);
 		sortedby.set_width_fixed(true);
-		sortedby.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
+		sortedby.set_size(scr_size(D_WIDE_BUTTON_WIDTH, D_EDIT_HEIGHT));
 		sortedby.add_listener(this);
 		add_component(&sortedby);
 
@@ -162,7 +162,6 @@ void curiositylist_frame_t::set_cityfilter(stadt_t *city)
 		filter_within_network.pressed = false;
 		curiositylist_stats_t::filter_own_network = false;
 		curiositylist_stats_t::region_filter=0;
-		region_selector.set_visible(false);
 		region_selector.set_selection(0);
 		lb_target_city.buf().printf("%s>%s", translator::translate("City"), city->get_name());
 		lb_target_city.update();
