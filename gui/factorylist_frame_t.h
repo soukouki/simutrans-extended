@@ -36,7 +36,7 @@ private:
 	button_t sorteddir;
 	button_t filter_within_network, bt_cansel_cityfilter;
 	button_t filter_buttons[MAX_FACTORY_TYPE_FILTER];
-	gui_label_buf_t lb_target_city;
+	gui_label_buf_t lb_target_city, lb_factory_counter;
 
 	gui_scrolled_list_t scrolly;
 

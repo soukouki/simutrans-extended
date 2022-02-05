@@ -158,8 +158,7 @@ factorylist_frame_t::factorylist_frame_t(stadt_t* city) :
 		}
 		end_table();
 
-		// dummy
-		new_component<gui_margin_t>(LINESPACE);
+		add_component(&lb_factory_counter);
 		add_table(6,1)->set_spacing(scr_size(0,0));
 		{
 			for (uint8 i = 0; i < factorylist_stats_t::FACTORYLIST_MODES; i++) {
@@ -291,6 +290,7 @@ void factorylist_frame_t::fill_list()
 {
 	old_factories_count = world()->get_fab_list().get_count(); // to avoid too many redraws ...
 	scrolly.clear_elements();
+	uint32 count = 0;
 	FOR(const vector_tpl<fabrik_t *>,fab,world()->get_fab_list()) {
 		if (factorylist_stats_t::region_filter && (factorylist_stats_t::region_filter-1) != world()->get_region(fab->get_pos().get_2d())) {
 			continue;
@@ -325,8 +325,11 @@ void factorylist_frame_t::fill_list()
 		if (!factorylist_stats_t::filter_own_network ||
 			(factorylist_stats_t::filter_own_network && fab->is_connected_to_network(world()->get_active_player()))) {
 			scrolly.new_component<factorylist_stats_t>(fab);
+			count++;
 		}
 	}
+	lb_factory_counter.buf().printf("%u/%u", count, world()->get_fab_list().get_count());
+	lb_factory_counter.update();
 	scrolly.sort(0);
 	scrolly.set_size(scrolly.get_size());
 }
