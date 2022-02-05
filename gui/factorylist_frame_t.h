@@ -16,6 +16,8 @@
 #include "components/gui_combobox.h"
 #include "factorylist_stats_t.h"
 
+#define MAX_FACTORY_TYPE_FILTER 4
+
 
 /*
  * Factory list window
@@ -25,11 +27,15 @@ class factorylist_frame_t : public gui_frame_t, private action_listener_t
 private:
 	static const char *sort_text[factorylist::SORT_MODES];
 	static const char *display_mode_text[factorylist_stats_t::FACTORYLIST_MODES];
+	static const char *factory_type_text[MAX_FACTORY_TYPE_FILTER];
+	static const enum button_t::type factory_type_button_style[MAX_FACTORY_TYPE_FILTER];
+	static uint8 factory_type_filter_bits;
 
 	gui_combobox_t sortedby, freight_type_c, cb_display_mode, region_selector;
 
 	button_t sorteddir;
 	button_t filter_within_network, bt_cansel_cityfilter;
+	button_t filter_buttons[MAX_FACTORY_TYPE_FILTER];
 	gui_label_buf_t lb_target_city;
 
 	gui_scrolled_list_t scrolly;

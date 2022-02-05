@@ -12,6 +12,7 @@
 
 
 char factorylist_frame_t::name_filter[256];
+uint8 factorylist_frame_t::factory_type_filter_bits = 255;
 
 const char *factorylist_frame_t::sort_text[factorylist::SORT_MODES] = {
 	"Fabrikname",
@@ -34,6 +35,21 @@ const char *factorylist_frame_t::display_mode_text[factorylist_stats_t::FACTORYL
 	"Goods needed",
 	"Output",
 	"fl_btn_region"
+};
+
+
+const char *factorylist_frame_t::factory_type_text[MAX_FACTORY_TYPE_FILTER] =
+{
+	"All",
+	"gl_prod",
+	"Manufacturers",
+	"gl_con"
+};
+
+
+const enum button_t::type factorylist_frame_t::factory_type_button_style[MAX_FACTORY_TYPE_FILTER] =
+{
+	button_t::roundbox_state, button_t::roundbox_left_state, button_t::roundbox_middle_state, button_t::roundbox_right_state
 };
 
 
@@ -144,7 +160,7 @@ factorylist_frame_t::factorylist_frame_t(stadt_t* city) :
 
 		// dummy
 		new_component<gui_margin_t>(LINESPACE);
-		add_table(2,1);
+		add_table(6,1)->set_spacing(scr_size(0,0));
 		{
 			for (uint8 i = 0; i < factorylist_stats_t::FACTORYLIST_MODES; i++) {
 				cb_display_mode.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(display_mode_text[i]), SYSCOL_TEXT);
@@ -155,8 +171,18 @@ factorylist_frame_t::factorylist_frame_t(stadt_t* city) :
 			cb_display_mode.add_listener(this);
 			add_component(&cb_display_mode);
 
-			// dummy
-			new_component<gui_margin_t>(LINESPACE);
+			new_component<gui_margin_t>(D_V_SPACE);
+
+			filter_buttons[0].init(button_t::roundbox_state, factory_type_text[0], scr_coord(0, 0), scr_size(proportional_string_width(translator::translate("All")) + D_BUTTON_PADDINGS_X, D_BUTTON_HEIGHT));
+			filter_buttons[0].pressed = (factory_type_filter_bits == 255);
+			filter_buttons[0].add_listener(this);
+			add_component(&filter_buttons[0]);
+			for (uint8 i = 1; i < MAX_FACTORY_TYPE_FILTER; i++) {
+				filter_buttons[i].init(factory_type_button_style[i], factory_type_text[i]);
+				filter_buttons[i].add_listener(this);
+				filter_buttons[i].pressed = factory_type_filter_bits & (1 << (i - 1));
+				add_component(filter_buttons + i);
+			}
 		}
 		end_table();
 	}
@@ -219,6 +245,44 @@ bool factorylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v
 	else if (comp == &bt_cansel_cityfilter) {
 		set_cityfilter(NULL);
 	}
+	else if (comp == &filter_buttons[0]) {
+		filter_buttons[0].pressed ^= 1;
+		if (filter_buttons[0].pressed) {
+			for (int i = 1; i < MAX_FACTORY_TYPE_FILTER; i++) {
+				filter_buttons[i].pressed = true;
+			}
+			factory_type_filter_bits = 255;
+		}
+		else {
+			for (int i = 1; i < MAX_FACTORY_TYPE_FILTER; i++) {
+				factory_type_filter_bits &= ~(1 << (i - 1));
+				filter_buttons[i].pressed = false;
+			}
+		}
+		fill_list();
+	}
+	else {
+		for (int i = 1; i < MAX_FACTORY_TYPE_FILTER; i++) {
+			if (comp == filter_buttons + i) {
+				filter_buttons[0].pressed = false;
+				filter_buttons[i].pressed ^= 1;
+				if (filter_buttons[i].pressed) {
+					factory_type_filter_bits |= (1 << (i - 1));
+				}
+				else {
+					factory_type_filter_bits &= ~(1 << (i - 1));
+				}
+
+				if (factory_type_filter_bits == 255) {
+					filter_buttons[0].pressed = true;
+				}
+				fill_list();
+				return true;
+			}
+		}
+
+	}
+
 	return true;
 }
 
@@ -236,6 +300,22 @@ void factorylist_frame_t::fill_list()
 		}
 		if (last_name_filter[0] != 0 && !utf8caseutf8(fab->get_name(), last_name_filter)) {
 			continue;
+		}
+		// filter by producer/manufacturer/endconsumer
+		if (!filter_buttons[0].pressed) {
+			bool match = false;
+			if (filter_buttons[1].pressed && (!fab->get_output().empty() && fab->get_input().empty())) {
+				match = true;
+			}
+			if (!match && filter_buttons[2].pressed && (!fab->get_output().empty() && !fab->get_input().empty())) {
+				match = true;
+			}
+			if (!match && filter_buttons[3].pressed && (!fab->get_input().empty() && fab->get_output().empty())) {
+				match = true;
+			}
+			if (!match) {
+				continue;
+			}
 		}
 		// filter by goods category
 		if (factorylist_stats_t::filter_goods_catg != goods_manager_t::INDEX_NONE && !fab->has_goods_catg_demand(factorylist_stats_t::filter_goods_catg)) {
