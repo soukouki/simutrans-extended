@@ -69,7 +69,7 @@ void gui_combined_factory_storage_bar_t::draw(scr_coord offset)
 			const uint32 storage_capacity = (uint32)goods.get_capacity(pfactor);
 			const uint32 stock_quantity = min(storage_capacity,(uint32)goods.get_storage());
 			if (!storage_capacity) { continue; }
-			
+
 			uint32 temp_sum = sum+stock_quantity;
 			const PIXVAL goods_color = goods.get_typ()->get_color();
 			display_cylinderbar_wh_clip_rgb(offset.x+1 + color_bar_w*sum/max_capacity, offset.y+1, color_bar_w*stock_quantity/max_capacity, size.h-2, goods_color, true);
