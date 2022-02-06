@@ -1829,7 +1829,7 @@ void convoi_t::step()
 						{
 							if(vehicle[k]->get_desc() == replace->get_replacing_vehicle(i))
 							{
-								veh = remove_vehicle_bei(k);
+								veh = remove_vehicle_at(k);
 								break;
 							}
 						}
@@ -1854,7 +1854,7 @@ void convoi_t::step()
 									{
 										veh = vehicle_builder_t::build(get_pos(), get_owner(), NULL, replace->get_replacing_vehicle(i), true);
 										upgrade_vehicle(j, veh);
-										remove_vehicle_bei(j);
+										remove_vehicle_at(j);
 										goto end_loop;
 									}
 								}
@@ -1894,7 +1894,7 @@ end_loop:
 						}
 						else
 						{
-							vehicle_t* old_veh = remove_vehicle_bei(a);
+							vehicle_t* old_veh = remove_vehicle_at(a);
 							old_veh->discard_cargo();
 							old_veh->set_leading(false);
 							old_veh->set_last(false);
@@ -2996,7 +2996,7 @@ void convoi_t::upgrade_vehicle(uint16 i, vehicle_t* v)
 DBG_MESSAGE("convoi_t::upgrade_vehicle()","now %i of %i total vehicles.",i,max_vehicle);
 }
 
-vehicle_t *convoi_t::remove_vehicle_bei(uint16 i)
+vehicle_t *convoi_t::remove_vehicle_at(uint16 i)
 {
 	vehicle_t *v = NULL;
 	if(i<vehicle_count) {
