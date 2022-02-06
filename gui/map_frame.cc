@@ -501,6 +501,17 @@ void map_frame_t::show_hide_directory(const bool show)
 }
 
 
+void map_frame_t::enable_network_map()
+{
+	b_overlay_networks.pressed = true;
+	show_hide_legend(false);
+	show_hide_scale(false);
+	show_hide_directory(false);
+
+	env_t::default_mapmode |= minimap_t::MAP_LINES;
+	minimap_t::get_instance()->set_display_mode((minimap_t::MAP_DISPLAY_MODE)env_t::default_mapmode);
+}
+
 bool map_frame_t::action_triggered( gui_action_creator_t *comp, value_t)
 {
 	if(comp==&b_show_legend) {

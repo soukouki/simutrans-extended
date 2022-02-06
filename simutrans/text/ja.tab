@@ -2263,6 +2263,8 @@ Acceleration
 加速
 Access
 アクセス権
+access_minimap
+路線図
 accommodation
 クラス別定員/容量
 accommodation (detail)
@@ -4157,6 +4159,8 @@ has_no_class
 -
 Information windows pop up control:
 情報ウィンドウの表示許可設定：
+helptxt_access_minimap
+ミニマップウィンドウに路線図を表示します
 helptxt_ground_info_toggler
 占有されていないタイルをクリックすると土地情報を情報ウィンドウを開きます
 helptxt_tree_info_toggler
