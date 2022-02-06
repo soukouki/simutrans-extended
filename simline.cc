@@ -375,7 +375,7 @@ void simline_t::rdwr(loadsave_t *file)
 				if(((j == LINE_AVERAGE_SPEED || j == LINE_COMFORT) && file->get_extended_version() <= 1)
 					|| (j == LINE_REFUNDS && file->get_extended_version() < 8)
 					|| ((j == LINE_DEPARTURES || j == LINE_DEPARTURES_SCHEDULED) && file->get_extended_version() < 12)
-					|| ((j == LINE_MAIL_DISTANCE || j == LINE_PAYLOAD_DISTANCE) && file->is_version_ex_less(14, 47))
+					|| ((j == LINE_MAIL_DISTANCE || j == LINE_PAYLOAD_DISTANCE) && file->is_version_ex_less(14, 48))
 					)
 #endif
 				{

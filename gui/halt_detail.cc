@@ -1186,7 +1186,7 @@ void gui_halt_nearby_factory_info_t::draw(scr_coord offset)
 	FORX(const slist_tpl<fabrik_t*>, const fab, fab_list, yoff += LINESPACE + 1) {
 		xoff = D_POS_BUTTON_WIDTH + D_H_SPACE;
 		// [status color bar]
-		const PIXVAL col_val = color_idx_to_rgb(fabrik_t::status_to_color[fab->get_status() % fabrik_t::staff_shortage]);
+		const PIXVAL col_val = color_idx_to_rgb(fabrik_t::status_to_color[fab->get_status()]);
 		display_fillbox_wh_clip_rgb(offset.x + xoff + 1, offset.y + yoff + GOODS_COLOR_BOX_YOFF + 3, D_INDICATOR_WIDTH / 2 - 1, D_INDICATOR_HEIGHT, col_val, true);
 		xoff += D_INDICATOR_WIDTH / 2 + 3;
 
