@@ -6287,6 +6287,6 @@ Show the amount of goods waiting at each stop
 material_not_available
 Raw materials unavailable
 access_minimap
-Show on map
+Show route on map
 helptxt_access_minimap
 Show this line's route on the map in schematic form
