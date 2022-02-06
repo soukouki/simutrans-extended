@@ -98,6 +98,18 @@ server_frame_t::server_frame_t() :
 		show_offline.add_listener( this );
 		add_component( &show_offline, 2 );
 
+		new_component_span<gui_divider_t>(3);
+
+		new_component_span<gui_label_t>("Or enter a server manually:", 3);
+
+		// Add server input/button
+		addinput.set_text( newserver_name, sizeof( newserver_name ) );
+		addinput.add_listener( this );
+		add_component( &addinput, 2 );
+
+		add.init( button_t::roundbox, "Query server");
+		add.add_listener( this );
+		add_component( &add );
 
 		new_component_span<gui_divider_t>(3);
 	}
