@@ -245,6 +245,10 @@ void convoi_info_t::init(convoihandle_t cnv)
 		replace_button.add_listener(this);
 
 		details_button.init(button_t::roundbox | button_t::flexible, "Details");
+		if (skinverwaltung_t::open_window) {
+			details_button.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			details_button.set_image_position_right(true);
+		}
 		details_button.set_tooltip("Vehicle details");
 		details_button.add_listener(this);
 		add_component(&details_button);
