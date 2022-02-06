@@ -360,7 +360,6 @@ SOCKET network_open_address(char const* cp, char const*& err)
 						continue;
 					}
 
-
 				}
 
 				connected = true;
