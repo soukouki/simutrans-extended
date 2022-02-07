@@ -115,7 +115,7 @@ gui_settings_t::gui_settings_t()
 	// screen scale number input
 	add_table(3,1)->set_spacing(scr_size(0,0));
 	{
-		new_component<gui_label_t>("Screen scale: ");
+		new_component<gui_label_t>("Screen scale:");
 
 		add_table(2,0);
 		{
