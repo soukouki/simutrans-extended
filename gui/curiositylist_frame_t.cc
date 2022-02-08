@@ -71,11 +71,11 @@ curiositylist_frame_t::curiositylist_frame_t(stadt_t* city) :
 			lb_target_city.set_color(SYSCOL_TEXT_HIGHLIGHT);
 			add_component(&lb_target_city);
 
-			bt_cansel_cityfilter.init(button_t::roundbox, "reset");
-			bt_cansel_cityfilter.add_listener(this);
-			bt_cansel_cityfilter.set_visible(false);
-			bt_cansel_cityfilter.set_rigid(false);
-			add_component(&bt_cansel_cityfilter);
+			bt_cancel_cityfilter.init(button_t::roundbox, "reset");
+			bt_cancel_cityfilter.add_listener(this);
+			bt_cancel_cityfilter.set_visible(false);
+			bt_cancel_cityfilter.set_rigid(false);
+			add_component(&bt_cancel_cityfilter);
 		}
 		end_table();
 
@@ -156,7 +156,7 @@ void curiositylist_frame_t::set_cityfilter(stadt_t *city)
 {
 	filter_city = city;
 	region_selector.set_visible(filter_city==NULL && !welt->get_settings().regions.empty());
-	bt_cansel_cityfilter.set_visible(filter_city!=NULL);
+	bt_cancel_cityfilter.set_visible(filter_city!=NULL);
 	lb_target_city.set_visible(filter_city!=NULL);
 	if (city) {
 		filter_within_network.pressed = false;
@@ -193,7 +193,7 @@ bool curiositylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t
 		filter_within_network.pressed = curiositylist_stats_t::filter_own_network;
 		fill_list();
 	}
-	else if (comp == &bt_cansel_cityfilter) {
+	else if (comp == &bt_cancel_cityfilter) {
 		set_cityfilter(NULL);
 	}
 	return true;

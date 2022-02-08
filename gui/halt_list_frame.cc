@@ -493,11 +493,11 @@ halt_list_frame_t::halt_list_frame_t(stadt_t *city) :
 			lb_target_city.set_color(SYSCOL_TEXT_HIGHLIGHT);
 			add_component(&lb_target_city);
 
-			bt_cansel_cityfilter.init(button_t::roundbox, "reset");
-			bt_cansel_cityfilter.add_listener(this);
-			bt_cansel_cityfilter.set_visible(false);
-			bt_cansel_cityfilter.set_rigid(false);
-			add_component(&bt_cansel_cityfilter);
+			bt_cancel_cityfilter.init(button_t::roundbox, "reset");
+			bt_cancel_cityfilter.add_listener(this);
+			bt_cancel_cityfilter.set_visible(false);
+			bt_cancel_cityfilter.set_rigid(false);
+			add_component(&bt_cancel_cityfilter);
 		}
 		end_table();
 
@@ -608,7 +608,7 @@ void halt_list_frame_t::set_cityfilter(stadt_t *city)
 {
 	filter_city = city;
 	btn_show_mutual_use.set_visible(filter_city==NULL);
-	bt_cansel_cityfilter.set_visible(filter_city!=NULL);
+	bt_cancel_cityfilter.set_visible(filter_city!=NULL);
 	lb_target_city.set_visible(filter_city!=NULL);
 	if (city) {
 		btn_show_mutual_use.pressed = false;
@@ -686,7 +686,7 @@ bool halt_list_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* 
 		fill_list();
 		btn_show_mutual_use.pressed = show_mutual_stops;
 	}
-	else if (comp == &bt_cansel_cityfilter) {
+	else if (comp == &bt_cancel_cityfilter) {
 		set_cityfilter(NULL);
 	}
 	return true;
