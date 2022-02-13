@@ -49,7 +49,7 @@ If you are on Windows, download either [Microsoft Visual Studio](https://visuals
 
 You can download the latest version with a git client:
 ```
-git clone http://github.com/aburch/simutrans.git
+git clone https://github.com/jamespetts/simutrans-extended.git
 ```
 
 ### 2.2) Getting the libraries
