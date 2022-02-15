@@ -9581,7 +9581,14 @@ bool tool_change_depot_t::init( player_t *player )
 
 								if(tool == 'u')
 								{
-									depot->upgrade_vehicle(cnv, vb);
+									// "p" is the extra data sent from the depot, i.e., the vehicle name after the update is stored.
+									// Somehow a vehicle that is not selected can be a vb, so if we don't check it, it may be upgrading to the wrong vehicle...
+									if (!strcmp(p, vb->get_name())) {
+										depot->upgrade_vehicle(cnv, vb);
+									}
+									else {
+										continue;
+									}
 								}
 								else
 								{
