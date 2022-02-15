@@ -540,7 +540,7 @@ void roadsign_t::calc_image()
 		// traffic light
 		weg_t *str=gr->get_weg(road_wt);
 		if(str) {
-			const uint8 weg_dir = str->get_ribi_unmasked();
+			const uint8 weg_dir = str->get_ribi_unmasked() & ~(ribi_t::backward(str->get_ribi_unmasked()&~str->get_ribi()));
 			const uint8 direction = desc->get_count()>16 ? (state&2)+((state+1)&1) : (state+1) & 1;
 
 			// other front/back images for left side ...
