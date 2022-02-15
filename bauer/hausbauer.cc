@@ -474,6 +474,7 @@ void hausbauer_t::remove( player_t *player, const gebaeude_t *gb, bool map_gener
 					{
 						gb_part->set_stadt(city);
 					}
+					const bool dont_remove_slope = (gb_part->get_owner()==player) && gb_part->get_tile()->get_desc()->is_transport_building();
 					gb_part->cleanup( player );
 					if (city)
 					{
@@ -495,9 +496,12 @@ void hausbauer_t::remove( player_t *player, const gebaeude_t *gb, bool map_gener
 						if(  (gr2==NULL  ||  gr2==gr) &&  new_slope!=slope_t::flat  ) {
 							// and for ground above new sloped tile
 							gr2 = welt->lookup(koord3d(newk, new_hgt+1));
+							if(  gr==0  && slope_t::max_diff(new_slope) == 2  ) {
+								gr2 = welt->lookup(koord3d(newk, new_hgt + 2));
+							}
 						}
 						bool ground_recalc = true;
-						if(  gr2  &&  gr2!=gr  ) {
+						if(  (gr2  &&  gr2!=gr)  ||  dont_remove_slope  ) {
 							// there is another ground below or above
 							// => do not change height, keep foundation
 							welt->access(newk)->kartenboden_setzen( new boden_t( gr->get_pos(), slope_t::flat ) );
