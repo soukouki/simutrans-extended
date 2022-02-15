@@ -443,6 +443,7 @@ void hausbauer_t::remove( player_t *player, const gebaeude_t *gb, bool map_gener
 		welt->rem_fab(fab);
 	}
 
+	const bool dont_remove_slope = (gb->get_owner() == player) && (bdsc->is_transport_building() || bdsc->is_signalbox());
 
 	for(k.y = 0; k.y < size.y; k.y ++) {
 		for(k.x = 0; k.x < size.x; k.x ++) {
@@ -474,7 +475,6 @@ void hausbauer_t::remove( player_t *player, const gebaeude_t *gb, bool map_gener
 					{
 						gb_part->set_stadt(city);
 					}
-					const bool dont_remove_slope = (gb_part->get_owner()==player) && gb_part->get_tile()->get_desc()->is_transport_building();
 					gb_part->cleanup( player );
 					if (city)
 					{
