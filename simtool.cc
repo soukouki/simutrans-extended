@@ -10183,3 +10183,36 @@ bool tool_add_message_t::init(player_t *player)
 	}
 	return false;
 }
+
+
+bool tool_reassign_signal_internal_t::init(player_t *player)
+{
+	koord3d sig_pos;
+	koord3d new_sb_pos;
+
+	if (6 != sscanf(default_param, "%hi,%hi,%hi,%hi,%hi,%hi", &sig_pos.x, &sig_pos.y, &sig_pos.z, &new_sb_pos.x, &new_sb_pos.y, &new_sb_pos.z))
+	{
+		dbg->error("tool_reassign_signal_internal_t::init", "could not perform (%s)", default_param);
+		return false;
+	}
+
+	signal_t* sig = welt->lookup(sig_pos)->find<signal_t>();
+	if (!sig || sig->get_owner() != player) {
+		return false;
+	}
+	gebaeude_t* gb = world()->lookup(new_sb_pos)->get_building();
+
+	if (!gb || !gb->get_tile()->get_desc()->is_signalbox()) {
+		return false;
+	}
+	signalbox_t *new_sb = (signalbox_t*)world()->lookup(new_sb_pos)->get_building();
+
+	if (grund_t *gr = welt->lookup(sig->get_signalbox())) {
+		if (gebaeude_t* gb = gr->get_building()) {
+			if (gb->get_tile()->get_desc()->is_signalbox()) {
+				new_sb->transfer_signal(sig, (signalbox_t*)gb);
+			}
+		}
+	}
+	return false;
+}
