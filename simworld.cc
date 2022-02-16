@@ -8801,7 +8801,7 @@ void karte_t::rdwr_gamestate(loadsave_t *file, loadingscreen_t *ls)
 		settings.set_player_type(i, old_players[i]);
 	}
 
-	if (file->is_version_ex_atleast(14, 47)) {
+	if (file->is_version_ex_atleast(14, 50)) {
 		simrand_rdwr(file);
 	}
 
@@ -9420,7 +9420,7 @@ void karte_t::load(loadsave_t *file)
 	load_version.extended_version = file->get_extended_version();
 	load_version.extended_revision = file->get_extended_revision();
 
-	if (file->is_version_ex_atleast(14, 47)) {
+	if (file->is_version_ex_atleast(14, 50)) {
 		// rdwr the entire RNG sate
 		simrand_rdwr(file);
 	}
@@ -9428,7 +9428,7 @@ void karte_t::load(loadsave_t *file)
 	if(  env_t::networkmode  ) {
 		// To have games synchronized, transfer random counter too
 		// Superseded by simrand_rdwr in newer versions
-		if (file->is_version_ex_less(14, 47)) {
+		if (file->is_version_ex_less(14, 50)) {
 			setsimrand(settings.get_random_counter(), 0xFFFFFFFFu );
 		}
 
@@ -11094,6 +11094,7 @@ void karte_t::process_network_commands(sint32 *ms_difference)
 					// lost synchronisation -> server kicks client out actively
 					cbuffer_t buf;
 					LCHKLST(nwt->last_sync_step).print(buf, "server");
+					buf.append(" ");
 					nwt->last_checklist.print(buf, "initiator");
 					dbg->warning("karte_t::process_network_commands", "kicking client due to checklist mismatch : sync_step=%u %s", nwt->last_sync_step, buf.get_str());
 					socket_list_t::remove_client( nwc->get_sender() );
@@ -11160,8 +11161,7 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 
 		cbuffer_t buf;
 		server_checklist.print(buf, "server");
-		LCHKLST(server_sync_step).print(buf, "client");
-
+		buf.append(" ");
 		client_checklist.print(buf, "client");
 
 		dbg->warning("karte_t:::do_network_world_command", "sync_step=%u  %s", server_sync_step, buf.get_str());
@@ -11181,6 +11181,7 @@ void karte_t::do_network_world_command(network_world_command_t *nwc)
 				// lost synchronisation ...
 				cbuffer_t buf;
 				nwt->last_checklist.print(buf, "server");
+				buf.append(" ");
 				LCHKLST(nwt->last_sync_step).print(buf, "executor");
 
 				dbg->warning("karte_t:::do_network_world_command", "skipping command due to checklist mismatch : sync_step=%u %s", nwt->last_sync_step, buf.get_str());

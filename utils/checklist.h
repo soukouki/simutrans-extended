@@ -36,7 +36,7 @@ public:
 	checklist_t(uint32 _ss, uint32 _st, uint8 _nfc, uint32 _random_seed, uint16 _halt_entry, uint16 _line_entry, uint16 _convoy_entry, uint32 *_rands, uint32 *_debug_sums);
 
 	bool operator == (const checklist_t &other) const;
-	bool operator != (const checklist_t &other) const { return !( (*this)==other ); }
+	bool operator != (const checklist_t &other) const { return !( *this==other ); }
 
 	void rdwr(memory_rw_t *buffer);
 	void print(cbuffer_t &buffer, const char *entity) const;
