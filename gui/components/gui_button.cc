@@ -198,7 +198,7 @@ scr_size button_t::get_min_size() const
 		case roundbox_left:
 		case roundbox_middle:
 		case roundbox_right: {
-			scr_coord_val w = translated_text ?  2*D_H_SPACE + proportional_string_width( translated_text ) : 0;
+			scr_coord_val w = translated_text ?  2*D_H_SPACE + D_BUTTON_PADDINGS_X + proportional_string_width( translated_text ) : 0;
 			scr_size size = type & flexible ?
 				scr_size(gui_theme_t::gui_button_size.w, max(D_BUTTON_HEIGHT, LINESPACE)) : scr_size (get_size().w, max(D_BUTTON_HEIGHT,LINESPACE));
 			size.w = max(size.w, w);
