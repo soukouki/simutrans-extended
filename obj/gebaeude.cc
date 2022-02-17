@@ -1490,14 +1490,12 @@ void gebaeude_t::cleanup(player_t *player)
 	{
 		if (desc->get_price() != PRICE_MAGIC)
 		{
-			cost = -desc->get_price();
+			cost = -desc->get_price() / 2;
 		}
 		else
 		{
-			cost = welt->get_settings().cst_multiply_station * (desc->get_level());
+			cost = welt->get_settings().cst_multiply_remove_haus * (desc->get_level());
 		}
-		// Should be cheaper to bulldoze than build.
-		cost /= 2;
 
 		// If the player does not own the building, the land is not bought by bulldozing, so do not add the purchase cost.
 		// (A player putting a marker on the tile will have to pay to buy the land again).
