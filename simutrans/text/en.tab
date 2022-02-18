@@ -6311,7 +6311,7 @@ Amount of mail delivered successfully in the last quarter
 pax_destination_mapping
 Passenger destination mapping
 Open the color legend
-Open the colour legend
+Colour legend
 pax_transportation_ratio
 Passenger transport by mode
 helptxt_pax_transportation_ratio
@@ -6329,9 +6329,9 @@ Open the list of attraction buildings in this city
 Open the list of factories in this city
 Open the list of factories in this city
 too_slow_and_gave_up
-Journey too slow
+Public transport journey too slow
 too_slow_and_use_privatecar
-Travelled by private car (public transport too slow)
+Private car journey too slow
 destination_unavailable
 Destination unavailable (e.g. no jobs, no stock)
 (ci_demands)
