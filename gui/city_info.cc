@@ -39,8 +39,8 @@ const char *hist_type[MAX_CITY_HISTORY] =
 	"Visitor demand",
 	"Growth",
 	"Buildings",
-	"by_private_car",
-	"Public transport users",
+	"Private car",
+	"Public transport",
 	"Passagiere",
 	"Walked",
 	"sended",
@@ -75,10 +75,10 @@ const uint8 hist_type_color[MAX_CITY_HISTORY] =
 
 const char *pax_dest_type[PAX_DEST_COLOR_LEGENDS] =
 {
-	"Happy",
+	"Public transport",
 	"too_slow_public_transportation",
 	"too_slow_privatecar",
-	"by_private_car",
+	"Private car",
 	"Walked",
 	"Turned away",
 	"No Route",

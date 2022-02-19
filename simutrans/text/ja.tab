@@ -1995,7 +1995,7 @@ Transport %li passengers
 月に %li人以上の旅客を輸送
 Transported
 輸送実績
-Public transport users
+Public transport
 公共交通機関利用
 Travelled
 旅客輸送達成数
@@ -4257,8 +4257,6 @@ too_slow_public_transportation
 公共交通機関が遅すぎる
 too_slow_privatecar
 自家用車で移動しようとしたが時間がかかりすぎる
-by_private_car
-自家用車を利用
 destination_unavailable
 利用不可能な目的地
 (ci_demands)
