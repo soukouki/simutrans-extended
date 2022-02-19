@@ -654,18 +654,6 @@ void simline_t::renew_stops()
 	}
 }
 
-void simline_t::set_schedule(schedule_t* schedule)
-{
-	if (this->schedule)
-	{
-		haltestelle_t::refresh_routing(schedule, goods_catg_index, NULL, NULL, player);
-		unregister_stops();
-		delete this->schedule;
-	}
-	this->schedule = schedule;
-	financial_history[0][LINE_DEPARTURES_SCHEDULED] = calc_departures_scheduled();
-}
-
 void simline_t::set_linecode_l(const char *new_name)
 {
 	tstrncpy(linecode_l, new_name, lengthof(linecode_l));
