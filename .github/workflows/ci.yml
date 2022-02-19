@@ -410,7 +410,7 @@ jobs:
       - name: Configure
         run: |
           cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=gdi -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake .. -DSIMUTRANS_BACKEND=gdi -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
       - name: Build
         run: |
           cd ${{ github.workspace }}/build
@@ -444,7 +444,7 @@ jobs:
       - name: Configure
         run: |
           cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=sdl2 -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake .. -DSIMUTRANS_BACKEND=sdl2 -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
       - name: Build
         run: |
           cd ${{ github.workspace }}/build
@@ -477,7 +477,7 @@ jobs:
       - name: Configure
         run: |
           cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=none -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake .. -DSIMUTRANS_BACKEND=none -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
       - name: Build
         run: |
           cd ${{ github.workspace }}/build
@@ -511,7 +511,7 @@ jobs:
       - name: Configure
         run: |
           cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=none -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake .. -DSIMUTRANS_BACKEND=none -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
       - name: Build
         run: |
           cd ${{ github.workspace }}/build
@@ -545,7 +545,7 @@ jobs:
       - name: Configure
         run: |
           cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=none -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake .. -DSIMUTRANS_BACKEND=none -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
       - name: Build
         run: |
           cd ${{ github.workspace }}/build
