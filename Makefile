@@ -231,7 +231,6 @@ else
   USE_FLUIDSYNTH_MIDI = 0
 endif
 
-ifneq ($(HEAVY_MODE),)
 ifneq ($(MULTI_THREAD),)
   ifeq ($(shell expr $(MULTI_THREAD) \>= 1), 1)
     CFLAGS += -DMULTI_THREAD
