@@ -39,7 +39,7 @@ const char *hist_type[MAX_CITY_HISTORY] =
 	"Visitor demand",
 	"Growth",
 	"Buildings",
-	"Private car",
+	"Verkehrsteilnehmer",
 	"Public transport",
 	"Passagiere",
 	"Walked",
