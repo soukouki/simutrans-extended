@@ -781,10 +781,10 @@ void roadsign_t::display_overlay(int xpos, int ypos) const
 	if (strasse_t::show_masked_ribi) {
 		const waytype_t wt = get_waytype() == tram_wt ? track_wt : get_waytype();
 		if (wt == invalid_wt) { return; }
-		weg_t *weg = welt->lookup(get_pos())->get_weg(wt);
+		grund_t *gr = welt->lookup(get_pos());
+		weg_t *weg = gr->get_weg(wt);
 		const bool is_diagonal= weg->is_diagonal();
 		const uint8 way_ribi = weg->get_ribi_unmasked();
-		grund_t *gr = welt->lookup(get_pos());
 
 		const int raster_width = get_current_tile_raster_width();
 		xpos += raster_width/2;
