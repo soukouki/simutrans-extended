@@ -6328,9 +6328,9 @@ Open the list of attraction buildings in this city
 Open the list of attraction buildings in this city
 Open the list of factories in this city
 Open the list of factories in this city
-too_slow_and_gave_up
+too_slow_public_transportation
 Public transport journey too slow
-too_slow_and_use_privatecar
+too_slow_privatecar
 Private car journey too slow
 destination_unavailable
 Destination unavailable (e.g. no jobs, no stock)

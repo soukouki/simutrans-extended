@@ -4253,10 +4253,10 @@ Open the list of attraction buildings in this city
 市内にある観光施設の一覧を別ウィンドウで表示します
 Open the list of factories in this city
 市内にある産業の一覧を別ウィンドウで表示します
-too_slow_and_gave_up
-移動に時間がかかりすぎるため移動を断念
-too_slow_and_use_privatecar
-公共交通機関が不便すぎるので自家用車で移動
+too_slow_public_transportation
+公共交通機関が遅すぎる
+too_slow_privatecar
+自家用車で移動しようとしたが時間がかかりすぎる
 destination_unavailable
 利用不可能な目的地
 (ci_demands)

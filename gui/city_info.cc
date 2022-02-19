@@ -76,8 +76,8 @@ const uint8 hist_type_color[MAX_CITY_HISTORY] =
 const char *pax_dest_type[PAX_DEST_COLOR_LEGENDS] =
 {
 	"Happy",
-	"too_slow_and_gave_up",
-	"too_slow_and_use_privatecar",
+	"too_slow_public_transportation",
+	"too_slow_privatecar",
 	"Verkehrsteilnehmer",
 	"Walked",
 	"Turned away",
