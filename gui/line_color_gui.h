@@ -6,6 +6,7 @@
 #ifndef GUI_LINE_COLOR_GUI_H
 #define GUI_LINE_COLOR_GUI_H
 
+
 #include "gui_frame.h"
 #include "../player/simplay.h"
 #include "components/gui_label.h"
