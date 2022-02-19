@@ -9718,10 +9718,10 @@ bool tool_change_traffic_light_t::init( player_t *player )
 					rs->set_ticks_offset( (uint8)ticks );
 				}
 				else if(  ns == 4  ) {
-					rs->set_ticks_yellow_ns( (uint8)ticks );
+					rs->set_ticks_amber_ns( (uint8)ticks );
 				}
 				else if(  ns == 3  ) {
-					rs->set_ticks_yellow_ow( (uint8)ticks );
+					rs->set_ticks_amber_ow( (uint8)ticks );
 				}
 				// update the window
 				if(  rs->get_desc()->is_traffic_light()  ) {
