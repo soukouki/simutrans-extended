@@ -22,8 +22,6 @@
 
 const goods_desc_t *ware_t::index_to_desc[256];
 
-
-
 ware_t::ware_t() : ziel(), zwischenziel(), zielpos(-1, -1)
 {
 	menge = 0;
@@ -105,12 +103,10 @@ void ware_t::rdwr(loadsave_t *file)
 			index = type->get_index();
 		}
 	}
-
 	// convert coordinate to halt indices
 	if(file->is_version_atleast(110, 6) && (file->get_extended_version() >= 10 || file->get_extended_version() == 0)) {
 		// save halt id directly
-		if(file->is_saving())
-		{
+		if(file->is_saving()) {
 			uint16 halt_id = ziel.is_bound() ? ziel.get_id() : 0;
 			file->rdwr_short(halt_id);
 			halt_id = zwischenziel.is_bound() ? zwischenziel.get_id() : 0;
@@ -121,9 +117,7 @@ void ware_t::rdwr(loadsave_t *file)
 				file->rdwr_short(halt_id);
 			}
 		}
-
-		else
-		{
+		else {
 			uint16 halt_id;
 			file->rdwr_short(halt_id);
 			ziel.set_id(halt_id);
@@ -139,11 +133,11 @@ void ware_t::rdwr(loadsave_t *file)
 				origin = zwischenziel;
 			}
 		}
+
 	}
-	else
-	{
-		if(file->is_saving())
-		{
+	else {
+		// save halthandles via coordinates
+		if(file->is_saving()) {
 			koord ziel_koord = ziel.is_bound() ? ziel->get_basis_pos() : koord::invalid;
 			ziel_koord.rdwr(file);
 			koord zwischenziel_koord = zwischenziel.is_bound() ? zwischenziel->get_basis_pos() : koord::invalid;
@@ -154,8 +148,7 @@ void ware_t::rdwr(loadsave_t *file)
 				origin_koord.rdwr(file);
 			}
 		}
-		else
-		{
+		else {
 			koord ziel_koord(file);
 			ziel = haltestelle_t::get_halt_koord_index(ziel_koord);
 			koord zwischen_ziel_koord(file);
