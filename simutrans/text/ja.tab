@@ -4257,6 +4257,8 @@ too_slow_public_transportation
 公共交通機関が遅すぎる
 too_slow_privatecar
 自家用車で移動しようとしたが時間がかかりすぎる
+by_private_car
+自家用車を利用
 destination_unavailable
 利用不可能な目的地
 (ci_demands)
