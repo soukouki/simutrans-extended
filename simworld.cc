@@ -8886,7 +8886,7 @@ void karte_t::rdwr_gamestate(loadsave_t *file, loadingscreen_t *ls)
 		}
 	}
 
-	if (file->is_version_ex_atleast(14, 50)) {
+	if (file->is_version_ex_atleast(14, 51)) {
 		simrand_rdwr(file);
 	}
 
@@ -8894,7 +8894,7 @@ void karte_t::rdwr_gamestate(loadsave_t *file, loadingscreen_t *ls)
 		if(  env_t::networkmode  ) {
 			// To have games synchronized, transfer random counter too
 			// Superseded by simrand_rdwr in newer versions
-			if (file->is_version_ex_less(14, 50)) {
+			if (file->is_version_ex_less(14, 51)) {
 				setsimrand(settings.get_random_counter(), 0xFFFFFFFFu );
 			}
 
@@ -9028,7 +9028,7 @@ void karte_t::rdwr_gamestate(loadsave_t *file, loadingscreen_t *ls)
 	}
 
 	// rdwr tree ID mapping to restore tree IDs
-	if (file->is_version_ex_atleast(14, 50)) {
+	if (file->is_version_ex_atleast(14, 51)) {
 		DBG_MESSAGE("karte_t::rdwr_gamestate()", "rdwr tree IDs");
 		tree_builder_t::rdwr_tree_ids(file);
 	}
