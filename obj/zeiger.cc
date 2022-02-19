@@ -153,7 +153,7 @@ void schedule_marker_t::display_overlay(int xpos, int ypos) const
 	ypos += (raster_tile_width*5)>>3;
 	if( weg_t *way = welt->lookup(get_pos())->get_weg(wt) ) {
 		const uint8 way_ribi = way->get_ribi_unmasked();
-		// adjust offset for diagonal way 
+		// adjust offset for diagonal way
 		if (way_ribi == ribi_t::southwest) {
 			xpos -= raster_tile_width>>2;
 		}
