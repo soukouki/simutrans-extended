@@ -564,6 +564,12 @@ void simline_t::rdwr(loadsave_t *file)
 			}
 		}
 	}
+	if (file->is_version_ex_atleast(14,52)) {
+		file->rdwr_byte(line_color_index);
+		file->rdwr_byte(line_lettercode_style);
+		file->rdwr_str(linecode_l, lengthof(linecode_l));
+		file->rdwr_str(linecode_r, lengthof(linecode_r));
+	}
 }
 
 
@@ -664,10 +670,8 @@ void simline_t::set_linecode_r(const char *new_name)
 	tstrncpy(linecode_r, new_name, lengthof(linecode_r));
 }
 
-void simline_t::init_linecode(const char *str1, const char *str2, uint8 color_idx, uint8 style)
+void simline_t::set_line_color(uint8 color_idx, uint8 style)
 {
-	set_linecode_l(str1);
-	set_linecode_r(str2);
 	line_color_index = color_idx; line_lettercode_style = style;
 }
 

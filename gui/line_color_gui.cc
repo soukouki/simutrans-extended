@@ -10,6 +10,7 @@
 #include "../utils/simstring.h"
 #include "messagebox.h"
 #include "schedule_list.h"
+#include "../simmenu.h"
 
 class choose_color_button_t : public button_t
 {
@@ -338,7 +339,26 @@ bool line_color_gui_t::action_triggered(gui_action_creator_t *comp, value_t)
 	if( comp==&bt_edit  &&  line.is_bound() ) {
 		if ( line->get_owner()==world()->get_active_player()  &&  !world()->get_active_player()->is_locked() ) {
 			if (has_changed()) {
-				line->init_linecode(tmp_linecode_l, tmp_linecode_r, new_color_idx, new_style);
+				// text changed => call tool
+				cbuffer_t buf;
+				buf.printf("A%u,%s", line.get_id(), tmp_linecode_l);
+				tool_t *tool = create_tool(TOOL_RENAME | SIMPLE_TOOL);
+				tool->set_default_param(buf);
+				world()->set_tool(tool, line->get_owner());
+
+				buf.clear();
+				buf.printf("B%u,%s", line.get_id(), tmp_linecode_r);
+				tool = create_tool(TOOL_RENAME | SIMPLE_TOOL);
+				tool->set_default_param(buf);
+				world()->set_tool(tool, line->get_owner());
+
+				buf.clear();
+				buf.printf("A,%u,%u,%u", line.get_id(), new_color_idx, new_style);
+				tool = create_tool(TOOL_CHANGE_LINE | SIMPLE_TOOL);
+				tool->set_default_param(buf);
+				world()->set_tool(tool, line->get_owner());
+				// since init always returns false, it is safe to delete immediately
+				delete tool;
 				destroy_win(this);
 				schedule_list_gui_t *sl = dynamic_cast<schedule_list_gui_t *>(win_get_magic(magic_line_management_t + line->get_owner()->get_player_nr()));
 				if (sl) {
