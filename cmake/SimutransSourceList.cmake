@@ -4,6 +4,7 @@ target_sources(simutrans-extended PRIVATE
 	bauer/goods_manager.cc
 	bauer/hausbauer.cc
 	bauer/tunnelbauer.cc
+	bauer/tree_builder.cc
 	bauer/vehikelbauer.cc
 	bauer/wegbauer.cc
 	boden/boden.cc
@@ -221,6 +222,7 @@ target_sources(simutrans-extended PRIVATE
 	io/raw_image_bmp.cc
 	io/raw_image_png.cc
 	io/raw_image_ppm.cc
+		io/rdwr/adler32_stream.cc
 	io/rdwr/bzip2_file_rdwr_stream.cc
 	io/rdwr/raw_file_rdwr_stream.cc
 	io/rdwr/rdwr_stream.cc
@@ -255,7 +257,6 @@ target_sources(simutrans-extended PRIVATE
 	obj/wayobj.cc
 	obj/wolke.cc
 	obj/zeiger.cc
-
 	old_blockmanager.cc
 	path_explorer.cc
 	player/ai.cc
@@ -340,6 +341,7 @@ target_sources(simutrans-extended PRIVATE
 	squirrel/squirrel/sqvm.cc
 	unicode.cc
 	utils/cbuffer_t.cc
+	utils/checklist.cc
 	utils/csv.cc
 	utils/float32e8_t.cc
 	utils/log.cc

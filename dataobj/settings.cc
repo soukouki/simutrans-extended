@@ -982,8 +982,12 @@ void settings_t::rdwr(loadsave_t *file)
 		}
 		if(file->is_version_atleast(102, 3)) {
 			// network stuff
-			random_counter = get_random_seed( );
-			file->rdwr_long( random_counter );
+			// Superseded by simrand_rdwr in newer versions
+			if (file->is_version_ex_less(14, 51)) {
+				random_counter = get_random_seed( );
+				file->rdwr_long( random_counter );
+			}
+
 			if(  !env_t::networkmode  ||  env_t::server  ) {
 				frames_per_second = clamp(env_t::fps, env_t::min_fps, env_t::max_fps); // update it on the server to the current setting
 				frames_per_step = env_t::network_frames_per_step;
