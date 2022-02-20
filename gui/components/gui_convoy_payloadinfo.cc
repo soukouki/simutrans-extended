@@ -144,7 +144,7 @@ void gui_loadingbar_t::draw(scr_coord offset)
 	}
 	display_cylinderbar_wh_clip_rgb(offset.x + 1, offset.y + 1, colored_width, LOADINGBAR_HEIGHT - 2, color_idx_to_rgb(COL_GREEN - 1), true);
 
-	// winting gauge
+	// waiting gauge
 	if (waiting_time_per_month) {
 		colored_width = waiting_time_per_month > 100 ? size.w - 2 : waiting_time_per_month * (size.w - 2) / 100;
 		display_ddd_box_clip_rgb(offset.x, offset.y+LOADINGBAR_HEIGHT, colored_width + 2, WAITINGBAR_HEIGHT, color_idx_to_rgb(MN_GREY2), color_idx_to_rgb(MN_GREY0));
