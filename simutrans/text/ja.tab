@@ -4287,6 +4287,22 @@ reset
 やり直し
 save
 登録して終了
+Base color:
+基調色：
+sub_bg:
+背景色を反転：
+Letter code
+記号（前）
+Number
+記号（後）
+Colored
+基調色
+White
+白基調
+You do not have permission to edit!
+他のプレイヤーの路線は編集できません！
+Save your changes and close the dialog.
+変更を保存してダイアログを閉じます
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
