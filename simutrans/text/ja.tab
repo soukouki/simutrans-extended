@@ -4275,6 +4275,18 @@ Production boosted by power supply
 電力供給による生産力ブースト
 fl_stats_last_month
 前月度生産統計
+edit_line_color
+ラインカラー編集
+Use unique line color
+ラインカラーを設定する
+Use line letter code
+路線記号を使用する
+Frame with corners
+外枠を使用する
+reset
+やり直し
+save
+登録して終了
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
