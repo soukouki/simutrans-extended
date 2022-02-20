@@ -103,10 +103,10 @@ void gui_loadingbar_t::draw(scr_coord offset)
 	uint8 waiting_bar_col = COL_APRICOT;
 	switch (cnv->get_state()) {
 		case convoi_t::LOADING:
-			waiting_time_per_month = int(0.9 + cnv->calc_remaining_loading_time() * 200 / welt->ticks_per_world_month);
+			waiting_time_per_month = int(0.9 + cnv->calc_remaining_loading_time() * 200 / world()->ticks_per_world_month);
 			break;
 		case convoi_t::REVERSING:
-			waiting_time_per_month = int(0.9 + cnv->get_wait_lock() * 200 / welt->ticks_per_world_month);
+			waiting_time_per_month = int(0.9 + cnv->get_wait_lock() * 200 / world()->ticks_per_world_month);
 			break;
 		case convoi_t::WAITING_FOR_CLEARANCE_TWO_MONTHS:
 		case convoi_t::CAN_START_TWO_MONTHS:
