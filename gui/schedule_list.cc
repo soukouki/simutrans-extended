@@ -450,14 +450,25 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	add_component(&bt_delete_line);
 
 
-	int offset_y = D_MARGIN_TOP + D_BUTTON_HEIGHT*2;
-	bt_line_class_manager.init(button_t::roundbox_state, "line_class_manager", scr_coord(LINE_NAME_COLUMN_WIDTH, offset_y), D_BUTTON_SIZE);
+	int offset_y = D_MARGIN_TOP + D_BUTTON_HEIGHT;
+	bt_line_class_manager.init(button_t::roundbox_state, "line_class_manager", scr_coord(LINE_NAME_COLUMN_WIDTH + D_WIDE_BUTTON_WIDTH, offset_y), D_WIDE_BUTTON_SIZE);
 	bt_line_class_manager.set_tooltip("change_the_classes_for_the_entire_line");
 	bt_line_class_manager.set_visible(false);
 	bt_line_class_manager.add_listener(this);
 	add_component(&bt_line_class_manager);
 
-	bt_access_minimap.init(button_t::roundbox, "access_minimap", scr_coord(LINE_NAME_COLUMN_WIDTH+D_BUTTON_WIDTH, offset_y), D_WIDE_BUTTON_SIZE);
+	offset_y += D_BUTTON_HEIGHT;
+
+	bt_line_color_editor.init(button_t::roundbox_state, "edit_line_color", scr_coord(LINE_NAME_COLUMN_WIDTH, offset_y), D_WIDE_BUTTON_SIZE);
+	if (skinverwaltung_t::open_window) {
+		bt_line_color_editor.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		bt_line_color_editor.set_image_position_right(true);
+	}
+	bt_line_color_editor.set_visible(false);
+	bt_line_color_editor.add_listener(this);
+	add_component(&bt_line_color_editor);
+
+	bt_access_minimap.init(button_t::roundbox, "access_minimap", scr_coord(LINE_NAME_COLUMN_WIDTH+D_WIDE_BUTTON_WIDTH, offset_y), D_WIDE_BUTTON_SIZE);
 	if (skinverwaltung_t::open_window) {
 		bt_access_minimap.set_image(skinverwaltung_t::open_window->get_image_id(0));
 		bt_access_minimap.set_image_position_right(true);
@@ -466,10 +477,6 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	bt_access_minimap.set_visible(false);
 	bt_access_minimap.add_listener(this);
 	add_component(&bt_access_minimap);
-	bt_line_color_editor.init(button_t::roundbox_state, "edit_line_color", scr_coord(LINE_NAME_COLUMN_WIDTH+ D_BUTTON_WIDTH, offset_y), D_BUTTON_SIZE);
-	bt_line_color_editor.set_visible(false);
-	bt_line_color_editor.add_listener(this);
-	add_component(&bt_line_color_editor);
 
 	offset_y += D_BUTTON_HEIGHT;
 	// Select livery
