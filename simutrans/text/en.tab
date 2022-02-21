@@ -3219,6 +3219,8 @@ heath
  Lock
 &43_CITY_SUFFIX
 er's Lock
+&44_CITY_SUFFIX
+ St. George
 # 
 # Max: 50 (hex)
 #
@@ -3321,6 +3323,8 @@ green
  Minor
 &C_CITY_SUFFIX[4]
  Green
+&D_CITY_SUFFIX[4]
+ St. Jute
 # 
 # Max: 50 (hex)
 #
