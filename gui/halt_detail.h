@@ -88,14 +88,13 @@ public:
 	void draw(scr_coord offset) OVERRIDE;
 };
 
-class gui_halt_service_info_t : public gui_aligned_container_t, public action_listener_t
+class gui_halt_service_info_t : public gui_aligned_container_t
 {
 	gui_aligned_container_t container;
 	gui_scrollpane_t scrolly;
 
 	halthandle_t halt;
 
-	button_t bt_access_minimap;
 	uint8 display_mode = 0; // 0=frequency, 1=catg, 2=route
 	uint8 old_mode = 0;
 
@@ -115,8 +114,6 @@ public:
 	void update_connections();
 
 	void draw(scr_coord offset) OVERRIDE;
-
-	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
 	void set_mode(uint8 mode) { display_mode = mode; update_connections(); }
 
@@ -178,7 +175,7 @@ private:
 	gui_tab_panel_t tabs;
 
 	// service tab stuffs
-	button_t bt_sv_frequency, bt_sv_route, bt_sv_catg;
+	button_t bt_sv_frequency, bt_sv_route, bt_sv_catg, bt_access_minimap;
 
 	// route tab stuffs
 	uint8 selected_route_catg_index = goods_manager_t::INDEX_NONE;
