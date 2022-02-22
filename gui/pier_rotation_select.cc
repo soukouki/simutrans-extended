@@ -88,7 +88,13 @@ pier_height_select_t::pier_height_select_t(player_t *player_,tool_build_pier_aut
 	new_component<gui_fill_t>();
 
 	height_inp.add_listener(this);
-	height_inp.init(2,0,8);
+	int max_height=8;
+	if(tool->get_desc()){
+		if(int mh = tool->get_desc()->get_max_altitude()){
+			max_height=mh;
+		}
+	}
+	height_inp.init(2,0,max_height);
 	add_component( &height_inp );
 
 	reset_min_windowsize();

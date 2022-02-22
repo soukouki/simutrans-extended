@@ -498,7 +498,7 @@ public:
 		static sint8 start_height;
 	} pier[MAX_PLAYER_COUNT];
 
-
+	const pier_desc_t* get_desc() const {return desc;}
 	char const* get_tooltip(player_t const*) const override;
 	bool init(player_t *) override;
 	bool exit(player_t *const player) override;
