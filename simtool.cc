@@ -5956,6 +5956,9 @@ const char *tool_build_pier_t::get_tooltip(const player_t *) const{
 		}else{
 			n+=sprintf(toolstr+n, " %s" , translator::translate("NA t/axle"));
 		}
+		if(desc->get_max_altitude()){
+			n+=sprintf(toolstr+n, translator::translate(" (Limit %d tiles above grade)"), desc->get_max_altitude());
+		}
 		if(desc->get_low_waydeck()){
 			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
 		}
@@ -6133,6 +6136,9 @@ const char* tool_build_pier_auto_t::get_tooltip(const player_t *) const{
 			n+=sprintf(toolstr+n, translator::translate(" %dt+/axle"),tdesc->get_max_axle_load());
 		}else{
 			n+=sprintf(toolstr+n, " %s", translator::translate("NA t/axle"));
+		}
+		if(tdesc->get_max_altitude()){
+			n+=sprintf(toolstr+n, translator::translate(" (Limit %d tiles above grade)"), tdesc->get_max_altitude());
 		}
 		if(tdesc->get_low_waydeck()){
 			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
