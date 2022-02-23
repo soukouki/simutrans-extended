@@ -66,7 +66,11 @@ void pier_t::calc_image(){
 	uint8 snow=get_pos().z >= welt->get_snowline()  ||  welt->get_climate( get_pos().get_2d() ) == arctic_climate ? 1 : 0;
 	if(gr && gr->get_typ()!=grund_t::pierdeck){
 		back_image=desc->get_background(gr->get_grund_hang(),rotation,snow );
-		front_image=desc->get_foreground(gr->get_grund_hang(), rotation, snow);
+		if(gr->is_water()){
+			front_image=IMG_EMPTY;
+		}else{
+			front_image=desc->get_foreground(gr->get_grund_hang(), rotation, snow);
+		}
 	}else{ //assuming flat
 		if(get_low_waydeck() && gr->get_weg_nr(0)){
 			back_image=desc->get_background(pier_desc_t::low_waydeck_image,rotation, snow);
