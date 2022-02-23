@@ -48,6 +48,9 @@ private:
     uint8 keep_dry : 1; //restict pier to dry land
     uint8 low_waydeck : 1; //pier supports ways in pier, not on top
 
+    uint8 tooltipflags_a : 2; //pakset flags for tooltips (auto tools)
+    uint8 tooltipflags_m : 2; //pakset flags for tooltips (manual tools)
+
     static uint32 rotate_mask(uint32 m,uint8 r){
         return (m << (8*r)) | (m >> (32 - 8*r));
     }
@@ -100,6 +103,9 @@ public:
 	ribi_t::ribi get_drag_ribi(uint8 rotation=0) const {return rotate_ribi(drag_ribi, rotation);}
 
 	uint16 get_max_axle_load() const {return axle_load;}
+
+	bool get_tooltip_flag_a(uint8 flag) const { return tooltipflags_a & ((uint8)1 << flag);}
+	bool get_tooltip_flag_m(uint8 flag) const { return tooltipflags_m & ((uint8)1 << flag);}
 
 	image_id get_background(slope_t::type slope, uint8 rotation, uint8 season) const;
 

@@ -5962,6 +5962,12 @@ const char *tool_build_pier_t::get_tooltip(const player_t *) const{
 		if(desc->get_low_waydeck()){
 			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
 		}
+		if(desc->get_tooltip_flag_m(0)){
+			n+=sprintf(toolstr+n, " %s", translator::translate("(PierTooltipM0)"));
+		}
+		if(desc->get_tooltip_flag_m(1)){
+			n+=sprintf(toolstr+n, " %s", translator::translate("(PierTooltipM1)"));
+		}
 		return toolstr;
 	}
 	return "Invalid Pier";
@@ -6142,6 +6148,12 @@ const char* tool_build_pier_auto_t::get_tooltip(const player_t *) const{
 		}
 		if(tdesc->get_low_waydeck()){
 			n+=sprintf(toolstr+n, " %s", translator::translate("(Through Truss)"));
+		}
+		if(tdesc->get_tooltip_flag_a(0)){
+			n+=sprintf(toolstr+n, " %s", translator::translate("(PierTooltipA0)"));
+		}
+		if(tdesc->get_tooltip_flag_a(1)){
+			n+=sprintf(toolstr+n, " %s", translator::translate("(PierTooltipA1)"));
 		}
 		return toolstr;
 	}
