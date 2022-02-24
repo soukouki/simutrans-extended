@@ -1444,7 +1444,7 @@ public:
 		// Adjust for bits per month
 		if(ticks_per_world_month_shift >= base_bits_per_month)
 		{
-			if(is_signed<T>()){
+			if(std::is_signed<T>()){
 				const sint64 adjusted_monthly_figure = (sint64)nominal_monthly_figure << (ticks_per_world_month_shift - base_bits_per_month);
 				return adjusted_monthly_figure / adjustment_factor;
 			}else{
