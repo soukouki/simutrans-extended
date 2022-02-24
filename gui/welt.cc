@@ -55,7 +55,6 @@
 #define L_PREVIEW_SIZE_MIN (16)
 
 uint32 welt_gui_t::max_map_dimension_fixed = 32766;
-uint32 welt_gui_t::max_map_dimension_numerator = 33554432;
 uint32 welt_gui_t::memory = 0;
 
 welt_gui_t::welt_gui_t(settings_t* const sets_par) :
