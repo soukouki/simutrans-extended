@@ -399,7 +399,7 @@ void welt_gui_t::update_memory(const settings_t* sets)
 	// Calculate map memory
 	const uint sx = sets->get_size_x();
 	const uint sy = sets->get_size_y();
-	welt_gui_t::memory = (
+	const uint64 memory = (
 		(uint64)sizeof(karte_t) +
 		sizeof(player_t) * 8 +
 		sizeof(convoi_t) * 1000 +
@@ -410,8 +410,8 @@ void welt_gui_t::update_memory(const settings_t* sets)
 			sizeof(planquadrat_t) +
 			sizeof(baum_t)*(1 - sets->get_no_trees()) + /* only one since a lot will be water */
 			sizeof(void*) * 2
-			) * (uint64)sx * (uint64)sy
-		) / (1024ll * 1024ll);
+		) * (uint64)sx * (uint64)sy
+	) / (1024ll * 1024ll);
 }
 
 /**
