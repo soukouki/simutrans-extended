@@ -21,20 +21,18 @@ class settings_t;
 
 /**
  * The dialog for new world generation
- *
  */
 class welt_gui_t  :
 	public  gui_frame_t,
 	private action_listener_t
 {
 private:
-
 	settings_t* sets;
 
 	/**
 	* Mini Map-Preview
 	*/
-	array2d_tpl<PIXVAL>	map;
+	array2d_tpl<PIXVAL> map;
 	scr_size            map_size;
 
 	double tile_km = 0.0;
@@ -78,7 +76,6 @@ private:
 		info_x_size,
 		info_y_size,
 		size_label;
-
 	button_t
 		use_intro_dates,
 		use_beginner_mode,
@@ -117,8 +114,8 @@ public:
 
 	/**
 	* Set the window associated helptext
-		* @return the filename for the helptext, or NULL
-		*/
+	 * @return the filename for the helptext, or NULL
+	 */
 	const char * get_help_filename() const OVERRIDE {return "new_world.txt";}
 
 	settings_t* get_sets() const { return sets; }
@@ -129,10 +126,10 @@ public:
 	bool infowin_event(event_t const*) OVERRIDE;
 
 	/**
-		* Draw new component. The values to be passed refer to the window
-		* i.e. It's the screen coordinates of the window where the
-		* component is displayed.
-		*/
+	 * Draw new component. The values to be passed refer to the window
+	 * i.e. It's the screen coordinates of the window where the
+	 * component is displayed.
+	 */
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
