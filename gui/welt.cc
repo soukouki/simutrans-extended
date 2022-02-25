@@ -54,7 +54,6 @@
 
 #define L_PREVIEW_SIZE_MIN (16)
 
-uint32 welt_gui_t::max_map_dimension_fixed = 32766;
 uint32 welt_gui_t::memory = 0;
 
 welt_gui_t::welt_gui_t(settings_t* const sets_par) :
@@ -150,7 +149,7 @@ welt_gui_t::welt_gui_t(settings_t* const sets_par) :
 		info_x_size.init();
 		add_component(&info_x_size);
 
-		inp_x_size.init( sets->get_size_x(), 8, max_map_dimension_fixed, sets->get_size_x()>=512 ? 128 : 64, false );
+		inp_x_size.init( sets->get_size_x(), 8, 32766, sets->get_size_x()>=512 ? 128 : 64, false );
 		inp_x_size.add_listener(this);
 		add_component( &inp_x_size );
 
