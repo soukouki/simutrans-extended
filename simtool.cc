@@ -9347,6 +9347,18 @@ bool tool_change_line_t::init( player_t *player )
 					line->propogate_livery_scheme();
 				}
 			}
+			break;
+		case 'A': // Change Abbreviation color/style
+			{
+				if( line.is_bound() ) {
+					uint8 index;
+					uint8 style;
+					sscanf(p, "%hhi,%hhi", &index, &style);
+
+					line->set_line_color(index, style);
+				}
+			}
+			break;
 	}
 	return false;
 }
@@ -9812,6 +9824,7 @@ bool tool_change_city_t::init( player_t *player )
 /* Handles renaming of ingame entities. Needs a default param:
  * [object='c|h|l|m|t|p|f'][id|pos],[name]
  * c=convoi, h=halt, l=line,  m=marker, t=town, p=player, f=factory
+ * A=line lettercode left, B=line lettercode right
  * in case of marker / factory, id is a pos3d string
  */
 bool tool_rename_t::init(player_t *player)
@@ -9828,6 +9841,8 @@ bool tool_rename_t::init(player_t *player)
 		case 'c':
 		case 't':
 		case 'p':
+		case 'A':
+		case 'B':
 			id = atoi(p);
 			while(  *p>0  &&  *p++!=','  ) {
 			}
@@ -9879,6 +9894,26 @@ bool tool_rename_t::init(player_t *player)
 				if(  sl  ) {
 					sl->update_data( line );
 				}
+				return false;
+			}
+			break;
+		}
+		case 'A':
+		{
+			linehandle_t line;
+			line.set_id( id );
+			if (line.is_bound() && (!env_t::networkmode || player_t::check_owner(line->get_owner(), player))) {
+				line->set_linecode_l( p );
+				return false;
+			}
+			break;
+		}
+		case 'B':
+		{
+			linehandle_t line;
+			line.set_id( id );
+			if (line.is_bound() && (!env_t::networkmode || player_t::check_owner(line->get_owner(), player))) {
+				line->set_linecode_r( p );
 				return false;
 			}
 			break;
@@ -10198,7 +10233,7 @@ bool tool_reassign_signal_internal_t::init(player_t *player)
 	koord3d sig_pos;
 	koord3d new_sb_pos;
 
-	if (6 != sscanf(default_param, "%hi,%hi,%hi,%hi,%hi,%hi", &sig_pos.x, &sig_pos.y, &sig_pos.z, &new_sb_pos.x, &new_sb_pos.y, &new_sb_pos.z))
+	if (6 != sscanf(default_param, "%hi,%hi,%hhi,%hi,%hi,%hhi", &sig_pos.x, &sig_pos.y, &sig_pos.z, &new_sb_pos.x, &new_sb_pos.y, &new_sb_pos.z))
 	{
 		dbg->error("tool_reassign_signal_internal_t::init", "could not perform (%s)", default_param);
 		return false;

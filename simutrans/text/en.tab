@@ -3219,6 +3219,8 @@ heath
  Lock
 &43_CITY_SUFFIX
 er's Lock
+&44_CITY_SUFFIX
+ St. George
 # 
 # Max: 50 (hex)
 #
@@ -3321,6 +3323,8 @@ green
  Minor
 &C_CITY_SUFFIX[4]
  Green
+&D_CITY_SUFFIX[4]
+ St. Jute
 # 
 # Max: 50 (hex)
 #
@@ -6350,5 +6354,33 @@ Production boosted by power supply
 Production boosted by electricity supply
 fl_stats_last_month
 Data (last month)
-Test 1
-Test 2
+edit_line_color
+Edit line colour/code
+Use unique line color
+Use a unique line colour
+Use line letter code
+Use line letter/number code
+Base color:
+Base colour:
+sub_bg:
+Coloured background
+Frame with corners
+Square cornered shape
+Letter code
+Letter code
+Number
+Number
+Colored
+Coloured
+White
+White
+save
+Save
+reset
+Reset
+Save your changes and close the dialog.
+Save your changes and close the dialogue
+You do not have permission to edit!
+You do not have permission to edit this
+helptxt_linecode_use_sub_background
+Use a contrasting coloured background for this part of the code
