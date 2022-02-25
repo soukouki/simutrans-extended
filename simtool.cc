@@ -6203,6 +6203,12 @@ bool tool_build_pier_auto_t::init(player_t *player){
 
 	if(is_ctrl_pressed() && is_local_execution()){
 		create_win(new pier_height_select_t(player, this), w_info, (ptrdiff_t)this);
+	}else if(is_shift_pressed() && is_local_execution()){
+		if(get_height(player)==0){
+			set_height(player,2);
+		}else{
+			set_height(player,0);
+		}
 	}
 	return two_click_tool_t::init(player) && (desc!=NULL);
 }
