@@ -1125,6 +1125,8 @@ Fel
 Rut
 %25A_CITY_SYLL
 Wul
+%25B_CITY_SYLL
+Bal
 #
 # Max: 400 (hex)
 #
@@ -1280,6 +1282,10 @@ Brad
 Scramp
 %4A_CITY_SYLL[1]
 Apple
+%4B_CITY_SYLL[1]
+Skeg
+%4C_CITY_SYLL[1]
+Skeg
 #
 # Max: 400 (hex)
 #
@@ -2160,6 +2166,8 @@ ton
 with
 &21_CITY_SYLL[1]
 by
+&22_CITY_SYLL[1]
+holme
 #
 # Max: 200 (hex)
 #
@@ -3211,6 +3219,8 @@ heath
  Lock
 &43_CITY_SUFFIX
 er's Lock
+&44_CITY_SUFFIX
+ St. George
 # 
 # Max: 50 (hex)
 #
@@ -3313,6 +3323,8 @@ green
  Minor
 &C_CITY_SUFFIX[4]
  Green
+&D_CITY_SUFFIX[4]
+ St. Jute
 # 
 # Max: 50 (hex)
 #
@@ -6302,3 +6314,83 @@ helptxt_access_minimap
 Show this line's route on the map in schematic form
 (speed_restricted_by_crossing)
 (speed restricted by a crossing)
+cl_general
+General information
+pax_traffic
+Passengers
+mail_traffic
+Mail
+goods_traffic
+Goods
+Passengers using public transportation in the last quarter
+Passengers using public transportation in the last quarter
+Percentage of users of public transportation
+Percentage of passengers who use public transportation
+Number of mail sent in the last quarter
+Amount of mail sent in the last quarter
+Mail delivery success in the last quarter
+Amount of mail delivered successfully in the last quarter
+pax_destination_mapping
+Passenger destination mapping
+Open the color legend
+Colour legend
+pax_transportation_ratio
+Passenger transport by mode
+helptxt_pax_transportation_ratio
+The proportion of passengers in this city who reached their destinations, broken down by mode
+City stops
+City stops
+City attractions
+City attractions
+City factories
+City industries
+Open the list of stops in this city
+Open the list of stops in this city
+Open the list of attraction buildings in this city
+Open the list of attraction buildings in this city
+Open the list of factories in this city
+Open the list of factories in this city
+too_slow_public_transportation
+Public transport journey too slow
+too_slow_privatecar
+Private car journey too slow
+destination_unavailable
+Destination unavailable (e.g. no jobs, no stock)
+(ci_demands)
+Demand
+Manufacturers
+Manufacturers
+Production boosted by power supply
+Production boosted by electricity supply
+fl_stats_last_month
+Data (last month)
+edit_line_color
+Edit line colour/code
+Use unique line color
+Use a unique line colour
+Use line letter code
+Use line letter/number code
+Base color:
+Base colour:
+sub_bg:
+Coloured background
+Frame with corners
+Square cornered shape
+Letter code
+Letter code
+Number
+Number
+Colored
+Coloured
+White
+White
+save
+Save
+reset
+Reset
+Save your changes and close the dialog.
+Save your changes and close the dialogue
+You do not have permission to edit!
+You do not have permission to edit this
+helptxt_linecode_use_sub_background
+Use a contrasting coloured background for this part of the code
