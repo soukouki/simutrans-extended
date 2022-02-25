@@ -2472,18 +2472,19 @@ const char *tool_plant_tree_t::work( player_t *player, koord3d pos )
 		bool check_climates = true;
 		bool random_age = true;
 		if(default_param==NULL  ||  strlen(default_param)==0) {
-			desc = baum_t::random_tree_for_climate( welt->get_climate( k ) );
+			desc = tree_builder_t::random_tree_for_climate( welt->get_climate( k ) );
 		}
 		else {
 			// parse default_param: bbdesc_nr b=1 ignore climate b=1 random age
 			check_climates = default_param[0]=='0';
 			random_age = default_param[1]=='1';
-			desc = baum_t::find_tree(default_param+3);
+			desc = tree_builder_t::find_tree(default_param+3);
 		}
-		if(desc  &&  baum_t::plant_tree_on_coordinate( k, desc, check_climates, random_age )  ) {
+		if(desc  &&  tree_builder_t::plant_tree_on_coordinate( k, desc, check_climates, random_age )  ) {
 			player_t::book_construction_costs(player, welt->get_settings().cst_remove_tree, k, ignore_wt);
 			return NULL;
 		}
+
 		return "";
 	}
 	return NULL;
@@ -6203,6 +6204,12 @@ bool tool_build_pier_auto_t::init(player_t *player){
 
 	if(is_ctrl_pressed() && is_local_execution()){
 		create_win(new pier_height_select_t(player, this), w_info, (ptrdiff_t)this);
+	}else if(is_shift_pressed() && is_local_execution()){
+		if(get_height(player)==0){
+			set_height(player,2);
+		}else{
+			set_height(player,0);
+		}
 	}
 	return two_click_tool_t::init(player) && (desc!=NULL);
 }
@@ -8250,7 +8257,7 @@ const char *tool_forest_t::do_work( player_t *player, const koord3d &start, cons
 	nw.x = min(start.x, end.x)+(wh.x/2);
 	nw.y = min(start.y, end.y)+(wh.y/2);
 
-	sint64 costs = baum_t::create_forest( nw, wh );
+	sint64 costs = tree_builder_t::create_forest( nw, wh, 0, 0, welt->get_size().x, welt->get_size().y );
 	player_t::book_construction_costs(player, costs * welt->get_settings().cst_remove_tree, end.get_2d(), ignore_wt);
 
 	return NULL;
@@ -9810,6 +9817,18 @@ bool tool_change_line_t::init( player_t *player )
 					line->propogate_livery_scheme();
 				}
 			}
+			break;
+		case 'A': // Change Abbreviation color/style
+			{
+				if( line.is_bound() ) {
+					uint8 index;
+					uint8 style;
+					sscanf(p, "%hhi,%hhi", &index, &style);
+
+					line->set_line_color(index, style);
+				}
+			}
+			break;
 	}
 	return false;
 }
@@ -10194,10 +10213,10 @@ bool tool_change_traffic_light_t::init( player_t *player )
 					rs->set_ticks_offset( (uint8)ticks );
 				}
 				else if(  ns == 4  ) {
-					rs->set_ticks_yellow_ns( (uint8)ticks );
+					rs->set_ticks_amber_ns( (uint8)ticks );
 				}
 				else if(  ns == 3  ) {
-					rs->set_ticks_yellow_ow( (uint8)ticks );
+					rs->set_ticks_amber_ow( (uint8)ticks );
 				}
 				// update the window
 				if(  rs->get_desc()->is_traffic_light()  ) {
@@ -10275,6 +10294,7 @@ bool tool_change_city_t::init( player_t *player )
 /* Handles renaming of ingame entities. Needs a default param:
  * [object='c|h|l|m|t|p|f'][id|pos],[name]
  * c=convoi, h=halt, l=line,  m=marker, t=town, p=player, f=factory
+ * A=line lettercode left, B=line lettercode right
  * in case of marker / factory, id is a pos3d string
  */
 bool tool_rename_t::init(player_t *player)
@@ -10291,6 +10311,8 @@ bool tool_rename_t::init(player_t *player)
 		case 'c':
 		case 't':
 		case 'p':
+		case 'A':
+		case 'B':
 			id = atoi(p);
 			while(  *p>0  &&  *p++!=','  ) {
 			}
@@ -10342,6 +10364,26 @@ bool tool_rename_t::init(player_t *player)
 				if(  sl  ) {
 					sl->update_data( line );
 				}
+				return false;
+			}
+			break;
+		}
+		case 'A':
+		{
+			linehandle_t line;
+			line.set_id( id );
+			if (line.is_bound() && (!env_t::networkmode || player_t::check_owner(line->get_owner(), player))) {
+				line->set_linecode_l( p );
+				return false;
+			}
+			break;
+		}
+		case 'B':
+		{
+			linehandle_t line;
+			line.set_id( id );
+			if (line.is_bound() && (!env_t::networkmode || player_t::check_owner(line->get_owner(), player))) {
+				line->set_linecode_r( p );
 				return false;
 			}
 			break;
@@ -10661,7 +10703,7 @@ bool tool_reassign_signal_internal_t::init(player_t *player)
 	koord3d sig_pos;
 	koord3d new_sb_pos;
 
-	if (6 != sscanf(default_param, "%hi,%hi,%hi,%hi,%hi,%hi", &sig_pos.x, &sig_pos.y, &sig_pos.z, &new_sb_pos.x, &new_sb_pos.y, &new_sb_pos.z))
+	if (6 != sscanf(default_param, "%hi,%hi,%hhi,%hi,%hi,%hhi", &sig_pos.x, &sig_pos.y, &sig_pos.z, &new_sb_pos.x, &new_sb_pos.y, &new_sb_pos.z))
 	{
 		dbg->error("tool_reassign_signal_internal_t::init", "could not perform (%s)", default_param);
 		return false;
