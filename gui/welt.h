@@ -35,8 +35,6 @@ private:
 	array2d_tpl<PIXVAL> map;
 	scr_size            map_size;
 
-	double tile_km = 0.0;
-
 	bool load_heightfield;
 	bool loaded_heightfield;
 	bool load;
@@ -96,22 +94,20 @@ private:
 
 	void update_densities();
 
+
 public:
-
-	static uint32 memory;
-
 	welt_gui_t(settings_t*);
 
 	/**
-	* Berechnet Preview-Karte neu. Inititialisiert RNG neu!
-	* public, because also the climate dialog need it
-	*/
+	 * Berechnet Preview-Karte neu. Inititialisiert RNG neu!
+	 * public, because also the climate dialog need it
+	 */
 	void update_preview(bool load_heightfield = false);
 	void clear_loaded_heightfield() { loaded_heightfield =0; }
 	bool get_loaded_heightfield() const { return loaded_heightfield; }
 
 	/**
-	* Set the window associated helptext
+	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
 	 */
 	const char * get_help_filename() const OVERRIDE {return "new_world.txt";}
@@ -132,7 +128,7 @@ public:
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
-	static void update_memory(const settings_t* sets);
+	static void update_memory(gui_label_buf_t *label, const settings_t* sets);
 };
 
 #endif
