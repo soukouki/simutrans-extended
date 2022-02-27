@@ -1018,6 +1018,7 @@ void convoi_info_t::rdwr(loadsave_t *file)
 	// init window
 	if(  file->is_loading()  &&  cnv.is_bound())
 	{
+		loading_bar.set_cnv(cnv);
 		init(cnv);
 
 		reset_min_windowsize();
