@@ -1453,7 +1453,7 @@ void win_set_pos(gui_frame_t *gui, int x, int y)
 bool last_drag_is_caught = false;
 
 // since check_pos_win is processed before i.e. scrolling map
-// we do not want to catch the mouse, if we use it already 
+// we do not want to catch the mouse, if we use it already
 void catch_dragging()
 {
 	last_drag_is_caught = true;
