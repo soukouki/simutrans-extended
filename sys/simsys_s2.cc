@@ -185,14 +185,14 @@ static int SDLCALL my_event_filter(void* /*userdata*/, SDL_Event* event)
 			pak_name.erase(pak_name.length() - 1);
 			pak_name.append(".sve");
 
-			world()->save(pak_name.c_str(), true, SAVEGAME_VER_NR, true);
+			world()->save(pak_name.c_str(), true, SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR, true);
 			env_t::restore_UI = old_restore_UI;
 		}
 		// save settings
 		{
 			dr_chdir(env_t::user_dir);
 			loadsave_t settings_file;
-			if (settings_file.wr_open("settings.xml", loadsave_t::xml, 0, "settings only/", SAVEGAME_VER_NR) == loadsave_t::FILE_STATUS_OK) {
+			if (settings_file.wr_open("settings.xml", loadsave_t::xml, 0, "settings only/", SAVEGAME_VER_NR, EXTENDED_VER_NR, EXTENDED_REVISION_NR) == loadsave_t::FILE_STATUS_OK) {
 				env_t::rdwr(&settings_file);
 				env_t::default_settings.rdwr(&settings_file);
 				settings_file.close();
