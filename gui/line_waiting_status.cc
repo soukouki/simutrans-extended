@@ -12,9 +12,10 @@
 #include "../simworld.h"
 
 
-gui_halt_waiting_catg_t::gui_halt_waiting_catg_t(halthandle_t h, uint8 catg, bool yesno)
+gui_halt_waiting_catg_t::gui_halt_waiting_catg_t(halthandle_t h, uint8 catg, linehandle_t l, bool yesno)
 {
 	halt = h;
+	line = l;
 	catg_index = catg;
 	divide_by_class = yesno;
 	set_table_layout(1,0);
@@ -44,7 +45,7 @@ void gui_halt_waiting_catg_t::update()
 				if (wtyp->get_catg_index() != catg_index) {
 					continue;
 				}
-				const uint32 sum = halt->get_ware_summe(wtyp);
+				const uint32 sum = line.is_bound() ? halt->get_ware_summe(wtyp, line) : halt->get_ware_summe(wtyp);
 				if (sum > 0) {
 					if (got_one) {
 						new_component<gui_label_t>(", ", SYSCOL_TEXT);
@@ -173,7 +174,7 @@ void gui_line_waiting_status_t::init()
 
 					for (uint8 catg_index = 0; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
 						if (line->get_goods_catg_index().is_contained(catg_index)) {
-							new_component<gui_halt_waiting_catg_t>(halt, catg_index);
+							new_component<gui_halt_waiting_catg_t>(halt, catg_index, line);
 						}
 					}
 				}

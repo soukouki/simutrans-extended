@@ -17,6 +17,7 @@
 class gui_halt_waiting_catg_t : public gui_aligned_container_t
 {
 	halthandle_t halt;
+	linehandle_t line;
 	uint8 catg_index;
 	cbuffer_t buf;
 
@@ -25,7 +26,7 @@ class gui_halt_waiting_catg_t : public gui_aligned_container_t
 	bool divide_by_class;
 
 public:
-	gui_halt_waiting_catg_t(halthandle_t h, uint8 catg, bool divide_by_class = true);
+	gui_halt_waiting_catg_t(halthandle_t h, uint8 catg, linehandle_t line = linehandle_t(), bool divide_by_class = true);
 
 	void update();
 
