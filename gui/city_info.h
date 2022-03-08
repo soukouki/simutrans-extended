@@ -20,7 +20,7 @@
 #include "components/gui_tab_panel.h"
 
 class stadt_t;
-template <class T> class sparse_tpl;
+template <class T, typename IDX> class sparse_tpl;
 class gui_city_minimap_t;
 
 /**
