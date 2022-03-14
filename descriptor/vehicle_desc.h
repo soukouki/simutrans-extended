@@ -155,6 +155,7 @@ private:
 	uint8 *comfort;                  // How comfortable that a vehicle is for passengers. (Pointer to an array of comfort levels per class)
 
 	uint8 classes;                   // The number of different classes that this vehicle accommodates
+	uint8 accommodation_classes = 1; // total accommodations that this vehicle has
 
 	/** The time that the vehicle takes to load
 	  * in ticks. Min: if no passengers/goods
@@ -332,7 +333,7 @@ public:
 				const uint8 freight_images = freight_image_type == 255 ? 1 : freight_image_type;
 				for(uint8 i = 0; i < livery_image_type; i++)
 				{
-					if(!strcmp(livery_type, get_child<text_desc_t>(5 + trailer_count + leader_count + upgrades + freight_images + i)->get_text()))
+					if(!strcmp(livery_type, get_child<text_desc_t>(5 + trailer_count + leader_count + upgrades + accommodation_classes + freight_images + i)->get_text()))
 					{
 						livery_index = i;
 						break;
@@ -363,7 +364,7 @@ public:
 				// With the "default" livery, always select livery index 0
 				for(uint8 i = 0; i < livery_image_type; i++)
 				{
-					if(!strcmp(livery_type, get_child<text_desc_t>(6 + trailer_count + leader_count + upgrades + i)->get_text()))
+					if(!strcmp(livery_type, get_child<text_desc_t>(6 + trailer_count + leader_count + upgrades + accommodation_classes + i)->get_text()))
 					{
 						livery_index = i;
 						break;
@@ -394,7 +395,7 @@ public:
 			for( uint8 i=0;  i<freight_image_type;  i++  )
 			{
 
-				if (ware == get_child<goods_desc_t>(6 + trailer_count + leader_count + upgrades + i))
+				if (ware == get_child<goods_desc_t>(6 + trailer_count + leader_count + upgrades + accommodation_classes + i))
 				{
 					goods_index = i;
 					break;
@@ -421,7 +422,7 @@ public:
 
 			for( uint8 i=0;  i<freight_image_type;  i++  )
 			{
-				if (ware == get_child<goods_desc_t>(6 + trailer_count + leader_count + upgrades + i))
+				if (ware == get_child<goods_desc_t>(6 + trailer_count + leader_count + upgrades + accommodation_classes + i))
 				{
 					goods_index = i;
 					break;
@@ -432,7 +433,7 @@ public:
 			{
 				for(uint8 j = 0; j < livery_image_type; j++)
 				{
-					if(!strcmp(livery_type, get_child<text_desc_t>(6 + trailer_count + leader_count + freight_image_type + upgrades + j)->get_text()))
+					if(!strcmp(livery_type, get_child<text_desc_t>(6 + trailer_count + leader_count + freight_image_type + upgrades + accommodation_classes + j)->get_text()))
 					{
 						livery_index = j;
 						break;
@@ -495,7 +496,7 @@ public:
 			for(sint8 i = 0; i < livery_image_type; i++)
 			{
 				const uint8 freight_images = freight_image_type == 255 ? 1 : freight_image_type;
-				const char* livery_name = get_child<text_desc_t>(5 + trailer_count + leader_count + upgrades + freight_images + i)->get_text();
+				const char* livery_name = get_child<text_desc_t>(5 + trailer_count + leader_count + upgrades + accommodation_classes + freight_images + i)->get_text();
 				if(!strcmp(name, livery_name))
 				{
 					return true;
@@ -512,6 +513,12 @@ public:
 		return livery_image_type;
 	}
 	uint16 get_available_livery_count(class karte_t *welt) const;
+
+	uint8 get_accommodations() const
+	{
+		return accommodation_classes;
+	}
+	const char* get_accommodation_name(uint8 a_class) const;
 
 	/**
 	 * Returns allowed leader vehicles.
