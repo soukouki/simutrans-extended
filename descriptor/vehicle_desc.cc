@@ -462,7 +462,7 @@ const char* vehicle_desc_t::get_accommodation_name(uint8 a_class) const
 		return NULL;
 	}
 	else if (!accommodation_classes) {
-		// old pak => return default 
+		// old pak => return default
 		return goods_manager_t::get_default_accommodation_class_name(get_freight_type()->get_catg_index(), a_class);
 	}
 	uint8 count = 0;
