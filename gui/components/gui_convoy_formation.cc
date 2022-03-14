@@ -196,7 +196,7 @@ scr_size gui_convoy_formation_t::draw_capacities(scr_coord offset) const
 						display_color_img(goods_manager_t::get_info_catg_index(catg_index)->get_catg_symbol(), offset.x + left, offset.y + top + FIXED_SYMBOL_YOFF, 0, false, false);
 						left += 12;
 						// [class name]
-						buf.append(goods_manager_t::get_translated_wealth_name(catg_index, i));
+						buf.append(goods_manager_t::get_translated_fare_class_name(catg_index, i));
 
 						buf.printf(" %i/%i", cargo_sum, capacity);
 						left += display_proportional_clip_rgb(offset.x + left, offset.y + top, buf, ALIGN_LEFT, text_col, true);
