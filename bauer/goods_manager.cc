@@ -227,7 +227,7 @@ uint8 goods_manager_t::get_classes_catg_index(const uint8 catg_index)
 const char * goods_manager_t::get_translated_wealth_name(const uint8 catg_index, const uint8 g_class = 0)
 {
 	if (g_class >= get_classes_catg_index(catg_index)) {
-		return '\0';
+		return "\0";
 	}
 	if (catg_index == goods_manager_t::INDEX_PAS) {
 		return translator::translate(wealth_class_name_untranslated_pas[g_class]);
@@ -235,13 +235,13 @@ const char * goods_manager_t::get_translated_wealth_name(const uint8 catg_index,
 	else if (catg_index == goods_manager_t::INDEX_MAIL) {
 		return translator::translate(wealth_class_name_untranslated_mail[g_class]);
 	}
-	return '\0';
+	return "\0";
 }
 
 const char * goods_manager_t::get_translated_fare_class_name(const uint8 catg_index, const uint8 f_class = 0)
 {
 	if (f_class >= get_classes_catg_index(catg_index)) {
-		return '\0';
+		return "\0";
 	}
 	if (catg_index == goods_manager_t::INDEX_PAS) {
 		return translator::translate(fare_class_name_untranslated_pas[f_class]);
@@ -249,13 +249,13 @@ const char * goods_manager_t::get_translated_fare_class_name(const uint8 catg_in
 	else if (catg_index == goods_manager_t::INDEX_MAIL) {
 		return translator::translate(fare_class_name_untranslated_mail[f_class]);
 	}
-	return '\0';
+	return "\0";
 }
 
 const char * goods_manager_t::get_default_accommodation_class_name(const uint8 catg_index, const uint8 a_class = 0)
 {
 	if (a_class >= get_classes_catg_index(catg_index)) {
-		return '\0';
+		return "\0";
 	}
 	if (catg_index == goods_manager_t::INDEX_PAS) {
 		return default_accommodation_name_untranslated_pas[a_class];
@@ -263,7 +263,7 @@ const char * goods_manager_t::get_default_accommodation_class_name(const uint8 c
 	else if (catg_index == goods_manager_t::INDEX_MAIL) {
 		return default_accommodation_name_untranslated_mail[a_class];
 	}
-	return '\0';
+	return "\0";
 }
 
 
