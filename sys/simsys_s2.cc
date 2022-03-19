@@ -133,6 +133,9 @@ sint32 y_scale = SCALE_NEUTRAL_Y;
 // make sure we have at least so much pixel in y-direction
 #define MIN_SCALE_HEIGHT (640)
 
+// Most Android devices are underpowered to handle larger screens
+#define MAX_AUTOSCALE_WIDTH (1280)
+
 // screen -> texture coords
 #define SCREEN_TO_TEX_X(x) (((x) * SCALE_NEUTRAL_X) / x_scale)
 #define SCREEN_TO_TEX_Y(y) (((y) * SCALE_NEUTRAL_Y) / y_scale)
@@ -150,20 +153,20 @@ bool dr_set_screen_scale(sint16 scale_percent)
 	const sint32 old_x_scale = x_scale;
 	const sint32 old_y_scale = y_scale;
 
-	if(  scale_percent == -1  ) {
-#if SDL_VERSION_ATLEAST(2,0,4)
+	if (scale_percent == -1) {
 		float hdpi, vdpi;
 		SDL_Init( SDL_INIT_VIDEO );
 		SDL_DisplayMode mode;
 		SDL_GetCurrentDisplayMode(0, &mode);
 		DBG_MESSAGE("dr_auto_scale", "screen resolution width=%d, height=%d", mode.w, mode.h);
-		// auto scale only for high enough screens
 
-		if(  mode.h > 1.5*MIN_SCALE_HEIGHT  &&  SDL_GetDisplayDPI( 0, NULL, &hdpi, &vdpi )==0  ) {
+#if SDL_VERSION_ATLEAST(2,0,4)
+		// auto scale only for high enough screens
+		if (mode.h > 1.5 * MIN_SCALE_HEIGHT && SDL_GetDisplayDPI(0, NULL, &hdpi, &vdpi) == 0) {
 
 			x_scale = ((sint64)hdpi * SCALE_NEUTRAL_X + 1) / TARGET_DPI;
 			y_scale = ((sint64)vdpi * SCALE_NEUTRAL_Y + 1) / TARGET_DPI;
-			DBG_MESSAGE("auto_dpi_scaling","x=%i, y=%i", x_scale, y_scale);
+			DBG_MESSAGE("auto_dpi_scaling", "x=%i, y=%i", x_scale, y_scale);
 		}
 
 		sint32 current_y = SCREEN_TO_TEX_Y(mode.h);
@@ -171,7 +174,7 @@ bool dr_set_screen_scale(sint16 scale_percent)
 			DBG_MESSAGE("dr_auto_scale", "virtual height=%d < %d", current_y, MIN_SCALE_HEIGHT);
 			x_scale = (x_scale * current_y) / MIN_SCALE_HEIGHT;
 			y_scale = (y_scale * current_y) / MIN_SCALE_HEIGHT;
-			DBG_MESSAGE("new scaling", "x=%i, y=%i", x_scale, y_scale);
+			DBG_MESSAGE("new scaling (min 640)", "x=%i, y=%i", x_scale, y_scale);
 		}
 #else
 #pragma message "SDL version must be at least 2.0.4 to support autoscaling."
