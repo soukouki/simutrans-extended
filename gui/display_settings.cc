@@ -909,9 +909,9 @@ color_gui_t::color_gui_t() :
 	gui_settings.reselect_closes_tool.add_listener(this);
 
 	set_resizemode(diagonal_resize);
-	set_min_windowsize( scr_size(D_DEFAULT_WIDTH, max(get_min_windowsize().h, traffic_settings.get_size().h)) );
+	set_min_windowsize( gui_settings.get_min_size()+scr_size(0,D_TAB_HEADER_HEIGHT) );
 	// It is assumed that the map view tab is the tab with the most lines.
-	set_windowsize( scr_size(D_DEFAULT_WIDTH, map_settings.get_size().h+D_TAB_HEADER_HEIGHT+D_TITLEBAR_HEIGHT+D_MARGINS_Y) );
+	set_windowsize( get_min_windowsize()+map_settings.get_min_size() );
 	resize( scr_coord( 0, 0 ) );
 }
 
