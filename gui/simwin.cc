@@ -212,7 +212,7 @@ static int display_gadget_box(sint8 code,
 		else if (code == SKIN_GADGET_LOCKED) {
 			gadget_text = "L";
 		}
-		display_proportional_rgb( x+4, y+4, gadget_text, ALIGN_LEFT, color_idx_to_rgb(COL_BLACK), false );
+		display_proportional_rgb( x+4, y+4, gadget_text, ALIGN_LEFT, SYSCOL_TEXT, false );
 	}
 
 	int side = x+REVERSE_GADGETS*D_GADGET_WIDTH-1;
