@@ -1667,6 +1667,8 @@ remove narrowgauge tracks
 ナローゲージの撤去
 remove powerlines
 送電線の撤去
+remove signal
+信号の撤去
 remove roads
 道路の撤去
 remove tracks
