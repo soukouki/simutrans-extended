@@ -32,9 +32,9 @@ gui_tab_panel_t::gui_tab_panel_t() :
 
 
 
-void gui_tab_panel_t::add_tab(gui_component_t *c, const char *name, const skin_desc_t *desc, const char *tooltip )
+void gui_tab_panel_t::add_tab(gui_component_t *c, const char *name, const skin_desc_t *desc, const char *tooltip, PIXVAL color )
 {
-	tabs.append( tab(c, desc?NULL:name, desc?desc->get_image(0):NULL, tooltip) );
+	tabs.append( tab(c, desc?NULL:name, desc?desc->get_image(0):NULL, tooltip, color) );
 	// only call set_size, if size was already assigned
 	if (size.w > 0  && size.h > 0) {
 		set_size( get_size() );
@@ -207,6 +207,9 @@ void gui_tab_panel_t::draw(scr_coord parent_pos)
 
 			if (i != active_tab) {
 				// Non active tabs
+				if (iter.color!=0) {
+					display_blend_wh_rgb(text_x+1, ypos+2, iter.width-2, D_TAB_HEADER_HEIGHT-3, iter.color, 60);
+				}
 				display_fillbox_wh_clip_rgb(text_x+1, ypos+2, iter.width-2, 1, SYSCOL_HIGHLIGHT, true);
 				display_fillbox_wh_clip_rgb(text_x, ypos+required_size.h-1, iter.width-2, 1, SYSCOL_HIGHLIGHT, true);
 
@@ -225,6 +228,9 @@ void gui_tab_panel_t::draw(scr_coord parent_pos)
 			}
 			else {
 				// Active tab
+				if (iter.color!=0) {
+					display_fillbox_wh_clip_rgb(text_x+1, ypos+2-1, iter.width-2, D_TAB_HEADER_HEIGHT-2, iter.color, true);
+				}
 				display_fillbox_wh_clip_rgb(text_x+1, ypos, iter.width-2, 1, SYSCOL_HIGHLIGHT, true);
 
 				display_vline_wh_clip_rgb(text_x, ypos+1, required_size.h-2, SYSCOL_HIGHLIGHT, true);
