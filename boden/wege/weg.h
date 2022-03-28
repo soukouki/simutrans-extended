@@ -424,8 +424,8 @@ public:
 	 */
 	const char *is_deletable(const player_t *player) OVERRIDE;
 
-	bool is_low_clearence(const player_t* player){
-		return (!this->is_deletable(player) && !this->is_public_right_of_way() && (this->desc->is_low_clearence()));
+	bool is_low_clearence(const player_t* player, bool permissive=true){
+		return (!this->is_deletable(player) && !this->is_public_right_of_way() && (this->desc->is_low_clearence(permissive)));
 	}
 
 	waytype_t get_waytype() const OVERRIDE { return wtyp; }

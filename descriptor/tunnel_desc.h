@@ -49,6 +49,8 @@ private:
 	 */
 	uint8 broad_portals;
 
+	bool is_half_height;
+
 public:
 
 	/*
@@ -172,6 +174,10 @@ public:
 	inline bool get_has_way() const { return has_way == 1 || has_way == 3; }
 
 	inline bool has_tunnel_internal_images() const { return has_way == 2 || has_way == 3;  }
+
+	bool get_is_half_height() const {return is_half_height;}
+
+	bool check_way_slope(slope_t::type slope) const;
 
 	/* Way constraints: determines whether vehicles
 	 * can travel on this way. This method decodes

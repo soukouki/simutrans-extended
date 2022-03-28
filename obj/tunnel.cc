@@ -305,3 +305,7 @@ void tunnel_t::set_desc(const tunnel_desc_t *_desc)
 	}
 	player_t::add_maintenance(get_owner(), maint, get_desc()->get_finance_waytype());
 }
+
+bool tunnel_t::get_is_half_height() const{
+	return desc->get_is_half_height();
+}

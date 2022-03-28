@@ -193,7 +193,7 @@ koord3d tunnel_builder_t::find_end_pos(player_t *player, koord3d pos, koord zv, 
 
 		// next tile
 		gr = welt->lookup_with_checking_down_way_slope(pos);
-		if(  !gr  &&  env_t::pak_height_conversion_factor==2  ) {
+		if(  !gr  &&  env_t::pak_height_conversion_factor==2 && !desc->get_is_half_height() ) {
 			// check for one above
 			gr = welt->lookup(pos + koord3d(0,0,1));
 		}
@@ -215,7 +215,7 @@ koord3d tunnel_builder_t::find_end_pos(player_t *player, koord3d pos, koord zv, 
 				}
 			}
 			const uint8 slope = gr->get_grund_hang();
-			const slope_t::type new_slope = slope_type(-zv) * welt->get_settings().get_way_height_clearance();
+			const slope_t::type new_slope = slope_type(-zv) * (welt->get_settings().get_way_height_clearance() == 2 && !desc->get_is_half_height() ? 2 : 1);
 
 			if(  gr->ist_karten_boden()  &&  ( slope!=new_slope  ||  pos.z!=gr->get_pos().z )  ) {
 				// lower terrain to match - most of time shouldn't need to raise
@@ -326,10 +326,8 @@ const char *tunnel_builder_t::build( player_t *player, koord pos, const tunnel_d
 		return "Tunnel muss an\neinfachem\nHang beginnen!\n";
 	}
 
-/************************************** FIX ME ***************************************************
-********************** THIS MUST BE RATHER A PROPERTY OF THE TUNNEL IN QUESTION ! ****************/
 	// for conversion factor 1, must be single height, for conversion factor 2, must be double
-	if(  (env_t::pak_height_conversion_factor == 1  &&  !is_one_high(slope))  ||  (env_t::pak_height_conversion_factor == 2  &&  is_one_high(slope))  ) {
+	if(  !desc->check_way_slope(slope)  ) {
 		return "Tunnel muss an\neinfachem\nHang beginnen!\n";
 	}
 
@@ -373,7 +371,10 @@ const char *tunnel_builder_t::build( player_t *player, koord pos, const tunnel_d
 
 	// Begin and end found, we can build
 
-	slope_t::type end_slope = slope_type(-zv) * env_t::pak_height_conversion_factor;
+	slope_t::type end_slope = slope_type(-zv);
+	if( env_t::pak_height_conversion_factor == 2 && !desc->get_is_half_height()){
+		end_slope *= 2;
+	}
 	if(  full_tunnel  &&  (!end_gr  ||  end_gr->get_grund_hang()!=end_slope)  ) {
 		// end slope not at correct height - we have already checked in find_end_pos that we can change this
 		sint8 hsw = end.z + corner_sw(end_slope);
