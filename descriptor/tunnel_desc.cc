@@ -8,6 +8,7 @@
 #include "../dataobj/ribi.h"
 #include "tunnel_desc.h"
 #include "../network/checksum.h"
+#include "../dataobj/environment.h"
 
 int tunnel_desc_t::slope_indices[81] = {
 	-1, // 0:
@@ -107,4 +108,11 @@ void tunnel_desc_t::calc_checksum(checksum_t *chk) const
 waytype_t tunnel_desc_t::get_finance_waytype() const
 {
 	return ((get_way_desc() && (get_way_desc()->get_styp() == type_tram)) ? tram_wt : get_waytype()) ;
+}
+
+bool tunnel_desc_t::check_way_slope(slope_t::type slope) const{
+	return !((env_t::pak_height_conversion_factor == 1  &&  !is_one_high(slope))
+			|| (env_t::pak_height_conversion_factor == 2
+				&& ((get_is_half_height() && !is_one_high(slope))
+					|| (!get_is_half_height() && is_one_high(slope)))));
 }

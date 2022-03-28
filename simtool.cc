@@ -3183,7 +3183,7 @@ const char *tool_build_bridge_t::do_work( player_t *player, const koord3d &start
 		const koord zv(ribi_type(end-start));
 		sint8 bridge_height;
 		const char *error;
-		koord3d end2 = bridge_builder_t::find_end_pos(player, start, zv, desc, error, bridge_height, false, koord_distance(start, end), is_ctrl_pressed());
+		koord3d end2 = bridge_builder_t::find_end_pos(player, start, zv, desc, error, bridge_height, false, koord_distance(start, end), is_ctrl_pressed(), is_shift_pressed());
 		assert(end2 == end); (void)end2;
 
 		if (way_desc == NULL || (way_desc->get_styp() == type_elevated  &&  way_desc->get_wtyp() != air_wt))
@@ -3229,7 +3229,7 @@ void tool_build_bridge_t::mark_tiles(  player_t *player, const koord3d &start, c
 	const bridge_desc_t *desc = bridge_builder_t::get_desc(default_param);
 	const char *error;
 	sint8 bridge_height;
-	koord3d end2 = bridge_builder_t::find_end_pos(player, start, zv, desc, error, bridge_height, false, koord_distance(start, end), is_ctrl_pressed());
+	koord3d end2 = bridge_builder_t::find_end_pos(player, start, zv, desc, error, bridge_height, false, koord_distance(start, end), is_ctrl_pressed(), is_shift_pressed());
 	assert(end2 == end); (void)end2;
 
 	sint64 costs = 0;
@@ -3415,7 +3415,7 @@ uint8 tool_build_bridge_t::is_valid_pos(  player_t *player, const koord3d &pos, 
 		// check whether we can build a bridge here
 		const char *error = NULL;
 		sint8 bridge_height;
-		koord3d end = bridge_builder_t::find_end_pos(player, start, koord(test), desc, error, bridge_height, false, koord_distance(start, pos), is_ctrl_pressed());
+		koord3d end = bridge_builder_t::find_end_pos(player, start, koord(test), desc, error, bridge_height, false, koord_distance(start, pos), is_ctrl_pressed(), is_shift_pressed());
 		if (end!=pos) {
 			return 0;
 		}
@@ -3472,6 +3472,10 @@ const char* tool_build_tunnel_t::get_tooltip(const player_t *) const
 	if(any_prohibitive)
 	{
 		strcat(toolstr, ")");
+		n+=1;
+	}
+	if(desc->get_is_half_height()){
+		n += sprintf(toolstr + n, "%s", translator::translate(" Half Height"));
 	}
 	return toolstr;
 }
@@ -3574,12 +3578,14 @@ const char *tool_build_tunnel_t::check_pos( player_t *player, koord3d pos)
 					return "";
 				}
 
-				if(  env_t::pak_height_conversion_factor != slope_t::max_diff(sl)  ) {
+
+
+				const tunnel_desc_t *desc = tunnel_builder_t::get_desc(default_param);
+
+				if(  !desc->check_way_slope(sl)  ) {
 					win_set_static_tooltip( translator::translate("The gradient does not fit a tunnel") );
 					return "";
 				}
-
-				const tunnel_desc_t *desc = tunnel_builder_t::get_desc(default_param);
 
 				// first check for building portal only
 				if(  is_ctrl_pressed()  ) {
@@ -3627,7 +3633,7 @@ void tool_build_tunnel_t::calc_route( way_builder_t &bauigel, const koord3d &sta
 		wb = way_builder_t::weg_search(desc->get_waytype(), desc->get_topspeed(), desc->get_max_axle_load(), 0, type_flat, desc->get_wear_capacity());
 	}
 
-	bauigel.init_builder(bt | way_builder_t::tunnel_flag, wb, desc);
+	bauigel.init_builder(bt | way_builder_t::tunnel_flag | (desc->get_is_half_height() ? way_builder_t::low_clearence_flag : (way_builder_t::bautyp_t)0), wb, desc);
 	bauigel.set_keep_existing_faster_ways( !is_ctrl_pressed() );
 	// wegbauer (way builder) tries to find route to 3d coordinate if no ground at end exists or is not kartenboden (map ground)
 	bauigel.calc_straight_route(start,end);

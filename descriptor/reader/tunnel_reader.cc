@@ -104,14 +104,20 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 			{
 				way_constraints.set_permissive(decode_uint8(p));
 				way_constraints.set_prohibitive(decode_uint8(p));
-				if(extended_version == 1)
+				if(extended_version >= 1)
 				{
 					desc->topspeed_gradient_1 = decode_uint16(p);
 					desc->topspeed_gradient_2 = decode_uint16(p);
 					desc->max_altitude = decode_sint8(p);
 					desc->max_vehicles_on_tile = decode_uint8(p);
 				}
-				if(extended_version > 1)
+				if(extended_version == 2){
+					uint8 flags = decode_uint8(p);
+					desc->is_half_height = flags & 0x01;
+				}else{
+					desc->is_half_height=false;
+				}
+				if(extended_version > 2)
 				{
 					dbg->fatal("tunnel_reader_t::read_node()","Incompatible pak file version for Simutrans-Ex, number %i", extended_version);
 				}
@@ -146,6 +152,7 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 			}
 			desc->has_way = decode_uint8(p);
 			desc->broad_portals = decode_uint8(p);
+			desc->is_half_height=false;
 		}
 		else if(version == 3) {
 			// versioned node, version 3 - underground way specification support
@@ -168,6 +175,7 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 				}
 			}
 			desc->broad_portals = 0;
+			desc->is_half_height=false;
 		}
 		else if(version == 2) {
 			// versioned node, version 2 - snow image support
@@ -193,6 +201,7 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 			}
 			desc->has_way = 0;
 			desc->broad_portals = 0;
+			desc->is_half_height=false;
 		}
 		else if(version == 1) {
 			// first versioned node, version 1
@@ -206,6 +215,7 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 			desc->axle_load = 999;
 			desc->has_way = 0;
 			desc->broad_portals = 0;
+			desc->is_half_height=false;
 		}
 		else {
 			dbg->fatal("tunnel_reader_t::read_node()","illegal version %d",version);

@@ -846,7 +846,7 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 		}
 		// tile above cannot have way unless we are a way (not powerline) with a maximum speed of 0 (and is not a road, waterway or tram line as above), or be surface if we are underground
 		to2 = welt->lookup( to->get_pos() + koord3d(0, 0, 1) );
-		if(  to2  &&  ((to2->get_weg_nr(0)  &&  ((desc->get_topspeed() > 0 && desc->get_waytype() != water_wt && desc->get_waytype() != road_wt && desc->get_waytype() != tram_wt) || (bautyp&bautyp_mask)==leitung))  ||  (bautyp & tunnel_flag) != 0)  )
+		if(  to2  &&  ((to2->get_weg_nr(0)  &&  ((!desc->is_low_clearence()) || (bautyp&bautyp_mask)==leitung))  ||  ((bautyp & tunnel_flag) != 0 && (bautyp & low_clearence_flag) == 0))  )
 		{
 			return false;
 		}
