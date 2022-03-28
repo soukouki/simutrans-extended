@@ -222,14 +222,15 @@ void gui_tab_panel_t::draw(scr_coord parent_pos)
 				else {
 					scr_coord_val const y = ypos   - iter.img->get_pic()->y + required_size.h / 2 - iter.img->get_pic()->h / 2 + 1;
 					scr_coord_val const x = text_x - iter.img->get_pic()->x + iter.width / 2      - iter.img->get_pic()->w / 2;
-//					display_img_blend(iter.img->get_id(), x, y, TRANSPARENT50_FLAG, false, true);
+
 					display_base_img(iter.img->get_id(), x, y, 1, false, true);
 				}
 			}
 			else {
 				// Active tab
 				if (iter.color!=0) {
-					display_fillbox_wh_clip_rgb(text_x+1, ypos+2-1, iter.width-2, D_TAB_HEADER_HEIGHT-2, iter.color, true);
+					display_fillbox_wh_clip_rgb(text_x+1, ypos+2-1, iter.width-2, 3, iter.color, true);
+					display_vlinear_gradient_wh_rgb(text_x+1, ypos+2+2, iter.width-2, D_TAB_HEADER_HEIGHT-5, iter.color, 80, 20);
 				}
 				display_fillbox_wh_clip_rgb(text_x+1, ypos, iter.width-2, 1, SYSCOL_HIGHLIGHT, true);
 

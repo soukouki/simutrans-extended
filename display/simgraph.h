@@ -279,6 +279,7 @@ PIXVAL display_blend_colors(PIXVAL background, PIXVAL foreground, int percent_bl
 void display_blend_wh_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, int percent_blend);
 
 void display_linear_gradient_wh_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, int percent_blend_start, int percent_blend_end);
+void display_vlinear_gradient_wh_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, int percent_blend_start, int percent_blend_end);
 
 void display_fillbox_wh_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, bool dirty);
 
