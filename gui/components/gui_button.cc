@@ -446,7 +446,7 @@ void button_t::draw(scr_coord offset)
 				const uint8 min_bar_width = max(((size.w-8)/rows)>>1, 2);
 				const uint8 max_bar_width = min_bar_width*rows;
 				scr_rect area_drawing(area.x, area.y, 6/*arrow width(5)+margin(1)*/+ max_bar_width, bars_height);
-				area_drawing.set_pos(gui_theme_t::gui_color_button_text_offset + area.get_pos() + scr_coord(D_GET_CENTER_ALIGN_OFFSET((6+max_bar_width),area.w),D_GET_CENTER_ALIGN_OFFSET(bars_height,size.h)));
+				area_drawing.set_pos(area.get_pos() + scr_coord(D_GET_CENTER_ALIGN_OFFSET((6+max_bar_width),area.w),D_GET_CENTER_ALIGN_OFFSET(bars_height,size.h)));
 
 				// draw an arrow
 				display_fillbox_wh_clip_rgb(area_drawing.x+2, area_drawing.y, 1, bars_height, SYSCOL_BUTTON_TEXT, false);
