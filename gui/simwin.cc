@@ -66,6 +66,7 @@
 #endif
 #include "scenario_info.h"
 #include "depotlist_frame.h"
+#include "vehiclelist_frame.h"
 #include "halt_list_frame.h"
 #include "curiositylist_frame_t.h"
 #include "factorylist_frame_t.h"
@@ -641,8 +642,8 @@ void rdwr_all_win(loadsave_t *file)
 					case magic_scenario_info:  w = new scenario_info_t(); break;
 					//case magic_depot:          w = new depot_frame_t(); break;
 					case magic_convoi_list:    w = new convoi_frame_t(); break;
-					//case magic_vehiclelist:    w = new vehiclelist_frame_t(); break;
-					//case magic_citylist_frame_t: w = new citylist_frame_t(); break;
+					case magic_depotlist:      w = new depotlist_frame_t(); break;
+					case magic_vehiclelist:    w = new vehiclelist_frame_t(); break;
 					case magic_halt_list:      w = new halt_list_frame_t(); break;
 					case magic_citylist_frame_t: w = new citylist_frame_t(); break;
 					case magic_curiositylist:  w = new curiositylist_frame_t(); break;
