@@ -348,16 +348,16 @@ bool depotlist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 void depotlist_frame_t::fill_list()
 {
 	scrolly.clear_elements();
-	uint32 p_totoal = 0;
+	uint32 p_total = 0;
 	FOR(slist_tpl<depot_t*>, const depot, depot_t::get_depot_list()) {
 		if( depot->get_owner() == player ) {
 			if(  tabs.get_active_tab_index() == 0  ||  depot->get_waytype() == tabs.get_active_tab_waytype()  ) {
 				scrolly.new_component<depotlist_stats_t>(depot);
 			}
-			p_totoal++;
+			p_total++;
 		}
 	}
-	lb_depot_counter.buf().printf("%u/%u", scrolly.get_count(), p_totoal);
+	lb_depot_counter.buf().printf("%u/%u", scrolly.get_count(), p_total);
 	lb_depot_counter.update();
 	scrolly.sort(0);
 	scrolly.set_size( scrolly.get_size());
