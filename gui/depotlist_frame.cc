@@ -262,6 +262,23 @@ depotlist_frame_t::depotlist_frame_t(player_t *player) :
 	scrolly(gui_scrolled_list_t::windowskin, depotlist_stats_t::compare)
 {
 	this->player = player;
+
+	init_table();
+}
+
+
+depotlist_frame_t::depotlist_frame_t() :
+	gui_frame_t(translator::translate("dp_title"), NULL),
+	scrolly(gui_scrolled_list_t::windowskin, depotlist_stats_t::compare)
+{
+	player = NULL;
+
+	init_table();
+}
+
+
+void depotlist_frame_t::init_table()
+{
 	last_depot_count = 0;
 
 	set_table_layout(1,0);
@@ -301,26 +318,6 @@ depotlist_frame_t::depotlist_frame_t(player_t *player) :
 
 	set_resizemode(diagonal_resize);
 	scrolly.set_maximize(true);
-	reset_min_windowsize();
-}
-
-
-depotlist_frame_t::depotlist_frame_t() :
-	gui_frame_t(translator::translate("dp_title"), NULL),
-	scrolly(gui_scrolled_list_t::windowskin, depotlist_stats_t::compare)
-{
-	player = NULL;
-	last_depot_count = 0;
-
-	set_table_layout(1, 0);
-
-	scrolly.set_maximize(true);
-	tabs.init_tabs(&scrolly);
-	tabs.add_listener(this);
-	add_component(&tabs);
-	fill_list();
-
-	set_resizemode(diagonal_resize);
 	reset_min_windowsize();
 }
 

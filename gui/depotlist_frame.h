@@ -34,6 +34,8 @@ private:
 
 	void fill_list();
 
+	void init_table();
+
 	player_t *player;
 
 public:
