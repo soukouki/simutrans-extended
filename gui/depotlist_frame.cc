@@ -24,8 +24,6 @@
 #include "../boden/wege/strasse.h"
 #include "../bauer/vehikelbauer.h"
 
-#define IMG_WIDTH 20 // same as gui_tab_panel
-
 enum sort_mode_t { by_waytype, by_convoys, by_vehicle, by_coord, by_region, SORT_MODES };
 
 uint8 depotlist_stats_t::sort_mode = by_waytype;
