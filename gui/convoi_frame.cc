@@ -270,13 +270,11 @@ convoi_frame_t::convoi_frame_t() :
 		new_component<gui_label_t>("cl_txt_mode");
 
 		for (uint8 i = 0; i < gui_convoy_formation_t::CONVOY_OVERVIEW_MODES; i++) {
-			overview_selctor.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(gui_convoy_formation_t::cnvlist_mode_button_texts[i]), SYSCOL_TEXT);
+			overview_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(gui_convoy_formation_t::cnvlist_mode_button_texts[i]), SYSCOL_TEXT);
 		}
-		overview_selctor.set_selection(cl_display_mode);
-		overview_selctor.set_width_fixed(true);
-		overview_selctor.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
-		overview_selctor.add_listener(this);
-		add_component(&overview_selctor);
+		overview_selector.set_selection(cl_display_mode);
+		overview_selector.add_listener(this);
+		add_component(&overview_selector);
 	}
 	end_table();
 
@@ -336,8 +334,8 @@ bool convoi_frame_t::action_triggered( gui_action_creator_t *comp, value_t /* */
 		sort_list();
 		sort_order.pressed = sortreverse;
 	}
-	else if(  comp==&overview_selctor  ) {
-		cl_display_mode = overview_selctor.get_selection();
+	else if(  comp==&overview_selector  ) {
+		cl_display_mode = overview_selector.get_selection();
 		sort_list();
 		resize(scr_size(0, 0));
 	}
@@ -415,7 +413,7 @@ void convoi_frame_t::rdwr(loadsave_t *file)
 		sortby = (sort_mode_t)default_sortmode;
 		sort_order.pressed = sortreverse;
 		sortedby.set_selection(default_sortmode);
-		overview_selctor.set_selection(cl_display_mode);
+		overview_selector.set_selection(cl_display_mode);
 		owner = welt->get_player(player_nr);
 		win_set_magic(this, magic_convoi_list + player_nr);
 

@@ -53,7 +53,7 @@ private:
 	uint32 last_world_convois;
 
 	// these are part of the top UI
-	gui_combobox_t	sortedby, overview_selctor;
+	gui_combobox_t	sortedby, overview_selector;
 	button_t	sort_order;
 	//button_t	display_mode;
 	button_t	filter_details;
