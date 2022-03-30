@@ -62,11 +62,8 @@ bool depotlist_frame_t::is_available_wt(waytype_t wt)
 depotlist_stats_t::depotlist_stats_t(depot_t *d)
 {
 	this->depot = d;
-	// pos button
 	set_table_layout(8,1);
-	gotopos.set_typ(button_t::posbutton_automatic);
-	gotopos.set_targetpos3d(depot->get_pos());
-	add_component(&gotopos);
+	new_component<gui_margin_t>(0);
 	const waytype_t wt = d->get_wegtyp();
 	waytype_symbol.set_image(skinverwaltung_t::get_waytype_skin(wt)->get_image_id(0), true);
 	add_component(&waytype_symbol);
@@ -95,20 +92,29 @@ depotlist_stats_t::depotlist_stats_t(depot_t *d)
 	lb_vh_count.set_fixed_width(proportional_string_width(translator::translate("%d vehicles")));
 	add_component(&lb_vh_count);
 
-	lb_region.buf().printf( " %s ", depot->get_pos().get_2d().get_fullstr() );
-	stadt_t* c = welt->get_city(depot->get_pos().get_2d());
-	if (c) {
-		lb_region.buf().append("- ");
-		lb_region.buf().append( c->get_name() );
-	}
-	if (!welt->get_settings().regions.empty()) {
-		if (!c) {
-			lb_region.buf().append("-");
+	add_table(2,1)->set_spacing(scr_size(0,0));
+	{
+		// pos button
+		gotopos.set_typ(button_t::posbutton_automatic);
+		gotopos.set_targetpos3d(depot->get_pos());
+		add_component(&gotopos);
+
+		lb_region.buf().printf( " %s ", depot->get_pos().get_2d().get_fullstr() );
+		stadt_t* c = welt->get_city(depot->get_pos().get_2d());
+		if (c) {
+			lb_region.buf().append("- ");
+			lb_region.buf().append( c->get_name() );
 		}
-		lb_region.buf().printf(" (%s)", translator::translate(welt->get_region_name(depot->get_pos().get_2d()).c_str()));
+		if (!welt->get_settings().regions.empty()) {
+			if (!c) {
+				lb_region.buf().append("-");
+			}
+			lb_region.buf().printf(" (%s)", translator::translate(welt->get_region_name(depot->get_pos().get_2d()).c_str()));
+		}
+		lb_region.update();
+		add_component(&lb_region);
 	}
-	lb_region.update();
-	add_component(&lb_region);
+	end_table();
 	update_label();
 
 	new_component<gui_fill_t>();
