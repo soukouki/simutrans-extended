@@ -26,6 +26,7 @@ private:
 	gui_combobox_t sortedby;
 	button_t sort_order;
 	gui_scrolled_list_t scrolly;
+	gui_label_buf_t lb_depot_counter;
 
 	gui_waytype_tab_panel_t tabs;
 
