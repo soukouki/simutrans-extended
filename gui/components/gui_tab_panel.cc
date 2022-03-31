@@ -208,7 +208,7 @@ void gui_tab_panel_t::draw(scr_coord parent_pos)
 			if (i != active_tab) {
 				// Non active tabs
 				if (iter.color!=0) {
-					display_blend_wh_rgb(text_x+1, ypos+2, iter.width-2, D_TAB_HEADER_HEIGHT-3, iter.color, 60);
+					display_fillbox_wh_clip_rgb(text_x + 1, ypos + 2, iter.width - 2, required_size.h - 3, iter.color, true);
 				}
 				display_fillbox_wh_clip_rgb(text_x+1, ypos+2, iter.width-2, 1, SYSCOL_HIGHLIGHT, true);
 				display_fillbox_wh_clip_rgb(text_x, ypos+required_size.h-1, iter.width-2, 1, SYSCOL_HIGHLIGHT, true);
@@ -230,7 +230,7 @@ void gui_tab_panel_t::draw(scr_coord parent_pos)
 				// Active tab
 				if (iter.color!=0) {
 					display_fillbox_wh_clip_rgb(text_x+1, ypos+2-1, iter.width-2, 3, iter.color, true);
-					display_vlinear_gradient_wh_rgb(text_x+1, ypos+2+2, iter.width-2, D_TAB_HEADER_HEIGHT-5, iter.color, 80, 20);
+					display_vlinear_gradient_wh_rgb(text_x+1, ypos+2+2, iter.width-2, required_size.h-5, iter.color, 75, 10);
 				}
 				display_fillbox_wh_clip_rgb(text_x+1, ypos, iter.width-2, 1, SYSCOL_HIGHLIGHT, true);
 
