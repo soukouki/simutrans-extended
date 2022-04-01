@@ -478,6 +478,10 @@ void display_signal_direction_rgb(scr_coord_val, scr_coord_val, scr_coord_val, u
 {
 }
 
+void display_depot_symbol_rgb(scr_coord_val, scr_coord_val, scr_coord_val, const PIXVAL, const bool)
+{
+}
+
 void display_depot_symbol(scr_coord_val, scr_coord_val, scr_coord_val, const uint8, const bool)
 {
 }

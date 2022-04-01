@@ -229,6 +229,8 @@ public:
 	/// needed for town passenger map
 	static PIXVAL calc_ground_color (const grund_t *gr, bool show_contour = true, bool show_buildings = true);
 
+	static PIXVAL get_depot_color(obj_t::typ);
+
 	/// we are single instance ...
 	static minimap_t *get_instance();
 

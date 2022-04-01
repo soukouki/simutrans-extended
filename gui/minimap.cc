@@ -588,6 +588,32 @@ bool minimap_t::change_zoom_factor(bool magnify)
 }
 
 
+PIXVAL minimap_t::get_depot_color(obj_t::typ depot_type)
+{
+	switch (depot_type) {
+		case obj_t::bahndepot:
+			return world->get_settings().get_waytype_color(track_wt) ? world->get_settings().get_waytype_color(track_wt) : 64448;
+		case obj_t::strassendepot:
+			return world->get_settings().get_waytype_color(road_wt) ? world->get_settings().get_waytype_color(road_wt) : 39455;
+		case obj_t::schiffdepot:
+			return world->get_settings().get_waytype_color(water_wt) ? world->get_settings().get_waytype_color(water_wt) : 536;
+		case obj_t::airdepot:
+			return world->get_settings().get_waytype_color(air_wt) ? world->get_settings().get_waytype_color(air_wt) : 13919;
+		case obj_t::monoraildepot:
+			return world->get_settings().get_waytype_color(monorail_wt) ? world->get_settings().get_waytype_color(monorail_wt) : 45316;
+		case obj_t::tramdepot:
+			return world->get_settings().get_waytype_color(tram_wt) ? world->get_settings().get_waytype_color(tram_wt) : 15911;
+		case obj_t::maglevdepot:
+			return world->get_settings().get_waytype_color(maglev_wt) ? world->get_settings().get_waytype_color(maglev_wt) : 61916;
+		case obj_t::narrowgaugedepot:
+			return world->get_settings().get_waytype_color(narrowgauge_wt) ? world->get_settings().get_waytype_color(narrowgauge_wt) : 37702;
+		default:
+			return 37702;
+	}
+	return 0;
+}
+
+
 PIXVAL minimap_t::calc_severity_color(sint32 amount, sint32 max_value)
 {
 	if(max_value!=0) {
@@ -1258,8 +1284,7 @@ void minimap_t::calc_map()
 			if (d->get_owner() == world->get_active_player()) {
 				koord const pos = d->get_pos().get_2d();
 				// offset of one to avoid
-				static uint8 depot_typ_to_color[19]={ COL_ORANGE, COL_YELLOW, COL_RED, 0, 0, 0, 0, 0, 0, COL_PURPLE, COL_DARK_RED, COL_DARK_ORANGE, 0, 0, 0, 0, 0, 0, COL_LIGHT_RED };
-				set_map_color(pos, color_idx_to_rgb(depot_typ_to_color[d->get_typ() - obj_t::bahndepot]));
+				set_map_color(pos, get_depot_color(d->get_typ()));
 			}
 		}
 		return;
@@ -1651,7 +1676,8 @@ void minimap_t::draw(scr_coord pos)
 				static PIXVAL last_color = colval;
 				if (current_cnv.is_bound() && current_cnv.get_rep()->get_line().is_bound() && current_cnv.get_rep()->get_line()->get_line_color()!=0) {
 					// Since white is mixed in the background, it is easier to see in slightly darker.
-					colval = display_blend_colors(current_cnv.get_rep()->get_line()->get_line_color(), color_idx_to_rgb(COL_BLACK), 10);
+					const PIXVAL linecolor = current_cnv.get_rep()->get_line()->get_line_color();
+					colval = display_blend_colors(linecolor, color_idx_to_rgb(COL_BLACK), is_dark_color(linecolor) ? 15:30);
 				}
 				else {
 					colval = color_idx_to_rgb(seg.player->get_player_color1()+1);
@@ -2033,9 +2059,9 @@ void minimap_t::draw(scr_coord pos)
 				scr_coord depot_pos = map_to_screen_coord( d->get_pos().get_2d() );
 				depot_pos = depot_pos + pos;
 				// offset of one to avoid
-				static uint8 depot_typ_to_color[19]={ COL_ORANGE, COL_YELLOW, COL_RED, 0, 0, 0, 0, 0, 0, COL_PURPLE, COL_DARK_RED, COL_DARK_ORANGE, 0, 0, 0, 0, 0, 0, COL_LIGHT_RED };
-				display_filled_circle_rgb( depot_pos.x, depot_pos.y, 4, color_idx_to_rgb(depot_typ_to_color[d->get_typ() - obj_t::bahndepot]) );
-				display_circle_rgb( depot_pos.x, depot_pos.y, 4, color_idx_to_rgb(COL_BLACK) );
+				const scr_coord_val symbol_width = 8 + d->get_tile()->get_desc()->get_level()/3*2;
+				display_depot_symbol_rgb( depot_pos.x-1, depot_pos.y-1, symbol_width+2, color_idx_to_rgb(COL_WHITE), false);
+				display_depot_symbol_rgb( depot_pos.x,   depot_pos.y,   symbol_width, get_depot_color(d->get_typ()), false);
 			}
 		}
 	}
