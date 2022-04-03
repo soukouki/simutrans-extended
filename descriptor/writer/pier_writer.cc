@@ -63,6 +63,12 @@ void pier_writer_t::write_obj(FILE * outfp, obj_node_t& parent, tabfileobj_t& ob
 	uint16 max_speed			= obj.get_int("topspeed",0xFFFF);
 	uint16 max_axle_load		= obj.get_int("max_weight",0xFFFF);
 
+	uint8 tooltipflagsauto		= obj.get_int("tooltipflagsauto",0);
+	uint8 tooltipflagsmanual	= obj.get_int("tooltipflagsmanual",0);
+
+	above_way_ribi |= tooltipflagsauto<<4;
+	below_way_ribi |= tooltipflagsmanual<<4;
+
 	uint16 version = 0x8009;
 
 	version |= EX_VER;

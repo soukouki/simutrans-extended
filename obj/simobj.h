@@ -182,7 +182,8 @@ public:
 
 		signalbox = -10,
 		pier = -11,
-		parapet = -12
+		parapet = -12,
+		schedule_marker=-20
 	};
 
 	inline sint8 get_xoff() const {return xoff;}

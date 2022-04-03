@@ -49,8 +49,14 @@ obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
     desc->retire_date = decode_uint16(p);
     desc->max_weight = decode_uint32(p);
     desc->max_altitude = decode_sint8(p);
-    desc->above_way_ribi = decode_uint8(p);
-    desc->below_way_ribi = decode_uint8(p);
+
+    uint8 above_way_ribi = decode_uint8(p);
+    desc->above_way_ribi = above_way_ribi & 0xF;
+    desc->tooltipflags_a = above_way_ribi >> 4;
+    uint8 below_way_ribi = decode_uint8(p);
+    desc->below_way_ribi = below_way_ribi & 0xF;
+    desc->tooltipflags_m = below_way_ribi >> 4;
+
     desc->base_mask = decode_uint32(p);
     desc->support_mask = decode_uint32(p);
     desc->sub_obj_mask = decode_uint32(p);
@@ -82,7 +88,6 @@ obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
     desc->axle_load = -1;
 
     if(sub_version>=2){
-        //not used yet
         desc->support_mask |= (uint64)decode_uint32(p) << 32;
         desc->middle_mask |= (uint64)decode_uint32(p) << 32;
         desc->base_mask |= (uint64)decode_uint32(p) << 32;
