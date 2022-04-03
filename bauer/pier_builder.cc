@@ -256,6 +256,7 @@ const pier_desc_t *pier_builder_t::get_desc_bad_load(koord3d pos,player_t *owner
 void pier_builder_t::get_params_from_pos(pier_finder_params &params, koord3d pos, player_t *owner){
     const grund_t* gr=welt->lookup(pos);
     params.pos_lsbs=((pos.x&1)<<0) | ((pos.y&1)<<1) | ((pos.y&1)<<2);
+    params.altitude=pos.z - welt->lookup_hgt(pos.get_2d());
     if(gr){
         if(gr->get_typ()==grund_t::brueckenboden || gr->get_typ()==grund_t::monorailboden){
             params.notallowed=true;
@@ -654,6 +655,11 @@ bool pier_builder_t::get_desc_context(pier_desc_t const *& descriptor, uint8& ro
                 match+=32;
             }
 
+            if(desc->get_max_altitude() && params.altitude > desc->get_max_altitude()){
+                unmatch=true;
+                match+=2;
+            }
+
             ribi_t::ribi way_ribi=params.requre_low_waydeck ? params.below_way_ribi : params.above_way_ribi;
             if(ribi_t::is_straight_ns(way_ribi)){
                 match+=(r&2)^(params.pos_lsbs&2);
@@ -832,6 +838,10 @@ const char *pier_builder_t::build(player_t *player, koord3d pos, const pier_desc
 
     if(welt->lookup_hgt(pos.get_2d()) < welt->get_water_hgt(pos.get_2d())){
         return "Cannot build in deep water";
+    }
+
+    if(desc->get_max_altitude() && pos.z - welt->lookup_hgt(pos.get_2d()) > desc->get_max_altitude()){
+        return "Cannot build this pier this far above grade";
     }
 
     if(gr->is_water() && desc->get_above_way_ribi()){

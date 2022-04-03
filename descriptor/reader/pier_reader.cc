@@ -38,10 +38,11 @@ obj_desc_t * pier_reader_t::read_node(FILE *fp, obj_node_info_t &node){
 
     char * p = desc_buf;
 
-    //read version (not used yet, only one version)
+    //read version
     uint16 sub_version = decode_uint16(p);
     sub_version &=  0x3FFF;
     sub_version >>= 8;
+    assert(sub_version>=3);
     desc->price = decode_uint32(p);
     desc->maintenance = decode_uint32(p);
     desc->intro_date = decode_uint16(p);
