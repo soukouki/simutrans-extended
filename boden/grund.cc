@@ -758,6 +758,7 @@ void grund_t::info(cbuffer_t& buf) const
 			}
 		}
 	}
+
 #if MSG_LEVEL >= 4
 	buf.printf("\nflags $%0X", flags );
 	buf.printf("\n\npos: (%s)",pos.get_str());

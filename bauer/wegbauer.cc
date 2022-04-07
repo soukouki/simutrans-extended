@@ -879,6 +879,43 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 		return false;
 	}
 
+	// univeral check: tunnel restrictions
+	if((bautyp&tunnel_flag) && tunnel_desc){
+		if(!tunnel_desc->get_subsea_allowed()){
+			if(welt->lookup_kartenboden(to->get_pos().get_2d())->is_water()){
+				return false;
+			}
+			if(welt->lookup_kartenboden(from->get_pos().get_2d())->is_water()){
+				return false;
+			}
+		}
+		if(!tunnel_desc->get_subbuilding_allowed()){
+			if(tunnel_builder_t::get_is_under_building(to->get_pos(),tunnel_desc)){
+				return false;
+			}
+			if(tunnel_builder_t::get_is_under_building(from->get_pos(),tunnel_desc)){
+				return false;
+			}
+		}
+		if(!tunnel_desc->get_subwaterline_allowed()){
+			if(tunnel_builder_t::get_is_below_waterline(to->get_pos())){
+				return false;
+			}
+			if(tunnel_builder_t::get_is_below_waterline(from->get_pos())){
+				return false;
+			}
+		}
+		if(tunnel_desc->get_depth_limit()){
+			if(welt->lookup_hgt(to->get_pos().get_2d()) - to->get_pos().z > (sint8)tunnel_desc->get_depth_limit()){
+				return false;
+			}
+			if(welt->lookup_hgt(from->get_pos().get_2d()) - from->get_pos().z > (sint8)tunnel_desc->get_depth_limit()){
+				return false;
+			}
+		}
+
+	}
+
 	// universal check for crossings
 	weg_t* this_way = to->get_weg_nr(0);
 	waytype_t const wtyp = (bautyp == river) ? water_wt : (waytype_t)(bautyp & bautyp_mask);
@@ -2478,8 +2515,8 @@ bool way_builder_t::build_tunnel_tile()
 				player_t::add_maintenance( player_builder, -lt->get_desc()->get_maintenance(), powerline_wt);
 			}
 			tunnel->calc_image();
-			cost -= tunnel_desc->get_value();
-			player_t::add_maintenance( player_builder,  tunnel_desc->get_maintenance(), tunnel_desc->get_finance_waytype() );
+			cost -= tunnel_builder_t::get_total_cost(tunnel->get_pos(),tunnel_desc);
+			player_t::add_maintenance( player_builder,  tunnel_builder_t::get_total_maintenance(tunnel->get_pos(),tunnel_desc), tunnel_desc->get_finance_waytype() );
 		}
 		else if(  gr->get_typ() == grund_t::tunnelboden  ) {
 			// check for extension only ...
@@ -2507,7 +2544,7 @@ bool way_builder_t::build_tunnel_tile()
 					}
 					gr->calc_image();
 
-					cost -= tunnel_desc->get_value();
+					cost -= tunnel_builder_t::get_total_cost(tunnel->get_pos(),tunnel_desc);
 				}
 				if(  tunnel_desc->get_waytype()==road_wt  ) {
 					strasse_t *str = (strasse_t*)gr->get_weg(road_wt);
@@ -2563,7 +2600,7 @@ bool way_builder_t::build_tunnel_tile()
 					// respect speed limit of crossing
 					weg->count_sign();
 				}
-				cost -= tunnel_desc->get_value();
+				cost -= tunnel_builder_t::get_total_cost(tunnel->get_pos(),tunnel_desc);
 			}
 		}
 	}
