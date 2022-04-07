@@ -1466,6 +1466,18 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 				else {
 					return "Maximum tile height difference reached.";
 				}
+				if(tunnel_t *tunnel=gr1->find<tunnel_t>()){
+					if(!tunnel->get_desc()->get_subwaterline_allowed()){
+						if(  tunnel_builder_t::get_is_below_waterline(new_pos)) {
+							return NOTICE_TILE_FULL;
+						}
+					}
+					if(tunnel->get_desc()->get_depth_limit()){
+						if(welt->lookup_hgt(new_pos.get_2d()) - new_pos.z > (sint8)tunnel->get_desc()->get_depth_limit()){
+							return NOTICE_TILE_FULL;
+						}
+					}
+				}
 			}
 		}
 
@@ -3475,8 +3487,59 @@ const char* tool_build_tunnel_t::get_tooltip(const player_t *) const
 		n+=1;
 	}
 	if(desc->get_is_half_height()){
-		n += sprintf(toolstr + n, "%s", translator::translate(" Half Height"));
+		n += sprintf(toolstr + n, ", %s", translator::translate("Half Height"));
 	}
+	if(desc->get_depth_limit()){
+		n += sprintf(toolstr + n, ", %s: %d", translator::translate("Depth Limit"), desc->get_depth_limit());
+	}
+	if(desc->get_depth_cost()){
+		n += sprintf(toolstr + n, ", %s: +", translator::translate("Per-Depth"));
+		money_to_string(toolstr + n,(double)desc->get_depth_cost()/100.0);
+		n = strlen(toolstr);
+	}
+	if(desc->get_depth2_cost()){
+		n += sprintf(toolstr + n, ", %s: +", translator::translate("Per-Depth-Squared"));
+		money_to_string(toolstr + n,(double)desc->get_depth2_cost()/100.0);
+		n = strlen(toolstr);
+	}
+	if(desc->get_subway_cost()){
+		n += sprintf(toolstr + n, ", %s: +", translator::translate("Sub-Way"));
+		money_to_string(toolstr + n,(double)desc->get_subway_cost()/100.0);
+		n = strlen(toolstr);
+	}
+
+	if(!desc->get_subbuilding_allowed()){
+		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Building Prohibited"));
+	}else if(desc->get_subbuilding_cost()){
+		n += sprintf(toolstr + n, ", %s: +", translator::translate("Sub-Building"));
+		money_to_string(toolstr + n,(double)desc->get_subbuilding_cost()/100.0);
+		n = strlen(toolstr);
+	}
+	if(desc->get_subwaterline_allowed()){
+		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Groundwater Permitted"));
+		if(desc->get_subwaterline_cost() || desc->get_subwaterline_maintenance()){
+			n += sprintf(toolstr + n, ": +");
+			money_to_string(toolstr + n, (double)desc->get_subwaterline_cost()/100.0);
+			n = strlen(toolstr);
+			n += sprintf(toolstr + n, " (+");
+			money_to_string(toolstr + n, (double)desc->get_subwaterline_maintenance()/100.0);
+			n = strlen(toolstr);
+			n += sprintf(toolstr + n, ")");
+		}
+	}
+	if(desc->get_subsea_allowed()){
+		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Sea Permitted"));
+		if(desc->get_subsea_cost() || desc->get_subsea_maintenance()){
+			n += sprintf(toolstr + n, ": +");
+			money_to_string(toolstr + n, (double)desc->get_subsea_cost()/100.0);
+			n = strlen(toolstr);
+			n += sprintf(toolstr + n, " (+");
+			money_to_string(toolstr + n, (double)desc->get_subsea_maintenance()/100.0);
+			n = strlen(toolstr);
+			n += sprintf(toolstr + n, ")");
+		}
+	}
+
 	return toolstr;
 }
 

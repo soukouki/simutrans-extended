@@ -88,6 +88,13 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 			extended_version -=1;
 		}
 
+		desc->subsea_cost=0xFFFFFFFF;
+		desc->subbuilding_cost=0;
+		desc->subwaterline_cost=0xFFFFFFFF;
+		desc->subway_cost=0;
+		desc->depth_cost=0;
+		desc->depth2_cost=0;
+		desc->depth_limit=0;
 		if( version == 5 ) {
 			// versioned node, version 5 - axle load
 			desc->topspeed = decode_uint32(p);
@@ -114,6 +121,26 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 				if(extended_version == 2){
 					uint8 flags = decode_uint8(p);
 					desc->is_half_height = flags & 0x01;
+					if(flags & 0x02){
+						desc->subsea_cost = decode_uint32(p);
+						desc->subsea_maintenance = decode_uint32(p);
+						desc->subwaterline_cost = 0;
+					}
+
+					if(flags & 0x04){
+						desc->subbuilding_cost = decode_uint32(p);
+					}
+					if(flags & 0x08){
+						desc->subwaterline_cost = decode_uint32(p);
+						desc->subwaterline_maintenance = decode_uint32(p);
+					}
+					if(flags & 0x10){
+						desc->subway_cost = decode_uint32(p);
+						desc->depth_cost = decode_uint32(p);
+						desc->depth2_cost = decode_uint32(p);
+						desc->depth_limit = decode_uint8(p);
+					}
+
 				}else{
 					desc->is_half_height=false;
 				}
