@@ -47,7 +47,7 @@ void tunnel_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 	uint32 subsea_cost;
 	uint32 subsea_maintenance;
 	if(((subsea_cost=obj.get_int("subsea_cost",0xFFFFFFFF))!=0xFFFFFFFF) || obj.get_int("allow_subsea",0)){
-		flags|=0x02|0x08; //implies subwaterline
+		flags|=0x02;
 		subsea_maintenance = obj.get_int("subsea_maintenance",0);
 		node_size+=8;
 	}
@@ -67,6 +67,9 @@ void tunnel_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 	if(((subwaterline_cost=obj.get_int("subwaterline_cost",0xFFFFFFFF))!=0xFFFFFFFF) || obj.get_int("allow_subsea",0)){
 		flags|=0x08;
 		subwaterline_maintenance = obj.get_int("subwaterline_maintenance",0);
+		if(subwaterline_cost==0xFFFFFFFF){
+			subwaterline_cost=0;
+		}
 		node_size+=8;
 	}
 
