@@ -102,6 +102,16 @@ void tunnel_desc_t::calc_checksum(checksum_t *chk) const
 	//chk->input(max_axle_load);
 	chk->input(way_constraints.get_permissive());
 	chk->input(way_constraints.get_prohibitive());
+	chk->input(depth_cost);
+	chk->input(depth2_cost);
+	chk->input(depth_limit);
+	chk->input(is_half_height);
+	chk->input(subsea_cost);
+	chk->input(subsea_maintenance);
+	chk->input(subwaterline_cost);
+	chk->input(subwaterline_maintenance);
+	chk->input(subbuilding_cost);
+	chk->input(subway_cost);
 }
 
 

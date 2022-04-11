@@ -1469,12 +1469,12 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 				if(tunnel_t *tunnel=gr1->find<tunnel_t>()){
 					if(!tunnel->get_desc()->get_subwaterline_allowed()){
 						if(  tunnel_builder_t::get_is_below_waterline(new_pos)) {
-							return NOTICE_TILE_FULL;
+							return "This tunnel cannot be brought below the waterline";
 						}
 					}
 					if(tunnel->get_desc()->get_depth_limit()){
 						if(welt->lookup_hgt(new_pos.get_2d()) - new_pos.z > (sint8)tunnel->get_desc()->get_depth_limit()){
-							return NOTICE_TILE_FULL;
+							return "This tunnel cannot be brought any deeper";
 						}
 					}
 				}

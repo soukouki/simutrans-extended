@@ -48,6 +48,9 @@ void tunnel_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 	uint32 subsea_maintenance;
 	if(((subsea_cost=obj.get_int("subsea_cost",0xFFFFFFFF))!=0xFFFFFFFF) || obj.get_int("allow_subsea",0)){
 		flags|=0x02;
+		if(subsea_cost==0xFFFFFFFF){
+			subsea_cost=0;
+		}
 		subsea_maintenance = obj.get_int("subsea_maintenance",0);
 		node_size+=8;
 	}
