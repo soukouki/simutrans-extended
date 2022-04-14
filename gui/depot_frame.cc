@@ -239,7 +239,7 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 				{
 					txt_traction_types.printf(", ");
 				}
-				txt_traction_types.printf("%s", translator::translate(vehicle_builder_t::engine_type_names[(vehicle_desc_t::engine_t)i]));
+				txt_traction_types.printf("%s", translator::translate(vehicle_builder_t::engine_type_names[(vehicle_desc_t::engine_t)(i+1)]));
 			}
 		}
 	}
