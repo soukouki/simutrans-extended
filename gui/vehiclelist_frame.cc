@@ -335,7 +335,7 @@ vehiclelist_frame_t::vehiclelist_frame_t() :
 					engine_filter.clear_elements();
 					engine_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All traction types"), SYSCOL_TEXT);
 					for (int i = 0; i < vehicle_desc_t::MAX_TRACTION_TYPE; i++) {
-						engine_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(vehicle_desc_t::get_engine_type((vehicle_desc_t::engine_t)i)), SYSCOL_TEXT);
+						engine_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(vehicle_builder_t::engine_type_names[(vehicle_desc_t::engine_t)i]), SYSCOL_TEXT);
 					}
 					engine_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Trailers"), SYSCOL_TEXT);
 					engine_filter.set_selection( 0 );
