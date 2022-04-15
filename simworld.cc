@@ -11496,9 +11496,9 @@ void karte_t::announce_server(int status)
 		}
 		// Always send dns and port as these are used as the unique identifier for the server
 		buf.clear();
-		buf.append( "&dns=" );
+		buf.append( "&dns=127.0.0.1&alt_dns=::1&ddns=" );
 		encode_URI( buf, env_t::server_dns.c_str() );
-		buf.append( "&alt_dns=" );
+		buf.append( "&alt_ddns=" );
 		encode_URI( buf, env_t::server_alt_dns.c_str() );
 		buf.printf( "&port=%u", env_t::server );
 		// Always send announce interval to allow listing server to predict next announce
@@ -11592,7 +11592,7 @@ void karte_t::network_disconnect()
 	reset_timer();
 	clear_command_queue();
 	create_win( display_get_width()/2-128, 40, new news_img("Lost synchronisation\nwith server."), w_info, magic_none);
-	ticker::add_msg( translator::translate("Lost synchronisation\nwith server."), koord::invalid, color_idx_to_rgb(COL_BLACK) );
+	ticker::add_msg( translator::translate("Lost synchronisation\nwith server."), koord::invalid, SYSCOL_TEXT );
 	last_active_player_nr = active_player_nr;
 	set_pause(true);
 }
