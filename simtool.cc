@@ -1466,6 +1466,18 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 				else {
 					return "Maximum tile height difference reached.";
 				}
+				if(tunnel_t *tunnel=gr1->find<tunnel_t>()){
+					if(!tunnel->get_desc()->get_subwaterline_allowed()){
+						if(  tunnel_builder_t::get_is_below_waterline(new_pos)) {
+							return "This tunnel cannot be brought below the waterline";
+						}
+					}
+					if(tunnel->get_desc()->get_depth_limit()){
+						if(welt->lookup_hgt(new_pos.get_2d()) - new_pos.z > (sint8)tunnel->get_desc()->get_depth_limit()){
+							return "This tunnel cannot be brought any deeper";
+						}
+					}
+				}
 			}
 		}
 
@@ -3188,7 +3200,7 @@ const char *tool_build_bridge_t::do_work( player_t *player, const koord3d &start
 		const koord zv(ribi_type(end-start));
 		sint8 bridge_height;
 		const char *error;
-		koord3d end2 = bridge_builder_t::find_end_pos(player, start, zv, desc, error, bridge_height, false, koord_distance(start, end), is_ctrl_pressed());
+		koord3d end2 = bridge_builder_t::find_end_pos(player, start, zv, desc, error, bridge_height, false, koord_distance(start, end), is_ctrl_pressed(), is_shift_pressed());
 		assert(end2 == end); (void)end2;
 
 		if (way_desc == NULL || (way_desc->get_styp() == type_elevated  &&  way_desc->get_wtyp() != air_wt))
@@ -3234,7 +3246,7 @@ void tool_build_bridge_t::mark_tiles(  player_t *player, const koord3d &start, c
 	const bridge_desc_t *desc = bridge_builder_t::get_desc(default_param);
 	const char *error;
 	sint8 bridge_height;
-	koord3d end2 = bridge_builder_t::find_end_pos(player, start, zv, desc, error, bridge_height, false, koord_distance(start, end), is_ctrl_pressed());
+	koord3d end2 = bridge_builder_t::find_end_pos(player, start, zv, desc, error, bridge_height, false, koord_distance(start, end), is_ctrl_pressed(), is_shift_pressed());
 	assert(end2 == end); (void)end2;
 
 	sint64 costs = 0;
@@ -3420,7 +3432,7 @@ uint8 tool_build_bridge_t::is_valid_pos(  player_t *player, const koord3d &pos, 
 		// check whether we can build a bridge here
 		const char *error = NULL;
 		sint8 bridge_height;
-		koord3d end = bridge_builder_t::find_end_pos(player, start, koord(test), desc, error, bridge_height, false, koord_distance(start, pos), is_ctrl_pressed());
+		koord3d end = bridge_builder_t::find_end_pos(player, start, koord(test), desc, error, bridge_height, false, koord_distance(start, pos), is_ctrl_pressed(), is_shift_pressed());
 		if (end!=pos) {
 			return 0;
 		}
@@ -3477,7 +3489,62 @@ const char* tool_build_tunnel_t::get_tooltip(const player_t *) const
 	if(any_prohibitive)
 	{
 		strcat(toolstr, ")");
+		n+=1;
 	}
+	if(desc->get_is_half_height()){
+		n += sprintf(toolstr + n, ", %s", translator::translate("Half Height"));
+	}
+	if(desc->get_depth_limit()){
+		n += sprintf(toolstr + n, ", %s: %d", translator::translate("Depth Limit"), desc->get_depth_limit());
+	}
+	if(desc->get_depth_cost()){
+		n += sprintf(toolstr + n, ", %s: +", translator::translate("Per-Depth"));
+		money_to_string(toolstr + n,(double)desc->get_depth_cost()/100.0);
+		n = strlen(toolstr);
+	}
+	if(desc->get_depth2_cost()){
+		n += sprintf(toolstr + n, ", %s: +", translator::translate("Per-Depth-Squared"));
+		money_to_string(toolstr + n,(double)desc->get_depth2_cost()/100.0);
+		n = strlen(toolstr);
+	}
+	if(desc->get_subway_cost()){
+		n += sprintf(toolstr + n, ", %s: +", translator::translate("Sub-Way"));
+		money_to_string(toolstr + n,(double)desc->get_subway_cost()/100.0);
+		n = strlen(toolstr);
+	}
+
+	if(!desc->get_subbuilding_allowed()){
+		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Building Prohibited"));
+	}else if(desc->get_subbuilding_cost()){
+		n += sprintf(toolstr + n, ", %s: +", translator::translate("Sub-Building"));
+		money_to_string(toolstr + n,(double)desc->get_subbuilding_cost()/100.0);
+		n = strlen(toolstr);
+	}
+	if(desc->get_subwaterline_allowed()){
+		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Groundwater Permitted"));
+		if(desc->get_subwaterline_cost() || desc->get_subwaterline_maintenance()){
+			n += sprintf(toolstr + n, ": +");
+			money_to_string(toolstr + n, (double)desc->get_subwaterline_cost()/100.0);
+			n = strlen(toolstr);
+			n += sprintf(toolstr + n, " (+");
+			money_to_string(toolstr + n, (double)desc->get_subwaterline_maintenance()/100.0);
+			n = strlen(toolstr);
+			n += sprintf(toolstr + n, ")");
+		}
+	}
+	if(desc->get_subsea_allowed()){
+		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Sea Permitted"));
+		if(desc->get_subsea_cost() || desc->get_subsea_maintenance()){
+			n += sprintf(toolstr + n, ": +");
+			money_to_string(toolstr + n, (double)desc->get_subsea_cost()/100.0);
+			n = strlen(toolstr);
+			n += sprintf(toolstr + n, " (+");
+			money_to_string(toolstr + n, (double)desc->get_subsea_maintenance()/100.0);
+			n = strlen(toolstr);
+			n += sprintf(toolstr + n, ")");
+		}
+	}
+
 	return toolstr;
 }
 
@@ -3579,12 +3646,14 @@ const char *tool_build_tunnel_t::check_pos( player_t *player, koord3d pos)
 					return "";
 				}
 
-				if(  env_t::pak_height_conversion_factor != slope_t::max_diff(sl)  ) {
+
+
+				const tunnel_desc_t *desc = tunnel_builder_t::get_desc(default_param);
+
+				if(  !desc->check_way_slope(sl)  ) {
 					win_set_static_tooltip( translator::translate("The gradient does not fit a tunnel") );
 					return "";
 				}
-
-				const tunnel_desc_t *desc = tunnel_builder_t::get_desc(default_param);
 
 				// first check for building portal only
 				if(  is_ctrl_pressed()  ) {
@@ -3632,7 +3701,7 @@ void tool_build_tunnel_t::calc_route( way_builder_t &bauigel, const koord3d &sta
 		wb = way_builder_t::weg_search(desc->get_waytype(), desc->get_topspeed(), desc->get_max_axle_load(), 0, type_flat, desc->get_wear_capacity());
 	}
 
-	bauigel.init_builder(bt | way_builder_t::tunnel_flag, wb, desc);
+	bauigel.init_builder(bt | way_builder_t::tunnel_flag | (desc->get_is_half_height() ? way_builder_t::low_clearence_flag : (way_builder_t::bautyp_t)0), wb, desc);
 	bauigel.set_keep_existing_faster_ways( !is_ctrl_pressed() );
 	// wegbauer (way builder) tries to find route to 3d coordinate if no ground at end exists or is not kartenboden (map ground)
 	bauigel.calc_straight_route(start,end);
