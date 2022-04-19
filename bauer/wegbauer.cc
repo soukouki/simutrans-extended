@@ -913,7 +913,18 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 				return false;
 			}
 		}
-
+		if(tunnel_desc->get_underwater_limit()){
+			if(const grund_t* gr = welt->lookup_kartenboden(from->get_pos().get_2d())){
+				if(gr->is_water() && gr->get_pos().z - from->get_pos().z > (sint8)tunnel_desc->get_underwater_limit()){
+					return false;
+				}
+			}
+			if(const grund_t* gr = welt->lookup_kartenboden(to->get_pos().get_2d())){
+				if(gr->is_water() && gr->get_pos().z - to->get_pos().z > (sint8)tunnel_desc->get_underwater_limit()){
+					return false;
+				}
+			}
+		}
 	}
 
 	// universal check for crossings
