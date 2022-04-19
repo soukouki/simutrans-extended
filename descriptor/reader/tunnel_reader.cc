@@ -145,7 +145,9 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 							desc->depth_limit=0;
 						}
 					}
-
+					if(flags & 0x20){
+						desc->underwater_limit = decode_uint8(p);
+					}
 				}else{
 					desc->is_half_height=false;
 				}
