@@ -59,6 +59,7 @@ private:
 	uint32 depth_cost;
 	uint32 depth2_cost;
 	uint8 depth_limit;
+	uint8 underwater_limit;
 public:
 
 	/*
@@ -196,6 +197,7 @@ public:
 	uint32 get_depth_cost() const {return depth_cost;}
 	uint32 get_depth2_cost() const {return depth2_cost;}
 	uint8 get_depth_limit() const {return depth_limit;}
+	uint8 get_underwater_limit() const {return underwater_limit;}
 
 	bool check_way_slope(slope_t::type slope) const;
 
