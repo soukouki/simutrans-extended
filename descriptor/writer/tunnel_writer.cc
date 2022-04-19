@@ -83,7 +83,8 @@ void tunnel_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 	depth_limit=obj.get_int("depth_limit",0) & 0x7F;
 	uint8 underwater_limit=obj.get_int("sea_depth_limit",0);
 	if(underwater_limit){
-		depth_limit = 0x80 | underwater_limit;
+		flags|=0x20;
+		node_size+=1;
 	}
 	if(depth_cost || depth2_cost || subway_cost || depth_limit){
 		flags|=0x10;
@@ -232,6 +233,10 @@ void tunnel_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 		node.write_uint32(fp, depth2_cost,				offset+8);
 		node.write_uint8(fp,  depth_limit,				offset+12);
 		offset+=13;
+	}
+
+	if(flags & 0x20){
+		node.write_uint8(fp,  underwater_limit,         offset);
 	}
 
 	write_head(fp, node, obj);
