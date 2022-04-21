@@ -213,7 +213,7 @@ void factory_legend_t::update_factory_legend()
 
 	// add corresponding legend entries
 	bool filter_by_catg = (minimap_t::get_instance()->freight_type_group_index_showed_on_map != nullptr && minimap_t::get_instance()->freight_type_group_index_showed_on_map != goods_manager_t::none);
-	PIXVAL prev_color = NULL;
+	PIXVAL prev_color = 0;
 	const char *prev_name = {};
 	FOR(vector_tpl<const factory_desc_t*>, f, factory_types) {
 		if (prev_name && !strcmp(translator::translate(f->get_name()), prev_name) && f->get_color()==prev_color) {
@@ -280,7 +280,6 @@ const goods_desc_t *factory_legend_t::is_linked(const factory_desc_t *fac_desc, 
 	}
 	const factory_desc_t *upstream = !side ? fac_desc : focus_fac;
 	const factory_desc_t *downstream = !side ? focus_fac: fac_desc;
-	const uint16 product_count = !side ? fac_desc->get_product_count() : focus_fac->get_product_count();
 	for (uint16 i = 0; i < upstream->get_product_count(); i++) {
 		if (downstream->get_accepts_these_goods(upstream->get_product(i)->get_output_type())) {
 			return upstream->get_product(i)->get_output_type();
