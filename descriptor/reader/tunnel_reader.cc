@@ -96,6 +96,7 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 		desc->depth2_cost=0;
 		desc->depth_limit=0;
 		desc->underwater_limit=0;
+		desc->length_limit=0;
 		if( version == 5 ) {
 			// versioned node, version 5 - axle load
 			desc->topspeed = decode_uint32(p);
@@ -147,6 +148,9 @@ obj_desc_t * tunnel_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 					}
 					if(flags & 0x20){
 						desc->underwater_limit = decode_uint8(p);
+					}
+					if(flags & 0x40){
+						desc->length_limit = decode_uint16(p);
 					}
 				}else{
 					desc->is_half_height=false;

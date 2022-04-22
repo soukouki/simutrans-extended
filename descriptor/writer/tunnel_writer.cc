@@ -90,7 +90,12 @@ void tunnel_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 		flags|=0x10;
 		node_size+=13;
 	}
-
+	uint16 length_limit=obj.get_int("length_limit",0);
+	if(length_limit){
+		flags|=0x40;
+		node_size+=2;
+		dbg->warning("tunnel_writer::write_node()","High values of length_limit can reduce performance of tunnel construction");
+	}
 
 	// BG, 11.02.2014: max_weight was missused as axle_load
 	// in experimetal before standard introduced axle_load.
@@ -237,6 +242,12 @@ void tunnel_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 
 	if(flags & 0x20){
 		node.write_uint8(fp,  underwater_limit,         offset);
+		offset+=1;
+	}
+
+	if(flags & 0x40){
+		node.write_uint16(fp,  length_limit,             offset);
+		offset+=2;
 	}
 
 	write_head(fp, node, obj);
