@@ -3547,9 +3547,13 @@ const char* tool_build_tunnel_t::get_tooltip(const player_t *) const
 			n = strlen(toolstr);
 			n += sprintf(toolstr + n, ")");
 		}
+		if(desc->get_length_limit()){
+			n += sprintf(toolstr + n, " %d%s", desc->get_length_limit(), translator::translate("m"));
+		}
 		if(desc->get_underwater_limit()){
 			n += sprintf(toolstr + n, ", %s: %d", translator::translate("Sub-Sea Depth Limit"), desc->get_underwater_limit());
 		}
+
 	}else{
 		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Sea Prohibited"));
 	}
