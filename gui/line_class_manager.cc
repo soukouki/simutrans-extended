@@ -621,10 +621,8 @@ bool line_class_manager_t::action_triggered(gui_action_creator_t *comp, value_t)
 				pass_class_sel.at(i)->set_selection(0);
 				new_class = 0;
 			}
-			int good_type = 0; // 0 = Passenger, 1 = Mail,
-			int reset = 0; // 0 = reset only single class, 1 = reset all classes
 			cbuffer_t buf;
-			buf.printf("%i,%i,%i,%i", i, new_class, good_type, reset);
+			buf.printf("%i,%i,%i", i, new_class, goods_manager_t::INDEX_PAS);
 			for (unsigned convoy = 0; convoy < line->count_convoys(); convoy++)
 			{
 				convoihandle_t cnv = line->get_convoy(convoy);
@@ -653,10 +651,8 @@ bool line_class_manager_t::action_triggered(gui_action_creator_t *comp, value_t)
 				mail_class_sel.at(i)->set_selection(0);
 				new_class = 0;
 			}
-			int good_type = 1; // 0 = Passenger, 1 = Mail,
-			int reset = 0; // 0 = reset only single class, 1 = reset all classes
 			cbuffer_t buf;
-			buf.printf("%i,%i,%i,%i", i, new_class, good_type, reset);
+			buf.printf("%i,%i,%i", i, new_class, goods_manager_t::INDEX_MAIL);
 			for (unsigned convoy = 0; convoy < line->count_convoys(); convoy++)
 			{
 				convoihandle_t cnv = line->get_convoy(convoy);
@@ -676,14 +672,12 @@ bool line_class_manager_t::action_triggered(gui_action_creator_t *comp, value_t)
 	}
 	if (comp == &reset_all_pass_button)
 	{
-		int good_type = 0; // 0 = Passenger, 1 = Mail,
-		int reset = 1; // 0 = reset only single class, 1 = reset all classes
 		cbuffer_t buf;
-		buf.printf("%i,%i,%i,%i", 0, 0, good_type, reset);
+		buf.printf("%hhi", goods_manager_t::INDEX_PAS);
 		for (unsigned convoy = 0; convoy < line->count_convoys(); convoy++)
 		{
 			convoihandle_t cnv = line->get_convoy(convoy);
-			cnv->call_convoi_tool('c', buf);
+			cnv->call_convoi_tool('i', buf);
 		}
 
 		for (uint32 i = 0; i < pass_class_sel.get_count(); i++)
@@ -700,14 +694,12 @@ bool line_class_manager_t::action_triggered(gui_action_creator_t *comp, value_t)
 	}
 	if (comp == &reset_all_mail_button)
 	{
-		int good_type = 1; // 0 = Passenger, 1 = Mail,
-		int reset = 1; // 0 = reset only single class, 1 = reset all classes
 		cbuffer_t buf;
-		buf.printf("%i,%i,%i,%i", 0, 0, good_type, reset);
+		buf.printf("%hhi", goods_manager_t::INDEX_MAIL);
 		for (unsigned convoy = 0; convoy < line->count_convoys(); convoy++)
 		{
 			convoihandle_t cnv = line->get_convoy(convoy);
-			cnv->call_convoi_tool('c', buf);
+			cnv->call_convoi_tool('i', buf);
 		}
 
 		for (uint32 i = 0; i < mail_class_sel.get_count(); i++)
