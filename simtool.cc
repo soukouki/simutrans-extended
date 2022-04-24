@@ -9458,6 +9458,7 @@ static bool scenario_check_schedule(karte_t *welt, player_t *player, schedule_t 
  * 'l' : apply new line [number]
  * 'c' : reassign classes
  * 'i' : init assingned fare class
+ * 'j' : change a single compartment's fare class
  */
 bool tool_change_convoi_t::init( player_t *player )
 {
@@ -9708,7 +9709,30 @@ bool tool_change_convoi_t::init( player_t *player )
 			break;
 		}
 
-		case 'c': // reassign class
+		case 'j': // change a single compartment's fare class
+		{
+			uint8 veh_pos;
+			uint8 accommo_class;
+			uint8 fare_class;
+			sscanf(p, "%hhi,%hhi,%hhi", &veh_pos, &accommo_class, &fare_class);
+			if( veh_pos > cnv->get_vehicle_count()-1) break;
+
+			vehicle_t* veh = cnv->get_vehicle(veh_pos);
+			uint8 classes_amount = veh->get_desc()->get_number_of_classes();
+			if (accommo_class > classes_amount-1  ||  fare_class > classes_amount-1) break;
+			if (!veh->get_desc()->get_capacity(accommo_class)) break;
+
+			veh->set_class_reassignment(accommo_class, fare_class);
+			cnv->calc_classes_carried();
+			linehandle_t line = cnv->get_line();
+			if (line.is_bound())
+			{
+				line->calc_classes_carried();
+			}
+			break;
+		}
+
+		case 'c': // reassign fare class
 			uint16 compartment, new_class;
 			sint32 good_type; // 0 = Passenger, 1 = Mail,
 			sscanf(p, "%hu,%hu,%i", &compartment, &new_class, &good_type);
