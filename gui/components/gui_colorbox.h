@@ -214,6 +214,8 @@ public:
 
 	void draw(scr_coord offset) OVERRIDE;
 
+	void set_value(sint64 v) { value = v; }
+
 	scr_size get_min_size() const OVERRIDE { return gui_component_t::size; }
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
