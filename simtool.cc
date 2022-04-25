@@ -9456,7 +9456,7 @@ static bool scenario_check_schedule(karte_t *welt, player_t *player, schedule_t 
  * 'T' : toggle 'retire'
  * 's' : change state to [number] (and maybe set open schedule flag)
  * 'l' : apply new line [number]
- * 'c' : reassign classes
+ * 'c' : reassign fare classes
  * 'i' : init assingned fare class
  * 'j' : change a single compartment's fare class
  */
