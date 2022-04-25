@@ -1122,6 +1122,31 @@ void tool_path_remover_t::tile_mark(player_t *, const koord3d &pos, const koord3
 	}
 }
 
+const char * tool_flatten_path_t::tile_work(player_t *player, const koord3d &pos, const koord3d &start){
+	int n=0;
+	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(0,0),start.z,n,player->is_public_service());
+	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(0,1),start.z,n,player->is_public_service());
+	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(1,0),start.z,n,player->is_public_service());
+	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(1,1),start.z,n,player->is_public_service());
+	if(n>0){
+		const sint64 cost = welt->get_settings().cst_alter_land * n;
+		player_t::book_construction_costs(player, cost, pos.get_2d(), ignore_wt);
+	}
+}
+
+void tool_flatten_path_t::tile_mark(player_t *player, const koord3d &pos, const koord3d &start){
+	if(grund_t *gr = welt->lookup_kartenboden( pos.get_2d() )){
+		zeiger_t *marker = new zeiger_t(gr->get_pos(), NULL);
+		uint8 ground_slope=gr->get_grund_hang();
+		uint8 back_slope = (ground_slope % 3) + 3 * ((uint8)ground_slope / 9) + 27;
+		marker->set_after_image(ground_desc_t::marker->get_image( ground_slope % 27));
+		marker->set_image(ground_desc_t::marker->get_image( back_slope ));
+		marker->mark_image_dirty(marker->get_image(),0);
+		gr->obj_add( marker );
+		marked.insert( marker );
+	}
+}
+
 const char *tool_raise_lower_base_t::move( player_t *player, uint16 buttonstate, koord3d pos )
 {
 	// This is rough and ready: if you can afford something costing 1, we decide you can afford this

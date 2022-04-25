@@ -99,7 +99,6 @@ protected:
 	bool is_dragging;
 	sint16 drag_height;
 
-	const char* drag(player_t*, koord k, sint16 h, int &n, bool allow_deep_water);
 	virtual sint16 get_drag_height(koord k) = 0;
 	bool check_dragging();
 
@@ -128,6 +127,9 @@ public:
 	bool is_grid_tool() const OVERRIDE {return true;}
 
 	bool update_pos_after_use() const OVERRIDE { return true; }
+
+	static const char* drag(player_t*, koord k, sint16 h, int &n, bool allow_deep_water);
+
 };
 
 class tool_raise_t : public tool_raise_lower_base_t {
@@ -146,6 +148,13 @@ public:
 	char const* check_pos(player_t*, koord3d) OVERRIDE;
 	char const* work(player_t*, koord3d) OVERRIDE;
 	sint16 get_drag_height(koord k) OVERRIDE;
+};
+
+class tool_flatten_path_t : public tool_path_tool_t{
+public:
+	tool_flatten_path_t() : tool_path_tool_t(TOOL_FLATTEN_PATH | GENERAL_TOOL) {}
+	void tile_mark(player_t *, const koord3d &, const koord3d &) override;
+	const char * tile_work(player_t *, const koord3d &, const koord3d &) override;
 };
 
 /* slope tool definitions */
