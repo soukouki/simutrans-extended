@@ -73,21 +73,24 @@ public:
 class tool_path_tool_t : public two_click_tool_t {
 public:
 	tool_path_tool_t(const uint16 tool_id) : two_click_tool_t(tool_id) {}
-	virtual void tile_work(player_t*, koord3d const &)=0;
-	virtual void tile_mark(player_t*, koord3d const &)=0;
+	virtual const char * tile_work(player_t*, koord3d const &, koord3d const &)=0;
+	virtual void tile_mark(player_t*, koord3d const &,koord3d const &)=0;
 
 	const char * do_work(player_t *, const koord3d &start, const koord3d &end) override;
 	void mark_tiles(player_t *, const koord3d &start, const koord3d &end) override;
 	uint8 is_valid_pos(player_t *, const koord3d &, const char *&, const koord3d &) override {return 2;}
 	bool is_init_network_safe() const OVERRIDE { return true; }
+
 };
 
 //call tool_remover along path
 class tool_path_remover_t : public tool_path_tool_t {
 public:
 	tool_path_remover_t() : tool_path_tool_t(TOOL_PATH_REMOVER | GENERAL_TOOL) {}
-	void tile_mark(player_t *, const koord3d &) override;
-	void tile_work(player_t *, const koord3d &) override;
+	void tile_mark(player_t *, const koord3d &, koord3d const &) override;
+	const char * tile_work(player_t *, const koord3d &, koord3d const &) override;
+private:
+	koord3d get_work_pos(koord3d pos, koord3d start);
 };
 
 // alter land height tools

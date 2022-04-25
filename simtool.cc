@@ -1043,12 +1043,11 @@ const char *tool_remover_t::work( player_t *player, koord3d pos )
 
 const char *tool_path_tool_t::do_work(player_t *player, const koord3d &start, const koord3d &end){
 	if(end==koord3d::invalid){
-		tile_work(player,start);
-		return NULL;
+		return tile_work(player,start,start);
 	}
 	koord pos=start.get_2d();
 	while(pos!=end.get_2d()){
-		tile_work(player,koord3d(pos,start.z));
+		tile_work(player,koord3d(pos,start.z),start);
 		if(abs(pos.x-end.x)>=abs(pos.y-end.y)) {
 			if(pos.x>end.x){
 				pos.x--;
@@ -1064,19 +1063,19 @@ const char *tool_path_tool_t::do_work(player_t *player, const koord3d &start, co
 			}
 		}
 	}
-	tile_work(player,koord3d(end.get_2d(),start.z));
+	tile_work(player,koord3d(end.get_2d(),start.z),start);
 	return NULL;
 }
 
 //This is a little redundant but explicitly using function pointers would drag performance
 void tool_path_tool_t::mark_tiles(player_t *player, const koord3d &start, const koord3d &end){
 	if(end==koord3d::invalid){
-		tile_mark(player,start);
+		tile_mark(player,start,start);
 		return;
 	}
 	koord pos=start.get_2d();
 	while(pos!=end.get_2d()){
-		tile_mark(player,koord3d(pos,start.z));
+		tile_mark(player,koord3d(pos,start.z),start);
 		if(abs(pos.x-end.x)>=abs(pos.y-end.y)) {
 			if(pos.x>end.x){
 				pos.x--;
@@ -1092,18 +1091,31 @@ void tool_path_tool_t::mark_tiles(player_t *player, const koord3d &start, const 
 			}
 		}
 	}
-	tile_mark(player,koord3d(end.get_2d(),start.z));
+	tile_mark(player,koord3d(end.get_2d(),start.z),start);
 }
 
-void tool_path_remover_t::tile_work(player_t* player, const koord3d &pos){
-	tool_remover_t().work(player,pos);
+koord3d tool_path_remover_t::get_work_pos(koord3d pos, koord3d start){
+	if(const grund_t *gr = welt->lookup(start)){
+		if(gr->ist_karten_boden()){
+			if(const grund_t *gr2 = welt->lookup_kartenboden(pos.get_2d())){
+				return gr2->get_pos();
+			}
+		}
+	}
+	return pos;
 }
 
-void tool_path_remover_t::tile_mark(player_t *, const koord3d &pos){
-	if(grund_t *gr = welt->lookup(pos)){
-		zeiger_t *marker = new zeiger_t(pos,NULL);
-		marker->set_after_image(ground_desc_t::marker->get_image(0));
-		marker->set_image(ground_desc_t::marker->get_image(0));
+const char * tool_path_remover_t::tile_work(player_t* player, const koord3d &pos, const koord3d &start){
+
+	return tool_remover_t().work(player,get_work_pos(pos,start));
+}
+
+void tool_path_remover_t::tile_mark(player_t *, const koord3d &pos, const koord3d &start){
+	koord3d work_pos = get_work_pos(pos,start);
+	if(grund_t *gr = welt->lookup(work_pos)){
+		zeiger_t *marker = new zeiger_t(work_pos,NULL);
+		marker->set_after_image(cursor);
+		marker->set_image(cursor);
 		marker->mark_image_dirty(marker->get_image(),0);
 		gr->obj_add(marker);
 		marked.insert(marker);
