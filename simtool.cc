@@ -1132,6 +1132,7 @@ const char * tool_flatten_path_t::tile_work(player_t *player, const koord3d &pos
 		const sint64 cost = welt->get_settings().cst_alter_land * n;
 		player_t::book_construction_costs(player, cost, pos.get_2d(), ignore_wt);
 	}
+	return NULL;
 }
 
 void tool_flatten_path_t::tile_mark(player_t *player, const koord3d &pos, const koord3d &start){
