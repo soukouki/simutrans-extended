@@ -2560,15 +2560,13 @@ Cluster size
 combined_signal
 複合信号機(場内信号機+通過信号機)
 Comfort
-快適性
+快適度
 comfort expectance\nfor travelling
-移動中の快適性
+移動中の快適度
 comfort impact\nlimitations
-快適性の収入への影響
+快適度の収入への影響
 Comfort:
-快適性:
-comfort: %i
-快適性: %i
+快適度:
 commuting
 通勤中
 Commuting
@@ -4389,3 +4387,7 @@ Power: %4d kW\n
 #前月と比べた待機数の増減を表示
 #Queueing
 #待機数の増減
+#Postrate
+#郵便度
+#comfort: %i
+#快適度: %i

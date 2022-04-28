@@ -6,8 +6,8 @@
 #include <algorithm>
 
 #include "goods_frame_t.h"
+#include "components/gui_image.h"
 #include "components/gui_scrollpane.h"
-
 
 #include "../bauer/goods_manager.h"
 #include "../descriptor/goods_desc.h"
@@ -103,7 +103,12 @@ goods_frame_t::goods_frame_t() :
 		distance_input.add_listener( this );
 		input_container.add_component(&distance_input);
 
-		input_container.new_component<gui_label_t>("Comfort");
+		input_container.add_table(2,1);
+		{
+			input_container.new_component<gui_image_t>(skinverwaltung_t::comfort ? skinverwaltung_t::comfort->get_image_id(0) : IMG_EMPTY, 0, ALIGN_NONE, true);
+			input_container.new_component<gui_label_t>("Comfort");
+		}
+		input_container.end_table();
 		comfort_input.set_limits( 1, 255 );
 		comfort_input.set_value( comfort );
 		comfort_input.wrap_mode( false );
