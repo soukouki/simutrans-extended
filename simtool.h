@@ -80,7 +80,7 @@ public:
 	void mark_tiles(player_t *, const koord3d &start, const koord3d &end) override;
 	uint8 is_valid_pos(player_t *, const koord3d &, const char *&, const koord3d &) override {return 2;}
 	bool is_init_network_safe() const OVERRIDE { return true; }
-
+	virtual char const *get_tooltip(player_t const*) const override {return "";}
 };
 
 //call tool_remover along path
@@ -89,6 +89,7 @@ public:
 	tool_path_remover_t() : tool_path_tool_t(TOOL_PATH_REMOVER | GENERAL_TOOL) {}
 	void tile_mark(player_t *, const koord3d &, koord3d const &) override;
 	const char * tile_work(player_t *, const koord3d &, koord3d const &) override;
+	char const* get_tooltip(player_t const*) const override { return translator::translate("Path Remove");}
 private:
 	koord3d get_work_pos(koord3d pos, koord3d start);
 };
@@ -155,6 +156,7 @@ public:
 	tool_flatten_path_t() : tool_path_tool_t(TOOL_FLATTEN_PATH | GENERAL_TOOL) {}
 	void tile_mark(player_t *, const koord3d &, const koord3d &) override;
 	const char * tile_work(player_t *, const koord3d &, const koord3d &) override;
+	char const* get_tooltip(player_t const*) const override { return translator::translate("Flatten Path");}
 };
 
 /* slope tool definitions */
