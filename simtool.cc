@@ -1123,6 +1123,11 @@ void tool_path_remover_t::tile_mark(player_t *, const koord3d &pos, const koord3
 }
 
 const char * tool_flatten_path_t::tile_work(player_t *player, const koord3d &pos, const koord3d &start){
+
+	if(is_shift_pressed()){
+		tool_setslope_t::tool_set_slope_work(player,koord3d(pos.get_2d(),welt->lookup_hgt(pos.get_2d())),RESTORE_SLOPE);
+	}
+
 	int n=0;
 	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(0,0),start.z,n,player->is_public_service());
 	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(0,1),start.z,n,player->is_public_service());
