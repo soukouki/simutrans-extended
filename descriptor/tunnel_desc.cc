@@ -123,6 +123,5 @@ waytype_t tunnel_desc_t::get_finance_waytype() const
 bool tunnel_desc_t::check_way_slope(slope_t::type slope) const{
 	return !((env_t::pak_height_conversion_factor == 1  &&  !is_one_high(slope))
 			|| (env_t::pak_height_conversion_factor == 2
-				&& ((get_is_half_height() && !is_one_high(slope))
-					|| (!get_is_half_height() && is_one_high(slope)))));
+				&& ((!get_is_half_height() && is_one_high(slope)))));
 }
