@@ -79,12 +79,23 @@ void tunnel_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 	uint32 depth_cost=obj.get_int("depth_cost",0);
 	uint32 depth2_cost=obj.get_int("depth_squared_cost",0);
 	uint32 subway_cost=obj.get_int("sub_way_cost",0);
-	uint8 depth_limit=obj.get_int("depth_limit",0);
+	uint8 depth_limit;
+	depth_limit=obj.get_int("depth_limit",0) & 0x7F;
+	uint8 underwater_limit=obj.get_int("sea_depth_limit",0);
+	if(underwater_limit){
+		flags|=0x20;
+		node_size+=1;
+	}
 	if(depth_cost || depth2_cost || subway_cost || depth_limit){
 		flags|=0x10;
 		node_size+=13;
 	}
-
+	uint16 length_limit=obj.get_int("length_limit",0);
+	if(length_limit){
+		flags|=0x40;
+		node_size+=2;
+		dbg->warning("tunnel_writer::write_node()","High values of length_limit can reduce performance of tunnel construction");
+	}
 
 	// BG, 11.02.2014: max_weight was missused as axle_load
 	// in experimetal before standard introduced axle_load.
@@ -227,6 +238,16 @@ void tunnel_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 		node.write_uint32(fp, depth2_cost,				offset+8);
 		node.write_uint8(fp,  depth_limit,				offset+12);
 		offset+=13;
+	}
+
+	if(flags & 0x20){
+		node.write_uint8(fp,  underwater_limit,         offset);
+		offset+=1;
+	}
+
+	if(flags & 0x40){
+		node.write_uint16(fp,  length_limit,             offset);
+		offset+=2;
 	}
 
 	write_head(fp, node, obj);

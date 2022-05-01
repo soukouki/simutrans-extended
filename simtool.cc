@@ -1477,6 +1477,13 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 							return "This tunnel cannot be brought any deeper";
 						}
 					}
+					if(tunnel->get_desc()->get_underwater_limit()){
+						if(const grund_t* gr = welt->lookup_kartenboden(new_pos.get_2d())){
+							if(gr->is_water() && gr->get_pos().z - new_pos.z > (sint8)tunnel->get_desc()->get_underwater_limit()){
+								return "This tunnel cannot be bround any further below the water surface";
+							}
+						}
+					}
 				}
 			}
 		}
@@ -3531,6 +3538,8 @@ const char* tool_build_tunnel_t::get_tooltip(const player_t *) const
 			n = strlen(toolstr);
 			n += sprintf(toolstr + n, ")");
 		}
+	}else{
+		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Groundwater Prohibited"));
 	}
 	if(desc->get_subsea_allowed()){
 		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Sea Permitted"));
@@ -3543,6 +3552,15 @@ const char* tool_build_tunnel_t::get_tooltip(const player_t *) const
 			n = strlen(toolstr);
 			n += sprintf(toolstr + n, ")");
 		}
+		if(desc->get_length_limit()){
+			n += sprintf(toolstr + n, " %d%s", desc->get_length_limit(), translator::translate("m"));
+		}
+		if(desc->get_underwater_limit()){
+			n += sprintf(toolstr + n, ", %s: %d", translator::translate("Sub-Sea Depth Limit"), desc->get_underwater_limit());
+		}
+
+	}else{
+		n += sprintf(toolstr + n, ", %s", translator::translate("Sub-Sea Prohibited"));
 	}
 
 	return toolstr;
