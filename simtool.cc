@@ -1041,7 +1041,112 @@ const char *tool_remover_t::work( player_t *player, koord3d pos )
 	return NULL;
 }
 
+const char *tool_path_tool_t::do_work(player_t *player, const koord3d &start, const koord3d &end){
+	if(end==koord3d::invalid){
+		return tile_work(player,start,start);
+	}
+	koord pos=start.get_2d();
+	while(pos!=end.get_2d()){
+		tile_work(player,koord3d(pos,start.z),start);
+		if(abs(pos.x-end.x)>=abs(pos.y-end.y)) {
+			if(pos.x>end.x){
+				pos.x--;
+			}else{
+				pos.x++;
+			}
+		}
+		else {
+			if(pos.y>end.y){
+				pos.y--;
+			}else{
+				pos.y++;
+			}
+		}
+	}
+	tile_work(player,koord3d(end.get_2d(),start.z),start);
+	return NULL;
+}
 
+//This is a little redundant but explicitly using function pointers would drag performance
+void tool_path_tool_t::mark_tiles(player_t *player, const koord3d &start, const koord3d &end){
+	if(end==koord3d::invalid){
+		tile_mark(player,start,start);
+		return;
+	}
+	koord pos=start.get_2d();
+	while(pos!=end.get_2d()){
+		tile_mark(player,koord3d(pos,start.z),start);
+		if(abs(pos.x-end.x)>=abs(pos.y-end.y)) {
+			if(pos.x>end.x){
+				pos.x--;
+			}else{
+				pos.x++;
+			}
+		}
+		else {
+			if(pos.y>end.y){
+				pos.y--;
+			}else{
+				pos.y++;
+			}
+		}
+	}
+	tile_mark(player,koord3d(end.get_2d(),start.z),start);
+}
+
+koord3d tool_path_remover_t::get_work_pos(koord3d pos, koord3d start){
+	if(const grund_t *gr = welt->lookup(start)){
+		if(gr->ist_karten_boden()){
+			if(const grund_t *gr2 = welt->lookup_kartenboden(pos.get_2d())){
+				return gr2->get_pos();
+			}
+		}
+	}
+	return pos;
+}
+
+const char * tool_path_remover_t::tile_work(player_t* player, const koord3d &pos, const koord3d &start){
+
+	return tool_remover_t().work(player,get_work_pos(pos,start));
+}
+
+void tool_path_remover_t::tile_mark(player_t *, const koord3d &pos, const koord3d &start){
+	koord3d work_pos = get_work_pos(pos,start);
+	if(grund_t *gr = welt->lookup(work_pos)){
+		zeiger_t *marker = new zeiger_t(work_pos,NULL);
+		marker->set_after_image(cursor);
+		marker->set_image(cursor);
+		marker->mark_image_dirty(marker->get_image(),0);
+		gr->obj_add(marker);
+		marked.insert(marker);
+	}
+}
+
+const char * tool_flatten_path_t::tile_work(player_t *player, const koord3d &pos, const koord3d &start){
+	int n=0;
+	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(0,0),start.z,n,player->is_public_service());
+	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(0,1),start.z,n,player->is_public_service());
+	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(1,0),start.z,n,player->is_public_service());
+	tool_raise_lower_base_t::drag(player,pos.get_2d()+koord(1,1),start.z,n,player->is_public_service());
+	if(n>0){
+		const sint64 cost = welt->get_settings().cst_alter_land * n;
+		player_t::book_construction_costs(player, cost, pos.get_2d(), ignore_wt);
+	}
+	return NULL;
+}
+
+void tool_flatten_path_t::tile_mark(player_t *player, const koord3d &pos, const koord3d &start){
+	if(grund_t *gr = welt->lookup_kartenboden( pos.get_2d() )){
+		zeiger_t *marker = new zeiger_t(gr->get_pos(), NULL);
+		uint8 ground_slope=gr->get_grund_hang();
+		uint8 back_slope = (ground_slope % 3) + 3 * ((uint8)ground_slope / 9) + 27;
+		marker->set_after_image(ground_desc_t::marker->get_image( ground_slope % 27));
+		marker->set_image(ground_desc_t::marker->get_image( back_slope ));
+		marker->mark_image_dirty(marker->get_image(),0);
+		gr->obj_add( marker );
+		marked.insert( marker );
+	}
+}
 
 const char *tool_raise_lower_base_t::move( player_t *player, uint16 buttonstate, koord3d pos )
 {
