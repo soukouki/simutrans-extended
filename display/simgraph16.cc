@@ -5600,11 +5600,11 @@ void display_depot_symbol_rgb(scr_coord_val x, scr_coord_val y, scr_coord_val wi
 	const scr_coord_val y_start = width/4+1;
 	const PIXVAL decoration_col = display_blend_colors(colval, color_idx_to_rgb(COL_WHITE), 60);
 
-	display_vline_wh_clip_rgb(x+1,             y+y_start, width-width/3-2, decoration_col, dirty);
-	display_vline_wh_clip_rgb(x+(width/2)*2-2, y+y_start, width-width/3-2, decoration_col, dirty);
+	display_vline_wh_clip_rgb(x+1,       y+y_start, width-width/3-2, decoration_col, dirty);
+	display_vline_wh_clip_rgb(x+width-2, y+y_start, width-width/3-2, decoration_col, dirty);
 	if (width < 8) { return; } // too small to draw!
 	for (uint8 i=y_start; i < width-3; i+=2) {
-		const scr_coord_val w = i==y_start ? (width/2)*2-4 : (width/2)*2-6;
+		const scr_coord_val w = i==y_start ? width-4 : width-6;
 		display_fillbox_wh_clip_rgb(x+3-(i==y_start), y+i, w, 1, decoration_col, dirty);
 	}
 }
