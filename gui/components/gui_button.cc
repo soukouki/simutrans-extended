@@ -135,6 +135,7 @@ void button_t::set_typ(enum type t)
 		case depot:
 		{
 			b_no_translate = false;
+			text_color = color_idx_to_rgb(91); // brown
 			targetpos = koord3d::invalid;
 			break;
 		}
@@ -499,8 +500,8 @@ void button_t::draw(scr_coord offset)
 				if (background_color != color_idx_to_rgb(COL_WHITE)) {
 					display_img_stretch_blend(gui_theme_t::button_color_tiles[b_enabled && pressed], area, background_color | TRANSPARENT75_FLAG | OUTLINE_FLAG);
 				}
-				const uint8 color_index = b_enabled ? 88/* brown */ : 8/* gray */;
-				display_depot_symbol(area.x+3, area.y+2+(pressed&&gui_theme_t::pressed_button_sinks), size.w-6, color_index, false);
+				const PIXVAL depot_color = b_enabled ? this->text_color : SYSCOL_BUTTON_TEXT_DISABLED;
+				display_depot_symbol_rgb(area.x+3, area.y+2+(pressed&&gui_theme_t::pressed_button_sinks), size.w-6, depot_color, false);
 			}
 			break;
 
