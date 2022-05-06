@@ -5,6 +5,7 @@
 
 #include "depotlist_frame.h"
 #include "gui_theme.h"
+#include "minimap.h"
 
 #include "../player/simplay.h"
 
@@ -62,11 +63,9 @@ bool depotlist_frame_t::is_available_wt(waytype_t wt)
 depotlist_stats_t::depotlist_stats_t(depot_t *d)
 {
 	this->depot = d;
-	set_table_layout(8,1);
+	set_table_layout(7,1);
 	new_component<gui_margin_t>(0);
 	const waytype_t wt = d->get_wegtyp();
-	waytype_symbol.set_image(skinverwaltung_t::get_waytype_skin(wt)->get_image_id(0), true);
-	add_component(&waytype_symbol);
 
 	const weg_t *w = welt->lookup(depot->get_pos())->get_weg(wt != tram_wt ? wt : track_wt);
 	const bool way_electrified = w ? w->is_electrified() : false;
@@ -94,9 +93,13 @@ depotlist_stats_t::depotlist_stats_t(depot_t *d)
 
 	add_table(2,1)->set_spacing(scr_size(0,0));
 	{
-		// pos button
-		gotopos.set_typ(button_t::posbutton_automatic);
+		// pos button (depot type)
+		//// Change the symbol size in the button depending on the depot level
+		////const uint8 symbol_width = LINEASCENT-2 + min(2,d->get_tile()->get_desc()->get_level()/3)*2;
+		//gotopos.set_typ(button_t::posbutton_automatic);
+		gotopos.set_typ(button_t::depot_automatic);
 		gotopos.set_targetpos3d(depot->get_pos());
+		gotopos.text_color = minimap_t::get_depot_color(depot->get_typ());
 		add_component(&gotopos);
 
 		lb_region.buf().printf( " %s ", depot->get_pos().get_2d().get_fullstr() );
