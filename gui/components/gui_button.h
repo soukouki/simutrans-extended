@@ -74,6 +74,7 @@ public:
 		imagebox_automatic  = imagebox     | automatic,
 		sortarrow_automatic = sortarrow    | automatic,
 		posbutton_automatic = posbutton    | automatic,
+		depot_automatic     = depot        | automatic,
 
 		flexible = 1 << 9
 	};

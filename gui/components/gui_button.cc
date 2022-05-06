@@ -323,9 +323,9 @@ bool button_t::infowin_event(const event_t *ev)
 	}
 
 	if(IS_LEFTRELEASE(ev)) {
-		if(  (type & TYPE_MASK)==posbutton  ) {
+		if(  (type & TYPE_MASK)==posbutton  ||  type==depot_automatic  ) {
 			call_listeners( &targetpos );
-			if (type == posbutton_automatic) {
+			if( type==posbutton_automatic  ||  type==depot_automatic ) {
 				welt->get_viewport()->change_world_position( targetpos );
 				welt->get_zeiger()->change_pos( targetpos );
 			}
