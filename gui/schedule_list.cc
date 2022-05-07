@@ -321,10 +321,11 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	tabs.add_listener(this);
 	add_component(&tabs);
 
-	cont_line_name.set_table_layout(2,1);
+	cont_line_name.set_table_layout(3,1);
 	cont_line_name.set_spacing(scr_size(0,0));
 	cont_line_name.set_pos(scr_coord(LINE_NAME_COLUMN_WIDTH, D_MARGIN_TOP));
 
+	cont_line_name.add_component(&wt_symbol);
 	cont_line_name.add_component(&lc_preview);
 
 	// editable line name
@@ -1131,6 +1132,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scrolly_haltestellen.set_visible(true);
 		scrolly_line_info.set_visible(new_line->get_schedule()->get_count()>0);
 		//inp_name.set_visible(true);
+		wt_symbol.set_waytype(new_line->get_schedule()->get_waytype());
 		lc_preview.set_line(new_line);
 		lc_preview.set_base_color( new_line->get_line_color() );
 		lc_preview.set_visible(new_line->get_line_color_index()!=255);
