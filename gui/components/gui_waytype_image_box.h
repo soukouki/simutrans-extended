@@ -17,7 +17,7 @@ class gui_waytype_image_box_t :
 private:
 	PIXVAL bgcol = 0;
 public:
-	gui_waytype_image_box_t(waytype_t wt);
+	gui_waytype_image_box_t(waytype_t wt=invalid_wt);
 	void set_size(scr_size size_par) OVERRIDE;
 
 	void set_waytype(waytype_t wt);

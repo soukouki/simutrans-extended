@@ -13,7 +13,7 @@
 
 
 gui_waytype_image_box_t::gui_waytype_image_box_t(waytype_t wt) :
-	gui_image_t(skinverwaltung_t::get_waytype_skin(wt)->get_image_id(0), 0, 0, true)
+	gui_image_t(IMG_EMPTY, 0, 0, true)
 {
 	set_waytype(wt);
 }
@@ -21,7 +21,12 @@ gui_waytype_image_box_t::gui_waytype_image_box_t(waytype_t wt) :
 
 void gui_waytype_image_box_t::set_waytype(waytype_t wt)
 {
-	set_image(skinverwaltung_t::get_waytype_skin(wt)->get_image_id(0), true);
+	if (wt!=invalid_wt && skinverwaltung_t::get_waytype_skin(wt)) {
+		set_image(skinverwaltung_t::get_waytype_skin(wt)->get_image_id(0), true);
+	}
+	else {
+		set_image(IMG_EMPTY);
+	}
 	bgcol = world()->get_settings().get_waytype_color(wt);
 	set_size(scr_size( gui_image_t::get_size().w, gui_image_t::get_size().h) );
 }
