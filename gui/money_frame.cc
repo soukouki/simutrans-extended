@@ -353,7 +353,7 @@ void money_frame_t::init_stats()
 			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
 				cont_stats.add_table(3,1);
 				cont_stats.new_component<gui_fill_t>();
-				cont_stats.new_component<gui_image_t>()->set_image(skinverwaltung_t::get_waytype_skin( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )->get_image_id(0), true);
+				cont_stats.new_component<gui_image_t>(skinverwaltung_t::get_waytype_skin( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )->get_image_id(0), 0, 0, true);
 				cont_stats.new_component<gui_fill_t>();
 				cont_stats.end_table();
 			}
