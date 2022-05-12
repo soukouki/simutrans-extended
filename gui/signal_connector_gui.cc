@@ -8,9 +8,10 @@
 #include "../display/viewport.h"
 #include "../descriptor/building_desc.h"
 #include "simwin.h"
+#include "../simmenu.h"
 
 
-gui_signalbox_changer_t::gui_signalbox_changer_t(signalbox_t* to, signal_t* from)
+gui_signalbox_changer_t::gui_signalbox_changer_t(signalbox_t* to, const signal_t* from)
 {
 	sig = from;
 	sb = to;
@@ -63,23 +64,26 @@ bool gui_signalbox_changer_t::action_triggered(gui_action_creator_t *comp, value
 		return false;
 	}
 	if (comp == &bt_connect) {
-		koord3d old_sb_pos = sig->get_signalbox();
-		const grund_t* gr = world()->lookup(old_sb_pos);
-		if (gr) {
-			gebaeude_t* gb = gr->get_building();
-			if (gb && gb->get_tile()->get_desc()->is_signalbox()) {
-				signalbox_t *old_sb = (signalbox_t*)gb;
-				sb->transfer_signal(sig, old_sb);
-				update();
-				return true;
-			}
+		if( sb->can_add_more_signals() ) {
+			// text changed => call tool
+			cbuffer_t buf;
+			buf.append(sig->get_pos().get_str());
+			buf.append(",");
+			buf.append(sb->get_pos().get_str());
+			tool_t *tool = create_tool(TOOL_REASSIGN_SIGNAL_INTERNAL | SIMPLE_TOOL);
+			tool->set_default_param(buf);
+			world()->set_tool(tool, world()->get_active_player());
+			// since init always returns false, it is safe to delete immediately
+			delete tool;
+			update();
+			return true;
 		}
 	}
 	return false;
 }
 
 
-signal_connector_gui_t::signal_connector_gui_t(signal_t *s) :
+signal_connector_gui_t::signal_connector_gui_t(const signal_t *s) :
 	gui_frame_t( translator::translate("Signal connector") )
 {
 	sig_pos = s->get_pos();
@@ -91,7 +95,7 @@ signal_connector_gui_t::signal_connector_gui_t(signal_t *s) :
 }
 
 
-void signal_connector_gui_t::build_list(signal_t* sig)
+void signal_connector_gui_t::build_list(const signal_t* sig)
 {
 	sb_selections.clear();
 	const player_t *player = sig->get_owner();
@@ -104,7 +108,7 @@ void signal_connector_gui_t::build_list(signal_t* sig)
 }
 
 
-void signal_connector_gui_t::update(signal_t* sig)
+void signal_connector_gui_t::update(const signal_t* sig)
 {
 	remove_all();
 

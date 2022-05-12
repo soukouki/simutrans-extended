@@ -41,9 +41,9 @@ void interaction_t::move_view( const event_t &ev )
 
 	// move the mouse pointer back to starting location => infinite mouse movement
 	if(  (ev.mx - ev.cx) != 0  ||  (ev.my-ev.cy) !=0  ) {
-#ifdef __BEOS__
 		change_drag_start(ev.mx - ev.cx, ev.my - ev.cy);
-#else
+#if 0
+		// move pointer catches the mouse inside the windows but is incompatible with any touch based scolling
 		move_pointer(ev.cx, ev.cy);
 #endif
 	}
@@ -79,21 +79,26 @@ void interaction_t::move_cursor( const event_t &ev )
 		zeiger->change_pos(pos);
 
 		if (!tool->move_has_effects()) {
+			tool->end_move(world->get_active_player(), pos);
 			is_dragging = false;
+
 		}
 		else if(  !env_t::networkmode  ||  tool->is_move_network_safe(world->get_active_player())) {
 			tool->flags = event_get_last_control_shift() | tool_t::WFL_LOCAL;
 			if(tool->check_pos( world->get_active_player(), zeiger->get_pos() )==NULL) {
 				if(  ev.button_state == 0  ) {
+					tool->end_move(world->get_active_player(), pos);
 					is_dragging = false;
 				}
 				else if(ev.ev_class==EVENT_DRAG) {
 					if(!is_dragging  &&  prev_pos != koord3d::invalid  &&  tool->check_pos( world->get_active_player(), prev_pos )==NULL) {
 						const char* err = world->get_scenario()->is_work_allowed_here(world->get_active_player(), tool->get_id(), tool->get_waytype(), prev_pos);
 						if (err == NULL) {
+							tool->begin_move(world->get_active_player(), pos);
 							is_dragging = true;
 						}
 						else {
+							tool->end_move(world->get_active_player(), pos);
 							is_dragging = false;
 						}
 					}
@@ -383,9 +388,10 @@ bool interaction_t::process_event( event_t &ev )
 	else if(IS_RIGHTDRAG(&ev)) {
 		// unset following
 		world->get_viewport()->set_follow_convoi( convoihandle_t() );
+		catch_dragging();
 		move_view(ev);
 	}
-	else if(  (left_drag  ||  world->get_tool(world->get_active_player_nr())->get_id() == (TOOL_QUERY | GENERAL_TOOL))  &&  IS_LEFTDRAG(&ev)  ) {
+	else if( (left_drag || world->get_tool(world->get_active_player_nr())->get_id() == (TOOL_QUERY | GENERAL_TOOL)) && IS_LEFTDRAG(&ev) ) {
 		/* ok, we have the query tool selected, and we have a left drag or left release event with an actual difference
 		 * => move the map */
 		if(  !left_drag  ) {
@@ -393,6 +399,7 @@ bool interaction_t::process_event( event_t &ev )
 			left_drag = true;
 		}
 		world->get_viewport()->set_follow_convoi( convoihandle_t() );
+		catch_dragging();
 		move_view(ev);
 		ev.ev_code = IGNORE_EVENT;
 	}

@@ -95,16 +95,12 @@ Maximize height levels
 高さを最大化する
 Networks
 路線図
-Queueing
-待機の増減
 Road toll
 通行料
 Scenario
 シナリオ
 Start this as a server
 このゲームをサーバーとして開始します。
-Transfers
-乗降数
 #_________________________________climates_text_________________________________
 #_________________________________climates_text_________________________________
 arctic
@@ -283,20 +279,20 @@ Please click on the map to add\nwaypoints or stops to this\nschedule.
 マップをクリックして、中継点または\n駅をスケジュールに追加してください。
 Set tile climate
 地面タイルの気候を%sに変更します。
-Show capacity and if halt is overcrowded
-各駅/停留所の待合室定員の大きさと混雑度を表示
 Show how many convoi reach a station
 駅に到着した車両の数を表示
 Show how many people/much is waiting at halts
-待機量を表示
+現在の旅客待機量を円の大きさで表示し、混雑度を色で表します。紫は過度の混雑状態を示します。
+Show how many mails are waiting at halts
+現在の郵便待機量を円の大きさで表示し、混雑度を色で表します。
+Show how many goods are waiting at halts
+現在の貨物待機量を円の大きさで表示し、混雑度を色で表します。
 Show initial passenger departure
 旅客および郵便の発生源を表示
 Show level of city buildings
 市内建築物の旅客度/郵便度を表示
 Show speedlimit of ways
 軌道/道路の制限速度を表示
-Show the change of waiting at halts
-先月と比べた待機数の増減を表示
 Show the owenership of infrastructure
 軌道/道路の所有者を表示
 Show transported freight/freight network
@@ -716,7 +712,9 @@ chooses a random map
 citicens
 住民
 City attraction
-都市内施設
+都市内向け施設
+City attractions
+市内の観光施設
 City industries
 産業チェーンの数
 City list
@@ -1062,9 +1060,11 @@ gl_title
 gl_normal
 基本情報
 gl_prod
-生産者
+生産業
 gl_con
-消費者
+対消費者産業
+Manufacturers
+製造業
 go home
 車庫へ
 Goods
@@ -1244,7 +1244,7 @@ LARGE_NUMBER_STRING
 LARGE_NUMBER_VALUE
 1e8
 Last Month
-先月
+前月
 Last used tools
 最後に使用したツール
 Last Year
@@ -1995,6 +1995,10 @@ Transport %li passengers
 月に %li人以上の旅客を輸送
 Transported
 輸送実績
+Public transport
+公共交通機関利用
+Travelled
+旅客輸送達成数
 Trees disabled!
 樹木は使用できません！
 TrolleyBus_tab
@@ -2226,13 +2230,15 @@ brakes from max. speed in %i m
 (Max. comfortable journey time:
 (快適に移動できる最大時間:
 (speed_restricted_by_bridge)
-(橋梁による速度制限)
+橋梁による速度制限
 (speed_restricted_by_city)
-(市道化による速度制限)
+都市による速度制限
 (speed_restricted_by_tunnel)
-(トンネルによる速度制限)
+トンネルによる速度制限
 (speed_restricted_by_wayobj)
-(軌道付属設備による速度制限)
+軌道付属設備による速度制限
+(speed_restricted_by_crossing)
+踏切による速度制限
 [R]
 [折返]
 \n\nInterest on your debt is\naccumulating at %i %%
@@ -2267,6 +2273,8 @@ Acceleration
 加速
 Access
 アクセス権
+access_minimap
+路線図
 accommodation
 クラス別定員/容量
 accommodation (detail)
@@ -2827,10 +2835,6 @@ Mail delivery success this year:
 今年の郵便配達成功率:
 Mail demand/output
 郵便需要/発送量
-Mail sent last year:
-昨年の郵便発送数:
-Mail sent this year:
-今年の郵便発送数:
 maint_incl_wayobj
 軌道付属設備を含む維持費
 maintenance
@@ -3309,10 +3313,6 @@ The number of passengers who decline to travel because the journey would take to
 許容できる旅行時間よりも所要時間が長すぎるため、旅行を取り止めた旅客の人数を表します。
 The number of passengers who have travelled successfully from this stop
 この停留所/駅からの移動に成功した旅客の人数を表します。
-The number of passengers/units of mail/goods that have arrived at this stop
-この停留所/駅に到着した旅客/郵便/貨物の数を表します。
-The number of passengers/units of mail/goods that have departed from this stop
-この停留所/駅から出発した旅客/郵便/貨物の数を表します。
 The number of passengers/units of mail/goods waiting at this stop
 駅/停留所で待機している旅客/郵便/貨物の数を表します。
 The number of private car trips in the region overall
@@ -3407,6 +3407,8 @@ transferring
 移動中
 transfers
 移動中の旅客/貨物
+Transfers
+乗降客数
 Transformer only next to factory or in city!
 変電所は産業の隣接マスか市域内にのみ建設できます。
 Transshipment time:
@@ -3583,6 +3585,8 @@ fab_stuck
 生産停止（資材＆在庫飽和）
 missing_connection
 必要最低限の提携先がありません！
+material_not_available
+資材が調達できなくなっています！
 Within own network
 自家輸送網内のみ表示
 Show only connected to own transport network
@@ -3929,8 +3933,8 @@ Trailers
 被牽引車
 <p>Continue by ESC, SPACE, or BACKSPACE.<br>
 <p>[ESC] [SPACE] [BACKSPACE]、いずれかのキーでゲームを開始します。<br>
-fl_btn_demand
-商品需要
+#fl_btn_demand
+#商品需要
 fl_btn_region
 所在地
 TOOL_SOUND
@@ -4072,9 +4076,9 @@ by_potential_pax_number
 by_potential_mail_users
 郵便需要度
 by_pax_happy_last_month
-先月の乗車数
+前月の乗車数
 by_mail_delivered_last_month
-先月の郵便発送数
+前月の郵便発送数
 show_mutual_use
 利用中の他社駅も表示
 Also shows the stops of other players you are using
@@ -4145,6 +4149,10 @@ can open a dedicated window by clicking on a private car.
 自家用車をクリックすると専用の情報ウィンドウを開きます
 can open a dedicated window by clicking on a pedestrian.
 歩行者をクリックすると専用の情報ウィンドウを開きます
+Private car
+自家用車
+Reselect closes tools
+選択済のツールボタンを押すと選択を解除する
 Date format
 日時の表示形式
 Show own depot names
@@ -4163,10 +4171,140 @@ has_no_class
 -
 Information windows pop up control:
 情報ウィンドウの表示許可設定：
+helptxt_access_minimap
+ミニマップウィンドウに路線図を表示します
+ground_info
+地表タイル
 helptxt_ground_info_toggler
 占有されていないタイルをクリックすると土地情報を情報ウィンドウを開きます
+tree_info
+樹木
 helptxt_tree_info_toggler
 樹木、岩石、鳥の群れなどのオブジェクトをクリックすると専用の情報ウィンドウを開きます
+travel_distance
+運行距離
+Pax-km
+旅客輸送量
+Mail-km
+郵便輸送量
+Freight-km
+貨物輸送量
+pkm
+人km
+kgkm
+kg・km
+tkm
+トンkm
+A measure of the amount of passengers transported, expressed in passenger-kilometre
+旅客の輸送量を示す指標。輸送人数と輸送距離の積。
+A measure of the amount of mail transported, expressed in tonne-kilometre
+郵便物の輸送量を示す指標。貨物の重量と輸送距離の積。
+A measure of the amount of freight transported, expressed in tonne-kilometre
+貨物の輸送量を示す指標。貨物の重量と輸送距離の積。
+Transportation density
+輸送密度
+Yearly average
+年間平均
+/mon
+/月
+Handling mails
+郵便取扱量
+Handling goods
+貨物取扱量
+pax_handled_last_month
+前月旅客利用者
+mail_handled_last_month
+前月郵便取扱量
+goods_handled_last_month
+前月貨物取扱量
+The number of visitors that getting on and off
+この駅で乗り降りした旅行者の数
+The number of commuters that getting on and off
+この駅で乗り降りした通勤利用者の数
+The number of passengers at the stop last month
+前月の旅客利用者数
+The number of mail that handling at the stop last month
+前月の郵便物取扱量
+The number of goods that handling at the stop last month
+前月の貨物取扱量（トン）
+cl_general
+基本データ
+pax_traffic
+旅客流動量
+mail_traffic
+郵便流動量
+goods_traffic
+貨物流動量
+Passengers using public transportation in the last quarter
+前四半期の公共交通機関利用者数
+Percentage of users of public transportation
+公共交通機関利用者の割合
+Number of mail sent in the last quarter
+前四半期の郵便発送数
+Mail delivery success in the last quarter
+前四半期の郵便配達達成率
+pax_destination_mapping
+旅客目的地マッピング
+Open the color legend
+凡例を表示
+pax_transportation_ratio
+旅客移動手段比率
+helptxt_pax_transportation_ratio
+旅客が目的地まで移動した交通手段の比率
+City stops
+市内の駅
+City attractions
+市内のランドマーク
+City factories
+市内の産業
+Open the list of stops in this city
+市内にある全てのプレイヤーの駅一覧を別ウィンドウで表示します
+Open the list of attraction buildings in this city
+市内にある観光施設の一覧を別ウィンドウで表示します
+Open the list of factories in this city
+市内にある産業の一覧を別ウィンドウで表示します
+too_slow_public_transportation
+公共交通機関が遅すぎる
+too_slow_privatecar
+自家用車で移動しようとしたが時間がかかりすぎる
+destination_unavailable
+利用不可能な目的地
+(ci_demands)
+需要
+Production boosted by power supply
+電力供給による生産力ブースト
+fl_stats_last_month
+前月度生産統計
+edit_line_color
+ラインカラー編集
+Use unique line color
+ラインカラーを設定する
+Use line letter code
+路線記号を使用する
+Frame with corners
+外枠を使用する
+reset
+やり直し
+save
+登録して終了
+Base color:
+基調色：
+sub_bg:
+背景色を反転：
+Letter code
+記号（前）
+Number
+記号（後）
+Colored
+選択色
+White
+白
+You do not have permission to edit!
+他のプレイヤーの路線は編集できません！
+Save your changes and close the dialog.
+変更を保存してダイアログを閉じます
+helptxt_linecode_use_sub_background
+文字の背景に使用される色が基調色とは異なる色に入れ替わります
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
@@ -4239,3 +4377,15 @@ Power: %4d kW\n
 #\n軸重制限:
 #\nMax. weight:
 #重量制限:
+#Transported
+#輸送実績
+#The number of passengers/units of mail/goods that have arrived at this stop
+#この停留所/駅に到着した旅客/郵便/貨物の数を表します。
+#The number of passengers/units of mail/goods that have departed from this stop
+#この停留所/駅から出発した旅客/郵便/貨物の数を表します。
+#Show capacity and if halt is overcrowded
+#各駅/停留所の待合室定員の大きさと混雑度を表示
+#Show the change of waiting at halts
+#前月と比べた待機数の増減を表示
+#Queueing
+#待機数の増減

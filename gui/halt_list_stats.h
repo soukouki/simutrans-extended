@@ -73,6 +73,8 @@ public:
 		hl_waiting_goods,
 		hl_pax_evaluation,
 		hl_mail_evaluation,
+		hl_pax_volume,
+		hl_mail_volume,
 		hl_goods_needed,
 		hl_products,
 		coverage_output_pax,

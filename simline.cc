@@ -26,7 +26,7 @@
 line_cost_t convoi_to_line_catgory_[convoi_t::MAX_CONVOI_COST] =
 {
 	LINE_CAPACITY,
-	LINE_TRANSPORTED_GOODS,
+	LINE_PAX_DISTANCE,
 	LINE_AVERAGE_SPEED,
 	LINE_COMFORT,
 	LINE_REVENUE,
@@ -34,8 +34,9 @@ line_cost_t convoi_to_line_catgory_[convoi_t::MAX_CONVOI_COST] =
 	LINE_PROFIT,
 	LINE_DISTANCE,
 	LINE_REFUNDS,
-//	LINE_MAXSPEED,
-	LINE_WAYTOLL
+	LINE_WAYTOLL,
+	LINE_MAIL_DISTANCE,
+	LINE_PAYLOAD_DISTANCE
 };
 
 line_cost_t simline_t::convoi_to_line_catgory(convoi_t::convoi_cost_t cnv_cost)
@@ -371,7 +372,11 @@ void simline_t::rdwr(loadsave_t *file)
 #ifdef SPECIAL_RESCUE_12_2
 				if(((j == LINE_AVERAGE_SPEED || j == LINE_COMFORT) && file->get_extended_version() <= 1) || (j == LINE_REFUNDS && file->get_extended_version() < 8) || ((j == LINE_DEPARTURES || j == LINE_DEPARTURES_SCHEDULED) && (file->get_extended_version() < 12 || file->is_loading())))
 #else
-				if(((j == LINE_AVERAGE_SPEED || j == LINE_COMFORT) && file->get_extended_version() <= 1) || (j == LINE_REFUNDS && file->get_extended_version() < 8) || ((j == LINE_DEPARTURES || j == LINE_DEPARTURES_SCHEDULED) && file->get_extended_version() < 12))
+				if(((j == LINE_AVERAGE_SPEED || j == LINE_COMFORT) && file->get_extended_version() <= 1)
+					|| (j == LINE_REFUNDS && file->get_extended_version() < 8)
+					|| ((j == LINE_DEPARTURES || j == LINE_DEPARTURES_SCHEDULED) && file->get_extended_version() < 12)
+					|| ((j == LINE_MAIL_DISTANCE || j == LINE_PAYLOAD_DISTANCE) && file->is_version_ex_less(14, 48))
+					)
 #endif
 				{
 					// Versions of Extended saves with 1 and below
@@ -559,6 +564,12 @@ void simline_t::rdwr(loadsave_t *file)
 			}
 		}
 	}
+	if (file->is_version_ex_atleast(14,52)) {
+		file->rdwr_byte(line_color_index);
+		file->rdwr_byte(line_lettercode_style);
+		file->rdwr_str(linecode_l, lengthof(linecode_l));
+		file->rdwr_str(linecode_r, lengthof(linecode_r));
+	}
 }
 
 
@@ -649,6 +660,20 @@ void simline_t::renew_stops()
 	}
 }
 
+void simline_t::set_linecode_l(const char *new_name)
+{
+	tstrncpy(linecode_l, new_name, lengthof(linecode_l));
+}
+
+void simline_t::set_linecode_r(const char *new_name)
+{
+	tstrncpy(linecode_r, new_name, lengthof(linecode_r));
+}
+
+void simline_t::set_line_color(uint8 color_idx, uint8 style)
+{
+	line_color_index = color_idx; line_lettercode_style = style;
+}
 
 void simline_t::check_freight()
 {
@@ -726,7 +751,7 @@ void simline_t::recalc_status()
 						if (v->get_desc()->get_upgrades(k) && !v->get_desc()->get_upgrades(k)->is_future(month_now))
 						{
 							state |= line_has_upgradeable_vehicles;
-							state_color = COL_UPGRADEABLE;
+							if (!skinverwaltung_t::upgradable) state_color = COL_UPGRADEABLE;
 						}
 					}
 				}
@@ -737,6 +762,11 @@ void simline_t::recalc_status()
 				state |= line_has_obsolete_vehicles;
 				// obsolete has priority over upgradeable (only for color)
 				state_color = COL_OBSOLETE;
+			}
+
+			if (i->get_state() == convoi_t::NO_ROUTE || i->get_state() == convoi_t::NO_ROUTE_TOO_COMPLEX || i->get_state() == convoi_t::OUT_OF_RANGE)
+			{
+				state |= line_has_stuck_convoy;
 			}
 		}
 	}
@@ -750,8 +780,8 @@ void simline_t::recalc_status()
 	if (has_overcrowded())
 	{
 		// Overcrowded
-		state_color = color_idx_to_rgb(COL_DARK_PURPLE);
 		state |= line_overcrowded;
+		if (!skinverwaltung_t::upgradable) state_color = color_idx_to_rgb(COL_DARK_PURPLE);
 	}
 	if((financial_history[0][LINE_DISTANCE]|financial_history[1][LINE_DISTANCE]|financial_history[2][LINE_DISTANCE]) ==0)
 	{
@@ -1044,6 +1074,11 @@ void simline_t::propogate_livery_scheme()
 		line_managed_convoys[i]->set_livery_scheme_index(livery_scheme_index);
 		line_managed_convoys[i]->apply_livery_scheme();
 	}
+}
+
+PIXVAL simline_t::get_line_color() const
+{
+	return line_color_index==254 ? color_idx_to_rgb(player->get_player_color1()+4) : line_color_idx_to_rgb(line_color_index);
 }
 
 sint64 simline_t::calc_departures_scheduled()

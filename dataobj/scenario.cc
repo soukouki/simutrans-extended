@@ -752,9 +752,10 @@ plainstring scenario_t::load_language_file(const char* filename)
 		if(len>0) {
 			char* const buf = MALLOCN(char, len + 1);
 			fseek(file,0,SEEK_SET);
-			fread(buf, 1, len, file);
-			buf[len] = '\0';
-			text = buf;
+			if (fread(buf, 1, len, file) == (size_t)len) {
+				buf[len] = '\0';
+				text = buf;
+			}
 			free(buf);
 		}
 		fclose(file);
@@ -821,10 +822,9 @@ void scenario_t::rdwr(loadsave_t *file)
 			else {
 				// load script
 				cbuffer_t script_filename;
-
 				// assume error
 				rdwr_error = true;
- 				// try addon directory first
+				// try addon directory first
 				if (env_t::default_settings.get_with_private_paks()) {
 					scenario_path = ( std::string("addons/") + env_t::objfilename + "scenario/" + scenario_name.c_str() + "/").c_str();
 					script_filename.printf("%sscenario.nut", scenario_path.c_str());

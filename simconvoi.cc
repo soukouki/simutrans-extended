@@ -223,7 +223,9 @@ void convoi_t::init(player_t *player)
 	needs_full_route_flush = false;
 }
 
-convoi_t::convoi_t(loadsave_t* file) : vehicle(max_vehicle, NULL)
+convoi_t::convoi_t(loadsave_t* file) :
+	vehicle(max_vehicle, NULL),
+	lane_affinity_end_index(0)
 {
 	self = convoihandle_t();
 	init(0);
@@ -232,6 +234,7 @@ convoi_t::convoi_t(loadsave_t* file) : vehicle(max_vehicle, NULL)
 	last_stop_was_depot = true;
 	max_signal_speed = SPEED_UNLIMITED;
 
+	init_financial_history();
 	no_route_retry_count = 0;
 	rdwr(file);
 	current_stop = schedule == NULL ? 255 : schedule->get_current_stop() - 1;
@@ -1557,6 +1560,9 @@ bool convoi_t::drive_to()
 		{
 			success == route_t::route_too_complex ? state = NO_ROUTE_TOO_COMPLEX : state = NO_ROUTE;
 			no_route_retry_count = 0;
+			if (line.is_bound()) {
+				line->set_state(simline_t::line_has_stuck_convoy);
+			}
 #ifdef MULTI_THREAD
 			pthread_mutex_lock(&step_convois_mutex);
 #endif
@@ -1606,7 +1612,7 @@ bool convoi_t::drive_to()
 			}
 
 			// continue route search until the destination is a station/stop or a reversing waypoint
-			while(is_waypoint(ziel) && schedule->get_current_entry().reverse < 1)
+			while(is_waypoint(ziel) && schedule->get_current_entry().reverse < 1 && !gr->get_depot())
 			{
 				allow_clear_reservation = false;
 				start = ziel;
@@ -1829,7 +1835,7 @@ void convoi_t::step()
 						{
 							if(vehicle[k]->get_desc() == replace->get_replacing_vehicle(i))
 							{
-								veh = remove_vehicle_bei(k);
+								veh = remove_vehicle_at(k);
 								break;
 							}
 						}
@@ -1854,7 +1860,7 @@ void convoi_t::step()
 									{
 										veh = vehicle_builder_t::build(get_pos(), get_owner(), NULL, replace->get_replacing_vehicle(i), true);
 										upgrade_vehicle(j, veh);
-										remove_vehicle_bei(j);
+										remove_vehicle_at(j);
 										goto end_loop;
 									}
 								}
@@ -1894,7 +1900,7 @@ end_loop:
 						}
 						else
 						{
-							vehicle_t* old_veh = remove_vehicle_bei(a);
+							vehicle_t* old_veh = remove_vehicle_at(a);
 							old_veh->discard_cargo();
 							old_veh->set_leading(false);
 							old_veh->set_last(false);
@@ -2665,7 +2671,7 @@ void convoi_t::enter_depot(depot_t *dep)
 }
 
 
-void convoi_t::start()
+void convoi_t::start(depot_t* dep)
 {
 	if(state == INITIAL || state == ROUTING_1) {
 
@@ -2678,6 +2684,11 @@ void convoi_t::start()
 		{
 			home_depot = route.front();
 			front()->set_pos( home_depot );
+		}
+
+		if ((home_depot == koord3d::invalid) && dep)
+		{
+			home_depot = dep->get_pos();
 		}
 		// put the convoi on the depot ground, to get automatic rotation
 		// (vorfahren() will remove it anyway again.)
@@ -2996,7 +3007,7 @@ void convoi_t::upgrade_vehicle(uint16 i, vehicle_t* v)
 DBG_MESSAGE("convoi_t::upgrade_vehicle()","now %i of %i total vehicles.",i,max_vehicle);
 }
 
-vehicle_t *convoi_t::remove_vehicle_bei(uint16 i)
+vehicle_t *convoi_t::remove_vehicle_at(uint16 i)
 {
 	vehicle_t *v = NULL;
 	if(i<vehicle_count) {
@@ -3847,13 +3858,31 @@ void convoi_t::reverse_order(bool rev)
 		vehicle[i]->set_reversed(reversed);
 	}
 
-	if(front()->get_waytype() == track_wt || front()->get_waytype()  == tram_wt || front()->get_waytype() == maglev_wt || front()->get_waytype() == monorail_wt)
-	{
-		rail_vehicle_t* w = (rail_vehicle_t*)front();
-		w->set_working_method(wm);
-	}
+	set_working_method(wm);
 
 	welt->set_dirty();
+}
+
+void convoi_t::set_working_method(working_method_t value)
+{
+	for (uint32 i = 0; i < vehicle_count; i++)
+	{
+		vehicle_t* veh = get_vehicle(i);
+		if (veh->get_waytype() == track_wt || veh->get_waytype() == tram_wt || veh->get_waytype() == maglev_wt || veh->get_waytype() == monorail_wt)
+		{
+			rail_vehicle_t* rv = static_cast<rail_vehicle_t *>(veh);
+			rv->set_working_method(value);
+
+			if (i == 0)
+			{
+				if (rv->get_working_method() == one_train_staff && value != one_train_staff)
+				{
+					rv->unreserve_in_rear();
+					reserve_own_tiles();
+				}
+			}
+		}
+	}
 }
 
 
@@ -4213,6 +4242,16 @@ void convoi_t::rdwr(loadsave_t *file)
 		{
 			switch (j)
 			{
+			case CONVOI_MAIL_DISTANCE:
+			case CONVOI_PAYLOAD_DISTANCE:
+				if( file->is_version_ex_less(14,48) && file->is_loading() ) {
+					for (int k = MAX_MONTHS-1; k>=0; k--)
+					{
+						financial_history[k][j] = 0;
+					}
+					continue;
+				}
+				break;
 			case CONVOI_AVERAGE_SPEED:
 			case CONVOI_COMFORT:
 				if (file->get_extended_version() < 2)
@@ -5710,6 +5749,12 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
 
 		// Finally, get the fare.
 		fare = goods->get_total_fare(revenue_distance_meters, starting_distance_meters, comfort, catering_level, g_class, journey_tenths);
+
+		// add transportation measurement to statistics
+		// passenger-km(x10 for precision)
+		const sint64 pas_distance = ware.menge*revenue_distance_meters/100;
+		book(pas_distance, convoi_t::CONVOI_PAX_DISTANCE);
+		get_owner()->book_transported(pas_distance, front()->get_waytype(), 0);
 	}
 	else if(ware.is_mail())
 	{
@@ -5717,12 +5762,25 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
 		const uint8 catering_level = get_catering_level(goods->get_catg_index());
 		// Finally, get the fare.
 		fare = goods->get_total_fare(revenue_distance_meters, starting_distance_meters, 0u, catering_level, g_class, journey_tenths);
+
+		// add transportation measurement to statistics
+		// kg-kilometre(x10 for precision)
+		const sint64 mail_distance = ware.menge*goods->get_weight_per_unit()*revenue_distance_meters / 100;
+		book(mail_distance, convoi_t::CONVOI_MAIL_DISTANCE); // in kg-km/10
+		// tonne-kilometre(x10 for precision)
+		get_owner()->book_transported(mail_distance/10, front()->get_waytype(), 1);
 	}
 	else
 	{
 		// Freight ignores comfort and catering and TPO.
 		// So here we can skip the complicated version for speed.
 		fare = goods->get_total_fare(revenue_distance_meters, starting_distance_meters);
+
+		// add transportation measurement to statistics
+		// tonne-kilometre(x10 for precision)
+		const sint64 payload_distance = ware.menge*goods->get_weight_per_unit()*revenue_distance_meters/100000;
+		book(payload_distance, convoi_t::CONVOI_PAYLOAD_DISTANCE);
+		get_owner()->book_transported(payload_distance, front()->get_waytype(), 2);
 	}
 	// Note that fare comes out in units of 1/4096 of a simcent, for computational precision
 

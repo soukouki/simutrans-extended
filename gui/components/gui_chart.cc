@@ -76,6 +76,13 @@ uint32 gui_chart_t::add_curve(PIXVAL color, const sint64 *values, int size, int 
 		case DISTANCE: new_curve.suffix = "km";   break;
 		case FORCE:    new_curve.suffix = "kN";   break;
 		case KMPH:     new_curve.suffix = "km/h"; break;
+		case PAX_KM:   new_curve.suffix = translator::translate("pkm");  break;
+		case KG_KM:    new_curve.suffix = translator::translate("kgkm"); break;
+		case TON_KM:
+		case TON_KM_MAIL:
+			           new_curve.suffix = translator::translate("tkm");  break;
+		case KW:       new_curve.suffix = "kW";   break;
+		case TONNEN:   new_curve.suffix = translator::translate("tonnen");   break;
 		default:       new_curve.suffix = NULL;   break;
 	}
 	new_curve.precision = precision;
@@ -266,7 +273,7 @@ void gui_chart_t::draw(scr_coord offset)
 						(scr_coord_val)( offset.y+baseline-(int)(tmp/scale) ),
 						c.color);
 				}
-				else if (i == 0 && !abort_display_x || abort_display_x && i == start) {
+				else if ( (i==0 && !abort_display_x)  ||  (abort_display_x && i==start) ) {
 					// for the first element print the current value (optionally)
 					// only print value if not too narrow to min/max/zero
 					if(  c.show_value  ) {
@@ -277,7 +284,7 @@ void gui_chart_t::draw(scr_coord offset)
 
 						if(  left_to_right_graph  ) {
 							const sint16 width = proportional_string_width(cmin)+7;
-							display_ddd_proportional( tmpx + 8, (scr_coord_val)(offset.y+baseline-(int)(tmp/scale)-4), width, 0, env_t::tooltip_color, c.color, cmin, true);
+							display_ddd_proportional( tmpx + 8, (scr_coord_val)(offset.y+baseline-(int)(tmp/scale)-4), width, 0, c.color, is_dark_color(c.color) ? color_idx_to_rgb(COL_WHITE) : color_idx_to_rgb(COL_BLACK), cmin, true);
 						}
 						else if(  (baseline-tmp/scale-8) > 0  &&  (baseline-tmp/scale+8) < chart_size.h  &&  abs((int)(tmp/scale)) > 9  ) {
 							display_proportional_rgb(tmpx - 4, (scr_coord_val)(offset.y+baseline-(int)(tmp/scale)-4), cmin, ALIGN_RIGHT, c.color, true );

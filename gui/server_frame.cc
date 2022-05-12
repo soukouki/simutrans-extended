@@ -250,13 +250,13 @@ PIXVAL server_frame_t::update_info()
 		buf.printf( translator::translate("%u Client(s)\n"), (unsigned)gi.get_clients() );
 	}
 	buf.printf( "%s %u\n", translator::translate("Towns"), gi.get_city_count() );
-	number_to_string( temp, gi.get_einwohnerzahl(), 0 );
+	number_to_string( temp, gi.get_citizen_count(), 0 );
 	buf.printf( "%s %s\n", translator::translate("citicens"), temp );
 	buf.printf( "%s %u\n", translator::translate("Factories"), gi.get_industries() );
 	buf.printf( "%s %u\n", translator::translate("Convoys"), gi.get_convoi_count() );
 	buf.printf( "%s %u\n", translator::translate("Stops"), gi.get_halt_count() );
 
-	revision.buf().printf( "%s %x", translator::translate( "Revision:" ), gi.get_game_engine_revision() );
+	revision.buf().printf( "%s #%07x", translator::translate( "Revision:" ), gi.get_game_engine_revision() );
 	revision.set_color( engine_match ? SYSCOL_TEXT : MONEY_MINUS );
 	revision.update();
 

@@ -40,6 +40,7 @@
 #include "obj/roadsign.h"
 #include "obj/leitung2.h"
 #include "obj/wayobj.h"
+#include "obj/pier.h"
 
 #include "dataobj/translator.h"
 #include "dataobj/settings.h"
@@ -2427,14 +2428,8 @@ void stadt_t::rdwr(loadsave_t* file)
 }
 
 
-/**
- * Wird am Ende der Laderoutine aufgerufen, wenn die Welt geladen ist
- * und nur noch die Datenstrukturenneu verknuepft werden muessen.
- */
 void stadt_t::finish_rd()
 {
-	//step_count = 0;
-	//next_step = 0;
 	next_growth_step = 0;
 
 	// there might be broken savegames
@@ -2848,7 +2843,7 @@ void stadt_t::calc_growth()
 			{
 				city_history_month[0][HIST_GOODS_NEEDED] ++;
 				city_history_year[0][HIST_GOODS_NEEDED] ++;
-				if(fab->count_input_stock(desc->get_supplier(i)->get_input_type()) > 0  )
+				if(fab->get_input_stock(desc->get_supplier(i)->get_input_type()) > 0  )
 				{
 					city_history_month[0][HIST_GOODS_RECEIVED] ++;
 					city_history_year[0][HIST_GOODS_RECEIVED] ++;
@@ -4364,7 +4359,7 @@ void stadt_t::build_city_building(const koord k, bool new_town, bool map_generat
 	// test ownership of all objects that can block construction
 	for(  uint8 i = 0;  i < gr->obj_count();  i++  ) {
 		obj_t *const obj = gr->obj_bei(i);
-		if(  obj->is_deletable(NULL) != NULL  &&  obj->get_typ() != obj_t::pillar  ) {
+		if(  obj->is_deletable(NULL) != NULL  &&  obj->get_typ() != obj_t::pillar && obj->get_typ() != obj_t::pier ) {
 			return;
 		}
 	}
@@ -4422,15 +4417,18 @@ void stadt_t::build_city_building(const koord k, bool new_town, bool map_generat
 	building_desc_t::btype want_to_have = building_desc_t::unknown;
 	const building_desc_t* h = NULL;
 
+	uint32 pier_sub_1_mask=pier_t::get_sub_mask_total(gr);
+	uint32 pier_sub_2_mask=pier_t::get_sub_mask_total(welt->lookup(gr->get_pos()+koord3d(0,0,1)));
+
 	if (!worker_shortage && (sum_commercial > sum_industrial  &&  sum_commercial > sum_residential)) {
-		h = hausbauer_t::get_commercial(0, size_single, current_month, cl, region, new_town, neighbor_building_clusters);
+		h = hausbauer_t::get_commercial(0, size_single, current_month, cl, region, new_town, neighbor_building_clusters,pier_sub_1_mask,pier_sub_2_mask);
 		if (h != NULL) {
 			want_to_have = building_desc_t::city_com;
 		}
 	}
 
 	if (!worker_shortage && (h == NULL  &&  sum_industrial > sum_residential  &&  sum_industrial > sum_commercial)) {
-		h = hausbauer_t::get_industrial(0, size_single, current_month, cl, region, new_town, neighbor_building_clusters);
+		h = hausbauer_t::get_industrial(0, size_single, current_month, cl, region, new_town, neighbor_building_clusters,pier_sub_1_mask,pier_sub_2_mask);
 		if (h != NULL) {
 			want_to_have = building_desc_t::city_ind;
 		}
@@ -4439,7 +4437,7 @@ void stadt_t::build_city_building(const koord k, bool new_town, bool map_generat
 	if (h == NULL  &&  ((sum_residential > sum_industrial  &&  sum_residential > sum_commercial) || worker_shortage)) {
 		if (!job_shortage || worker_shortage)
 		{
-			h = hausbauer_t::get_residential(0, size_single, current_month, cl, region, new_town, neighbor_building_clusters);
+			h = hausbauer_t::get_residential(0, size_single, current_month, cl, region, new_town, neighbor_building_clusters,pier_sub_1_mask,pier_sub_2_mask);
 		}
 		if (h != NULL) {
 			want_to_have = building_desc_t::city_res;
@@ -4851,7 +4849,41 @@ uint32 stadt_t::get_population_by_class(uint8 p_class)
 	for (weighted_vector_tpl<gebaeude_t*>::const_iterator i = buildings.begin(); i != buildings.end(); ++i)
 	{
 		gebaeude_t* building = *i;
-		sum += building->get_adjusted_population_by_class(p_class);
+		if (building && building == building->get_first_tile()) {
+			sum += building->get_adjusted_population_by_class(p_class);
+		}
+	}
+	return sum;
+}
+
+uint32 stadt_t::get_jobs_by_class(uint8 p_class)
+{
+	uint32 sum = 0;
+	for (weighted_vector_tpl<gebaeude_t*>::const_iterator i = buildings.begin(); i != buildings.end(); ++i)
+	{
+		gebaeude_t* building = *i;
+		if (building && building == building->get_first_tile()) {
+			sum += building->get_adjusted_jobs_by_class(p_class);
+		}
+	}
+	FOR(vector_tpl<fabrik_t*>, factory, city_factories) {
+		sum += factory->get_building()->get_adjusted_jobs_by_class(p_class);
+	}
+	return sum;
+}
+
+uint32 stadt_t::get_visitor_demand_by_class(uint8 p_class)
+{
+	uint32 sum = 0;
+	for (weighted_vector_tpl<gebaeude_t*>::const_iterator i = buildings.begin(); i != buildings.end(); ++i)
+	{
+		gebaeude_t* building = *i;
+		if (building && building == building->get_first_tile()) {
+			sum += building->get_adjusted_visitor_demand_by_class(p_class);
+		}
+	}
+	FOR(vector_tpl<fabrik_t*>, factory, city_factories) {
+		sum += factory->get_building()->get_adjusted_visitor_demand_by_class(p_class);
 	}
 	return sum;
 }
@@ -5119,10 +5151,7 @@ bool stadt_t::build_road(const koord k, player_t* player_, bool forced, bool map
 	slope_t::type slope = bd->get_grund_hang();
 	if (!slope_t::is_way(slope)) {
 		climate c = welt->get_climate(k);
-		if (welt->can_flatten_tile(NULL, k, bd->get_hoehe()+1, true)) {
-			welt->flatten_tile(NULL, k, bd->get_hoehe()+1, true);
-		}
-		else if(  bd->get_hoehe() > welt->get_water_hgt(k)  &&  welt->can_flatten_tile(NULL, k, bd->get_hoehe() )  ) {
+		if(  bd->get_hoehe() > welt->get_water_hgt(k)  &&  welt->can_flatten_tile(NULL, k, bd->get_hoehe() )  ) {
 			welt->flatten_tile(NULL, k, bd->get_hoehe());
 		}
 		else {
@@ -5908,6 +5937,16 @@ void stadt_t::add_substation(senke_t* substation)
 void stadt_t::remove_substation(senke_t* substation)
 {
 	substations.remove(substation);
+}
+
+sint64 stadt_t::get_cityhistory_last_quarter(int type)
+{
+	sint64 sum = 0;
+	const uint8 q_last_month_offset = world()->get_current_month()%3 + 1;
+	for (uint8 i = 0; i < 3; i++) {
+		sum += city_history_month[i+q_last_month_offset][type];
+	}
+	return sum;
 }
 
 private_car_destination_finder_t::private_car_destination_finder_t(karte_t* w, road_vehicle_t* m, stadt_t* o)

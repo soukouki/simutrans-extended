@@ -321,12 +321,12 @@ class dialog_list_halt_t : public tool_t {
 public:
 	dialog_list_halt_t() : tool_t(DIALOG_LIST_HALT | DIALOG_TOOL) {}
 	char const* get_tooltip(player_t const*) const OVERRIDE{ return translator::translate("hl_title"); }
-	bool is_selected() const OVERRIDE{ return win_get_magic(magic_halt_list); }
-	bool init(player_t* /*player*/) OVERRIDE{
-		create_win(new halt_list_frame_t(), w_info, magic_halt_list);
+	bool is_selected() const OVERRIDE{ return win_get_magic(magic_halt_list + welt->get_active_player_nr()); }
+	bool init(player_t* player) OVERRIDE{
+		create_win(new halt_list_frame_t(), w_info, magic_halt_list + player->get_player_nr());
 		return false;
 	}
-	bool exit(player_t*) OVERRIDE{ destroy_win(magic_halt_list); return false; }
+	bool exit(player_t* player) OVERRIDE{ destroy_win(magic_halt_list + player->get_player_nr()); return false; }
 	bool is_init_network_safe() const OVERRIDE{ return true; }
 	bool is_work_network_safe() const OVERRIDE{ return true; }
 };
@@ -387,8 +387,8 @@ public:
 		return false;
 	}
 	bool exit(player_t* player) OVERRIDE { destroy_win(magic_signalboxlist + player->get_player_nr()); return false; }
-	bool is_init_network_save() const { return true; }
-	bool is_work_network_save() const { return true; }
+	bool is_init_network_safe() const OVERRIDE { return true; }
+	bool is_work_network_safe() const OVERRIDE { return true; }
 };
 
 /* open the list of towns */
@@ -507,10 +507,10 @@ class dialog_edit_tree_t : public tool_t {
 public:
 	dialog_edit_tree_t() : tool_t(DIALOG_EDIT_TREE | DIALOG_TOOL) {}
 	char const* get_tooltip(player_t const*) const OVERRIDE{ return translator::translate("baum builder"); }
-	image_id get_icon(player_t *) const OVERRIDE { return baum_t::get_count() > 0 ? icon : IMG_EMPTY; }
+	image_id get_icon(player_t *) const OVERRIDE { return tree_builder_t::has_trees() ? icon : IMG_EMPTY; }
 	bool is_selected() const OVERRIDE{ return win_get_magic(magic_edit_tree); }
 	bool init(player_t* player) OVERRIDE{
-		if (baum_t::get_count() > 0 && !is_selected()) {
+		if (tree_builder_t::has_trees() > 0 && !is_selected()) {
 			create_win(new baum_edit_frame_t(player), w_info, magic_edit_tree);
 		}
 		return false;

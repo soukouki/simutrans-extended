@@ -276,6 +276,10 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	add_component(&bt_show_all);
 
 	bt_class_management.set_typ(button_t::roundbox);
+	if (skinverwaltung_t::open_window) {
+		bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		bt_class_management.set_image_position_right(true);
+	}
 	bt_class_management.set_text("class_manager");
 	bt_class_management.add_listener(this);
 	bt_class_management.set_tooltip("see_and_change_the_class_assignments");
@@ -481,8 +485,6 @@ void gui_convoy_assembler_t::layout()
 	lb_convoi_number.set_width(30);
 	bt_class_management.set_pos(scr_coord(c3_x, y));
 	bt_class_management.set_size(scr_size(size.w - c3_x-5, LINESPACE));
-	bt_class_management.pressed = win_get_magic(magic_class_manager);
-	//bt_class_management.pressed = show_class_management;
 	y += LINESPACE + 1;
 	lb_convoi_cost.set_pos(scr_coord(c1_x, y));
 	lb_convoi_cost.set_size(scr_size(c2_x - c1_x, LINESPACE));
@@ -680,11 +682,11 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 				action_selector.set_selection(0);
 				selection=0;
 			}
-				if(  (unsigned)(selection)<= va_upgrade) {
+			if(  (unsigned)(selection)<= va_upgrade) {
 				veh_action=(unsigned)(selection);
 				build_vehicle_lists();
 				update_data();
-				}
+			}
 		}
 		else if (comp == &bt_class_management)
 		{
@@ -828,6 +830,8 @@ void gui_convoy_assembler_t::draw(scr_coord parent_pos)
 
 			if (cnv.is_bound() && cnv->get_vehicle_count() > i)
 			{
+				bt_class_management.pressed = win_get_magic(magic_class_manager+cnv.get_id());
+
 				vehicle_t* v = cnv->get_vehicle(i);
 
 				switch (ware->get_catg_index())
@@ -2090,7 +2094,7 @@ void gui_convoy_assembler_t::update_tabs()
 	vehicle_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Relevant"), SYSCOL_TEXT);
 
 	FOR(vector_tpl<goods_desc_t const*>, const i, welt->get_goods_list()) {
-		vehicle_filter.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(i->get_name()), SYSCOL_TEXT);
+		vehicle_filter.new_component<gui_scrolled_list_t::img_label_scrollitem_t>(translator::translate(i->get_name()), SYSCOL_TEXT, i->get_catg_symbol());
 	}
 
 	if (selected_filter > vehicle_filter.count_elements()) {

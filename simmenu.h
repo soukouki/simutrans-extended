@@ -81,6 +81,10 @@ enum {
 	// Extended entries from here:
 	TOOL_BUILD_SIGNALBOX=0x0080,
 	TOOL_REASSIGN_SIGNAL,
+	TOOL_BUILD_PIER,
+	TOOL_BUILD_PIER_AUTO,
+	TOOL_PATH_REMOVER,
+	TOOL_FLATTEN_PATH,
 	GENERAL_TOOL_COUNT,
 	GENERAL_TOOL = 0x1000
 };
@@ -137,6 +141,7 @@ enum {
 	TOOL_CONVOY_NAMEPLATES,
 	TOOL_CONVOY_LOADINGBAR,
 	TOOL_SHOW_FACTORY_STORAGE,
+	TOOL_REASSIGN_SIGNAL_INTERNAL,
 	SIMPLE_TOOL_COUNT,
 	SIMPLE_TOOL = 0x2000
 };
@@ -347,6 +352,16 @@ public:
 	 * move will only be called, if this function returns true.
 	 */
 	virtual bool move_has_effects() const { return false;}
+
+	/**
+	 * @brief begin_move called when draggings starts
+	 */
+	virtual void begin_move(player_t*, koord3d) {return;}
+
+	/**
+	 * @brief end_move called to reset dragging (dragging may have not started yet)
+	 */
+	virtual void end_move(player_t*, koord3d) {return;}
 
 	/**
 	 * Returns whether the 2d koordinate passed it's a valid position for this tool to highlight a tile,

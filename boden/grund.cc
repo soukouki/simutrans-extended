@@ -714,7 +714,7 @@ void grund_t::info(cbuffer_t& buf) const
 	if (strcmp(n1, n2)) {
 		buf.printf("%s\n", n2);
         }
-	if (!is_water())
+    if (!is_water() && !(get_typ()==pierdeck))
 	{
 		char price[64];
 		money_to_string(price, abs(welt->get_land_value(pos))/100.0);
@@ -2228,7 +2228,7 @@ bool grund_t::would_create_excessive_roads(int dx, int dy, road_network_plan_t &
 
 		wayobj_t *wo;
 		if ((wo = gr[i]->get_wayobj(road_wt)) &&
-		    wo->get_desc()->is_noise_barrier()) {
+			(wo->get_desc()->is_noise_barrier() || wo->get_desc()->is_overhead_line())) {
 			return false;
 		}
 
@@ -2299,7 +2299,7 @@ bool grund_t::remove_excessive_roads(int dx, int dy, road_network_plan_t &road_t
 
 		wayobj_t *wo;
 		if ((wo = gr[i]->get_wayobj(road_wt)) &&
-		    wo->get_desc()->is_noise_barrier()) {
+		   ( wo->get_desc()->is_noise_barrier() || wo->get_desc()->is_overhead_line())) {
 			return false;
 		}
 

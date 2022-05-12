@@ -107,12 +107,6 @@ private:
 	 */
 	sint64 calc_sale_value(const vehicle_desc_t *veh_type);
 
-	/**
-	 * Does this window need a min size button in the title bar?
-	 * @return true if such a button is needed
-	 */
-	bool has_min_sizer() const OVERRIDE {return true;}
-
 	// true if already stored here
 	bool is_contained(const vehicle_desc_t *info);
 
@@ -123,6 +117,8 @@ private:
 	void image_from_convoi_list(uint nr, bool to_end);
 
 	void image_from_storage_list(gui_image_list_t::image_data_t *image_data);
+
+	static bool compare_line(linehandle_t const& l1, linehandle_t const& l2);
 
 public:
 	// the next two are only needed for depot_t update notifications

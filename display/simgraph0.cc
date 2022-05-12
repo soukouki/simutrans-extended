@@ -30,6 +30,12 @@ uint32 get_color_rgb(uint8)
 	return 0;
 }
 
+PIXVAL line_color_idx_to_rgb(uint8)
+{
+	return 0;
+}
+
+
 void env_t_rgb_to_system_colors()
 {
 }
@@ -72,6 +78,21 @@ void mark_screen_dirty()
 
 void display_mark_img_dirty(image_id, scr_coord_val, scr_coord_val)
 {
+}
+
+bool is_dark_color(PIXVAL)
+{
+	return true;
+}
+
+bool is_dark_color(uint32)
+{
+	return true;
+}
+
+sint8 get_color_brightness_index(PIXVAL)
+{
+	return 0;
 }
 
 bool display_load_font(const char*, bool)
@@ -226,7 +247,7 @@ void display_blend_wh_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord
 {
 }
 
-void display_linear_gradient_wh_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, int, int, bool)
+void display_linear_gradient_wh_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, int, int)
 {
 }
 
@@ -331,6 +352,11 @@ void display_calc_proportional_multiline_string_len_width( int &xw, int &yh, con
 
 
 int display_text_proportional_len_clip_rgb(scr_coord_val, scr_coord_val, const char*, control_alignment_t , const PIXVAL, bool, sint32  CLIP_NUM_DEF_NOUSE)
+{
+	return 0;
+}
+
+int display_line_lettercode_rgb(scr_coord_val, scr_coord_val, PIXVAL, uint8, const char*, const char*, bool)
 {
 	return 0;
 }
@@ -464,9 +490,8 @@ void display_img_aligned( const image_id, scr_rect, int, bool )
 {
 }
 
-scr_coord_val display_proportional_ellipsis_rgb( scr_rect, const char *, int, PIXVAL, bool, bool, PIXVAL)
+void display_proportional_ellipsis_rgb( scr_rect, const char *, int, PIXVAL, bool, bool, PIXVAL)
 {
-	return 0;
 }
 
 image_id get_image_count()

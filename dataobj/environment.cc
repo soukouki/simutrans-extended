@@ -59,6 +59,7 @@ std::string env_t::server_motd_filename;
 vector_tpl<std::string> env_t::listen;
 bool env_t::server_save_game_on_quit = false;
 bool env_t::reload_and_save_on_quit = true;
+uint8 env_t::network_heavy_mode = 0;
 
 sint32 env_t::server_frames_ahead = 4;
 sint32 env_t::additional_client_frames_behind = 4;
@@ -96,7 +97,6 @@ settings_t env_t::default_settings;
 
 // what finances are shown? (default bank balance)
 bool env_t::player_finance_display_account = true;
-
 
 // the following initialisation is not important; set values in init()!
 std::string env_t::objfilename;
@@ -209,7 +209,7 @@ void env_t::init()
 	message_flags[2] = 0x00A0;
 	message_flags[3] = 0;
 
-	night_shift = false;
+	night_shift = true;
 
 	hide_with_transparency = true;
 	hide_trees = false;
@@ -267,9 +267,10 @@ void env_t::init()
 
 	river_types = 0;
 
-
 	// autosave every x months (0=off)
 	autosave = 0;
+
+	reload_and_save_on_quit = true;
 
 	// default: make 25 frames per second (if possible) and 10 for faster fast forward
 	fps = 25;
@@ -335,6 +336,7 @@ void env_t::init()
 	listen.append_unique("0.0.0.0");
 	show_money_message = 0;
 }
+
 
 // save/restore environment
 void env_t::rdwr(loadsave_t *file)
@@ -579,7 +581,7 @@ void env_t::rdwr(loadsave_t *file)
 	}
 	if(  file->is_version_atleast(120, 6)  ) {
 		plainstring str = fontname.c_str();
-		file->rdwr_str(str);
+		file->rdwr_str( str );
 		if (file->is_loading()) {
 			fontname = str ? str.c_str() : "";
 		}

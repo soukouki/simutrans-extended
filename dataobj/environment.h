@@ -99,6 +99,7 @@ public:
 	/// if true save game under autosave-#paksetname#.sve and reload it upon startup
 	static bool reload_and_save_on_quit;
 
+	static uint8 network_heavy_mode;
 	/// @} end of Network-related settings
 
 
@@ -494,7 +495,6 @@ public:
 	/// if true this will show a softkeyboard only when editing text
 	/// default is off
 	static bool hide_keyboard;
-
 
 	/// default settings
 	/// read in simmain.cc from various tab files

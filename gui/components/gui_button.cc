@@ -64,12 +64,6 @@ void button_t::init(enum type type_par, const char *text_par, scr_coord pos_par,
 	if(  size_par != scr_size::invalid  ) {
 		set_size(size_par);
 	}
-	else if (size_par == scr_size::invalid && type_par & posbutton) {
-		set_size(D_POS_BUTTON_SIZE);
-	}
-	else if (size_par == scr_size::invalid && (type_par & roundbox || type_par & roundbox_left || type_par & roundbox_middle || type_par & roundbox_right) && !(type_par & flexible) ) {
-		set_size(D_BUTTON_SIZE);
-	}
 }
 
 
@@ -130,7 +124,7 @@ void button_t::set_typ(enum type t)
 
 		case sortarrow:
 		{
-			const uint8 block_height = 2;
+			const uint8 block_height = max(size.h/7,2);
 			const uint8 bars_height = uint8((size.h-block_height-4)/4) * block_height*2 + block_height;
 			set_size( scr_size(max(D_BUTTON_HEIGHT, (gui_theme_t::gui_color_button_text_offset.w+4)*2 + 6/*arrow width(5)+margin(1)*/+block_height + (bars_height-2)/2), max(D_BUTTON_HEIGHT, LINESPACE)) );
 			b_no_translate = false;
@@ -198,9 +192,14 @@ scr_size button_t::get_min_size() const
 		case roundbox_left:
 		case roundbox_middle:
 		case roundbox_right: {
-			scr_coord_val w = translated_text ?  2*D_H_SPACE + proportional_string_width( translated_text ) : 0;
+			scr_coord_val w = translated_text ?  2*D_H_SPACE + D_BUTTON_PADDINGS_X + proportional_string_width( translated_text ) : 0;
 			scr_size size = type & flexible ?
 				scr_size(gui_theme_t::gui_button_size.w, max(D_BUTTON_HEIGHT, LINESPACE)) : scr_size (get_size().w, max(D_BUTTON_HEIGHT,LINESPACE));
+			if (img) {
+				scr_coord_val x = 0, y = 0, img_w = 0, h = 0;
+				display_get_image_offset(img, &x, &y, &img_w, &h);
+				w += img_w+2;
+			}
 			size.w = max(size.w, w);
 			return size;
 		}
@@ -216,7 +215,7 @@ scr_size button_t::get_min_size() const
 
 		case sortarrow:
 		{
-			const uint8 block_height = 2;
+			const uint8 block_height = max(size.h/7,2);
 			const uint8 bars_height = uint8((size.h-block_height-4)/4) * block_height*2 + block_height;
 			return scr_size( max( D_BUTTON_HEIGHT, (gui_theme_t::gui_color_button_text_offset.w+4)*2 + 6/*arrow width(5)+margin(1)*/+block_height + (bars_height-2)/2 ), max(D_BUTTON_HEIGHT, LINESPACE) );
 		}
@@ -392,20 +391,16 @@ void button_t::draw(scr_coord offset)
 				scr_rect area_text = area - gui_theme_t::gui_button_text_offset_right;
 				area_img.set_pos( area.get_pos() );
 				area_text.set_pos( gui_theme_t::gui_button_text_offset + area.get_pos() );
-				if(  img!=IMG_EMPTY  ) {
-					if(  text  ) {
-						area_img.set_pos( area.get_pos() + gui_theme_t::gui_button_text_offset );
-						area_text.x += w;
-						area_text.w -= (w+D_H_SPACE);
-					}
-					else {
-						// draw on center
-						area_img=area;
-					}
-					if( pressed && gui_theme_t::pressed_button_sinks ) area_img.y++;
-					display_img_aligned( img, area_img, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true );
-				}
 				if(  text  ) {
+					if( img != IMG_EMPTY ) {
+						area_text.w -= (w+D_H_SPACE);
+						if (!img_on_right) {
+							area_text.x += w;
+						}
+						else {
+							area_img.x += area_text.w;
+						}
+					}
 					if( type&box && pressed ) {
 						text_color = SYSCOL_COLORED_BUTTON_TEXT_SELECTED;
 					}
@@ -413,7 +408,19 @@ void button_t::draw(scr_coord offset)
 					if( pressed && gui_theme_t::pressed_button_sinks ) area_text.y++;
 					display_proportional_ellipsis_rgb( area_text, translated_text, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, text_color, true );
 				}
-
+				if(  img != IMG_EMPTY  ) {
+					if(  text  ) {
+						if ( !img_on_right ) {
+							area_img.x += gui_theme_t::gui_button_text_offset.w;
+						}
+					}
+					else {
+						// image on center
+						area_img=area;
+					}
+					if( pressed && gui_theme_t::pressed_button_sinks ) area_img.y++;
+					display_img_aligned( img, area_img, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true );
+				}
 				if(  win_get_focus()==this  ) {
 					draw_focus_rect( area );
 				}
@@ -433,10 +440,13 @@ void button_t::draw(scr_coord offset)
 			{
 				display_img_stretch(gui_theme_t::button_tiles[0], area);
 
-				const uint8 block_height = 2;
-				const uint8 bars_height = uint8((size.h-block_height-4)/4)*block_height*2 + block_height;
-				scr_rect area_drawing(area.x, area.y, 6/*arrow width(5)+margin(1)*/+block_height+(bars_height-2)/2, bars_height);
-				area_drawing.set_pos(gui_theme_t::gui_color_button_text_offset + area.get_pos() + scr_coord(4/*left margin*/,D_GET_CENTER_ALIGN_OFFSET(bars_height,size.h)));
+				const uint8 block_height = max(size.h/7,2);
+				const uint8 bars_height = min(size.h-2, block_height*5+2);
+				const uint8 rows = (uint8)(bars_height/block_height)/2+1;
+				const uint8 min_bar_width = max(((size.w-8)/rows)>>1, 2);
+				const uint8 max_bar_width = min_bar_width*rows;
+				scr_rect area_drawing(area.x, area.y, 6/*arrow width(5)+margin(1)*/+ max_bar_width, bars_height);
+				area_drawing.set_pos(area.get_pos() + scr_coord(D_GET_CENTER_ALIGN_OFFSET((6+max_bar_width),area.w),D_GET_CENTER_ALIGN_OFFSET(bars_height,size.h)));
 
 				// draw an arrow
 				display_fillbox_wh_clip_rgb(area_drawing.x+2, area_drawing.y, 1, bars_height, SYSCOL_BUTTON_TEXT, false);
@@ -444,8 +454,8 @@ void button_t::draw(scr_coord offset)
 					// desc
 					display_fillbox_wh_clip_rgb(area_drawing.x+1, area_drawing.y+1, 3, 1, SYSCOL_BUTTON_TEXT, false);
 					display_fillbox_wh_clip_rgb(area_drawing.x,   area_drawing.y+2, 5, 1, SYSCOL_BUTTON_TEXT, false);
-					for (uint8 row=0; row*4<bars_height; row++) {
-						display_fillbox_wh_clip_rgb(area_drawing.x + 6/*arrow width(5)+margin(1)*/, area_drawing.y + bars_height - block_height - row*block_height*2, block_height*(row+1), block_height, SYSCOL_BUTTON_TEXT, false);
+					for (uint8 row=0; row*block_height*2<bars_height; row++) {
+						display_fillbox_wh_clip_rgb(area_drawing.x + 6/*arrow width(5)+margin(1)*/, area_drawing.y + bars_height - block_height - row*block_height*2, min_bar_width*(row+1), block_height, SYSCOL_BUTTON_TEXT, false);
 					}
 					tooltip = "hl_btn_sort_desc";
 				}
@@ -453,8 +463,8 @@ void button_t::draw(scr_coord offset)
 					// asc
 					display_fillbox_wh_clip_rgb(area_drawing.x+1, area_drawing.y+bars_height-2, 3, 1, SYSCOL_BUTTON_TEXT, false);
 					display_fillbox_wh_clip_rgb(area_drawing.x,   area_drawing.y+bars_height-3, 5, 1, SYSCOL_BUTTON_TEXT, false);
-					for (uint8 row=0; row*4<bars_height; row++) {
-						display_fillbox_wh_clip_rgb(area_drawing.x + 6/*arrow width(5)+margin(1)*/, area_drawing.y + row*block_height*2, block_height*(row+1), block_height, SYSCOL_BUTTON_TEXT, false);
+					for (uint8 row=0; row*block_height*2<bars_height; row++) {
+						display_fillbox_wh_clip_rgb(area_drawing.x + 6/*arrow width(5)+margin(1)*/, area_drawing.y + row*block_height*2 + 1, min_bar_width*(row+1), block_height, SYSCOL_BUTTON_TEXT, false);
 					}
 					tooltip = "hl_btn_sort_asc";
 				}

@@ -8,6 +8,7 @@
 
 
 #include "simwin.h"
+#include "../simcity.h"
 #include "gui_frame.h"
 #include "halt_list_stats.h"
 #include "components/gui_button.h"
@@ -37,7 +38,10 @@ public:
 		by_potential_pax,
 		by_potential_mail,
 		by_pax_happy_last_month,
+		by_pax_handled_last_month,
 		by_mail_delivered_last_month,
+		by_mail_handled_last_month,
+		by_goods_handled_last_month,
 		by_convoy_arrivals_last_month,
 		by_region,
 		by_surrounding_population,
@@ -84,14 +88,17 @@ private:
 	button_t sort_order;
 	button_t filter_on;
 	button_t filter_details;
-	button_t btn_show_mutual_use;
+	button_t btn_show_mutual_use, bt_cancel_cityfilter;
 	gui_combobox_t sortedby, cb_display_mode;
 	gui_scrolled_halt_list_t *scrolly;
+	gui_label_buf_t lb_target_city;
 
 	/*
 	 * Child window, if open
 	 */
 	gui_frame_t *filter_frame;
+
+	stadt_t *filter_city;
 
 	/*
 	 * All filter settings are static, so they are not reset each
@@ -116,7 +123,7 @@ public:
 	static bool compare_halts(halthandle_t, halthandle_t);
 	static uint8 display_mode;
 
-	halt_list_frame_t();
+	halt_list_frame_t(stadt_t *filter_city = NULL);
 
 	virtual ~halt_list_frame_t();
 
@@ -162,13 +169,13 @@ public:
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
-	bool has_min_sizer() const OVERRIDE {return true;}
-
 	void map_rotate90( sint16 ) OVERRIDE { fill_list(); }
 
 	void rdwr(loadsave_t* file) OVERRIDE;
 
 	uint32 get_rdwr_id() OVERRIDE { return magic_halt_list; }
+
+	void set_cityfilter(stadt_t *city);
 };
 
 #endif

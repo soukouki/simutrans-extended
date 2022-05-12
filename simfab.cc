@@ -821,7 +821,8 @@ bool fabrik_t::disconnect_supplier(koord supplier_pos) //Returns true if must be
 }
 
 
-fabrik_t::fabrik_t(loadsave_t* file)
+fabrik_t::fabrik_t(loadsave_t* file) :
+	sector(ftype::unknown)
 {
 	owner = NULL;
 	power = 0;
@@ -834,9 +835,9 @@ fabrik_t::fabrik_t(loadsave_t* file)
 
 	rdwr(file);
 
-	delta_sum = 0;
-	delta_menge = 0;
-	menge_remainder = 0;
+	delta_t_sum = 0;
+	delta_amount = 0;
+	delta_amount_remainder = 0;
 	total_input = total_transit = total_output = 0;
 	sector = unknown;
 	status = nothing;
@@ -889,9 +890,9 @@ fabrik_t::fabrik_t(koord3d pos_, player_t* owner, const factory_desc_t* desc, si
 		prodbase = initial_prod_base;
 	}
 
-	delta_sum = 0;
-	delta_menge = 0;
-	menge_remainder = 0;
+	delta_t_sum = 0;
+	delta_amount = 0;
+	delta_amount_remainder = 0;
 	activity_count = 0;
 	currently_producing = false;
 	transformer_connected = NULL;
@@ -1863,7 +1864,7 @@ uint32 fabrik_t::scale_output_production(const uint32 product, uint32 menge) con
 }
 
 
-sint32 fabrik_t::count_input_stock(const goods_desc_t *ware)
+sint32 fabrik_t::get_input_stock(const goods_desc_t *ware)
 {
 	sint32 menge = -1;
 
@@ -1878,7 +1879,7 @@ sint32 fabrik_t::count_input_stock(const goods_desc_t *ware)
 }
 
 
-sint32 fabrik_t::count_output_stock(const goods_desc_t *ware)
+sint32 fabrik_t::get_output_stock(const goods_desc_t *ware)
 {
 	sint32 menge = -1;
 
@@ -1958,9 +1959,9 @@ void fabrik_t::add_consuming_passengers(sint32 number_of_passengers)
 
 	// calculate the production per delta_t; scaled to PRODUCTION_DELTA_T
 	// Calculate actual production. A remainder is used for extra precision.
-	const uint64 want_prod_long = welt->scale_for_distance_only((uint64)prodbase * (uint64)boost * (uint64)delta_t + (uint64)menge_remainder);
+	const uint64 want_prod_long = welt->scale_for_distance_only((uint64)prodbase * (uint64)boost * (uint64)delta_t + (uint64)delta_amount_remainder);
 	const sint32 prod = (uint32)(want_prod_long >> (PRODUCTION_DELTA_T_BITS + DEFAULT_PRODUCTION_FACTOR_BITS + DEFAULT_PRODUCTION_FACTOR_BITS - fabrik_t::precision_bits));
-	menge_remainder = (uint32)(want_prod_long & ((1 << (PRODUCTION_DELTA_T_BITS + DEFAULT_PRODUCTION_FACTOR_BITS + DEFAULT_PRODUCTION_FACTOR_BITS - fabrik_t::precision_bits)) - 1));
+	delta_amount_remainder = (uint32)(want_prod_long & ((1 << (PRODUCTION_DELTA_T_BITS + DEFAULT_PRODUCTION_FACTOR_BITS + DEFAULT_PRODUCTION_FACTOR_BITS - fabrik_t::precision_bits)) - 1));
 
 	// Consume stock in proportion to passengers' visits
 	// We want to consume prod amount of each input normally. However, if
@@ -2014,7 +2015,7 @@ void fabrik_t::add_consuming_passengers(sint32 number_of_passengers)
 
 			input[index].menge -= prod_this_input;
 			input[index].book_stat(prod_this_input * (sint64)desc->get_supplier(index)->get_consumption(), FAB_GOODS_CONSUMED);
-			delta_menge += prod_this_input;
+			delta_amount += prod_this_input;
 
 			// Update the demand left to allocate
 			total_remaining -= prod_this_input * (sint64)desc->get_supplier(index)->get_consumption();
@@ -2167,7 +2168,7 @@ void fabrik_t::step(uint32 delta_t)
 		}
 
 		// produced => trigger smoke
-		delta_menge = 1 << fabrik_t::precision_bits;
+		delta_amount = 1 << fabrik_t::precision_bits;
 	}
 	else {
 		// not a producer => then consume electricity ...
@@ -2179,12 +2180,13 @@ void fabrik_t::step(uint32 delta_t)
 		}
 
 		const sint32 boost = get_prodfactor();
+		const bool staff_shortage = is_staff_shortage();
 
 		// calculate the production per delta_t; scaled to PRODUCTION_DELTA_T
 		// Calculate actual production. A remainder is used for extra precision.
-		const uint64 want_prod_long = welt->scale_for_distance_only(((uint64)prodbase * (uint64)boost * (uint64)delta_t)) + (uint64)menge_remainder;
+		const uint64 want_prod_long = welt->scale_for_distance_only(((uint64)prodbase * (uint64)boost * (uint64)delta_t)) + (uint64)delta_amount_remainder;
 		const uint32 prod = (uint32)(want_prod_long >> (PRODUCTION_DELTA_T_BITS + DEFAULT_PRODUCTION_FACTOR_BITS + DEFAULT_PRODUCTION_FACTOR_BITS - fabrik_t::precision_bits));
-		menge_remainder = (uint32)(want_prod_long & ((1 << (PRODUCTION_DELTA_T_BITS + DEFAULT_PRODUCTION_FACTOR_BITS + DEFAULT_PRODUCTION_FACTOR_BITS - fabrik_t::precision_bits)) - 1));
+		delta_amount_remainder = (uint32)(want_prod_long & ((1 << (PRODUCTION_DELTA_T_BITS + DEFAULT_PRODUCTION_FACTOR_BITS + DEFAULT_PRODUCTION_FACTOR_BITS - fabrik_t::precision_bits)) - 1));
 
 		// needed for electricity
 		currently_producing = false;
@@ -2206,7 +2208,7 @@ void fabrik_t::step(uint32 delta_t)
 			{
 				uint32 v = prod;
 
-				if (status >= staff_shortage)
+				if (staff_shortage)
 				{
 					// Do not reduce production unless the staff numbers
 					// are below the shortage threshold.
@@ -2226,7 +2228,7 @@ void fabrik_t::step(uint32 delta_t)
 						power += (uint32)(((sint64)scaled_electric_demand * (sint64)(DEFAULT_PRODUCTION_FACTOR + prodfactor_pax + prodfactor_mail)) >> DEFAULT_PRODUCTION_FACTOR_BITS);
 					}
 
-					if (status >= staff_shortage)
+					if (staff_shortage)
 					{
 						// Do not reduce production unless the staff numbers
 						// are below the shortage threshold.
@@ -2235,7 +2237,7 @@ void fabrik_t::step(uint32 delta_t)
 					}
 
 					// to find out if storage changed
-					delta_menge += v;
+					delta_amount += v;
 				}
 				else
 				{
@@ -2245,7 +2247,7 @@ void fabrik_t::step(uint32 delta_t)
 						power += (uint32)((((sint64)scaled_electric_demand * (sint64)(DEFAULT_PRODUCTION_FACTOR + prodfactor_pax + prodfactor_mail)) >> DEFAULT_PRODUCTION_FACTOR_BITS) * input[index].menge / (v + 1));
 					}
 
-					if (status >= staff_shortage)
+					if (staff_shortage)
 					{
 						// Do not reduce production unless the staff numbers
 						// are below the shortage threshold.
@@ -2253,7 +2255,7 @@ void fabrik_t::step(uint32 delta_t)
 						power /= 100;
 					}
 
-					delta_menge += input[index].menge;
+					delta_amount += input[index].menge;
 
 					input[index].book_stat((sint64)input[index].menge * (desc->get_supplier(index) ? (sint64)desc->get_supplier(index)->get_consumption() : 1), FAB_GOODS_CONSUMED);
 					input[index].menge = 0;
@@ -2291,7 +2293,7 @@ void fabrik_t::step(uint32 delta_t)
 				// sint32 p_menge = (sint32)scale_output_production(product, prod);
 				sint32 p_menge = prod;
 
-				if (status >= staff_shortage)
+				if (staff_shortage)
 				{
 					// Do not reduce production unless the staff numbers
 					// are below the shortage threshold.
@@ -2310,7 +2312,7 @@ void fabrik_t::step(uint32 delta_t)
 					// produce
 					if (output[product].menge < output[product].max) {
 						// to find out, if storage changed
-						delta_menge += p;
+						delta_amount += p;
 						output[product].menge += p;
 						output[product].book_stat((sint64)p * (sint64)desc->get_product(product)->get_factor(), FAB_GOODS_PRODUCED);
 						// if less than 3/4 filled we neary always consume power
@@ -2357,9 +2359,9 @@ void fabrik_t::step(uint32 delta_t)
 		power = 0;
 	}
 
-	delta_sum += delta_t;
-	if(  delta_sum > PRODUCTION_DELTA_T  ) {
-		delta_sum = delta_sum % PRODUCTION_DELTA_T;
+	delta_t_sum += delta_t;
+	if(  delta_t_sum > PRODUCTION_DELTA_T  ) {
+		delta_t_sum = delta_t_sum % PRODUCTION_DELTA_T;
 
 		// distribute, if there is more than 1 waiting ...
 		// Changed from the original 10 by jamespetts, July 2017
@@ -2376,11 +2378,11 @@ void fabrik_t::step(uint32 delta_t)
 
 		recalc_factory_status();
 
-		// rescale delta_menge here: all products should be produced at least once
+		// rescale delta_amount here: all products should be produced at least once
 		// (if consumer only: all supplements should be consumed once)
 		const uint32 min_change = output.empty() ? input.get_count() : output.get_count();
 
-		if(  (delta_menge>>fabrik_t::precision_bits)>min_change  ) {
+		if(  (delta_amount>>fabrik_t::precision_bits)>min_change  ) {
 
 			// we produced some real quantity => smoke
 			smoke();
@@ -2405,7 +2407,7 @@ void fabrik_t::step(uint32 delta_t)
 
 			INT_CHECK("simfab 558");
 			// reset for next cycle
-			delta_menge = 0;
+			delta_amount = 0;
 		}
 	}
 
@@ -2816,9 +2818,12 @@ void fabrik_t::new_month()
 
 	// Check whether we have any missing links
 	bool must_close = false;
-	if (status == missing_connection)
+	if (status == missing_connections || status == material_not_available)
 	{
 		must_close = disconnect_supplier(koord::invalid); // This does not remove anything, but checks for missing suppliers
+	}
+	if (status == missing_connections || status == missing_consumer)
+	{
 		must_close |= disconnect_consumer(koord::invalid); // This does not remove anything, but checks for missing consumers
 	}
 
@@ -3051,7 +3056,7 @@ void fabrik_t::new_month()
 // static !
 uint8 fabrik_t::status_to_color[MAX_FAB_STATUS] = {
 	COL_WHITE, COL_GREEN, COL_DODGER_BLUE, COL_LIGHT_TURQUOISE, COL_BLUE, COL_DARK_GREEN,
-	COL_GREY3, COL_DARK_BROWN + 1, COL_YELLOW - 1, COL_YELLOW, COL_ORANGE, COL_ORANGE_RED, COL_RED, COL_BLACK, COL_DARK_ORCHID };
+	COL_GREY3, COL_DARK_BROWN + 1, COL_YELLOW - 1, COL_YELLOW, COL_ORANGE, COL_ORANGE_RED, COL_RED, COL_BLACK, COL_DARK_BLUE, COL_DARK_RED+1 };
 
 #define FL_WARE_NULL           1
 #define FL_WARE_ALLENULL       2
@@ -3062,12 +3067,13 @@ uint8 fabrik_t::status_to_color[MAX_FAB_STATUS] = {
 #define FL_WARE_FEHLT_WAS      64
 
 
-/* returns the status of the current factory, as well as output */
+/* returns the status of the current factory, as well as output
+   also updates total_input/total_transit/total_output          */
 void fabrik_t::recalc_factory_status()
 {
 	uint64 warenlager;
-	char status_ein;
-	char status_aus;
+	char status_ein; // in
+	char status_aus; // out
 
 	int haltcount = nearby_freight_halts.get_count();
 
@@ -3075,32 +3081,35 @@ void fabrik_t::recalc_factory_status()
 	warenlager = 0;
 	total_transit = 0;
 	status_ein = FL_WARE_ALLELIMIT;
+	status = nothing;
 	uint32 i = 0;
-	uint32 input_count = input.get_count();
-	uint32 supplier_check = 0;
-	FOR(array_tpl<ware_production_t>, const& j, input) {
-		if (j.menge >= j.max) {
-			status_ein |= FL_WARE_LIMIT;
-		}
-		else {
-			status_ein &= ~FL_WARE_ALLELIMIT;
-		}
-		warenlager += (uint64)j.menge * (uint64)(desc->get_supplier(i++)->get_consumption());
-		total_transit += j.get_in_transit();
-		if ((j.menge >> fabrik_t::precision_bits) == 0) {
-			status_ein |= FL_WARE_FEHLT_WAS;
-		}
-		// Does each input goods have one or more suppliers. If not, this factory will not be operational.
-		if (sector == manufacturing) {
+	if(const uint32 input_count = input.get_count()){
+		uint32 active_input_count = 0;
+		FOR(array_tpl<ware_production_t>, const& j, input) {
+			if (j.menge >= j.max) {
+				status_ein |= FL_WARE_LIMIT;
+			}
+			else {
+				status_ein &= ~FL_WARE_ALLELIMIT;
+			}
+			warenlager += (uint64)j.menge * (uint64)(desc->get_supplier(i++)->get_consumption());
+			total_transit += j.get_in_transit();
+			if ((j.menge >> fabrik_t::precision_bits) == 0) {
+				status_ein |= FL_WARE_FEHLT_WAS;
+			}
+			// Does each input goods have one or more suppliers? If not, this factory will not be operational.
+			bool found = false;
 			FOR(vector_tpl<koord>, k, suppliers)
 			{
-				fabrik_t* supplier = fabrik_t::get_fab(k);
-				bool found = false;
+				const fabrik_t* supplier = fabrik_t::get_fab(k);
+				if (supplier->get_status() == missing_connections || supplier->get_status() == material_not_available) {
+					// An inoperable factory is synonymous with non-existence => skip!
+					continue;
+				}
 				FOR(array_tpl<ware_production_t>, sw, supplier->get_output())
 				{
 					if (sw.get_typ() == j.get_typ())
 					{
-						supplier_check++;
 						found = true;
 						break;
 					}
@@ -3109,18 +3118,31 @@ void fabrik_t::recalc_factory_status()
 					break; // same goods count only once
 				}
 			}
+
+			if (found || (!found && (j.get_in_transit() || j.menge))) {
+				active_input_count++;
+			}
 		}
-	}
+		warenlager >>= fabrik_t::precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS;
+		if (warenlager == 0) {
+			status_ein |= FL_WARE_ALLENULL;
+		}
+		total_input = (uint32)warenlager;
 
-	warenlager >>= fabrik_t::precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS;
-	if (warenlager == 0) {
-		status_ein |= FL_WARE_ALLENULL;
-	}
-	total_input = (uint32)warenlager;
-
-	// one ware missing, but producing
-	if (status_ein & FL_WARE_FEHLT_WAS && !output.empty() && haltcount > 0) {
-		status = material_shortage;
+		if( !output.empty() ) {
+			// All materials must be available for manufacturing.
+			if (active_input_count != input_count) {
+				status = material_not_available;
+			}
+			else if (status_ein & FL_WARE_FEHLT_WAS && !output.empty() && haltcount > 0 && status != material_not_available) {
+				// one ware missing, but producing
+				status = material_shortage;
+			}
+		}
+		else if (!active_input_count) {
+			// No access to any materials or goods.
+			status = material_not_available;
+		}
 	}
 
 	// set bits for output
@@ -3147,120 +3169,132 @@ void fabrik_t::recalc_factory_status()
 	}
 	total_output = (uint32)warenlager;
 
-	// now calculate status bar
-	switch (sector) {
-		case marine_resource:
-			if (!consumers.get_count())
-			{
-				if (!add_customer(this)) {
-					status = missing_connection;
-					return;
+	// At least one must have a normal downstream industry
+	if( !output.empty() ) {
+		bool has_any_consumer = false;
+		FOR(vector_tpl<koord>, k, consumers) {
+			const fabrik_t* consumer = fabrik_t::get_fab(k);
+			// Focus on incomplete connections between manufacturers rather than missing end consumer's connection
+			if (consumer->get_sector()==end_consumer) {
+				has_any_consumer = true;
+				break;
+			}
+			const uint8 consumer_status = consumer->get_status();
+			if (consumer_status!= missing_connections && consumer_status != missing_consumer && consumer_status != material_not_available) {
+				has_any_consumer = true;
+				break;
+			}
+		}
+		if (!has_any_consumer) {
+			// no sane shipping partner
+			if (status== material_not_available) {
+				status = missing_connections;
+			}
+			else {
+				status = missing_consumer;
+			}
+		}
+	}
+	if (sector==marine_resource && !consumers.get_count()) {
+		if (!add_customer(this)) {
+			status = missing_consumer;
+			return;
+		}
+	}
+
+	// now calculate status bar for sane factory
+	if (status != missing_consumer && status != material_not_available && status != missing_connections) {
+		switch (sector) {
+			case marine_resource:
+				// since it has a station function, it discriminates only whether stock is full or not
+				status = status_aus & FL_WARE_ALLEUEBER75 ? water_resource_full : water_resource;
+				break;
+			case resource:
+			case resource_city:
+				if (!haltcount) {
+					status = inactive;
 				}
-			}
-			// since it has a station function, it discriminates only whether stock is full or not
-			status = status_aus & FL_WARE_ALLEUEBER75 ? water_resource_full : water_resource;
-			break;
-		case resource:
-		case resource_city:
-			if (!consumers.get_count())
-			{
-				status = missing_connection;
-			}
-			else if (!haltcount) {
-				status = inactive;
-			}
-			else if (status_aus&FL_WARE_ALLEUEBER75 || status_aus & FL_WARE_UEBER75) {
-				if (status_aus&FL_WARE_ALLEUEBER75) {
-					status = storage_full;  // connect => needs better service
+				else if (status_aus&FL_WARE_ALLEUEBER75 || status_aus & FL_WARE_UEBER75) {
+					if (status_aus&FL_WARE_ALLEUEBER75) {
+						status = storage_full;  // connect => needs better service
+					}
+					else {
+						status = medium;        // connect => needs better service for at least one product
+					}
 				}
 				else {
-					status = medium;        // connect => needs better service for at least one product
-				}
-			}
-			else {
-				status = good;
-			}
-			break;
-		case manufacturing:
-			// Check if it has at least the minimum required connections
-			if (input_count > supplier_check || !consumers.get_count()) {
-				status = missing_connection;
-			}
-			else if (!haltcount) {
-				status = inactive;
-			}
-			else if (status_ein&FL_WARE_ALLELIMIT && status_aus&FL_WARE_ALLELIMIT) {
-				status = stuck; // all storages are full => Shipment and arrival are stagnant, and it can not produce anything
-			}
-			else if (status_ein&FL_WARE_ALLENULL) {
-				status = no_material;
-			}
-			else if (status_ein&FL_WARE_NULL) {
-				status = material_shortage;
-			}
-			else if (status_ein&FL_WARE_ALLELIMIT) {
-				status = mat_overstocked; // all input storages are full => lack of production speed = receiving stop
-			}
-			else if (status_aus&FL_WARE_ALLELIMIT) {
-				status = shipment_stuck; // all out storages are full => product demand is low or shipment pace is slow = shipping stop
-			}
-			else if (status_ein&FL_WARE_LIMIT || status_aus & FL_WARE_LIMIT) {
-				status = medium; // some storages are full
-			}
-			else {
-				status = good;
-			}
-			break;
-		case end_consumer:
-		case power_plant:
-			if (sector == power_plant && !desc->get_supplier_count()) {
-				// Power plants that do not require materials such as wind power generation
-				if (currently_producing) {
 					status = good;
 				}
+				break;
+			case manufacturing:
+				if (!haltcount) {
+					status = inactive;
+				}
+				else if (status_ein&FL_WARE_ALLELIMIT && status_aus&FL_WARE_ALLELIMIT) {
+					status = stuck; // all storages are full => Shipment and arrival are stagnant, and it can not produce anything
+				}
+				else if (status_ein&FL_WARE_ALLENULL) {
+					status = no_material;
+				}
+				else if (status_ein&FL_WARE_NULL) {
+					status = material_shortage;
+				}
+				else if (status_ein&FL_WARE_ALLELIMIT) {
+					status = mat_overstocked; // all input storages are full => lack of production speed = receiving stop
+				}
+				else if (status_aus&FL_WARE_ALLELIMIT) {
+					status = shipment_stuck; // all out storages are full => product demand is low or shipment pace is slow = shipping stop
+				}
+				else if (status_ein&FL_WARE_LIMIT || status_aus & FL_WARE_LIMIT) {
+					status = medium; // some storages are full
+				}
 				else {
+					status = good;
+				}
+				break;
+			case end_consumer:
+			case power_plant:
+				if (sector == power_plant && !desc->get_supplier_count()) {
+					// Power plants that do not require materials such as wind power generation
+					if (currently_producing) {
+						status = good;
+					}
+					else {
+						status = bad;
+					}
+				}
+				else if (!haltcount) {
+					status = inactive;
+				}
+				else if (status_ein&FL_WARE_ALLELIMIT) {
+					// Excess supply or Stagnation of shipment or Low productivity or Customer shortage => receiving stop
+					status = mat_overstocked;
+				}
+				else if (status_ein&FL_WARE_LIMIT) {
+					// served, but still one at limit => possibility of customer shortage and some delivery stops because its storage is full
 					status = bad;
 				}
-			}
-			else if (!suppliers.get_count())
-			{
-				status = missing_connection;
-			}
-			else if (!haltcount) {
-				status = inactive;
-			}
-			else if (status_ein&FL_WARE_ALLELIMIT) {
-				// Excess supply or Stagnation of shipment or Low productivity or Customer shortage => receiving stop
-				status = mat_overstocked;
-			}
-			else if (status_ein&FL_WARE_LIMIT) {
-				// served, but still one at limit => possibility of customer shortage and some delivery stops because its storage is full
-				status = bad;
-			}
-			else if (status_ein&FL_WARE_ALLENULL) {
-				// there is a halt => needs better service
-				status = no_material;
-			}
-			else if (status_ein&FL_WARE_NULL) {
-				// some items out of stock, but still active
-				status = medium;
-			}
-			else {
-				status = good;
-			}
-			break;
-		default:
-			if (!haltcount) {
-				status = inactive;
-			}
-			else {
-				status = nothing;
-			}
-			break;
-	}
-	// staff shortage check
-	if (chk_staff_shortage(sector, building->get_staffing_level_percentage())) {
-		status += staff_shortage;
+				else if (status_ein&FL_WARE_ALLENULL) {
+					// there is a halt => needs better service
+					status = no_material;
+				}
+				else if (status_ein&FL_WARE_NULL) {
+					// some items out of stock, but still active
+					status = medium;
+				}
+				else {
+					status = good;
+				}
+				break;
+			default:
+				if (!haltcount) {
+					status = inactive;
+				}
+				else {
+					status = nothing;
+				}
+				break;
+		}
 	}
 }
 
@@ -3608,7 +3642,7 @@ void fabrik_t::add_all_suppliers()
 
 		FOR(vector_tpl<fabrik_t*>, const fab, welt->get_fab_list()) {
 			// connect to an existing one, if this is an producer
-			if(fab!=this  && fab->count_output_stock(ware) > -1) {
+			if(fab!=this  && fab->get_output_stock(ware) > -1) {
 				// add us to this factory
 				// will also add to our suppliers list
 				fab->add_consumer(pos.get_2d());
@@ -3628,7 +3662,7 @@ bool fabrik_t::add_supplier(fabrik_t* fab)
 		const goods_desc_t *ware = supplier->get_input_type();
 
 			// connect to an existing one, if this is an producer
-			if(  fab!=this  && fab->count_output_stock(ware) > -1  ) { //"inventory to" (Google)
+			if(  fab!=this  && fab->get_output_stock(ware) > -1  ) {
 				// add us to this factory
 				fab->add_consumer(pos.get_2d());
 				cbuffer_t buf;
@@ -3651,7 +3685,7 @@ bool fabrik_t::add_customer(fabrik_t* fab)
 		const goods_desc_t *ware = supplier->get_input_type();
 
 			// connect to an existing one, if it is a consumer
-			if(fab!=this && count_output_stock(ware) > -1) { //"inventory to" (Google)
+			if(fab!=this && get_output_stock(ware) > -1) {
 				// add this factory
 				add_consumer(fab->pos.get_2d());
 				return true;
@@ -3773,20 +3807,18 @@ uint16 fabrik_t::get_max_intransit_percentage(uint32 index)
 	return max_intransit_percentages.get(input[index].get_typ()->get_catg());
 }
 
-uint16 fabrik_t::get_total_input_occupancy() const
+uint32 fabrik_t::get_total_input_capacity() const
 {
 	uint32 i = 0;
 	uint32 capacity_sum = 0;
 	uint32 stock_sum = 0;
 	FORX(array_tpl<ware_production_t>, const& goods, input, i++) {
 		const sint64 pfactor =desc->get_supplier(i) ? (sint64)desc->get_supplier(i)->get_consumption() : 1ll;
-		const uint32 stock_quantity = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.menge * pfactor) >> (fabrik_t::precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
 		const uint32 storage_capacity = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max * pfactor) >> (fabrik_t::precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
 
-		stock_sum += min(stock_quantity, storage_capacity);
 		capacity_sum += storage_capacity;
 	}
-	return capacity_sum > 0 ? (uint16)(stock_sum * 100 / capacity_sum) : 0;
+	return capacity_sum;
 }
 
 uint32 fabrik_t::get_total_output_capacity() const
@@ -3814,7 +3846,7 @@ void fabrik_t::display_status(sint16 xpos, sint16 ypos)
 		xpos -= get_tile_raster_width()/4;
 	}
 	//const int x = xpos;
-	const bool active = (status != missing_connection && status != inactive);
+	const bool active = (status != missing_connections && status != inactive && status != material_not_available && status != missing_consumer);
 
 	// if pakset has symbol, display it
 	if( input.get_count() ) {
@@ -3830,8 +3862,8 @@ void fabrik_t::display_status(sint16 xpos, sint16 ypos)
 			}
 			const sint64 pfactor = desc->get_supplier(i) ? (sint64)desc->get_supplier(i)->get_consumption() : 1ll;
 			//const sint64 max_transit      = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max_transit * pfactor) >> (fabrik_t::precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
-			const uint32 stock_quantity   = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.menge * pfactor) >> (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
-			const uint32 storage_capacity = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max * pfactor) >> (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
+			const uint32 stock_quantity = (uint32)goods.get_storage();
+			const uint32 storage_capacity = (uint32)goods.get_capacity(pfactor);
 			const PIXVAL goods_color = goods.get_typ()->get_color();
 
 			if (storage_capacity) {
@@ -3860,8 +3892,8 @@ void fabrik_t::display_status(sint16 xpos, sint16 ypos)
 		int i = 0;
 		FORX(array_tpl<ware_production_t>, const& goods, output, i++) {
 			const sint64 pfactor = (sint64)desc->get_product(i)->get_factor();
-			const uint32 stock_quantity   = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.menge * pfactor) >> (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
-			const uint32 storage_capacity = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max * pfactor) >> (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
+			const uint32 stock_quantity = (uint32)goods.get_storage();
+			const uint32 storage_capacity = (uint32)goods.get_capacity(pfactor);
 			const PIXVAL goods_color  = goods.get_typ()->get_color();
 
 			const uint16 v = min(25, (uint16)(25 * stock_quantity / storage_capacity)) + 2;
@@ -4029,13 +4061,13 @@ void fabrik_t::set_sector()
 	}
 }
 
-bool fabrik_t::chk_staff_shortage (uint8 ftype, sint32 staffing_level_percentage) const
+bool fabrik_t::is_staff_shortage() const
 {
-	switch (ftype) {
+	const sint32 staffing_level_percentage = building->get_staffing_level_percentage();
+	switch (sector) {
 		//TODO: when power_plant or unknown ?
 		case marine_resource:
 			return false;
-			break;
 		case resource:
 			if (welt->get_settings().get_rural_industries_no_staff_shortage()) {
 				return false;
@@ -4090,9 +4122,9 @@ bool fabrik_t::is_connected_to_network(player_t *player) const
 	return false;
 }
 
-bool fabrik_t::has_goods_catg_demand(uint8 catg_index) const
+bool fabrik_t::has_goods_catg_demand(uint8 catg_index, uint8 check_option) const
 {
-	if (!output.empty()) {
+	if (!output.empty() && check_option!=1) {
 		for (uint32 index = 0; index < output.get_count(); index++) {
 			if (output[index].get_typ()->get_catg_index() == catg_index) {
 				return true;
@@ -4100,7 +4132,7 @@ bool fabrik_t::has_goods_catg_demand(uint8 catg_index) const
 		}
 	}
 
-	if (!input.empty()) {
+	if (!input.empty() && check_option != 2) {
 		for (uint32 index = 0; index < input.get_count(); index++) {
 			if (!desc->get_supplier(index))
 			{
@@ -4130,7 +4162,7 @@ uint32 fabrik_t::calc_operation_rate(sint8 month) const
 
 	sint32 temp_sum = 0;
 	// which sector?
-	if ((sector == end_consumer || sector == power_plant) && input.get_count()) {
+	if ((sector == ftype::end_consumer || sector == ftype::power_plant) && !input.empty()) {
 		// check the consuming rate
 		for (uint32 i = 0; i < input.get_count(); i++) {
 			const sint64 pfactor = desc->get_supplier(i) ? (sint64)desc->get_supplier(i)->get_consumption() : 1ll;
@@ -4139,7 +4171,7 @@ uint32 fabrik_t::calc_operation_rate(sint8 month) const
 		}
 		return (uint32)(temp_sum * 1000 / input.get_count() / base_monthly_prod);
 	}
-	else if(sector != unknown && output.get_count()){
+	else if(sector != ftype::unknown && !output.empty()){
 		// check the producing rate of this factory
 		for (uint32 i = 0; i < output.get_count(); i++) {
 			const sint64 pfactor = (sint64)desc->get_product(i)->get_factor();

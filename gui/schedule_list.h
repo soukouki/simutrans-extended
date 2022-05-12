@@ -23,6 +23,7 @@
 #include "times_history_container.h"
 #include "components/gui_vehicle_capacitybar.h"
 #include "components/gui_schedule_item.h"
+#include "components/gui_line_lettercode.h"
 
 class player_t;
 
@@ -59,8 +60,10 @@ private:
 
 	button_t bt_new_line, bt_edit_line, bt_delete_line, bt_withdraw_line, bt_line_class_manager, bt_mode_convois, bt_show_halt_name;
 	button_t sort_order;
+	button_t bt_access_minimap, bt_line_color_editor;
+	gui_line_lettercode_t lc_preview;
 	gui_container_t cont, cont_charts, cont_convoys;
-	gui_aligned_container_t cont_times_history, cont_line_info, cont_tab_haltlist;
+	gui_aligned_container_t cont_times_history, cont_line_info, cont_tab_haltlist, cont_transport_density;
 	gui_line_waiting_status_t cont_haltlist;
 	gui_convoy_loading_info_t cont_line_capacity_by_catg;
 	gui_scrollpane_t scrolly_convois, scrolly_haltestellen, scroll_times_history, scrolly_line_info;
@@ -154,12 +157,6 @@ public:
 
 	static bool get_reverse() { return sortreverse; }
 	static void set_reverse(bool reverse) { sortreverse = reverse; }
-
-	/**
-	* Does this window need a min size button in the title bar?
-	* @return true if such a button is needed
-	*/
-	bool has_min_sizer() const OVERRIDE {return true;}
 
 	/**
 	* Draw new component. The values to be passed refer to the window
