@@ -15,6 +15,7 @@
 // Similar function: gui_convoy_handle_catg_img_t
 class gui_line_handle_catg_img_t : public gui_container_t
 {
+protected:
 	linehandle_t line;
 
 public:
@@ -24,6 +25,18 @@ public:
 
 	scr_size get_min_size() const OVERRIDE;
 	scr_size get_max_size() const OVERRIDE;
+};
+
+
+class gui_matching_catg_img_t : public gui_line_handle_catg_img_t
+{
+	linehandle_t line_b;
+
+public:
+	gui_matching_catg_img_t(linehandle_t line_a, linehandle_t line_b);
+
+	void draw(scr_coord offset) OVERRIDE;
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 
 

@@ -47,6 +47,28 @@ scr_size gui_line_handle_catg_img_t::get_max_size() const
 }
 
 
+gui_matching_catg_img_t::gui_matching_catg_img_t(linehandle_t line_a, linehandle_t line_b) :
+	gui_line_handle_catg_img_t(line_a)
+{
+	this->line_b = line_b;
+}
+
+void gui_matching_catg_img_t::draw(scr_coord offset)
+{
+	if( line.is_null() || line_b.is_null()  ) {
+		return;
+	}
+	scr_coord_val offset_x = 2;
+	offset += pos;
+	FOR(minivec_tpl<uint8>, const catg_index, line->get_goods_catg_index()) {
+		if( !line_b->get_goods_catg_index().is_contained(catg_index) ) continue;
+		display_color_img(goods_manager_t::get_info_catg_index(catg_index)->get_catg_symbol(), offset.x + offset_x + 2, offset.y + 3, 0, false, true);
+		offset_x += D_FIXED_SYMBOL_WIDTH+2;
+	}
+	size.w = offset_x+2;
+}
+
+
 gui_line_label_t::gui_line_label_t(linehandle_t l)
 {
 	line = l;
