@@ -47,25 +47,32 @@ scr_size gui_line_handle_catg_img_t::get_max_size() const
 }
 
 
-gui_matching_catg_img_t::gui_matching_catg_img_t(linehandle_t line_a, linehandle_t line_b) :
-	gui_line_handle_catg_img_t(line_a)
+gui_matching_catg_img_t::gui_matching_catg_img_t(const minivec_tpl<uint8>& goods_catg_index_a, const minivec_tpl<uint8>& goods_catg_index_b)
 {
-	this->line_b = line_b;
+	matching_freight_catg.clear();
+	FOR(minivec_tpl<uint8>, const catg_index, goods_catg_index_b) {
+		if (!goods_catg_index_a.is_contained(catg_index)) continue;
+		matching_freight_catg.append(catg_index);
+	}
+	set_size( scr_size((D_FIXED_SYMBOL_WIDTH+2)*matching_freight_catg.get_count()+2, D_FIXED_SYMBOL_WIDTH+2) );
 }
 
 void gui_matching_catg_img_t::draw(scr_coord offset)
 {
-	if( line.is_null() || line_b.is_null()  ) {
+	if( matching_freight_catg.empty() ) {
 		return;
 	}
 	scr_coord_val offset_x = 2;
 	offset += pos;
-	FOR(minivec_tpl<uint8>, const catg_index, line->get_goods_catg_index()) {
-		if( !line_b->get_goods_catg_index().is_contained(catg_index) ) continue;
+	FOR(minivec_tpl<uint8>, const catg_index, matching_freight_catg) {
 		display_color_img(goods_manager_t::get_info_catg_index(catg_index)->get_catg_symbol(), offset.x + offset_x + 2, offset.y + 3, 0, false, true);
 		offset_x += D_FIXED_SYMBOL_WIDTH+2;
 	}
-	size.w = offset_x+2;
+}
+
+scr_size gui_matching_catg_img_t::get_min_size() const
+{
+	return scr_size(size.w, D_FIXED_SYMBOL_WIDTH + 2);
 }
 
 
