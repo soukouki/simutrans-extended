@@ -11387,6 +11387,7 @@ bool karte_t::interactive(uint32 quit_month)
 					{
 						// only update display
 						idle_time = 100;
+						eventmanager->check_events();
 					}
 			}
 			else if (env_t::networkmode && !env_t::server && sync_steps >= sync_steps_barrier) {
