@@ -5092,6 +5092,10 @@ void convoi_t::show_info()
 	}
 }
 
+void convoi_t::show_detail()
+{
+	create_win( new convoi_detail_t(self), w_info, magic_convoi_detail+self.get_id() );
+}
 
 #if 0
 void convoi_t::info(cbuffer_t & buf) const
