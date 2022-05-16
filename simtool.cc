@@ -3898,7 +3898,7 @@ bool tool_build_tunnel_t::check_ventilation(const way_builder_t &bauigel){
 
 			if(const grund_t *gr=welt->lookup(pos)){
 				if(const weg_t *w = gr->get_weg(desc->get_waytype())){
-					vent_checker_t vent_check(desc->get_waytype());
+					vent_checker_t vent_check(desc->get_length_limit());
 					route_t vent_route;
 					if(vent_route.find_route(welt,pos,&vent_check,0,ribi_t::all,0,1,0,desc->get_length_limit()/welt->get_settings().get_meters_per_tile()+1,false)){
 						//count tiles.
@@ -3939,8 +3939,14 @@ bool tool_build_tunnel_t::check_ventilation(const way_builder_t &bauigel){
 	return true;
 }
 
-bool tool_build_tunnel_t::vent_checker_t::check_next_tile(const grund_t *) const{
-	//TODO return false for tunnels with lower length limit
+bool tool_build_tunnel_t::vent_checker_t::check_next_tile(const grund_t *gr) const{
+	if(gr){
+		if(const tunnel_t *tunnel = gr->find<tunnel_t>()){
+			if(tunnel->get_desc()->get_length_limit() < length_limit){
+				return false;
+			}
+		}
+	}
 	return true;
 }
 

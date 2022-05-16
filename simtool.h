@@ -370,9 +370,9 @@ private:
 
 	bool check_ventilation(const way_builder_t &bauigel);
 	class vent_checker_t : public test_driver_t {
-
+		uint16 length_limit;
 	public:
-		vent_checker_t(waytype_t) {}
+		vent_checker_t(uint16 max_length) {length_limit=max_length;}
 		bool check_next_tile(const grund_t *) const override;
 		waytype_t get_waytype() const override {return invalid_wt;}
 		ribi_t::ribi get_ribi(const grund_t *) const override {return ribi_t::all;}
