@@ -749,13 +749,13 @@ bool map_frame_t::infowin_event(const event_t *ev)
 		is_dragging = true;
 
 		scrolly.set_scroll_position(  max(0, x),  max(0, y) );
-
+#if 0
 		// Move the mouse pointer back to starting location
 		// To prevent a infinite mouse event loop, we just do it when needed.
 		if ((ev->mx - ev->cx)!=0  ||  (ev->my-ev->cy)!=0) {
 			move_pointer(screenpos.x + ev->cx, screenpos.y+ev->cy);
 		}
-
+#endif
 		return true;
 	}
 	else if(  IS_LEFTDBLCLK(ev)  &&  minimap_t::get_instance()->getroffen(ev2.mx,ev2.my)  ) {
