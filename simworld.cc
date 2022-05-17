@@ -11358,7 +11358,7 @@ bool karte_t::interactive(uint32 quit_month)
 				INT_CHECK("karte_t::interactive()");
 			}
 			DBG_DEBUG4("karte_t::interactive", "end of sleep");
-			
+
 			// process enqueued network world commands
 			while (!command_queue.empty()) {
 				network_world_command_t* nwc = command_queue.remove_first();

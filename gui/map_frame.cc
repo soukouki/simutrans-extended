@@ -717,8 +717,8 @@ bool map_frame_t::infowin_event(const event_t *ev)
 		set_focus( minimap_t::get_instance() );
 	}
 
-	if(  (IS_WHEELUP(ev) || IS_WHEELDOWN(ev))  &&  
-		minimap_t::get_instance()->getroffen(ev2.mx,ev2.my)  && 
+	if(  (IS_WHEELUP(ev) || IS_WHEELDOWN(ev))  &&
+		minimap_t::get_instance()->getroffen(ev2.mx,ev2.my)  &&
 		!viewed_player_c.getroffen(ev2.mx,ev2.my) &&
 		!transport_type_c.getroffen(ev2.mx,ev2.my) &&
 		!freight_type_c.getroffen(ev2.mx,ev2.my)  )
