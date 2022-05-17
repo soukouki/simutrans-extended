@@ -98,12 +98,14 @@ void gui_line_label_t::update_check()
 	}
 
 	// check 2 - texts
-	cbuffer_t buf;
-	buf.printf("%s%s%s", line->get_linecode_l(), line->get_linecode_r(), line->get_name());
-	if ( strcmp(buf.get_str(), name_buf.get_str())!=0 ) {
-		name_buf.clear();
-		name_buf.append(buf.get_str());
-		need_update = true;
+	if (!need_update) {
+		cbuffer_t buf;
+		buf.printf("%s%s%s", line->get_linecode_l(), line->get_linecode_r(), line->get_name());
+		if ( strcmp(buf.get_str(), name_buf.get_str())!=0 ) {
+			name_buf.clear();
+			name_buf.append(buf.get_str());
+			need_update = true;
+		}
 	}
 
 	if (need_update) {
