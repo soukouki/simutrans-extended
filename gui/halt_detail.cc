@@ -26,6 +26,7 @@
 #include "linelist_stats_t.h"
 #include "components/gui_label.h"
 #include "components/gui_halthandled_lines.h"
+#include "components/gui_convoi_button.h"
 
 
 #define GOODS_SYMBOL_CELL_WIDTH 14
