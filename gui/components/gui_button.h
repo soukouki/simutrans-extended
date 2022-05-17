@@ -104,8 +104,11 @@ private:
 	const char *text;
 	const char *translated_text;
 
-	koord3d targetpos;
-	image_id img;
+	union {
+		koord3d targetpos;
+		image_id img;
+		uint32 button_click_time;
+	};
 
 	bool img_on_right=false;
 
