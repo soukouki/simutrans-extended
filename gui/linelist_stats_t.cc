@@ -4,6 +4,7 @@
  */
 
 #include "linelist_stats_t.h"
+#include "simwin.h"
 
 #include "../simhalt.h"
 
@@ -91,7 +92,7 @@ void gui_line_label_t::update_check()
 	bool need_update = false;
 
 	// check 1 - numeric thing
-	const uint16 seed = line->get_line_lettercode_style() + line->get_line_color_index() + line->get_owner()->get_player_color1();
+	const uint16 seed = line->get_line_lettercode_style() + line->get_line_color_index() + line->get_owner()->get_player_color1() + line->get_schedule()->get_count();
 	if (old_seed != seed) {
 		old_seed = seed;
 		need_update = true;
@@ -117,6 +118,7 @@ void gui_line_label_t::update()
 {
 	remove_all();
 	name_buf.clear();
+	tooltip_buf.clear();
 	if( line.is_bound() ) {
 		if (line->get_line_color_index() == 255) {
 			new_component<gui_margin_t>(0);
@@ -127,6 +129,17 @@ void gui_line_label_t::update()
 		gui_label_buf_t *lb = new_component<gui_label_buf_t>(PLAYER_FLAG | color_idx_to_rgb(line->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
 		lb->buf().append(line->get_name());
 		lb->update();
+
+		const halthandle_t origin_halt = line->get_schedule()->get_origin_halt(line->get_owner());
+		const halthandle_t destination_halt = line->get_schedule()->get_destination_halt(line->get_owner());
+
+		if( origin_halt.is_bound() && destination_halt.is_bound() ) {
+			tooltip_buf.printf("%s %s %s,  %.1fkm",
+				origin_halt->get_name(),
+				line->get_schedule()->is_mirrored() ? translator::translate("<=>") : translator::translate("-->"),
+				destination_halt->get_name(),
+				(float)(line->get_schedule()->get_travel_distance()*world()->get_settings().get_meters_per_tile() / 1000.0));
+		}
 	}
 	set_size(get_min_size());
 }
@@ -138,4 +151,11 @@ void gui_line_label_t::draw(scr_coord offset)
 	}
 	update_check();
 	gui_aligned_container_t::draw(offset);
+
+	if (getroffen(get_mouse_x() - offset.x, get_mouse_y() - offset.y)) {
+		if( tooltip_buf ) {
+			win_set_tooltip(offset.x + pos.x + size.w - 2, offset.y + pos.y + size.h - 2, tooltip_buf, this);
+		}
+	}
+
 }

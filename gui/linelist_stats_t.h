@@ -50,7 +50,7 @@ public:
 class gui_line_label_t : public gui_aligned_container_t
 {
 	linehandle_t line;
-	cbuffer_t name_buf;
+	cbuffer_t name_buf, tooltip_buf;
 	uint16 old_seed = -1;
 
 public:
