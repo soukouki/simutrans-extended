@@ -11,10 +11,14 @@
 
 #include "../../descriptor/skin_desc.h"
 
+#include "../gui_theme.h"
+#include "gui_tab_panel.h" // D_TAB_HEADER_HEIGHT
 
-gui_waytype_image_box_t::gui_waytype_image_box_t(waytype_t wt) :
+
+gui_waytype_image_box_t::gui_waytype_image_box_t(waytype_t wt, bool yesno) :
 	gui_image_t(IMG_EMPTY, 0, 0, true)
 {
+	flexible = yesno;
 	set_waytype(wt);
 }
 
@@ -55,4 +59,9 @@ void gui_waytype_image_box_t::set_size( scr_size size_par )
 	}
 
 	gui_component_t::set_size(size_par);
+}
+
+scr_size gui_waytype_image_box_t::get_min_size() const
+{
+	return flexible ? size : scr_size(min(size.w, gui_component_t::get_min_size().w), max(size.h,max(LINESPACE,D_TAB_HEADER_HEIGHT-2)));
 }
