@@ -1693,6 +1693,9 @@ bool gui_halt_route_info_t::infowin_event(const event_t * ev)
 			if (ev->cx > 0 && ev->cx < 15) {
 				welt->get_viewport()->change_world_position(halt_pos);
 			}
+			else if (IS_SHIFT_PRESSED(ev)) {
+				halt->show_detail();
+			}
 			else {
 				halt->show_info();
 			}
