@@ -4374,6 +4374,10 @@ const char* tool_build_wayobj_t::get_tooltip(const player_t *) const
 			if(any_prohibitive)
 			{
 				strcat(toolstr, ")");
+				n+=1;
+			}
+			if(desc->get_is_tall()){
+				sprintf(toolstr + n, ", %s", translator::translate("No Low Bridges"));
 			}
 			return toolstr;
 		}
@@ -4456,10 +4460,13 @@ bool tool_build_wayobj_t::calc_route( route_t &verbindung, player_t *player, con
 	vehicle_t* test_vehicle = vehicle_builder_t::build(start, player, NULL, &remover_desc);
 	test_vehicle->set_flag( obj_t::not_on_map );
 	test_driver_t* test_driver = scenario_checker_t::apply(test_vehicle, player, this);
-
+	bool is_tall=false;
+	if(desc){
+		is_tall=desc->get_is_tall();
+	}
 	bool can_built;
 	if( start != to ) {
-		can_built = verbindung.calc_route(welt, start, to, test_driver, 0, 0, false, 0);
+		can_built = verbindung.calc_route(welt, start, to, test_driver, 0, 0, is_tall, 0);
 	}
 	else {
 		verbindung.clear();
