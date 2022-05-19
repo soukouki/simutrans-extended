@@ -835,7 +835,7 @@ void roadsign_t::display_overlay(int xpos, int ypos) const
 					}
 
 					if (!any_reserve) {
-						// The stuff is here
+						// The staff is here
 						if (state != call_on) {
 							state_temp = roadsign_t::caution;
 						}
