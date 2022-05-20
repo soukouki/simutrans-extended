@@ -28,7 +28,7 @@ public:
 	void draw( scr_coord offset ) OVERRIDE;
 
 	scr_size get_min_size() const OVERRIDE;
-	scr_size get_max_size() const OVERRIDE { return flexible ? get_min_size() : scr_size(scr_size::inf.w, get_min_size().h); }
+	scr_size get_max_size() const OVERRIDE { return flexible ? scr_size(scr_size::inf.w, get_min_size().h) : get_min_size(); }
 };
 
 #endif

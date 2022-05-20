@@ -63,5 +63,5 @@ void gui_waytype_image_box_t::set_size( scr_size size_par )
 
 scr_size gui_waytype_image_box_t::get_min_size() const
 {
-	return flexible ? size : scr_size(min(size.w, gui_component_t::get_min_size().w), max(size.h,max(LINESPACE,D_TAB_HEADER_HEIGHT-2)));
+	return flexible ? scr_size( min( size.w,gui_component_t::get_min_size().w ), max( size.h,max(LINESPACE,D_TAB_HEADER_HEIGHT-2) ) ) : size;
 }
