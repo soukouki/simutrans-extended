@@ -114,7 +114,7 @@ private:
 
 public:
 	gui_line_network_t(linehandle_t line);
-	//gui_line_network_t(convoihandle_t cnv);
+	gui_line_network_t(convoihandle_t cnv);
 
 	void set_line(linehandle_t line_) { line = line_; init_table(); }
 

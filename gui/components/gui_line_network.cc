@@ -242,6 +242,8 @@ void gui_line_transfer_guide_t::update()
 
 	cont_lines.clear();
 	add_component(&cont_lines);
+
+	const player_t *player = line.is_bound() ? line->get_owner() : cnv->get_owner();
 	add_table(1,0)->set_spacing(scr_size(0,2));
 	{
 		for (uint32 i = 0; i < halt->registered_lines.get_count(); i++) {
@@ -251,7 +253,7 @@ void gui_line_transfer_guide_t::update()
 			if( filter_catg!=goods_manager_t::INDEX_NONE  &&  !connected_line->get_goods_catg_index().is_contained(filter_catg) ) {
 				continue; // filter not match
 			}
-			if( filter_same_company && (line->get_owner()!=connected_line->get_owner() ) ) {
+			if( filter_same_company && (player!=connected_line->get_owner() ) ) {
 				continue; // filter not match
 			}
 
@@ -265,14 +267,14 @@ void gui_line_transfer_guide_t::update()
 			if (!can_transfer) continue;
 			connection_line_t connection_line = {
 				connected_line->get_line_color()==0 ? color_idx_to_rgb(connected_line->get_owner()->get_player_color1()+3) : connected_line->get_line_color(),
-				(line->get_owner()==connected_line->get_owner()),
+				(player==connected_line->get_owner()),
 				false
 			};
 			cont_lines.append_line(connection_line);
 
 			add_table(2,1)->set_spacing(scr_size(0,0));
 			{
-				new_component<gui_matching_catg_img_t>(line->get_goods_catg_index(), connected_line->get_goods_catg_index());
+				new_component<gui_matching_catg_img_t>(line.is_bound() ? line->get_goods_catg_index() : cnv->get_goods_catg_index(), connected_line->get_goods_catg_index());
 				new_component<gui_transfer_line_t>(connected_line, halt->get_basis_pos());
 			}
 			end_table();
@@ -285,7 +287,7 @@ void gui_line_transfer_guide_t::update()
 			if( filter_catg!=goods_manager_t::INDEX_NONE  &&  !connected_cnv->get_goods_catg_index().is_contained(filter_catg) ) {
 				continue; // filter not match
 			}
-			if( filter_same_company && (line->get_owner()!=connected_cnv->get_owner() ) ) {
+			if( filter_same_company && (player!=connected_cnv->get_owner() ) ) {
 				continue; // filter not match
 			}
 
@@ -299,14 +301,14 @@ void gui_line_transfer_guide_t::update()
 			if (!can_transfer) continue;
 			connection_line_t connection_line = {
 				color_idx_to_rgb( connected_cnv->get_owner()->get_player_color1()+2 ),
-				(line->get_owner()==connected_cnv->get_owner()),
+				(player==connected_cnv->get_owner()),
 				true
 			};
 			cont_lines.append_line(connection_line);
 
 			add_table(2,1)->set_spacing(scr_size(0, 0));
 			{
-				new_component<gui_matching_catg_img_t>(line->get_goods_catg_index(), connected_cnv->get_goods_catg_index());
+				new_component<gui_matching_catg_img_t>(line.is_bound() ? line->get_goods_catg_index() : cnv->get_goods_catg_index(), connected_cnv->get_goods_catg_index());
 				new_component<gui_transfer_line_t>(connected_cnv, halt->get_basis_pos());
 			}
 			end_table();
@@ -333,10 +335,19 @@ void gui_line_transfer_guide_t::draw(scr_coord offset)
 gui_line_network_t::gui_line_network_t(linehandle_t line)
 {
 	this->line = line;
+	cnv = convoihandle_t();
 
-	set_spacing( scr_size(0,0) );
-	set_alignment(ALIGN_TOP);
 	if (line.is_bound()) {
+		init_table();
+	}
+}
+
+gui_line_network_t::gui_line_network_t(convoihandle_t cnv)
+{
+	this->cnv = cnv;
+	line = linehandle_t();
+
+	if (cnv.is_bound()) {
 		init_table();
 	}
 }
@@ -345,6 +356,8 @@ void gui_line_network_t::init_table()
 {
 	remove_all();
 	set_table_layout(5,0);
+	set_alignment(ALIGN_TOP);
+	set_spacing( scr_size(0,0) );
 	if (!line.is_bound() && !cnv.is_bound()) return;
 
 	const minivec_tpl<uint8> &goods_catg_index = cnv.is_bound() ? cnv->get_goods_catg_index() : line->get_goods_catg_index();
@@ -391,15 +404,16 @@ void gui_line_network_t::init_table()
 	new_component_span<gui_border_t>(5);
 
 	schedule_t *schedule = cnv.is_bound() ? cnv->get_schedule() : line->get_schedule();
+	const player_t *player = line.is_bound() ? line->get_owner() : cnv->get_owner();
 	uint8 entry_idx = 0;
 	FORX(minivec_tpl<schedule_entry_t>, const& i, schedule->entries, ++entry_idx) {
-		halthandle_t const halt = haltestelle_t::get_halt(i.pos, line->get_owner());
+		halthandle_t const halt = haltestelle_t::get_halt(i.pos, player);
 		if (!halt.is_bound()) { continue; }
 
 		add_table(2,1);
 		{
 			new_component<gui_fill_t>();
-			const bool can_serve = halt->can_serve(line);
+			const bool can_serve = line.is_bound() ? halt->can_serve(line) : halt->can_serve(cnv);
 			gui_label_buf_t *lb = new_component<gui_label_buf_t>(can_serve ? SYSCOL_TEXT : COL_INACTIVE, gui_label_t::right);
 			if (!can_serve) {
 				lb->buf().printf("(%s)", halt->get_name());
@@ -424,21 +438,39 @@ void gui_line_network_t::init_table()
 			);
 
 			if( entry_idx < schedule->entries.get_count()-1 ) {
-				const uint8 line_style = line->get_schedule()->is_mirrored() ? gui_colored_route_bar_t::doubled : gui_colored_route_bar_t::solid;
+				const uint8 line_style = schedule->is_mirrored() ? gui_colored_route_bar_t::doubled : gui_colored_route_bar_t::solid;
 
-				if (line->get_line_color()==0) {
-					new_component<gui_colored_route_bar_t>(line->get_owner()->get_player_color1(), line_style, true);
+				// Almost similar code is in times_history_container
+				PIXVAL base_color;
+				const uint8 temp_col_index = line.is_bound() ? line->get_line_color_index() : !cnv.is_bound() ? 255 : cnv->get_line().is_bound() ? cnv->get_line()->get_line_color_index() : 255;
+				switch (temp_col_index) {
+					case 254:
+						base_color = color_idx_to_rgb(player->get_player_color1()+4);
+						break;
+					case 255:
+						base_color = color_idx_to_rgb(player->get_player_color1()+2);
+						break;
+					default:
+						base_color = line_color_idx_to_rgb(temp_col_index);
+						break;
 				}
-				else {
-					const PIXVAL base_color = is_dark_color(line->get_line_color()) ? line->get_line_color() : display_blend_colors(line->get_line_color(), color_idx_to_rgb(COL_BLACK), 15);
-					new_component<gui_colored_route_bar_t>(base_color, line_style, true);
+
+				if (!is_dark_color(base_color)) {
+					base_color = display_blend_colors(base_color, color_idx_to_rgb(COL_BLACK), 15);
 				}
+
+				new_component<gui_colored_route_bar_t>(base_color, line_style, true);
 			}
 		}
 		end_table();
 
 		if(is_interchange) {
-			new_component<gui_line_transfer_guide_t>(halt, line, filter_own_network, filter_catg);
+			if (line.is_bound()) {
+				new_component<gui_line_transfer_guide_t>(halt, line, filter_own_network, filter_catg);
+			}
+			else {
+				new_component<gui_line_transfer_guide_t>(halt, cnv, filter_own_network, filter_catg);
+			}
 		}
 		else {
 			new_component<gui_empty_t>();

@@ -125,8 +125,10 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv) :
 	loading_bar(cnv),
 	next_halt_number(-1),
 	cont_times_history(linehandle_t(), cnv),
+	cont_line_network(cnv),
 	scroll_freight(&container_freight, true, true),
 	scroll_times_history(&cont_times_history, true),
+	scroll_line_network(&cont_line_network, true, true),
 	lc_preview(0)
 {
 	if (cnv.is_bound()) {
@@ -329,6 +331,7 @@ void convoi_info_t::init(convoihandle_t cnv)
 	container_stats.end_table();
 
 	switch_mode.add_tab(&scroll_times_history, translator::translate("times_history"));
+	switch_mode.add_tab(&scroll_line_network, translator::translate("line_network"));
 
 	cnv->set_sortby( env_t::default_sortmode );
 
