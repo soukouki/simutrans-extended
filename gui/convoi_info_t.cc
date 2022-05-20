@@ -876,6 +876,9 @@ void convoi_info_t::set_tab_opened()
 		case 2: // times history
 			height = cont_times_history.get_size().h + D_MARGINS_Y;
 			break;
+		case 3: // line networks
+			height = cont_line_network.get_size().h + D_MARGINS_Y;
+			break;
 	}
 	if( (get_windowsize().h-margin_above_tab) < height ) {
 		set_windowsize( scr_size(get_windowsize().w, min(display_get_height()-margin_above_tab, margin_above_tab+height)+1) );
