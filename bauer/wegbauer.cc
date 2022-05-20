@@ -925,14 +925,6 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 				}
 			}
 		}
-		if(tunnel_desc->get_length_limit()){
-			if(!welt->is_near_land(from->get_pos().x,from->get_pos().y,tunnel_desc->get_length_limit())){
-				return false;
-			}
-			if(!welt->is_near_land(to->get_pos().x,to->get_pos().y,tunnel_desc->get_length_limit())){
-				return false;
-			}
-		}
 	}
 
 	// universal check for crossings

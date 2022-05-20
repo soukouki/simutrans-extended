@@ -3687,7 +3687,7 @@ const char* tool_build_tunnel_t::get_tooltip(const player_t *) const
 			n += sprintf(toolstr + n, ")");
 		}
 		if(desc->get_length_limit()){
-			n += sprintf(toolstr + n, " %d%s", desc->get_length_limit(), translator::translate("m"));
+			n += sprintf(toolstr + n, ", %s: %d%s", translator::translate("Max. Dist. to Shore"), desc->get_length_limit(), translator::translate("m"));
 		}
 		if(desc->get_underwater_limit()){
 			n += sprintf(toolstr + n, ", %s: %d", translator::translate("Sub-Sea Depth Limit"), desc->get_underwater_limit());
@@ -3896,6 +3896,9 @@ const char *tool_build_tunnel_t::do_work( player_t *player, const koord3d &start
 		// Build tunnels
 		way_builder_t bauigel(player);
 		calc_route( bauigel, start, end );
+		if(!check_ventilation(bauigel)){
+			return "Tunnel too long beneath water";
+		}
 		welt->mute_sound(true);
 		bauigel.set_overtaking_mode(overtaking_mode);
 		bauigel.set_desc(way_desc);
@@ -3956,7 +3959,9 @@ void tool_build_tunnel_t::mark_tiles(  player_t *player, const koord3d &start, c
 {
 	way_builder_t bauigel(player);
 	calc_route( bauigel, start, end );
-
+	if(!check_ventilation(bauigel)){
+		return;
+	}
 	const tunnel_desc_t *desc = tunnel_builder_t::get_desc(default_param);
 	// now we search a matching way for the tunnels top speed
 	const way_desc_t *wb = desc->get_way_desc();
@@ -4001,6 +4006,99 @@ void tool_build_tunnel_t::mark_tiles(  player_t *player, const koord3d &start, c
 	}
 }
 
+bool tool_build_tunnel_t::check_ventilation(const way_builder_t &bauigel){
+	const tunnel_desc_t *desc = tunnel_builder_t::get_desc(default_param);
+	if(!desc->get_length_limit()){
+		return true;
+	}
+	if(bauigel.get_count()<=0){
+		return true;
+	}
+
+	vector_tpl<uint32> dist_to_land(bauigel.get_count());
+	dist_to_land.set_count(bauigel.get_count());
+	bool no_subsea=true;
+	for(uint32 i = 0; i < bauigel.get_count(); i++){
+		koord3d pos = bauigel.get_route()[i];
+		if(welt->lookup_hgt(pos.get_2d()) > welt->get_water_hgt(pos.get_2d())){
+			dist_to_land[i] = 0;
+		}else{
+			no_subsea=false;
+			if(i>0 && dist_to_land[i-1]!=0xFFFFFFFF){
+				if(i<bauigel.get_count()-1
+						&& ribi_type(bauigel.get_route()[i+1] - bauigel.get_route()[i])!=ribi_type(bauigel.get_route()[i] - bauigel.get_route()[i-1])){
+					dist_to_land[i] = dist_to_land[i-1] + (welt->get_settings().get_meters_per_tile() * 5) / 7;
+				}else{
+					dist_to_land[i] = dist_to_land[i-1] + welt->get_settings().get_meters_per_tile();
+				}
+			}else{
+				dist_to_land[i] = 0xFFFFFFFF;
+			}
+
+			if(const grund_t *gr=welt->lookup(pos)){
+				if(const weg_t *w = gr->get_weg(desc->get_waytype())){
+					vent_checker_t vent_check(desc->get_length_limit());
+					route_t vent_route;
+					if(vent_route.find_route(welt,pos,&vent_check,0,ribi_t::all,0,1,0,desc->get_length_limit()/welt->get_settings().get_meters_per_tile()+1,false)){
+						//count tiles.
+						dist_to_land[i]=welt->get_settings().get_meters_per_tile()*2;
+						for(uint32 j = 1; j < vent_route.get_count()-1; j++){
+							if(ribi_type(vent_route.get_route()[j+1] - vent_route.get_route()[j])==ribi_type(vent_route.get_route()[j] - vent_route.get_route()[j-1])){
+								dist_to_land[i]+=welt->get_settings().get_meters_per_tile();
+							}else{
+								dist_to_land[i]+=(welt->get_settings().get_meters_per_tile()*5)/7;
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+	if(no_subsea){
+		return true;
+	}
+	//check in reverse direction
+	for(uint32 i = bauigel.get_count()-1; i <= bauigel.get_count()-1; i--){
+		if(i != bauigel.get_count()-1){
+			uint32 dist_from_land=dist_to_land[i+1];
+			if(i>0 && ribi_type(bauigel.get_route()[i+1] - bauigel.get_route()[i])!=ribi_type(bauigel.get_route()[i] - bauigel.get_route()[i-1])){
+				dist_from_land+=(welt->get_settings().get_meters_per_tile()*5)/7;
+			}else{
+				dist_from_land+=welt->get_settings().get_meters_per_tile();
+			}
+			if(dist_from_land<dist_to_land[i]){
+				dist_to_land[i]=dist_from_land;
+			}
+		}
+		if(dist_to_land[i]>desc->get_length_limit()){
+			return false;
+		}
+	}
+	return true;
+}
+
+bool tool_build_tunnel_t::vent_checker_t::check_next_tile(const grund_t *gr) const{
+	if(gr){
+		if(const tunnel_t *tunnel = gr->find<tunnel_t>()){
+			if(tunnel->get_desc()->get_length_limit() < length_limit){
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+int tool_build_tunnel_t::vent_checker_t::get_cost(const grund_t *gr, const sint32, koord from_pos){
+	return welt->get_settings().get_meters_per_tile();
+}
+
+bool tool_build_tunnel_t::vent_checker_t::is_target(const grund_t *gr, const grund_t *){
+	if(!gr){
+		return false;
+	}
+	return (welt->lookup_hgt(gr->get_pos().get_2d()) > welt->get_water_hgt(gr->get_pos().get_2d()));
+}
 
 /* removes a way like a driving car ... */
 char const* tool_wayremover_t::get_tooltip(player_t const*) const
@@ -4415,6 +4513,10 @@ const char* tool_build_wayobj_t::get_tooltip(const player_t *) const
 			if(any_prohibitive)
 			{
 				strcat(toolstr, ")");
+				n+=1;
+			}
+			if(desc->get_is_tall()){
+				sprintf(toolstr + n, ", %s", translator::translate("No Low Bridges"));
 			}
 			return toolstr;
 		}
@@ -4497,10 +4599,13 @@ bool tool_build_wayobj_t::calc_route( route_t &verbindung, player_t *player, con
 	vehicle_t* test_vehicle = vehicle_builder_t::build(start, player, NULL, &remover_desc);
 	test_vehicle->set_flag( obj_t::not_on_map );
 	test_driver_t* test_driver = scenario_checker_t::apply(test_vehicle, player, this);
-
+	bool is_tall=false;
+	if(desc){
+		is_tall=desc->get_is_tall();
+	}
 	bool can_built;
 	if( start != to ) {
-		can_built = verbindung.calc_route(welt, start, to, test_driver, 0, 0, false, 0);
+		can_built = verbindung.calc_route(welt, start, to, test_driver, 0, 0, is_tall, 0);
 	}
 	else {
 		verbindung.clear();
