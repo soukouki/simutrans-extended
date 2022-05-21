@@ -369,6 +369,32 @@ void pedestrian_t::hop(grund_t *gr)
 	calc_image();
 }
 
+void pedestrian_t::get_screen_offset( int &xoff, int &yoff, const sint16 raster_width ) const
+{
+	// vehicles needs finer steps to appear smoother
+	sint32 display_steps = (uint32)(steps + steps_offset)*(uint16)raster_width;
+	if(dx*dy) {
+		display_steps &= 0xFFFFFC00;
+	}
+	else {
+		display_steps = (display_steps*diagonal_multiplier)>>10;
+	}
+	xoff += (display_steps*dx) >> 10;
+	yoff += ((display_steps*dy) >> 10) + (get_hoff(raster_width))/(4*16);
+
+	if (on_left) {
+		sint32 left_off_steps = ( (VEHICLE_STEPS_PER_TILE - 2*ped_offset)*(uint16)raster_width ) & 0xFFFFFC00;
+
+		if (dx*dy==0) {
+			// diagonal
+			left_off_steps /= 2;
+		}
+		// turn left (dx,dy) increments
+		xoff += (left_off_steps*2*dy) >> 10;
+		yoff -= (left_off_steps*dx) >> (10+1);
+	}
+}
+
 void pedestrian_t::check_timeline_pedestrians()
 {
 	current_pedestrians.clear();
