@@ -29,6 +29,8 @@
 
 #include "tpl/slist_tpl.h"
 
+#include "ifc/simtestdriver.h"
+
 class koord3d;
 class koord;
 class way_builder_t;
@@ -38,6 +40,7 @@ class roadsign_desc_t;
 class way_desc_t;
 class route_t;
 class way_obj_desc_t;
+
 
 /****************************** helper functions: *****************************/
 
@@ -70,13 +73,37 @@ public:
 	bool is_init_network_safe() const OVERRIDE { return true; }
 };
 
+class tool_path_tool_t : public two_click_tool_t {
+public:
+	tool_path_tool_t(const uint16 tool_id) : two_click_tool_t(tool_id) {}
+	virtual const char * tile_work(player_t*, koord3d const &, koord3d const &)=0;
+	virtual void tile_mark(player_t*, koord3d const &,koord3d const &)=0;
+
+	const char * do_work(player_t *, const koord3d &start, const koord3d &end) override;
+	void mark_tiles(player_t *, const koord3d &start, const koord3d &end) override;
+	uint8 is_valid_pos(player_t *, const koord3d &, const char *&, const koord3d &) override {return 2;}
+	bool is_init_network_safe() const OVERRIDE { return true; }
+	virtual char const *get_tooltip(player_t const*) const override {return "";}
+};
+
+//call tool_remover along path
+class tool_path_remover_t : public tool_path_tool_t {
+public:
+	tool_path_remover_t() : tool_path_tool_t(TOOL_PATH_REMOVER | GENERAL_TOOL) {}
+	void tile_mark(player_t *, const koord3d &, koord3d const &) override;
+	const char * tile_work(player_t *, const koord3d &, koord3d const &) override;
+	char const* get_tooltip(player_t const*) const override { return translator::translate("Path Remove");}
+private:
+	koord3d get_work_pos(koord3d pos, koord3d start);
+};
+
+
 // alter land height tools
 class tool_raise_lower_base_t : public tool_t {
 protected:
 	bool is_dragging;
 	sint16 drag_height;
 
-	const char* drag(player_t*, koord k, sint16 h, int &n, bool allow_deep_water);
 	virtual sint16 get_drag_height(koord k) = 0;
 	bool check_dragging();
 
@@ -105,6 +132,9 @@ public:
 	bool is_grid_tool() const OVERRIDE {return true;}
 
 	bool update_pos_after_use() const OVERRIDE { return true; }
+
+	static const char* drag(player_t*, koord k, sint16 h, int &n, bool allow_deep_water);
+
 };
 
 class tool_raise_t : public tool_raise_lower_base_t {
@@ -123,6 +153,14 @@ public:
 	char const* check_pos(player_t*, koord3d) OVERRIDE;
 	char const* work(player_t*, koord3d) OVERRIDE;
 	sint16 get_drag_height(koord k) OVERRIDE;
+};
+
+class tool_flatten_path_t : public tool_path_tool_t{
+public:
+	tool_flatten_path_t() : tool_path_tool_t(TOOL_FLATTEN_PATH | GENERAL_TOOL) {}
+	void tile_mark(player_t *, const koord3d &, const koord3d &) override;
+	const char * tile_work(player_t *, const koord3d &, const koord3d &) override;
+	char const* get_tooltip(player_t const*) const override { return translator::translate("Flatten Path");}
 };
 
 /* slope tool definitions */
@@ -365,6 +403,19 @@ private:
 	char const* do_work(player_t*, koord3d const&, koord3d const&) OVERRIDE;
 	void mark_tiles(player_t*, koord3d const&, koord3d const&) OVERRIDE;
 	uint8 is_valid_pos(player_t*, koord3d const&, char const*&, koord3d const&) OVERRIDE;
+
+	bool check_ventilation(const way_builder_t &bauigel);
+	class vent_checker_t : public test_driver_t {
+		uint16 length_limit;
+	public:
+		vent_checker_t(uint16 max_length) {length_limit=max_length;}
+		bool check_next_tile(const grund_t *) const override;
+		waytype_t get_waytype() const override {return invalid_wt;}
+		ribi_t::ribi get_ribi(const grund_t *) const override {return ribi_t::all;}
+		int get_cost(const grund_t *, const sint32, koord from_pos) override;
+		bool is_target(const grund_t *, const grund_t *) override;
+	};
+
 public:
 	tool_build_tunnel_t();
 	char const* get_tooltip(player_t const*) const OVERRIDE;
@@ -765,6 +816,16 @@ public:
 	char const* get_tooltip(player_t const*) const OVERRIDE;
 	char const* move(player_t*, uint16 /* buttonstate */, koord3d) OVERRIDE;
 	bool move_has_effects() const OVERRIDE { return true; }
+	char const* work(player_t*, koord3d) OVERRIDE;
+	bool is_init_network_safe() const OVERRIDE { return true; }
+};
+
+
+// removes signal from tile
+class tool_remove_signal_t : public tool_t {
+public:
+	tool_remove_signal_t() : tool_t(TOOL_REMOVE_SIGNAL | GENERAL_TOOL) {}
+	char const* get_tooltip(player_t const*) const OVERRIDE { return translator::translate("remove signal"); }
 	char const* work(player_t*, koord3d) OVERRIDE;
 	bool is_init_network_safe() const OVERRIDE { return true; }
 };

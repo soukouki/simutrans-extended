@@ -925,14 +925,6 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 				}
 			}
 		}
-		if(tunnel_desc->get_length_limit()){
-			if(!welt->is_near_land(from->get_pos().x,from->get_pos().y,tunnel_desc->get_length_limit())){
-				return false;
-			}
-			if(!welt->is_near_land(to->get_pos().x,to->get_pos().y,tunnel_desc->get_length_limit())){
-				return false;
-			}
-		}
 	}
 
 	// universal check for crossings
@@ -1325,6 +1317,12 @@ void way_builder_t::do_terraforming()
 
 		grund_t *to = welt->lookup(route[i+1]);
 		uint8 to_slope = to->get_grund_hang();
+		sint64 cost = welt->get_settings().cst_set_slope;
+		// Check whether this is an attempt at land reclamation from the sea.
+		if (to->is_water() || from->is_water())
+		{
+			cost += welt->get_settings().cst_reclaim_land;
+		}
 		// calculate new slopes
 		check_terraforming(from, to, &from_slope, &to_slope);
 		bool changed = false;
@@ -1352,7 +1350,7 @@ void way_builder_t::do_terraforming()
 			changed = true;
 			if (last_terraformed != i) {
 				// charge player
-				player_t::book_construction_costs(player_builder, welt->get_settings().cst_set_slope, from->get_pos().get_2d(), ignore_wt);
+				player_t::book_construction_costs(player_builder, cost, from->get_pos().get_2d(), ignore_wt);
 			}
 		}
 		// change slope of to
@@ -1378,7 +1376,7 @@ void way_builder_t::do_terraforming()
 			}
 			changed = true;
 			// charge player
-			player_t::book_construction_costs(player_builder, welt->get_settings().cst_set_slope, to->get_pos().get_2d(), ignore_wt);
+			player_t::book_construction_costs(player_builder, cost, to->get_pos().get_2d(), ignore_wt);
 			last_terraformed = i+1; // do not pay twice for terraforming one tile
 		}
 		// recalc slope image of neighbors
