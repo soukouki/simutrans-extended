@@ -4639,7 +4639,7 @@ Tunnels must start on a straight double height slope.\n
 Tunnel must end on single way!
 Tunnels must end on a single way with a slope.
 Tunnel must start on single way!
-Tunnels must start on a single way, on a double height slope, and with a matching slope at the other end.
+This is not a suitable place for building this type of tunnel entrance.
 Tunnelboden
 Tunnel
 Tunnelmuendung
@@ -5405,7 +5405,7 @@ Unpowered
 this_vehicle_carries_no_good
 This vehicle carries no goods
 high_clearance_under_bridges_(no_low_bridges)
-High clearance under bridges (no low bridges)
+High clearance under bridges (no low bridges/tunnels)
 equipped_with
 Equipped with
 tilting_vehicle_equipment
@@ -6404,3 +6404,5 @@ Path Remove
 Remove path
 Flatten Path
 Flatten path
+Low bridge
+Low bridge/tunnel
