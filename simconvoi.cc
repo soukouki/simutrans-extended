@@ -2671,7 +2671,7 @@ void convoi_t::enter_depot(depot_t *dep)
 }
 
 
-void convoi_t::start()
+void convoi_t::start(depot_t* dep)
 {
 	if(state == INITIAL || state == ROUTING_1) {
 
@@ -2684,6 +2684,11 @@ void convoi_t::start()
 		{
 			home_depot = route.front();
 			front()->set_pos( home_depot );
+		}
+
+		if ((home_depot == koord3d::invalid) && dep)
+		{
+			home_depot = dep->get_pos();
 		}
 		// put the convoi on the depot ground, to get automatic rotation
 		// (vorfahren() will remove it anyway again.)
@@ -5092,6 +5097,10 @@ void convoi_t::show_info()
 	}
 }
 
+void convoi_t::show_detail()
+{
+	create_win( new convoi_detail_t(self), w_info, magic_convoi_detail+self.get_id() );
+}
 
 #if 0
 void convoi_t::info(cbuffer_t & buf) const
@@ -8786,7 +8795,7 @@ sint16 convoi_t::get_car_numbering(uint8 car_no) const
 	uint8 normal_car_cnt = 0; // It also serves as a flag that the locomotive counting is over
 
 	for (uint8 veh = 0; veh < car_no; veh++) {
-		if (vehicle[veh]->get_number_of_accommodation_classes()) {
+		if (vehicle[veh]->get_number_of_fare_classes()) {
 			normal_car_cnt++;
 		}
 		else {

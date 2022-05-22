@@ -46,6 +46,7 @@
 #include "obj/gebaeude.h"
 #include "obj/label.h"
 #include "obj/signal.h"
+#include "obj/pier.h"
 
 #include "gui/halt_info.h"
 #include "gui/halt_detail.h"
@@ -311,6 +312,7 @@ DBG_MESSAGE("haltestelle_t::remove()","removing segment from %d,%d,%d", pos.x, p
 				halt->recalc_status();
 			}
 			hausbauer_t::remove( player, gb, false );
+			parapet_t::unhide_all(pos);
 			bd = NULL;	// no need to recalc image
 			// removing the building could have destroyed this halt already
 			if (!halt.is_bound()){
@@ -1353,10 +1355,12 @@ void haltestelle_t::step()
 								passengers_walked = true;
 							}
 
-							if(tmp.get_zwischenziel().is_bound() && shortest_distance(get_next_pos(tmp.get_zwischenziel()->get_basis_pos()), get_next_pos(tmp.get_zwischenziel()->get_basis_pos())) <= max_walking_distance)
+							const uint32 distance_to_transfer = shortest_distance(get_next_pos(tmp.get_zwischenziel()->get_basis_pos()), get_next_pos(tmp.get_zwischenziel()->get_basis_pos()));
+							if(tmp.get_zwischenziel().is_bound() && distance_to_transfer <= max_walking_distance)
 							{
 								// Passengers can walk to their next transfer.
-								pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), tmp.menge);
+								const uint32 walking_time = welt->walking_time_tenths_from_distance(distance_to_transfer);
+								pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), tmp.menge, world()->get_seconds_to_ticks(walking_time * 6));
 								tmp.set_last_transfer(self);
 								tmp.get_zwischenziel()->liefere_an(tmp, 1);
 								passengers_walked = true;
@@ -1563,7 +1567,7 @@ uint32 haltestelle_t::reroute_goods(const uint8 catg)
 			   && !get_preferred_convoy(ware.get_zwischenziel(), 0, ware.get_class()).is_bound()
 			   && !get_preferred_line(ware.get_zwischenziel(), 0, ware.get_class()).is_bound())
 			{
-				pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge);
+				pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge, 12000);
 				ware.get_zwischenziel()->liefere_an(ware, 1); // start counting walking steps at 1 again
 				continue;
 			}
@@ -2256,6 +2260,44 @@ uint32 haltestelle_t::find_route(ware_t &ware, const uint32 previous_journey_tim
 	const uint32 journey_time = find_route(destination_halts_list, ware, previous_journey_time);
 	return journey_time;
 }
+
+
+bool haltestelle_t::can_serve(linehandle_t line) const
+{
+	if ((enables&PAX) && line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS)) {
+		return true;
+	}
+	if ((enables&POST) && line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_MAIL)) {
+		return true;
+	}
+	if ((enables&WARE) && get_capacity(2)) {
+		for (uint8 catg_index=goods_manager_t::INDEX_NONE+1; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
+			if( line->get_goods_catg_index().is_contained(catg_index) ) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool haltestelle_t::can_serve(convoihandle_t cnv) const
+{
+	if ((enables&PAX) && cnv->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS)) {
+		return true;
+	}
+	if ((enables&POST) && cnv->get_goods_catg_index().is_contained(goods_manager_t::INDEX_MAIL)) {
+		return true;
+	}
+	if ((enables&WARE) && get_capacity(2)) {
+		for (uint8 catg_index=goods_manager_t::INDEX_NONE+1; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
+			if( cnv->get_goods_catg_index().is_contained(catg_index) ) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 
 /**
  * Found route and station uncrowded
@@ -3118,7 +3160,7 @@ void haltestelle_t::starte_mit_route(ware_t ware, koord origin_pos)
 		// This is a bug which should be fixed.  The passenger has already walked here,
 		// and presumably does not wish to walk further... --neroden
 		// If this is within walking distance of the next transfer, and there is not a faster way there, walk there.
-		pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge);
+		pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge, 12000);
 		ware.set_last_transfer(self);
 		ware.get_zwischenziel()->liefere_an(ware, 1);
 		return;
@@ -3308,6 +3350,7 @@ void haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 		// Check whether, on arriving, passengers can walk to their next stop or ultimate destination more quickly than waiting for the next convoy.
 		straight_line_distance_destination = shortest_distance(get_init_pos(), ware.get_zielpos());
 		destination_is_within_coverage = straight_line_distance_destination <= (welt->get_settings().get_station_coverage() / 2);
+		const uint16 straight_line_distance_to_next_transfer = shortest_distance(get_init_pos(), ware.get_zwischenziel()->get_next_pos(get_next_pos(ware.get_zwischenziel()->get_basis_pos())));
 		if(is_within_walking_distance_of(ware.get_ziel()) || is_within_walking_distance_of(ware.get_zwischenziel()) || destination_is_within_coverage)
 		{
 			convoihandle_t dummy;
@@ -3316,7 +3359,6 @@ void haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 
 			const sint64 arrival_after_walking_to_destination = welt->get_seconds_to_ticks(welt->walking_time_tenths_from_distance((uint32)straight_line_distance_destination) * 6) + welt->get_ticks();
 
-			const uint16 straight_line_distance_to_next_transfer = shortest_distance(get_init_pos(), ware.get_zwischenziel()->get_next_pos(get_next_pos(ware.get_zwischenziel()->get_basis_pos())));
 			const sint64 arrival_after_walking_to_next_transfer = welt->get_seconds_to_ticks(welt->walking_time_tenths_from_distance((uint32)straight_line_distance_to_next_transfer) * 6) + welt->get_ticks();
 
 			sint64 extra_time_to_ultimate_destination = 0;
@@ -3349,7 +3391,7 @@ void haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 		{
 			// If this is within walking distance of the next transfer, and there is not a faster way there, walk there.
 		walking:
-			pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge);
+			pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge, welt->get_seconds_to_ticks(welt->walking_time_tenths_from_distance((uint32)straight_line_distance_to_next_transfer) * 6));
 			ware.set_last_transfer(self);
 			ware.get_zwischenziel()->liefere_an(ware, walked_between_stations + 1);
 			return;
@@ -3446,6 +3488,11 @@ void haltestelle_t::get_short_freight_info(cbuffer_t & buf) const
 void haltestelle_t::show_info()
 {
 	create_win( new halt_info_t(self), w_info, magic_halt_info + self.get_id() );
+}
+
+void haltestelle_t::show_detail()
+{
+	create_win(new halt_detail_t(self), w_info, magic_halt_detail + self.get_id());
 }
 
 
