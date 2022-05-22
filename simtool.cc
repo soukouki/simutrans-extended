@@ -1672,6 +1672,11 @@ bool tool_clear_reservation_t::exit( player_t * )
 	return true;
 }
 
+bool tool_clear_reservation_t::is_selected() const
+{
+	return schiene_t::show_reservations;
+}
+
 const char *tool_clear_reservation_t::work( player_t *player, koord3d pos )
 {
 	grund_t *gr = welt->lookup(pos);
@@ -8465,6 +8470,38 @@ const char *tool_make_stop_public_t::work( player_t *player, koord3d p )
 		}
 	}
 	return NULL;
+}
+
+
+const char* tool_remove_signal_t::work( player_t* player, koord3d pos )
+{
+	if(  grund_t *gr=welt->lookup(pos)  ) {
+		if(  signal_t *rs=gr->find<signal_t>()  ) {
+			const char *msg = rs->is_deletable(player);
+			if(msg) {
+				return msg;
+			}
+			DBG_MESSAGE("tool_remove_signal_t()",  "removing roadsign at (%s)", pos.get_str());
+			weg_t *weg = gr->get_weg(rs->get_desc()->get_wtyp());
+			if(  weg==NULL  &&  rs->get_desc()->get_wtyp()==tram_wt  ) {
+				weg = gr->get_weg(track_wt);
+			}
+
+			rs->cleanup(player);
+			delete rs;
+
+			// no need to update way if there is none
+			// may happen when public player builds a signal on a company track,
+			// the company goes bankrupt and the public player tries to remove the signal
+			if (weg) {
+				weg->count_sign();
+			}
+
+			return NULL;
+		}
+	}
+	// fail silent
+	return "";
 }
 
 
