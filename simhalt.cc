@@ -1567,7 +1567,7 @@ uint32 haltestelle_t::reroute_goods(const uint8 catg)
 			   && !get_preferred_convoy(ware.get_zwischenziel(), 0, ware.get_class()).is_bound()
 			   && !get_preferred_line(ware.get_zwischenziel(), 0, ware.get_class()).is_bound())
 			{
-				pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge, 6500);
+				pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge, 12000);
 				ware.get_zwischenziel()->liefere_an(ware, 1); // start counting walking steps at 1 again
 				continue;
 			}
@@ -3160,7 +3160,7 @@ void haltestelle_t::starte_mit_route(ware_t ware, koord origin_pos)
 		// This is a bug which should be fixed.  The passenger has already walked here,
 		// and presumably does not wish to walk further... --neroden
 		// If this is within walking distance of the next transfer, and there is not a faster way there, walk there.
-		pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge, 6500);
+		pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge, 12000);
 		ware.set_last_transfer(self);
 		ware.get_zwischenziel()->liefere_an(ware, 1);
 		return;

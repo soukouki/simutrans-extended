@@ -6341,7 +6341,7 @@ void karte_t::deposit_ware_at_destination(ware_t ware)
 				}
 				if (pos_pedestrians != koord3d::invalid)
 				{
-					pedestrian_t::generate_pedestrians_at(pos_pedestrians, menge, 2500);
+					pedestrian_t::generate_pedestrians_at(pos_pedestrians, menge, 6000);
 				}
 			}
 		}
@@ -7239,7 +7239,7 @@ sint32 karte_t::generate_passengers_or_mail(const goods_desc_t * wtyp)
 			// create pedestrians in the near area?
 			if(settings.get_random_pedestrians() && wtyp == goods_manager_t::passengers)
 			{
-				pedestrian_t::generate_pedestrians_at(origin_pos, units_this_step, 2500);
+				pedestrian_t::generate_pedestrians_at(origin_pos, units_this_step, 6000);
 			}
 			// We cannot do this on arrival, as the ware packets do not remember their origin building.
 			// However, as for the destination, this can be set when the passengers arrive.
