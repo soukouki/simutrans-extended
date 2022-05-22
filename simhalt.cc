@@ -46,6 +46,7 @@
 #include "obj/gebaeude.h"
 #include "obj/label.h"
 #include "obj/signal.h"
+#include "obj/pier.h"
 
 #include "gui/halt_info.h"
 #include "gui/halt_detail.h"
@@ -311,6 +312,7 @@ DBG_MESSAGE("haltestelle_t::remove()","removing segment from %d,%d,%d", pos.x, p
 				halt->recalc_status();
 			}
 			hausbauer_t::remove( player, gb, false );
+			parapet_t::unhide_all(pos);
 			bd = NULL;	// no need to recalc image
 			// removing the building could have destroyed this halt already
 			if (!halt.is_bound()){
@@ -2257,6 +2259,44 @@ uint32 haltestelle_t::find_route(ware_t &ware, const uint32 previous_journey_tim
 	return journey_time;
 }
 
+
+bool haltestelle_t::can_serve(linehandle_t line) const
+{
+	if ((enables&PAX) && line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS)) {
+		return true;
+	}
+	if ((enables&POST) && line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_MAIL)) {
+		return true;
+	}
+	if ((enables&WARE) && get_capacity(2)) {
+		for (uint8 catg_index=goods_manager_t::INDEX_NONE+1; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
+			if( line->get_goods_catg_index().is_contained(catg_index) ) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool haltestelle_t::can_serve(convoihandle_t cnv) const
+{
+	if ((enables&PAX) && cnv->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS)) {
+		return true;
+	}
+	if ((enables&POST) && cnv->get_goods_catg_index().is_contained(goods_manager_t::INDEX_MAIL)) {
+		return true;
+	}
+	if ((enables&WARE) && get_capacity(2)) {
+		for (uint8 catg_index=goods_manager_t::INDEX_NONE+1; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
+			if( cnv->get_goods_catg_index().is_contained(catg_index) ) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
 /**
  * Found route and station uncrowded
  */
@@ -3446,6 +3486,11 @@ void haltestelle_t::get_short_freight_info(cbuffer_t & buf) const
 void haltestelle_t::show_info()
 {
 	create_win( new halt_info_t(self), w_info, magic_halt_info + self.get_id() );
+}
+
+void haltestelle_t::show_detail()
+{
+	create_win(new halt_detail_t(self), w_info, magic_halt_detail + self.get_id());
 }
 
 
