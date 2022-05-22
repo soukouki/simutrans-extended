@@ -6024,7 +6024,8 @@ void karte_t::step()
 #ifdef MULTI_THREAD_CONVOYS
 	// Start the convoys' route finding as soon as possible after the convoys have been stepped: this maximises efficiency and concurrency.
 	// Since it is mostly route finding in the multi-threaded convoy step, it is safe to have this concurrent with everything but the single-
-	// threaded convoy step, and anything that modifies potential routes.
+	// threaded convoy step, and anything that modifies potential routes. It is also potentially a problem to have this running during a
+	// sync step: see here: https://forum.simutrans.com/index.php/topic,20994.0.html. However, this is uncertain.
 	// This also (probably) needs to start after the path explorer, as it can modify the reversing flag of schedules/lines. Starting before
 	// the path explorer would thus lead to a race condition.
 	start_convoy_threads();
