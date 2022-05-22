@@ -199,6 +199,10 @@ void pedestrian_t::generate_pedestrians_at(const koord3d k, uint32 count, uint32
 		return;
 	}
 
+	const uint32 TEMP_pedestrian_real_life_seconds = time_to_live / 1000u;
+	const uint32 TEMP_pedestrian_real_life_minutes = TEMP_pedestrian_real_life_seconds / 60u;
+	const uint32 TEMP_pedestrian_in_game_minutes = welt->ticks_to_tenths_of_minutes(time_to_live) / 10u;
+
 	grund_t* gr = welt->lookup(k);
 	if (gr) {
 		weg_t* weg = gr->get_weg(road_wt);
