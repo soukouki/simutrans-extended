@@ -48,6 +48,40 @@ scr_coord map_frame_t::screenpos;
 #define L_BUTTON_WIDTH (button_size.w)
 #define L_BUTTON_WIDTH_2 100
 
+/**
+ * Entries in factory legend: show color indicator + name
+ */
+class legend_entry_t : public gui_component_t
+{
+	gui_label_t label;
+	PIXVAL color;
+	bool filtered;
+public:
+	legend_entry_t(const char* text, PIXVAL c, bool filtered_=false) : label(text), color(c), filtered(filtered_) {
+		label.set_color(filtered ? SYSCOL_TEXT_INACTIVE : SYSCOL_TEXT);
+	}
+
+	scr_size get_min_size() const OVERRIDE
+	{
+		return  label.get_min_size() + scr_size(D_INDICATOR_BOX_WIDTH + D_H_SPACE, 0);
+	}
+
+	scr_size get_max_size() const OVERRIDE
+	{
+		return scr_size( scr_size::inf.w, label.get_max_size().h );
+	}
+
+	void draw(scr_coord offset) OVERRIDE
+	{
+		scr_coord pos = get_pos() + offset;
+		if (!filtered) {
+			display_ddd_box_clip_rgb( pos.x, pos.y+D_GET_CENTER_ALIGN_OFFSET(D_INDICATOR_BOX_HEIGHT,LINESPACE)-1, D_INDICATOR_BOX_WIDTH, D_INDICATOR_HEIGHT+2, SYSCOL_TEXT, SYSCOL_TEXT );
+		}
+		display_fillbox_wh_clip_rgb( pos.x+1, pos.y+D_GET_CENTER_ALIGN_OFFSET(D_INDICATOR_BOX_HEIGHT,LINESPACE), D_INDICATOR_BOX_WIDTH-2, D_INDICATOR_BOX_HEIGHT, color, false );
+		label.draw( pos+scr_size(D_INDICATOR_BOX_WIDTH+D_H_SPACE,0) );
+	}
+};
+
 gui_scrollpane_map_t::gui_scrollpane_map_t(gui_component_t* comp) : gui_scrollpane_t(comp)
 {
 	//set_allow_dragging(false);
