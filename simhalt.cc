@@ -3350,7 +3350,6 @@ void haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 		// Check whether, on arriving, passengers can walk to their next stop or ultimate destination more quickly than waiting for the next convoy.
 		straight_line_distance_destination = shortest_distance(get_init_pos(), ware.get_zielpos());
 		destination_is_within_coverage = straight_line_distance_destination <= (welt->get_settings().get_station_coverage() / 2);
-		const uint16 straight_line_distance_to_next_transfer = shortest_distance(get_init_pos(), ware.get_zwischenziel()->get_next_pos(get_next_pos(ware.get_zwischenziel()->get_basis_pos())));
 		if(is_within_walking_distance_of(ware.get_ziel()) || is_within_walking_distance_of(ware.get_zwischenziel()) || destination_is_within_coverage)
 		{
 			convoihandle_t dummy;
@@ -3358,7 +3357,7 @@ void haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 			sint64 best_arrival_time_transfer = ware.get_zwischenziel() != ware.get_ziel() ? calc_earliest_arrival_time_at(ware.get_zwischenziel(), dummy, ware.get_desc()->get_catg_index(), ware.g_class) : SINT64_MAX_VALUE;
 
 			const sint64 arrival_after_walking_to_destination = welt->get_seconds_to_ticks(welt->walking_time_tenths_from_distance((uint32)straight_line_distance_destination) * 6) + welt->get_ticks();
-
+			const uint16 straight_line_distance_to_next_transfer = shortest_distance(get_init_pos(), ware.get_zwischenziel()->get_next_pos(get_next_pos(ware.get_zwischenziel()->get_basis_pos())));
 			const sint64 arrival_after_walking_to_next_transfer = welt->get_seconds_to_ticks(welt->walking_time_tenths_from_distance((uint32)straight_line_distance_to_next_transfer) * 6) + welt->get_ticks();
 
 			sint64 extra_time_to_ultimate_destination = 0;
@@ -3391,6 +3390,7 @@ void haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 		{
 			// If this is within walking distance of the next transfer, and there is not a faster way there, walk there.
 		walking:
+			const uint16 straight_line_distance_to_next_transfer = shortest_distance(get_init_pos(), ware.get_zwischenziel()->get_next_pos(get_next_pos(ware.get_zwischenziel()->get_basis_pos())));
 			pedestrian_t::generate_pedestrians_at(get_basis_pos3d(), ware.menge, welt->get_seconds_to_ticks(welt->walking_time_tenths_from_distance((uint32)straight_line_distance_to_next_transfer) * 6));
 			ware.set_last_transfer(self);
 			ware.get_zwischenziel()->liefere_an(ware, walked_between_stations + 1);
