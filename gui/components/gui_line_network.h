@@ -116,7 +116,8 @@ public:
 	gui_line_network_t(linehandle_t line);
 	gui_line_network_t(convoihandle_t cnv);
 
-	void set_line(linehandle_t line_) { line = line_; init_table(); }
+	void set_line(linehandle_t line_) { line = line_; cnv=convoihandle_t(); init_table(); }
+	void set_convoy(convoihandle_t cnv_) { line=linehandle_t(); cnv=cnv_; init_table(); }
 
 	void init_table();
 

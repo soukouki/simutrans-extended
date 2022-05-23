@@ -144,6 +144,7 @@ void convoi_info_t::init(convoihandle_t cnv)
 	gui_frame_t::set_name(cnv->get_name());
 	gui_frame_t::set_owner(cnv->get_owner());
 	cont_times_history.set_convoy(cnv);
+	cont_line_network.set_convoy(cnv);
 
 	minimap_t::get_instance()->set_selected_cnv(cnv);
 	set_table_layout(1,0);
