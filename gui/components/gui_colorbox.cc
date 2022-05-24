@@ -174,7 +174,7 @@ void gui_capacity_bar_t::draw(scr_coord offset)
 gui_fluctuation_triangle_t::gui_fluctuation_triangle_t(sint64 value_, uint8 height_)
 {
 	value = value_;
-	height = height_;
+	height = min(GOODS_COLOR_BOX_HEIGHT,height_);
 	gui_component_t::set_size(scr_size(height, height));
 }
 
