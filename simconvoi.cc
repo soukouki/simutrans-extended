@@ -5268,11 +5268,6 @@ void convoi_t::get_freight_info(cbuffer_t & buf)
 	}
 }
 
-void convoi_t::get_freight_info_by_class(cbuffer_t &)
-{
-
-}
-
 
 void convoi_t::open_schedule_window( bool show )
 {

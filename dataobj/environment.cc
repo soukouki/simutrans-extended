@@ -623,7 +623,7 @@ void env_t::rdwr(loadsave_t *file)
 		file->rdwr_bool( env_t::show_depot_names );
 		file->rdwr_byte( show_factory_storage_bar );
 	}
-	if( file->is_version_ex_atleast(14, 53) ) {
+	if( file->is_version_ex_atleast(14, 54) ) {
 		file->rdwr_bool(scroll_infinite);
 	}
 
