@@ -1010,6 +1010,7 @@ air_vehicle_t::air_vehicle_t(koord3d pos, const vehicle_desc_t* desc, player_t* 
 	cnv = cn;
 	state = taxiing;
 	flying_height = 0;
+	go_on_ticks = 0;
 	target_height = pos.z;
 	runway_too_short = false;
 	airport_too_close_to_the_edge = false;
@@ -1109,6 +1110,14 @@ void air_vehicle_t::rdwr_from_convoi(loadsave_t *file)
 	file->rdwr_long(search_for_stop);
 	file->rdwr_long(touchdown);
 	file->rdwr_long(takeoff);
+	if (file->is_version_ex_atleast(14, 54))
+	{
+		file->rdwr_longlong(go_on_ticks); 
+	}
+	else
+	{
+		go_on_ticks = 0;
+	}
 }
 
 
