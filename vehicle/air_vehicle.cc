@@ -914,6 +914,7 @@ bool air_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uin
 			block_reserver( touchdown, search_for_stop+1, false );
 			//			std::cout << "unreserve 3: "<< state <<" "<< touchdown << std::endl;
 			state = taxiing;
+			restart_speed = kmh_to_speed(10);
 			return true;
 		}
 		restart_speed = 0;
