@@ -155,7 +155,11 @@ int air_vehicle_t::get_cost(const grund_t *gr, const sint32, koord)
 	else {
 		// only, if not flying ...
 		assert(w);
-
+		if (w->get_desc()->get_styp() == type_runway)
+		{
+			// Prefer to taxi on taxiways
+			costs += 5;
+		}
 		if(w->get_desc()->get_styp()==type_flat) {
 			costs += 3;
 		}
