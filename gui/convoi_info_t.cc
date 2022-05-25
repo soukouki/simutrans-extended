@@ -842,6 +842,9 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 		case 2: // times history
 			scroll_times_history.set_show_scroll_x( scroll_times_history.get_size().h > D_SCROLLBAR_HEIGHT );
 			break;
+		case 3: // notwork
+			scroll_line_network.set_show_scroll_x(scroll_line_network.get_size().h > D_SCROLLBAR_HEIGHT);
+			break;
 	}
 
 	// all gui stuff set => display it
