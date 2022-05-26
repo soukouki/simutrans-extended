@@ -248,7 +248,10 @@ void gui_line_transfer_guide_t::update()
 	{
 		for (uint32 i = 0; i < halt->registered_lines.get_count(); i++) {
 			const linehandle_t connected_line = halt->registered_lines[i];
+
+			// Exclude the same line
 			if (line.is_bound() && line==connected_line) continue;
+			if (cnv.is_bound() && cnv->get_line().is_bound() && cnv->get_line()==connected_line) continue;
 
 			if( filter_catg!=goods_manager_t::INDEX_NONE  &&  !connected_line->get_goods_catg_index().is_contained(filter_catg) ) {
 				continue; // filter not match
