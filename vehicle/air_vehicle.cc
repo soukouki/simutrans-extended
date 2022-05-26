@@ -827,7 +827,7 @@ bool air_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uin
 		state = awaiting_clearance_on_runway;
 		go_on_ticks = welt->get_ticks() + welt->get_seconds_to_ticks(10);
 		const ribi_t::ribi old_direction = direction;
-		direction = ribi_t::backward(calc_direction(route.at(route.get_count() - 2), route.back())); 
+		direction = ribi_t::backward(calc_direction(route.at(route.get_count() - 2), route.back()));
 		calc_image();
 		direction = old_direction;
 		restart_speed = 0;
@@ -966,7 +966,7 @@ void air_vehicle_t::leave_tile()
 	vehicle_t::leave_tile();
 	if (is_on_ground() && state == taxiing || state == taxiing_to_halt || state == looking_for_parking)
 	{
-		grund_t* gr = welt->lookup(get_pos()); 
+		grund_t* gr = welt->lookup(get_pos());
 		runway_t* w = (runway_t*)gr->get_weg(air_wt);
 		if (w)
 		{
