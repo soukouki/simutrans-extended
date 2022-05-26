@@ -808,8 +808,10 @@ bool air_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uin
 		// enforce on ground for taxiing
 		flying_height = 0;
 
-		// Do not enter reserved runway
-		if (rw && rw->get_desc()->get_styp() == type_runway && rw->is_reserved() && rw->get_reserved_convoi() != cnv->self)
+		// Do not enter reserved runway if not already on a runway (check whether already on a runway to avoid deadlocks)
+		const grund_t* gr_current = welt->lookup(get_pos());
+		const runway_t* rw_current = gr_current ? (runway_t*)gr_current->get_weg(air_wt) : nullptr;
+		if (rw && rw->get_desc()->get_styp() == type_runway && (!rw_current || rw_current->get_desc()->get_styp() != type_runway) && rw->is_reserved() && rw->get_reserved_convoi() != cnv->self)
 		{
 			restart_speed = 0;
 			return false;
@@ -827,7 +829,7 @@ bool air_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uin
 		state = awaiting_clearance_on_runway;
 		go_on_ticks = welt->get_ticks() + welt->get_seconds_to_ticks(10);
 		const ribi_t::ribi old_direction = direction;
-		direction = ribi_t::backward(calc_direction(route.at(route.get_count() - 2), route.back()));
+		direction = calc_direction(route.at(takeoff), route.at(takeoff - 1));
 		calc_image();
 		direction = old_direction;
 		restart_speed = 0;
