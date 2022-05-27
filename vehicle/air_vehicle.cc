@@ -673,14 +673,23 @@ int air_vehicle_t::block_reserver( uint32 start, uint32 end, bool reserve ) cons
 					end = i;
 					break;
 				}
-				// reserve to the minimum runway length...
-				uint16 current_runway_length_meters = ((i+1)-start)*welt->get_settings().get_meters_per_tile();
-				if(i>start && current_runway_length_meters>min_runway_length_meters){
-					success = success == 0 ? 0 : runway_meters >= min_runway_length_meters ? 1 : 2;
-					return success;
-				}
 
-				// end of runway? <- this will not be executed.
+				// We want to reserve the whole length of the runway to prevent conflicts.
+				// Currently, this only works on takeoff. Landing is more difficult, as
+				// the path finder does not necessarily find a path along the whole length of the runway.
+				/*
+				// reserve to the minimum runway length...
+				if (state != taxiing && state != awaiting_clearance_on_runway)
+				{
+					uint16 current_runway_length_meters = ((i + 1) - start) * welt->get_settings().get_meters_per_tile();
+					if (i > start&& current_runway_length_meters > min_runway_length_meters) {
+						success = success == 0 ? 0 : runway_meters >= min_runway_length_meters ? 1 : 2;
+						return success;
+					}
+				}
+				*/
+
+				// end of runway?
 				if(i>start  &&  ribi_t::is_single(sch1->get_ribi_unmasked())  )
 				{
 					runway_tiles = (i + 1) - start;
