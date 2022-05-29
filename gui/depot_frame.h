@@ -152,7 +152,7 @@ public:
 	/**
 	 * Will update the tabs (don't show empty ones).
 	 */
-	void update_tabs();
+	//void update_tabs();
 
 	/**
 	 * Set the window associated helptext
