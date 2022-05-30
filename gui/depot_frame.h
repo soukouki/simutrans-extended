@@ -8,6 +8,7 @@
 
 
 #include "gui_frame.h"
+#include "components/gui_label.h"
 #include "components/action_listener.h"
 #include "components/gui_button.h"
 #include "components/gui_combobox.h"
@@ -40,18 +41,19 @@ private:
 	 */
 	int icnv;
 
+	gui_aligned_container_t cont_top;
+	void init_table();
+
 	/**
 	 * Gui elements
 	 */
-	gui_label_t lb_convois;
+	gui_label_buf_t lb_convois;
 
 	/// contains the current translation of "new convoi"
 	const char* new_convoy_text;
 	gui_combobox_t convoy_selector;
 
 	button_t line_button; // goto line ...
-
-	gui_label_t lb_convoi_line;
 
 //	gui_speedbar_t sb_convoi_length;
 //	sint32 convoi_length_ok_sb, convoi_length_slower_sb, convoi_length_too_slow_sb, convoi_tile_length_sb, new_vehicle_length_sb;

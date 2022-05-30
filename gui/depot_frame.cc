@@ -98,8 +98,6 @@ depot_frame_t::depot_frame_t(depot_t* depot) :
 	gui_frame_t( translator::translate(depot->get_name()), depot->get_owner()),
 	depot(depot),
 	icnv(depot->convoi_count()-1),
-	lb_convois(NULL, SYSCOL_TEXT, gui_label_t::left),
-	lb_convoi_line("Serves Line:", SYSCOL_TEXT, gui_label_t::left),
 	convoy_assembler(depot->get_wegtyp(), depot->get_owner_nr(), check_way_electrified(true) )
 {
 DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->get_max_convoi_length());
@@ -114,57 +112,14 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 
 	line_type_flags = 0;
 
+	init_table();
+
 	/*
 	 * [CONVOY ASSEMBLER]
 	 */
 	convoy_assembler.set_depot_frame(this);
 	convoy_assembler.add_listener(this);
 	update_convoy();
-
-	/*
-	 * [SELECT]:
-	 */
-	add_component(&lb_convois);
-
-	convoy_selector.add_listener(this);
-	convoy_selector.set_highlight_color( color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
-	add_component(&convoy_selector);
-
-	/*
-	* [SELECT ROUTE]:
-	*/
-	line_selector.add_listener(this);
-	line_selector.set_highlight_color( color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
-	line_selector.set_wrapping(false);
-	line_selector.set_focusable(true);
-	add_component(&line_selector);
-
-	// goto line button
-	line_button.set_typ(button_t::arrowright);
-	line_button.set_targetpos3d(koord3d::invalid);
-	line_button.add_listener(this);
-	add_component(&line_button);
-
-	/*
-	* [CONVOI]
-	*/
-	add_component(&lb_convoi_line);
-
-	//sb_convoi_length.set_base( depot->get_max_convoi_length() * CARUNITS_PER_TILE / 2 - 1);
-	//sb_convoi_length.set_vertical(false);
-	//convoi_length_ok_sb = 0;
-	//convoi_length_slower_sb = 0;
-	//convoi_length_too_slow_sb = 0;
-	//convoi_tile_length_sb = 0;
-	//new_vehicle_length_sb = 0;
-	//if(  depot->get_typ() != depot_t::schiffdepot  &&  depot->get_typ() != depot_t::airdepot  ) { // no convoy length bar for ships or aircraft
-	//	sb_convoi_length.add_color_value(&convoi_tile_length_sb, COL_BROWN);
-	//	sb_convoi_length.add_color_value(&new_vehicle_length_sb, COL_DARK_GREEN);
-	//	sb_convoi_length.add_color_value(&convoi_length_ok_sb, COL_GREEN);
-	//	sb_convoi_length.add_color_value(&convoi_length_slower_sb, COL_ORANGE);
-	//	sb_convoi_length.add_color_value(&convoi_length_too_slow_sb, COL_RED);
-	//	add_component(&sb_convoi_length);
-	//}
 
 	/*
 	* [ACTIONS]
@@ -204,8 +159,6 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	update_data();
 	gui_frame_t::set_windowsize(size);
 
-	// text will be translated by ourselves (after update data)!
-	lb_convois.set_text_pointer(txt_convois);
 
 	check_way_electrified();
 	add_component(&img_bolt);
@@ -249,6 +202,73 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	set_resizemode(diagonal_resize);
 
 	depot->clear_command_pending();
+}
+
+void depot_frame_t::init_table()
+{
+	/*
+	 * [SELECT]:
+	 */
+	cont_top.set_table_layout(2,0);
+	// text will be translated by ourselves (after update data)!
+	cont_top.add_component(&lb_convois);
+
+	convoy_selector.set_highlight_color(color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
+	convoy_selector.add_listener(this);
+	cont_top.add_component(&convoy_selector);
+
+
+	/*
+	 * [SELECT ROUTE]:
+	 */
+	cont_top.add_table(2,1);
+	{
+		// goto line button
+		if (skinverwaltung_t::open_window) {
+			line_button.init(button_t::imagebox, NULL);
+			line_button.set_image(skinverwaltung_t::open_window->get_image_id(0));
+		}
+		else {
+			line_button.set_typ(button_t::arrowright);
+		}
+		line_button.add_listener(this);
+		cont_top.add_component(&line_button);
+		cont_top.new_component<gui_label_t>("Serves Line:");
+	}
+	cont_top.end_table();
+	cont_top.add_table(4,1)->set_spacing(scr_size(0,0));
+	{
+		line_selector.add_listener(this);
+		line_selector.set_highlight_color( color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
+		line_selector.set_wrapping(false);
+		line_selector.set_focusable(true);
+		cont_top.add_component(&line_selector);
+
+		// [freight type filter buttons]
+		filter_btn_all_pas.init(button_t::roundbox_state, NULL, scr_coord(0,0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+		filter_btn_all_pas.set_image(skinverwaltung_t::passengers->get_image_id(0));
+		filter_btn_all_pas.set_tooltip("filter_pas_line");
+		filter_btn_all_pas.add_listener(this);
+		cont_top.add_component(&filter_btn_all_pas);
+
+		filter_btn_all_mails.init(button_t::roundbox_state, NULL, scr_coord(0, 0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+		filter_btn_all_mails.set_image(skinverwaltung_t::mail->get_image_id(0));
+		filter_btn_all_mails.set_tooltip("filter_mail_line");
+		filter_btn_all_mails.add_listener(this);
+		cont_top.add_component(&filter_btn_all_mails);
+
+		filter_btn_all_freights.init(button_t::roundbox_state, NULL, scr_coord(0, 0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+		filter_btn_all_freights.set_image(skinverwaltung_t::goods->get_image_id(0));
+		filter_btn_all_freights.set_tooltip("filter_freight_line");
+		filter_btn_all_freights.add_listener(this);
+		cont_top.add_component(&filter_btn_all_freights);
+	}
+	cont_top.end_table();
+
+
+	// OVERHAULING TODO:  Remove after updating the entire depot frame
+	add_component(&cont_top);
+	cont_top.set_pos(scr_coord(D_MARGIN_LEFT,D_MARGIN_TOP));
 }
 
 //depot_frame_t::~depot_frame_t()
@@ -308,12 +328,6 @@ void depot_frame_t::layout(scr_size *size)
 	*  PREV and NEXT are small buttons - Label is adjusted to total width.
 	*/
 	const scr_coord_val SELECT_HEIGHT = D_BUTTON_HEIGHT;
-	const scr_coord_val selector_x = max(max(max(max(max(102, proportional_string_width(translator::translate("no convois")) + 4),
-		proportional_string_width(translator::translate("1 convoi")) + 4),
-		proportional_string_width(translator::translate("%d convois")) + 4),
-		proportional_string_width(translator::translate("convoi %d of %d")) + 4),
-		line_button.get_size().w + 2 + proportional_string_width(translator::translate(lb_convoi_line.get_text_pointer())) + 4
-		);
 
 	const scr_coord_val BUTTON_WIDTH_DEPOT = max(D_BUTTON_WIDTH,(win_size.w - D_MARGIN_LEFT - D_MARGIN_RIGHT - 4*D_H_SPACE) / 5);
 
@@ -377,47 +391,6 @@ void depot_frame_t::layout(scr_size *size)
 		size->h = TOTAL_HEIGHT;
 	}
 
-//	second_column_x = D_MARGIN_LEFT + (DEPOT_FRAME_WIDTH - D_MARGIN_LEFT - D_MARGIN_RIGHT) * 2 / 4;
-
-	/*
-	 * [SELECT]:
-	 */
-	lb_convois.set_pos(scr_coord(D_MARGIN_LEFT, SELECT_VSTART + 3));
-	lb_convois.set_width( selector_x - D_H_SPACE );
-
-	convoy_selector.set_pos(scr_coord(D_MARGIN_LEFT + selector_x, SELECT_VSTART));
-	convoy_selector.set_size(scr_size(DEPOT_FRAME_WIDTH - D_MARGIN_RIGHT - D_MARGIN_LEFT - selector_x, D_BUTTON_HEIGHT));
-	convoy_selector.set_max_size(scr_size(DEPOT_FRAME_WIDTH - D_MARGIN_RIGHT - D_MARGIN_LEFT - selector_x, LINESPACE * 13 + 2 + 16));
-
-	/*
-	 * [SELECT ROUTE]:
-	 */
-	line_button.set_pos(scr_coord(D_MARGIN_LEFT + selector_x, SELECT_VSTART + D_BUTTON_HEIGHT + (D_BUTTON_HEIGHT-D_POS_BUTTON_HEIGHT)/2));
-	lb_convoi_line.set_pos(scr_coord(D_MARGIN_LEFT + selector_x + line_button.get_size().w + 2, SELECT_VSTART + D_BUTTON_HEIGHT));
-	lb_convoi_line.set_width( selector_x - line_button.get_size().w - 2 - D_H_SPACE );
-
-	line_selector.set_pos(scr_coord(D_MARGIN_LEFT + selector_x*2, SELECT_VSTART + D_BUTTON_HEIGHT));
-	line_selector.set_size(scr_size(DEPOT_FRAME_WIDTH - D_MARGIN_RIGHT - D_MARGIN_LEFT - selector_x * 2 - D_BUTTON_HEIGHT*3, D_BUTTON_HEIGHT));
-	line_selector.set_max_size(scr_size(DEPOT_FRAME_WIDTH - D_MARGIN_RIGHT - D_MARGIN_LEFT - selector_x, LINESPACE * 13 + 2 + 16));
-
-	// [freight type filter buttons]
-	filter_btn_all_pas.init(button_t::roundbox_state, NULL, scr_coord(line_selector.get_pos() + scr_coord(line_selector.get_size().w, 0)), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
-	filter_btn_all_pas.set_image(skinverwaltung_t::passengers->get_image_id(0));
-	filter_btn_all_pas.set_tooltip("filter_pas_line");
-	add_component(&filter_btn_all_pas);
-	filter_btn_all_pas.add_listener(this);
-
-	filter_btn_all_mails.init(button_t::roundbox_state, NULL, scr_coord(filter_btn_all_pas.get_pos() + scr_coord(D_BUTTON_HEIGHT, 0)), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
-	filter_btn_all_mails.set_image(skinverwaltung_t::mail->get_image_id(0));
-	filter_btn_all_mails.set_tooltip("filter_mail_line");
-	filter_btn_all_mails.add_listener(this);
-	add_component(&filter_btn_all_mails);
-
-	filter_btn_all_freights.init(button_t::roundbox_state, NULL, scr_coord(filter_btn_all_mails.get_pos() + scr_coord(D_BUTTON_HEIGHT, 0)), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
-	filter_btn_all_freights.set_image(skinverwaltung_t::goods->get_image_id(0));
-	filter_btn_all_freights.set_tooltip("filter_freight_line");
-	filter_btn_all_freights.add_listener(this);
-	add_component(&filter_btn_all_freights);
 
 	/*
 	 * [CONVOI]
@@ -450,6 +423,11 @@ void depot_frame_t::layout(scr_size *size)
 
 	const scr_coord_val margin = 4;
 	img_bolt.set_pos(scr_coord(get_windowsize().w - skinverwaltung_t::electricity->get_image(0)->get_pic()->w - margin, margin));
+
+	// OVERHAULING TODO: Remove after updating the entire depot frame
+	if (size  &&  size->w == 0) {
+		cont_top.set_width( max(D_DEFAULT_WIDTH,size->w-D_MARGINS_X));
+	}
 }
 
 
@@ -485,7 +463,7 @@ static void get_line_list(const depot_t* depot, vector_tpl<linehandle_t>* lines)
 */
 void depot_frame_t::update_data()
 {
-	txt_convois.clear();
+	cbuffer_t &txt_convois = lb_convois.buf();
 	switch(depot->convoi_count()) {
 		case 0: {
 			txt_convois.printf( translator::translate("no convois") );
@@ -512,6 +490,7 @@ void depot_frame_t::update_data()
 			break;
 		}
 	}
+	lb_convois.update();
 
 	/*
 	* Reset counts and check for valid vehicles
@@ -533,6 +512,10 @@ void depot_frame_t::update_data()
 
 	// update the line selector
 	build_line_list();
+
+	// OVERHAULING TODO: Remove after updating the entire depot frame
+	cont_top.set_size(cont_top.get_min_size());
+	cont_top.set_width(get_min_windowsize().w-D_MARGINS_X);
 
 	convoy_assembler.update_data();
 }
