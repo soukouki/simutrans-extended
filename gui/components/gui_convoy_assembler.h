@@ -111,9 +111,6 @@ class gui_convoy_assembler_t :
 	// The selected convoy so far...
 	vector_tpl<const vehicle_desc_t *> vehicles;
 
-	// Last changed vehicle (added/deleted)
-	const vehicle_desc_t *last_changed_vehicle;
-
 	// If this is used for a depot, which depot_frame manages, else NULL
 	class depot_frame_t *depot_frame;
 	class replace_frame_t *replace_frame;
@@ -308,8 +305,6 @@ public:
 	inline void append_vehicle(const vehicle_desc_t* vb, bool in_front) {vehicles.insert_at(in_front?0:vehicles.get_count(),vb);}
 
 	/* Getter/setter methods */
-
-	inline const vehicle_desc_t *get_last_changed_vehicle() const {return last_changed_vehicle;}
 
 	inline void set_depot_frame(depot_frame_t *df) {depot_frame=df;}
 	inline void set_replace_frame(replace_frame_t *rf) {replace_frame=rf;}

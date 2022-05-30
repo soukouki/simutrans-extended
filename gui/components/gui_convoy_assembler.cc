@@ -46,7 +46,7 @@
 #define COL_EXCEED_AXLE_LOAD_LIMIT color_idx_to_rgb(COL_GREY3)
 
 gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_nr, bool electrified) :
-	way_type(wt), way_electrified(electrified), last_changed_vehicle(NULL),
+	way_type(wt), way_electrified(electrified),
 	depot_frame(NULL), replace_frame(NULL), placement(get_placement(wt)),
 	placement_dx(get_grid(wt).x * get_base_tile_raster_width() / 64 / 4),
 	grid(get_grid(wt)),
