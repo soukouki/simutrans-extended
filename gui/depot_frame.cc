@@ -684,9 +684,6 @@ bool depot_frame_t::action_triggered( gui_action_creator_t *comp, value_t p)
 				open_schedule_editor();
 				return true;
 			}
-		} else if(comp == &bt_destroy) {
-			depot->call_depot_tool( 'd', cnv, NULL );
-			update_convoy();
 		} else if(comp == &bt_sell) {
 			depot->call_depot_tool( 'v', cnv, NULL );
 			update_convoy();
@@ -702,13 +699,6 @@ bool depot_frame_t::action_triggered( gui_action_creator_t *comp, value_t p)
 		//		icnv = depot->convoi_count() - 1;
 		//	}
 		//	update_convoy();
-		//} else if(comp == &bt_new_line) {
-		//	depot->call_depot_tool( 'l', convoihandle_t(), NULL );
-		//	return true;
-		//} else if(comp == &bt_change_line) {
-		//	if(selected_line.is_bound()) {
-		//		create_win(new line_management_gui_t(selected_line, depot->get_owner()), w_info, (ptrdiff_t)selected_line.get_rep() );
-		//	}
 		//	return true;
 		}
 		else if(  comp == &line_button  ) {
@@ -824,13 +814,9 @@ bool depot_frame_t::infowin_event(const event_t *ev)
 {
 	// enable disable button actions
 	const bool action_allowed = welt->get_active_player() == depot->get_owner();
-	//bt_new_line.enable( action_allowed );
-	//bt_change_line.enable( action_allowed );
 	bt_copy_convoi.enable( action_allowed );
-	//bt_apply_line.enable( action_allowed );
 	bt_start.enable( action_allowed );
 	bt_schedule.enable( action_allowed );
-	bt_destroy.enable( action_allowed );
 	bt_sell.enable( action_allowed );
 	bt_details.enable(action_allowed);
 	line_button.enable( action_allowed );
@@ -918,13 +904,9 @@ bool depot_frame_t::infowin_event(const event_t *ev)
 void depot_frame_t::draw(scr_coord pos, scr_size size)
 {
 	const bool action_allowed = welt->get_active_player() == depot->get_owner();
-	//bt_new_line.enable( action_allowed );
-	//bt_change_line.enable( action_allowed );
 	bt_copy_convoi.enable( action_allowed );
-	//bt_apply_line.enable( action_allowed );
 	bt_start.enable( action_allowed );
 	bt_schedule.enable( action_allowed );
-	bt_destroy.enable( action_allowed );
 	bt_sell.enable( action_allowed );
 	line_button.enable( action_allowed );
 

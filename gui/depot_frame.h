@@ -58,7 +58,6 @@ private:
 
 	button_t bt_start;
 	button_t bt_schedule;
-	button_t bt_destroy;
 	button_t bt_sell;
 	button_t bt_details;
 
@@ -67,10 +66,7 @@ private:
 	/**
 	 * buttons for new route-management
 	 */
-//	button_t bt_new_line;
-//	button_t bt_change_line;
 	button_t bt_copy_convoi;
-//	button_t bt_apply_line;
 
 	// line selector stuff
 	/// contains the current translation of "<no schedule set>"
