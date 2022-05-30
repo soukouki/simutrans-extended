@@ -130,8 +130,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	cont_convoi.add_component(&lb_convoi_number);
 	cont_convoi.add_component(&convoi);
 
-	init_vehicle_bar_legends();
-
 	add_component(&lb_convoi_count);
 	add_component(&lb_convoi_count_fluctuation);
 	add_component(&lb_convoi_speed);
@@ -450,8 +448,8 @@ void gui_convoy_assembler_t::layout()
 	const scr_coord_val c2_x = c1_x + ((lb_size.w / 5) * 4) + D_V_SPACE;
 	const scr_coord_val c3_x = c2_x + ((lb_size.w / 4) * 3) + D_V_SPACE;
 
-	add_component(&tbl_vehicle_bar_legends);
-	tbl_vehicle_bar_legends.set_pos(scr_coord(c1_x, grid.y/2-LINESPACE));
+	add_component(&cont_vehicle_bar_legends);
+	cont_vehicle_bar_legends.set_pos(scr_coord(c1_x, grid.y/2-LINESPACE));
 
 	/*
 	 * [CONVOI]
@@ -1056,11 +1054,11 @@ void gui_convoy_assembler_t::draw(scr_coord parent_pos)
 		{
 			bt_class_management.set_visible(true);
 		}
-		tbl_vehicle_bar_legends.set_visible(false);
+		cont_vehicle_bar_legends.set_visible(false);
 	}
 	else {
 		tile_occupancy.set_visible(false);
-		tbl_vehicle_bar_legends.set_visible(true);
+		cont_vehicle_bar_legends.set_visible(true);
 	}
 
 	bt_outdated.pressed = show_outdated_vehicles;   // otherwise the button would not show depressed
@@ -2477,7 +2475,7 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 		{
 			buf.printf( "%s %s\n",
 				translator::translate("Retire. date:"),
-				translator::get_year_month( veh_type->get_retire_year_month())
+				translator::get_year_month( veh_type->get_retire_year_month() )
 			);
 			buf.append("\n");
 		}
@@ -3114,51 +3112,51 @@ void depot_convoi_capacity_t::draw(scr_coord offset)
 //	"cannot upgrade"
 //};
 
-void gui_convoy_assembler_t::init_vehicle_bar_legends()
+gui_vehicle_bar_legends_t::gui_vehicle_bar_legends_t()
 {
-	tbl_vehicle_bar_legends.set_table_layout(1,0);
-	tbl_vehicle_bar_legends.set_spacing( scr_size(D_H_SPACE,2) );
-	tbl_vehicle_bar_legends.add_table(3,1)->set_spacing( scr_size(D_H_SPACE,0) );
+	set_table_layout(1,0);
+	set_spacing( scr_size(D_H_SPACE,2) );
+	add_table(3,1)->set_spacing( scr_size(D_H_SPACE,0) );
 	{
-		tbl_vehicle_bar_legends.new_component<gui_margin_t>(D_MARGIN_LEFT + grid.x/2);
-		tbl_vehicle_bar_legends.new_component<gui_label_t>("Select vehicles to make up a convoy", SYSCOL_TEXT_INACTIVE);
-		tbl_vehicle_bar_legends.new_component<gui_fill_t>();
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_label_t>("Select vehicles to make up a convoy", SYSCOL_TEXT_INACTIVE);
+		new_component<gui_fill_t>();
 	}
-	tbl_vehicle_bar_legends.end_table();
-	tbl_vehicle_bar_legends.new_component<gui_margin_t>(0,LINESPACE);
+	end_table();
+	new_component<gui_margin_t>(0,LINESPACE);
 
-	tbl_vehicle_bar_legends.new_component<gui_label_t>("Vehicle bar shape legend:");
-	tbl_vehicle_bar_legends.add_table(6,0)->set_spacing( scr_size(D_H_SPACE,1) );
+	new_component<gui_label_t>("Vehicle bar shape legend:");
+	add_table(6,0)->set_spacing( scr_size(D_H_SPACE,1) );
 	{
-		tbl_vehicle_bar_legends.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		tbl_vehicle_bar_legends.new_component<gui_vehicle_bar_t>(COL_SAFETY)->set_flags(vehicle_desc_t::can_be_head, vehicle_desc_t::can_be_tail, 0);
-		tbl_vehicle_bar_legends.new_component<gui_label_t>("helptxt_one_direction", SYSCOL_TEXT_WEAK);
-		tbl_vehicle_bar_legends.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		tbl_vehicle_bar_legends.new_component<gui_vehicle_bar_t>(COL_SAFETY, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		tbl_vehicle_bar_legends.new_component<gui_label_t>("helptxt_powered_vehicle", SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_SAFETY)->set_flags(vehicle_desc_t::can_be_head, vehicle_desc_t::can_be_tail, 0);
+		new_component<gui_label_t>("helptxt_one_direction", SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_SAFETY, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>("helptxt_powered_vehicle", SYSCOL_TEXT_WEAK);
 
-		tbl_vehicle_bar_legends.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		tbl_vehicle_bar_legends.new_component<gui_vehicle_bar_t>(COL_SAFETY)->set_flags(vehicle_desc_t::can_be_head, vehicle_desc_t::can_be_head|vehicle_desc_t::can_be_tail, 1);
-		tbl_vehicle_bar_legends.new_component<gui_label_t>("helptxt_cab_head", SYSCOL_TEXT_WEAK);
-		tbl_vehicle_bar_legends.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		tbl_vehicle_bar_legends.new_component<gui_vehicle_bar_t>(COL_SAFETY, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 0);
-		tbl_vehicle_bar_legends.new_component<gui_label_t>("helptxt_unpowered_vehicle", SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_SAFETY)->set_flags(vehicle_desc_t::can_be_head, vehicle_desc_t::can_be_head|vehicle_desc_t::can_be_tail, 1);
+		new_component<gui_label_t>("helptxt_cab_head", SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_SAFETY, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 0);
+		new_component<gui_label_t>("helptxt_unpowered_vehicle", SYSCOL_TEXT_WEAK);
 
-		tbl_vehicle_bar_legends.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		tbl_vehicle_bar_legends.new_component<gui_vehicle_bar_t>(COL_SAFETY)->set_flags(vehicle_desc_t::can_be_tail, vehicle_desc_t::can_be_tail, 1);
-		tbl_vehicle_bar_legends.new_component<gui_label_t>("helptxt_can_be_at_rear", SYSCOL_TEXT_WEAK);
-		tbl_vehicle_bar_legends.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		tbl_vehicle_bar_legends.new_component<gui_image_t>(skinverwaltung_t::upgradable ? skinverwaltung_t::upgradable->get_image_id(1):IMG_EMPTY, 0, ALIGN_NONE, true);
-		tbl_vehicle_bar_legends.new_component<gui_label_t>("Upgrade available", SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_SAFETY)->set_flags(vehicle_desc_t::can_be_tail, vehicle_desc_t::can_be_tail, 1);
+		new_component<gui_label_t>("helptxt_can_be_at_rear", SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_image_t>(skinverwaltung_t::upgradable ? skinverwaltung_t::upgradable->get_image_id(1):IMG_EMPTY, 0, ALIGN_NONE, true);
+		new_component<gui_label_t>("Upgrade available", SYSCOL_TEXT_WEAK);
 
-		tbl_vehicle_bar_legends.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		tbl_vehicle_bar_legends.new_component<gui_vehicle_bar_t>(COL_SAFETY)->set_flags(0, 0, 0);
-		tbl_vehicle_bar_legends.new_component<gui_label_t>("helptxt_intermediate", SYSCOL_TEXT_WEAK);
-		tbl_vehicle_bar_legends.new_component<gui_margin_t>(D_MARGIN_LEFT);
-		tbl_vehicle_bar_legends.new_component<gui_image_t>(skinverwaltung_t::upgradable ? skinverwaltung_t::upgradable->get_image_id(0):IMG_EMPTY, 0, ALIGN_NONE, true);
-		tbl_vehicle_bar_legends.new_component<gui_label_t>(welt->get_settings().get_show_future_vehicle_info() ? "Upgrade is not available yet" : "Upgrade will be available in the near future", SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_SAFETY)->set_flags(0, 0, 0);
+		new_component<gui_label_t>("helptxt_intermediate", SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_image_t>(skinverwaltung_t::upgradable ? skinverwaltung_t::upgradable->get_image_id(0):IMG_EMPTY, 0, ALIGN_NONE, true);
+		new_component<gui_label_t>(world()->get_settings().get_show_future_vehicle_info() ? "Upgrade is not available yet" : "Upgrade will be available in the near future", SYSCOL_TEXT_WEAK);
 	}
-	tbl_vehicle_bar_legends.end_table();
+	end_table();
 
-	tbl_vehicle_bar_legends.set_size(tbl_vehicle_bar_legends.get_size());
+	set_size(get_size());
 }

@@ -8,6 +8,7 @@
 
 
 #include "action_listener.h"
+#include "gui_aligned_container.h"
 #include "gui_button.h"
 #include "gui_combobox.h"
 #include "gui_divider.h"
@@ -65,6 +66,12 @@ public:
 	depot_convoi_capacity_t();
 	void set_totals(uint32 pax, uint32 standing_pax, uint32 mail, uint32 goods, uint8 pax_classes, uint8 mail_classes, int good_0, int good_1, int good_2, int good_3, int good_4, uint32 good_0_amount, uint32 good_1_amount, uint32 good_2_amount, uint32 good_3_amount, uint32 good_4_amount, uint32 rest_good, uint8 catering, bool tpo);
 	void draw(scr_coord offset);
+};
+
+class gui_vehicle_bar_legends_t : public gui_aligned_container_t
+{
+public:
+	gui_vehicle_bar_legends_t();
 };
 
 /**
@@ -214,8 +221,7 @@ class gui_convoy_assembler_t :
 	cbuffer_t text_convoi_axle_load;
 	char txt_convoi_count_fluctuation[6];
 
-	gui_aligned_container_t tbl_vehicle_bar_legends;
-	void init_vehicle_bar_legends();
+	gui_vehicle_bar_legends_t cont_vehicle_bar_legends;
 
 	scr_coord_val second_column_x; // x position of the second text column
 
