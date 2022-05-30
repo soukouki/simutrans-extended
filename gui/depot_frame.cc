@@ -803,7 +803,7 @@ bool depot_frame_t::action_triggered( gui_action_creator_t *comp, value_t p)
 			build_line_list();
 			return true;
 		}
-			else if (comp == &filter_btn_all_freights) {
+		else if (comp == &filter_btn_all_freights) {
 			line_type_flags ^= (1 << simline_t::all_freight);
 			filter_btn_all_freights.pressed = line_type_flags & (1 << simline_t::all_freight);
 			build_line_list();
