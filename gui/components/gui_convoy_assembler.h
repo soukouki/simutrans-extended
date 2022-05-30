@@ -294,7 +294,7 @@ public:
 	/* The gui_component_t interface */
 	virtual void draw(scr_coord offset);
 
-	bool infowin_event(const event_t *ev);
+	bool infowin_event(const event_t *ev) OVERRIDE;
 
 	inline void clear_convoy() {vehicles.clear();}
 
