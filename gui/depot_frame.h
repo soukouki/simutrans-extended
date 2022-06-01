@@ -41,7 +41,6 @@ private:
 	 */
 	int icnv;
 
-	gui_aligned_container_t cont_top;
 	void init_table();
 
 	/**
@@ -93,7 +92,7 @@ private:
 
 	gui_convoy_assembler_t convoy_assembler;
 
-	gui_image_t img_bolt;
+	//gui_image_t img_bolt; // This has been broken for a long time in extended
 
 	linehandle_t selected_line, last_selected_line;
 

@@ -121,38 +121,6 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	convoy_assembler.add_listener(this);
 	update_convoy();
 
-	/*
-	* [ACTIONS]
-	*/
-	bt_start.set_typ(button_t::roundbox);
-	bt_start.add_listener(this);
-	bt_start.set_tooltip("Start the selected vehicle(s)");
-	add_component(&bt_start);
-
-	bt_schedule.set_typ(button_t::roundbox);
-	bt_schedule.add_listener(this);
-	bt_schedule.set_tooltip("Give the selected vehicle(s) an individual schedule"); // translated to "Edit the selected vehicle(s) individual schedule or assigned line"
-	add_component(&bt_schedule);
-
-	bt_copy_convoi.set_typ(button_t::roundbox);
-	bt_copy_convoi.add_listener(this);
-	bt_copy_convoi.set_tooltip("Copy the selected convoi and its schedule or line");
-	add_component(&bt_copy_convoi);
-
-	bt_sell.set_typ(button_t::roundbox);
-	bt_sell.add_listener(this);
-	set_resale_value();
-	add_component(&bt_sell);
-
-	bt_details.init(button_t::roundbox, "Details");
-	if (skinverwaltung_t::open_window) {
-		bt_details.set_image(skinverwaltung_t::open_window->get_image_id(0));
-		bt_details.set_image_position_right(true);
-	}
-	bt_details.add_listener(this);
-	bt_details.set_tooltip("Open the convoy detail window");
-	bt_details.disable();
-	add_component(&bt_details);
 
 	scr_size size(0,0);
 	layout(&size);
@@ -161,7 +129,7 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 
 
 	check_way_electrified();
-	add_component(&img_bolt);
+	//add_component(&img_bolt); // This has been broken for a long time in extended
 
 	add_component(&convoy_assembler);
 
@@ -209,66 +177,105 @@ void depot_frame_t::init_table()
 	/*
 	 * [SELECT]:
 	 */
-	cont_top.set_table_layout(2,0);
-	// text will be translated by ourselves (after update data)!
-	cont_top.add_component(&lb_convois);
+	set_table_layout(1,0);
+	set_margin(scr_size(0,0), scr_size(0,0));
 
-	convoy_selector.set_highlight_color(color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
-	convoy_selector.add_listener(this);
-	cont_top.add_component(&convoy_selector);
+	add_table(1,0)->set_margin(scr_size(D_MARGIN_LEFT, D_MARGIN_TOP), scr_size(D_MARGIN_RIGHT, 0));
+		add_table(2,2);
+		{
+			// text will be translated by ourselves (after update data)!
+			add_component(&lb_convois);
 
+			convoy_selector.set_highlight_color(color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
+			convoy_selector.add_listener(this);
+			add_component(&convoy_selector);
 
-	/*
-	 * [SELECT ROUTE]:
-	 */
-	cont_top.add_table(2,1);
-	{
-		// goto line button
-		if (skinverwaltung_t::open_window) {
-			line_button.init(button_t::imagebox, NULL);
-			line_button.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			/*
+			 * [SELECT ROUTE]:
+			 */
+			add_table(2,1);
+			{
+				// goto line button
+				if (skinverwaltung_t::open_window) {
+					line_button.init(button_t::imagebox, NULL);
+					line_button.set_image(skinverwaltung_t::open_window->get_image_id(0));
+				}
+				else {
+					line_button.set_typ(button_t::arrowright);
+				}
+				line_button.add_listener(this);
+				add_component(&line_button);
+				new_component<gui_label_t>("Serves Line:");
+			}
+			end_table();
+
+			add_table(4,1)->set_spacing(scr_size(0,0));
+			{
+				line_selector.add_listener(this);
+				line_selector.set_highlight_color( color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
+				line_selector.set_wrapping(false);
+				line_selector.set_focusable(true);
+				add_component(&line_selector);
+
+				// [freight type filter buttons]
+				filter_btn_all_pas.init(button_t::roundbox_state, NULL, scr_coord(0,0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+				filter_btn_all_pas.set_image(skinverwaltung_t::passengers->get_image_id(0));
+				filter_btn_all_pas.set_tooltip("filter_pas_line");
+				filter_btn_all_pas.add_listener(this);
+				add_component(&filter_btn_all_pas);
+
+				filter_btn_all_mails.init(button_t::roundbox_state, NULL, scr_coord(0,0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+				filter_btn_all_mails.set_image(skinverwaltung_t::mail->get_image_id(0));
+				filter_btn_all_mails.set_tooltip("filter_mail_line");
+				filter_btn_all_mails.add_listener(this);
+				add_component(&filter_btn_all_mails);
+
+				filter_btn_all_freights.init(button_t::roundbox_state, NULL, scr_coord(0,0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+				filter_btn_all_freights.set_image(skinverwaltung_t::goods->get_image_id(0));
+				filter_btn_all_freights.set_tooltip("filter_freight_line");
+				filter_btn_all_freights.add_listener(this);
+				add_component(&filter_btn_all_freights);
+			}
+			end_table();
 		}
-		else {
-			line_button.set_typ(button_t::arrowright);
-		}
-		line_button.add_listener(this);
-		cont_top.add_component(&line_button);
-		cont_top.new_component<gui_label_t>("Serves Line:");
-	}
-	cont_top.end_table();
-	cont_top.add_table(4,1)->set_spacing(scr_size(0,0));
-	{
-		line_selector.add_listener(this);
-		line_selector.set_highlight_color( color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
-		line_selector.set_wrapping(false);
-		line_selector.set_focusable(true);
-		cont_top.add_component(&line_selector);
+		end_table();
 
-		// [freight type filter buttons]
-		filter_btn_all_pas.init(button_t::roundbox_state, NULL, scr_coord(0,0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
-		filter_btn_all_pas.set_image(skinverwaltung_t::passengers->get_image_id(0));
-		filter_btn_all_pas.set_tooltip("filter_pas_line");
-		filter_btn_all_pas.add_listener(this);
-		cont_top.add_component(&filter_btn_all_pas);
+		/*
+		* [ACTIONS]
+		*/
+		add_table(5,1)->set_force_equal_columns(true);
+			bt_start.init(button_t::roundbox | button_t::flexible, "Start");
+			bt_start.add_listener(this);
+			bt_start.set_tooltip("Start the selected vehicle(s)");
+			add_component(&bt_start);
 
-		filter_btn_all_mails.init(button_t::roundbox_state, NULL, scr_coord(0, 0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
-		filter_btn_all_mails.set_image(skinverwaltung_t::mail->get_image_id(0));
-		filter_btn_all_mails.set_tooltip("filter_mail_line");
-		filter_btn_all_mails.add_listener(this);
-		cont_top.add_component(&filter_btn_all_mails);
+			bt_schedule.init(button_t::roundbox | button_t::flexible, "Fahrplan");
+			bt_schedule.add_listener(this);
+			bt_schedule.set_tooltip("Give the selected vehicle(s) an individual schedule"); // translated to "Edit the selected vehicle(s) individual schedule or assigned line"
+			add_component(&bt_schedule);
 
-		filter_btn_all_freights.init(button_t::roundbox_state, NULL, scr_coord(0, 0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
-		filter_btn_all_freights.set_image(skinverwaltung_t::goods->get_image_id(0));
-		filter_btn_all_freights.set_tooltip("filter_freight_line");
-		filter_btn_all_freights.add_listener(this);
-		cont_top.add_component(&filter_btn_all_freights);
-	}
-	cont_top.end_table();
+			bt_copy_convoi.init(button_t::roundbox | button_t::flexible, "Copy Convoi");
+			bt_copy_convoi.add_listener(this);
+			bt_copy_convoi.set_tooltip("Copy the selected convoi and its schedule or line");
+			add_component(&bt_copy_convoi);
 
+			bt_sell.init(button_t::roundbox | button_t::flexible, "verkaufen");
+			bt_sell.add_listener(this);
+			bt_sell.set_tooltip("Sell the selected vehicle(s)");
+			set_resale_value();
+			add_component(&bt_sell);
 
-	// OVERHAULING TODO:  Remove after updating the entire depot frame
-	add_component(&cont_top);
-	cont_top.set_pos(scr_coord(D_MARGIN_LEFT,D_MARGIN_TOP));
+			bt_details.init(button_t::roundbox | button_t::flexible, "Details");
+			if (skinverwaltung_t::open_window) {
+				bt_details.set_image(skinverwaltung_t::open_window->get_image_id(0));
+				bt_details.set_image_position_right(true);
+			}
+			bt_details.add_listener(this);
+			bt_details.set_tooltip("Open the convoy detail window");
+			bt_details.disable();
+			add_component(&bt_details);
+		end_table();
+	end_table();
 }
 
 //depot_frame_t::~depot_frame_t()
@@ -358,9 +365,7 @@ void depot_frame_t::layout(scr_size *size)
 	/*
 	*  Now we can do the first vertical adjustment:
 	*/
-	const scr_coord_val SELECT_VSTART = D_MARGIN_TOP;
-	const scr_coord_val ASSEMBLER_VSTART = SELECT_VSTART + SELECT_HEIGHT + LINESPACE + D_V_SPACE;
-	const scr_coord_val ACTIONS_VSTART = ASSEMBLER_VSTART + convoy_assembler.get_convoy_height() + LINESPACE*5 + D_V_SPACE;
+	const scr_coord_val ASSEMBLER_VSTART = D_MARGIN_TOP + SELECT_HEIGHT + LINESPACE + D_V_SPACE + D_BUTTON_HEIGHT;
 
 	/*
 	* Now we determine the row/col layout for the panel and the total panel
@@ -395,39 +400,17 @@ void depot_frame_t::layout(scr_size *size)
 	/*
 	 * [CONVOI]
 	 */
-	convoy_assembler.set_pos(scr_coord(0,ASSEMBLER_VSTART));
 	convoy_assembler.set_size(scr_size(DEPOT_FRAME_WIDTH,convoy_assembler.get_height()));
 	convoy_assembler.layout();
 
 	/*
 	 * [ACTIONS]
 	 */
-	bt_start.set_pos(scr_coord(D_MARGIN_LEFT, ACTIONS_VSTART));
-	bt_start.set_size(scr_size(BUTTON_WIDTH_DEPOT, D_BUTTON_HEIGHT));
-	bt_start.set_text("Start");
 
-	bt_schedule.set_pos(scr_coord(D_MARGIN_LEFT + BUTTON_WIDTH_DEPOT + D_H_SPACE, ACTIONS_VSTART));
-	bt_schedule.set_size(scr_size(BUTTON_WIDTH_DEPOT, D_BUTTON_HEIGHT));
-	bt_schedule.set_text("Fahrplan");
-
-	bt_copy_convoi.set_pos(scr_coord(D_MARGIN_LEFT + (BUTTON_WIDTH_DEPOT + D_H_SPACE) * 2, ACTIONS_VSTART));
-	bt_copy_convoi.set_size(scr_size(BUTTON_WIDTH_DEPOT, D_BUTTON_HEIGHT));
-	bt_copy_convoi.set_text("Copy Convoi");
-
-	bt_sell.set_pos(scr_coord(D_MARGIN_LEFT + (BUTTON_WIDTH_DEPOT + D_H_SPACE) * 3, ACTIONS_VSTART));
-	bt_sell.set_size(scr_size(BUTTON_WIDTH_DEPOT, D_BUTTON_HEIGHT));
 	set_resale_value();
 
-	bt_details.set_pos(scr_coord(D_MARGIN_LEFT + (BUTTON_WIDTH_DEPOT + D_H_SPACE) * 4, ACTIONS_VSTART));
-	bt_details.set_size(scr_size(BUTTON_WIDTH_DEPOT, D_BUTTON_HEIGHT));
-
-	const scr_coord_val margin = 4;
-	img_bolt.set_pos(scr_coord(get_windowsize().w - skinverwaltung_t::electricity->get_image(0)->get_pic()->w - margin, margin));
-
-	// OVERHAULING TODO: Remove after updating the entire depot frame
-	if (size  &&  size->w == 0) {
-		cont_top.set_width( max(D_DEFAULT_WIDTH,size->w-D_MARGINS_X));
-	}
+	//const scr_coord_val margin = 4;
+	//img_bolt.set_pos(scr_coord(get_windowsize().w - skinverwaltung_t::electricity->get_image(0)->get_pic()->w - margin, margin));
 }
 
 
@@ -514,8 +497,7 @@ void depot_frame_t::update_data()
 	build_line_list();
 
 	// OVERHAULING TODO: Remove after updating the entire depot frame
-	cont_top.set_size(cont_top.get_min_size());
-	cont_top.set_width(get_min_windowsize().w-D_MARGINS_X);
+	set_width(get_min_windowsize().w-D_MARGINS_X);
 
 	convoy_assembler.update_data();
 }
@@ -891,9 +873,9 @@ void depot_frame_t::draw(scr_coord pos, scr_size size)
 	bt_start.enable( action_allowed );
 	bt_schedule.enable( action_allowed );
 	bt_sell.enable( action_allowed );
-	line_button.enable( action_allowed );
 
 	convoihandle_t cnv = depot->get_convoi(icnv);
+	line_button.enable( action_allowed && cnv.is_bound() );
 	// check for data inconsistencies (can happen with withdraw-all and vehicle in depot)
 	const vector_tpl<gui_image_list_t::image_data_t*>* convoi_pics = convoy_assembler.get_convoi_pics();
 	if(  !cnv.is_bound()  &&  !convoi_pics->empty()  ) {
