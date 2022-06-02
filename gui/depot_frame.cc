@@ -110,6 +110,7 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	new_convoy_text      = translator::translate("new convoi");
 	promote_to_line_text = translator::translate("<promote to line>");
 
+	scr_size size(0,0);
 	line_type_flags = 0;
 
 	init_table();
@@ -120,12 +121,6 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	convoy_assembler.set_depot_frame(this);
 	convoy_assembler.add_listener(this);
 	update_convoy();
-
-
-	scr_size size(0,0);
-	layout(&size);
-	update_data();
-	gui_frame_t::set_windowsize(size);
 
 
 	check_way_electrified();
@@ -166,8 +161,9 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	}
 	convoy_assembler.set_traction_types(txt_traction_types.get_str());
 
-	// Hajo: Trigger layouting
-	set_resizemode(diagonal_resize);
+	reset_min_windowsize();
+	set_windowsize(size);
+	set_resizemode( diagonal_resize );
 
 	depot->clear_command_pending();
 }
@@ -874,6 +870,7 @@ bool depot_frame_t::infowin_event(const event_t *ev)
 void depot_frame_t::draw(scr_coord pos, scr_size size)
 {
 	const bool action_allowed = welt->get_active_player() == depot->get_owner();
+
 	bt_copy_convoi.enable( action_allowed );
 	bt_start.enable( action_allowed );
 	bt_schedule.enable( action_allowed );
