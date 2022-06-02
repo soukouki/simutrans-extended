@@ -72,7 +72,7 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	lb_livery_counter(NULL, SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left),
 	convoi_pics(depot_t::get_max_convoy_length(wt)),
 	convoi(&convoi_pics),
-	scrolly_convoi(&cont_convoi),
+	scrolly_convoi(&cont_convoi, true, false),
 	pas(&pas_vec),
 	pas2(&pas2_vec),
 	electrics(&electrics_vec),
@@ -459,8 +459,6 @@ void gui_convoy_assembler_t::layout()
 
 	cont_convoi.set_size(scr_size(get_convoy_clist_width(), grid.y + 5 + 4));
 	scrolly_convoi.set_size(scr_size(size.w - D_MARGIN_LEFT - D_MARGIN_RIGHT, cont_convoi.get_size().h + (3+D_SCROLLBAR_HEIGHT)*(get_convoy_clist_width() >= size.w-D_MARGIN_LEFT-D_MARGIN_RIGHT) ));
-	scrolly_convoi.set_show_scroll_x(true);
-	scrolly_convoi.set_show_scroll_y(false);
 	scrolly_convoi.set_scroll_discrete_x(false);
 	scrolly_convoi.set_size_corner(false);
 	scrolly_convoi.set_pos(scr_coord(D_H_SPACE,y));
