@@ -2017,7 +2017,6 @@ void gui_convoy_assembler_t::update_tabs()
 
 	bool one = false;
 
-	scrolly_pas.set_show_scroll_x(false);
 	scrolly_pas.set_size_corner(false);
 	// add only if there are any
 	if(!pas_vec.empty()) {
@@ -2025,7 +2024,6 @@ void gui_convoy_assembler_t::update_tabs()
 		one = true;
 	}
 
-	scrolly_pas2.set_show_scroll_x(false);
 	scrolly_pas2.set_size_corner(false);
 	// add only if there are any
 	if (!pas2_vec.empty()) {
@@ -2033,7 +2031,6 @@ void gui_convoy_assembler_t::update_tabs()
 		one = true;
 	}
 
-	scrolly_electrics.set_show_scroll_x(false);
 	scrolly_electrics.set_size_corner(false);
 	// add only if there are any trolleybuses
 	const uint16 shifter = 1 << vehicle_desc_t::electric;
@@ -2044,7 +2041,6 @@ void gui_convoy_assembler_t::update_tabs()
 		one = true;
 	}
 
-	scrolly_loks.set_show_scroll_x(false);
 	scrolly_loks.set_size_corner(false);
 	// add, if waggons are there ...
 	if (!loks_vec.empty() || !waggons_vec.empty()) {
@@ -2052,7 +2048,6 @@ void gui_convoy_assembler_t::update_tabs()
 		one = true;
 	}
 
-	scrolly_waggons.set_show_scroll_x(false);
 	scrolly_waggons.set_size_corner(false);
 	// only add, if there are waggons
 	if (!waggons_vec.empty()) {
