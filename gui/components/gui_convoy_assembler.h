@@ -286,7 +286,7 @@ public:
 	 */
 	void layout();
 
-	bool action_triggered( gui_action_creator_t *comp, value_t extra);
+	bool action_triggered( gui_action_creator_t *comp, value_t extra) OVERRIDE;
 
 	/**
 	 * Update texts, image lists and buttons according to the current state.
