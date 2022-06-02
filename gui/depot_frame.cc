@@ -298,57 +298,8 @@ void depot_frame_t::layout(scr_size *size)
 {
 	scr_size win_size = (size!=NULL)? *size : get_windowsize();
 
-	/*
-	* These parameter are adjusted to resolution.
-	* - Some extra space looks nicer.
-	grid.x = depot->get_x_grid() * get_base_tile_raster_width() / 64 + 4;
-	grid.y = depot->get_y_grid() * get_base_tile_raster_width() / 64 + 6;
-	placement.x = depot->get_x_placement() * get_base_tile_raster_width() / 64 + 2;
-	placement.y = depot->get_y_placement() * get_base_tile_raster_width() / 64 + 2;
-	grid_dx = depot->get_x_grid() * get_base_tile_raster_width() / 64 / 2;
-	placement_dx = depot->get_x_grid() * get_base_tile_raster_width() / 64 / 4;
-	*/
-
-	/*
-	*	Dialog format:
-	*
-	*	Main structure are these parts from top to bottom:
-	*
-	*	    [SELECT]		convoi-selector
-	*	    [CONVOI]		current convoi (*)
-	*	    [ACTIONS]		convoi action buttons
-	*	    [PANEL]		vehicle panel (*)
-	*	    [VINFO]		vehicle infotext (*)
-	*
-	*	(*) In CONVOI ASSEMBLER
-	*
-	*
-	*	Structure of [SELECT] is:
-	*
-	*	    [Info]
-	*	    [PREV][LABEL][NEXT]
-	*
-	*  PREV and NEXT are small buttons - Label is adjusted to total width.
-	*/
-	const scr_coord_val SELECT_HEIGHT = D_BUTTON_HEIGHT;
-
-	const scr_coord_val BUTTON_WIDTH_DEPOT = max(D_BUTTON_WIDTH,(win_size.w - D_MARGIN_LEFT - D_MARGIN_RIGHT - 4*D_H_SPACE) / 5);
-
-	/*
-	*	Structure of [CONVOI] is a image_list and an infos:
-	*
-	*	    [List]
-	*	    [Info]
-	*
-	* The image list is horizontally "condensed".
-	*/
-
 	// Vehicle parameter display for 2 columns.
 	convoy_assembler.set_convoy_tabs_skip(D_BUTTON_HEIGHT);
-
-	/*
-	*	Structure of [VINFO] is one multiline text.
-	*/
 
 	/*
 	* Total width is the max from [CONVOI] and [ACTIONS] width.
@@ -359,7 +310,7 @@ void depot_frame_t::layout(scr_size *size)
 	/*
 	*  Now we can do the first vertical adjustment:
 	*/
-	const scr_coord_val ASSEMBLER_VSTART = D_MARGIN_TOP + SELECT_HEIGHT + LINESPACE + D_V_SPACE + D_BUTTON_HEIGHT;
+	const scr_coord_val ASSEMBLER_VSTART = D_MARGIN_TOP + D_BUTTON_HEIGHT + LINESPACE + D_V_SPACE + D_BUTTON_HEIGHT;
 
 	/*
 	* Now we determine the row/col layout for the panel and the total panel
