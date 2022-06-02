@@ -348,9 +348,7 @@ void depot_frame_t::layout(scr_size *size)
 	*/
 
 	// Vehicle parameter display for 2 columns.
-	const int ACTIONS_WIDTH = 335*2 + D_MARGINS_X;
-	const int ACTIONS_HEIGHT = D_BUTTON_HEIGHT;
-	convoy_assembler.set_convoy_tabs_skip(ACTIONS_HEIGHT);
+	convoy_assembler.set_convoy_tabs_skip(D_BUTTON_HEIGHT);
 
 	/*
 	*	Structure of [VINFO] is one multiline text.
@@ -359,8 +357,8 @@ void depot_frame_t::layout(scr_size *size)
 	/*
 	* Total width is the max from [CONVOI] and [ACTIONS] width.
 	*/
-	const scr_coord_val MIN_DEPOT_FRAME_WIDTH = ACTIONS_WIDTH;
-	const scr_coord_val     DEPOT_FRAME_WIDTH = max(win_size.w, ACTIONS_WIDTH);
+	const scr_coord_val MIN_DEPOT_FRAME_WIDTH = D_BUTTON_WIDTH*5 + D_H_SPACE*4 + D_MARGINS_X;
+	const scr_coord_val     DEPOT_FRAME_WIDTH = max(win_size.w, MIN_DEPOT_FRAME_WIDTH);
 
 	/*
 	*  Now we can do the first vertical adjustment:
@@ -493,6 +491,8 @@ void depot_frame_t::update_data()
 		}
 	}
 
+	sint16 old_convoi_width = convoy_assembler.get_convoy_image_width();
+
 	// update the line selector
 	build_line_list();
 
@@ -500,6 +500,11 @@ void depot_frame_t::update_data()
 	set_width(get_min_windowsize().w-D_MARGINS_X);
 
 	convoy_assembler.update_data();
+
+	// update window if convoi container size changed
+	if (old_convoi_width != convoy_assembler.get_convoy_image_width()) {
+		resize(scr_size(0,0));
+	}
 }
 
 void depot_frame_t::build_line_list()

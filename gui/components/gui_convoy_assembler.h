@@ -318,7 +318,7 @@ public:
 
 	inline sint16 get_convoy_clist_width() const { return vehicles.get_count() * (grid.x - grid_dx) + 2 * gui_image_list_t::BORDER; } // = CLIST_WIDTH
 
-	inline sint16 get_convoy_image_width() const {return get_convoy_clist_width() + placement_dx;}
+	inline sint16 get_convoy_image_width() const {return convoi.get_max_size().w + placement_dx;}
 
 	inline sint16 get_convoy_image_height() const { return grid.y + 2 * gui_image_list_t::BORDER + 5; } // = CLIST_HEIGHT
 
