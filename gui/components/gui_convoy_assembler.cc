@@ -462,9 +462,7 @@ void gui_convoy_assembler_t::layout()
 	scrolly_convoi.set_scroll_discrete_x(false);
 	scrolly_convoi.set_size_corner(false);
 	scrolly_convoi.set_pos(scr_coord(D_H_SPACE,y));
-
 	scrolly_convoi.set_scrollbar_mode(scrollbar_t::show_disabled);
-	scrolly_convoi.set_size_corner(false);
 	add_component(&scrolly_convoi);
 	y = get_convoy_height();
 
