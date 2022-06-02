@@ -172,7 +172,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	bool one = false;
 
 	cont_pas.add_component(&pas);
-	scrolly_pas.set_show_scroll_x(false);
 	scrolly_pas.set_size_corner(false);
 
 	// add only if there are any
@@ -182,7 +181,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	}
 
 	cont_pas2.add_component(&pas2);
-	scrolly_pas2.set_show_scroll_x(false);
 	scrolly_pas2.set_size_corner(false);
 	// only add, if there are DMUs
 	if (!pas2_vec.empty()) {
@@ -191,7 +189,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	}
 
 	cont_electrics.add_component(&electrics);
-	scrolly_electrics.set_show_scroll_x(false);
 	scrolly_electrics.set_size_corner(false);
 	// add only if there are any trolleybuses
 	const uint16 shifter = 1 << vehicle_desc_t::electric;
@@ -204,7 +201,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	}
 
 	cont_loks.add_component(&loks);
-	scrolly_loks.set_show_scroll_x(false);
 	scrolly_loks.set_size_corner(false);
 	// add, if waggons are there ...
 	if (!loks_vec.empty() || !waggons_vec.empty()) {
@@ -213,7 +209,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	}
 
 	cont_waggons.add_component(&waggons);
-	scrolly_waggons.set_show_scroll_x(false);
 	scrolly_waggons.set_size_corner(false);
 	// only add, if there are waggons
 	if (!waggons_vec.empty()) {
