@@ -54,7 +54,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	max_convoy_length(depot_t::get_max_convoy_length(wt)), panel_rows(3), convoy_tabs_skip(0),
 	lb_convoi_number(NULL, SYSCOL_TEXT, gui_label_t::left),
 	lb_convoi_count(NULL, SYSCOL_TEXT, gui_label_t::left),
-	lb_convoi_count_fluctuation(NULL, SYSCOL_TEXT, gui_label_t::left),
 	lb_convoi_tiles(NULL, SYSCOL_TEXT, gui_label_t::left),
 	lb_convoi_speed(NULL, SYSCOL_TEXT, gui_label_t::left),
 	lb_convoi_cost(NULL, SYSCOL_TEXT, gui_label_t::left),
@@ -282,7 +281,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 
 	lb_convoi_number.set_text_pointer(txt_convoi_number);
 	lb_convoi_count.set_text_pointer(txt_convoi_count);
-	lb_convoi_count_fluctuation.set_text_pointer(txt_convoi_count_fluctuation);
 	lb_convoi_tiles.set_text_pointer(txt_convoi_tiles);
 	lb_convoi_speed.set_text_pointer(txt_convoi_speed);
 	lb_convoi_speed.set_tooltip(tooltip_convoi_speed);
@@ -2246,10 +2244,12 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 						}
 					}
 					// display upgrade counter
-					sprintf(txt_convoi_count_fluctuation, "(%hu)", (uint16)upgrade_count);
+					lb_convoi_count_fluctuation.buf().printf("(%hu)", (uint16)upgrade_count);
 					lb_convoi_count_fluctuation.set_visible(true);
+					cont_vehicle_bar_legends.set_visible(false);
 					lb_convoi_count_fluctuation.set_pos(scr_coord(lb_convoi_count.get_pos().x + proportional_string_width(txt_convoi_count) + D_H_SPACE, lb_convoi_count.get_pos().y));
 					lb_convoi_count_fluctuation.set_color(COL_UPGRADEABLE);
+					lb_convoi_count_fluctuation.update();
 				}
 			}
 		}
@@ -2675,17 +2675,21 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 
 		// vehicle number fluctuation counter
 		if (vehicle_fluctuation != 0) {
-			const PIXVAL counter_col = vehicle_fluctuation > 0 ? SYSCOL_UP_TRIANGLE : SYSCOL_DOWN_TRIANGLE;
-			sprintf(txt_convoi_count_fluctuation, "%s%i", vehicle_fluctuation > 0 ? "+" : "", vehicle_fluctuation);
+			lb_convoi_count_fluctuation.buf().printf("%s%i", vehicle_fluctuation > 0 ? "+" : "", vehicle_fluctuation);
 			lb_convoi_count_fluctuation.set_visible(true);
+			cont_vehicle_bar_legends.set_visible(false);
 			if (!txt_convoi_count.len()) {
 				txt_convoi_count.append(translator::translate("Fahrzeuge:"));
 			}
 			lb_convoi_count_fluctuation.set_pos(scr_coord(lb_convoi_count.get_pos().x + proportional_string_width(txt_convoi_count) + D_H_SPACE, lb_convoi_count.get_pos().y));
-			lb_convoi_count_fluctuation.set_color(counter_col);
+			lb_convoi_count_fluctuation.set_color(vehicle_fluctuation > 0 ? SYSCOL_UP_TRIANGLE : SYSCOL_DOWN_TRIANGLE);
+			lb_convoi_count_fluctuation.update();
 		}
 		else if(!upgrade_count) {
 			lb_convoi_count_fluctuation.set_visible(false);
+			if (!vehicles.get_count()) {
+				cont_vehicle_bar_legends.set_visible(true);
+			}
 		}
 
 		const uint8 MAX_ROWS = max(16-lines, 0); // Maximum display line of possession livery scheme or upgrade info

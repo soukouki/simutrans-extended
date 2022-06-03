@@ -127,7 +127,7 @@ class gui_convoy_assembler_t :
 	/* Gui elements */
 	gui_label_t lb_convoi_number;
 	gui_label_t lb_convoi_count;
-	gui_label_t lb_convoi_count_fluctuation;
+	gui_label_buf_t lb_convoi_count_fluctuation;
 	gui_label_t lb_convoi_tiles;
 	gui_label_t lb_convoi_speed;
 	gui_label_t lb_convoi_cost;
@@ -216,7 +216,6 @@ class gui_convoy_assembler_t :
 	cbuffer_t txt_convoi_brake_distance;
 	cbuffer_t tooltip_convoi_speed;
 	cbuffer_t text_convoi_axle_load;
-	char txt_convoi_count_fluctuation[6];
 
 	gui_vehicle_bar_legends_t cont_vehicle_bar_legends;
 
