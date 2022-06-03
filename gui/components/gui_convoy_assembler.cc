@@ -450,9 +450,6 @@ void gui_convoy_assembler_t::layout()
 	/*
 	 * [CONVOI]
 	 */
-	lb_convoi_count.set_pos(scr_coord(c1_x, y - LINESPACE + 2));
-	lb_convoi_count.set_size(D_BUTTON_SIZE); //
-	lb_convoi_count_fluctuation.set_size(scr_size(30, LINESPACE+2));
 	convoi.set_grid(scr_coord(grid.x - grid_dx, grid.y));
 	convoi.set_placement(scr_coord(placement.x - placement_dx, placement.y));
 	convoi.set_pos(scr_coord(0, 0));
@@ -464,28 +461,31 @@ void gui_convoy_assembler_t::layout()
 	scrolly_convoi.set_size_corner(false);
 	scrolly_convoi.set_pos(scr_coord(D_H_SPACE,y));
 	scrolly_convoi.set_scrollbar_mode(scrollbar_t::show_disabled);
-	y = get_convoy_height();
+	y = get_convoy_height()+D_V_SPACE;
 
 	// Convoy parameters ( = below convoy image)
-	lb_convoi_tiles.set_pos(scr_coord(c1_x, y));
+	lb_convoi_count.set_pos(scr_coord(c1_x, y));
+	lb_convoi_count.set_size(D_BUTTON_SIZE);
+	lb_convoi_count_fluctuation.set_size(scr_size(30, LINESPACE+2));
+	lb_convoi_tiles.set_pos(scr_coord(c1_x+D_BUTTON_WIDTH, y));
 	lb_convoi_tiles.set_size(scr_size(proportional_string_width(translator::translate("Station tiles:")) + proportional_string_width(" 000"), LINESPACE));
-	tile_occupancy.set_pos(scr_coord(c1_x + lb_convoi_tiles.get_size().w, y+3));
+	tile_occupancy.set_pos(scr_coord(c1_x + lb_convoi_tiles.get_size().w+D_BUTTON_WIDTH, y+3));
 	tile_occupancy.set_size(scr_size(size.w - lb_convoi_tiles.get_size().w - bt_class_management.get_size().w, 5));
 	lb_convoi_number.set_width(30);
-	bt_class_management.set_pos(scr_coord(c3_x, y));
-	bt_class_management.set_size(scr_size(size.w - c3_x-5, LINESPACE));
-	y += LINESPACE + 1;
+	y += LINESPACE + D_V_SPACE;
 	lb_convoi_cost.set_pos(scr_coord(c1_x, y));
 	lb_convoi_cost.set_size(scr_size(c2_x - c1_x, LINESPACE));
 	lb_convoi_maintenance.set_pos(scr_coord(c2_x, y));
 	lb_convoi_maintenance.set_size(scr_size(c3_x - c2_x, LINESPACE));
-	cont_convoi_capacity.set_pos(scr_coord(c3_x, y));
-	cont_convoi_capacity.set_size(lb_size);
+	bt_class_management.set_pos(scr_coord(c3_x, y));
+	bt_class_management.set_size(scr_size(size.w - c3_x-5, LINESPACE));
 	y += LINESPACE + 1;
 	lb_convoi_speed.set_pos(scr_coord(c1_x, y));
 	lb_convoi_speed.set_size(scr_size(c2_x - c1_x, LINESPACE));
 	lb_convoi_weight.set_pos(scr_coord(c2_x, y));
 	lb_convoi_weight.set_size(scr_size(c3_x - c2_x, LINESPACE));
+	cont_convoi_capacity.set_pos(scr_coord(c3_x, y));
+	cont_convoi_capacity.set_size(lb_size);
 	y += LINESPACE + 1;
 	lb_convoi_power.set_pos(scr_coord(c1_x, y));
 	lb_convoi_power.set_size(scr_size(c2_x - c1_x, LINESPACE));

@@ -304,7 +304,7 @@ void depot_frame_t::layout(scr_size *size)
 	/*
 	* Total width is the max from [CONVOI] and [ACTIONS] width.
 	*/
-	const scr_coord_val MIN_DEPOT_FRAME_WIDTH = D_BUTTON_WIDTH*5 + D_H_SPACE*4 + D_MARGINS_X;
+	const scr_coord_val MIN_DEPOT_FRAME_WIDTH = max(335*2,D_BUTTON_WIDTH*5 + D_H_SPACE*4) + D_MARGINS_X;
 	const scr_coord_val     DEPOT_FRAME_WIDTH = max(win_size.w, MIN_DEPOT_FRAME_WIDTH);
 
 	/*
