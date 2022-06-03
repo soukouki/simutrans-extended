@@ -125,23 +125,23 @@ class gui_convoy_assembler_t :
 	sint32 convoy_tabs_skip;
 
 	/* Gui elements */
-	gui_label_t lb_convoi_number;
 	gui_label_t lb_convoi_count;
+	gui_label_buf_t lb_convoi_number;
 	gui_label_buf_t lb_convoi_count_fluctuation;
-	gui_label_t lb_convoi_tiles;
-	gui_label_t lb_convoi_speed;
-	gui_label_t lb_convoi_cost;
-	gui_label_t lb_convoi_maintenance;
-	gui_label_t lb_convoi_power;
-	gui_label_t lb_convoi_weight;
-	gui_label_t lb_convoi_brake_force;
-	gui_label_t lb_convoi_brake_distance;
-	gui_label_t lb_convoi_axle_load;
+	gui_label_buf_t lb_convoi_tiles;
+	gui_label_buf_t lb_convoi_speed;
+	gui_label_buf_t lb_convoi_cost;
+	gui_label_buf_t lb_convoi_maintenance;
+	gui_label_buf_t lb_convoi_power;
+	gui_label_buf_t lb_convoi_weight;
+	gui_label_buf_t lb_convoi_brake_force;
+	gui_label_buf_t lb_convoi_brake_distance;
+	gui_label_buf_t lb_convoi_axle_load;
 	// Specifies the traction types handled by
 	// this depot.
 	// @author: jamespetts, April 2010
-	gui_label_t lb_traction_types;
-	gui_label_t lb_vehicle_count;
+	gui_label_buf_t lb_traction_types;
+	gui_label_buf_t lb_vehicle_count;
 	// Display the load
 	//gui_container_t cont_convoi_capacity;
 
@@ -164,7 +164,7 @@ class gui_convoy_assembler_t :
 	gui_label_t lb_too_heavy_notice;
 
 	gui_label_t lb_livery_selector;
-	gui_label_t lb_livery_counter;
+	gui_label_buf_t lb_livery_counter;
 	gui_combobox_t livery_selector;
 
 	button_t bt_class_management;
@@ -199,23 +199,10 @@ class gui_convoy_assembler_t :
 	gui_combobox_t vehicle_filter;
 	gui_label_t lb_vehicle_filter;
 
-	cbuffer_t txt_convoi_number;
 	cbuffer_t txt_convoi_count;
-	cbuffer_t txt_convoi_tiles;
-	cbuffer_t txt_convoi_maintenance;
-	cbuffer_t txt_convoi_speed;
-	cbuffer_t txt_convoi_cost;
-	cbuffer_t txt_convoi_power;
-	cbuffer_t txt_convoi_weight;
-	cbuffer_t txt_convoi_brake_force;
 	cbuffer_t tooltip_convoi_rolling_resistance;
 	cbuffer_t txt_convoi_way_wear_factor;
-	cbuffer_t txt_traction_types;
-	cbuffer_t txt_vehicle_count;
-	cbuffer_t txt_livery_count;
-	cbuffer_t txt_convoi_brake_distance;
 	cbuffer_t tooltip_convoi_speed;
-	cbuffer_t text_convoi_axle_load;
 
 	gui_vehicle_bar_legends_t cont_vehicle_bar_legends;
 
@@ -343,7 +330,7 @@ public:
 
 	static uint16 get_livery_scheme_index() { return livery_scheme_index; }
 
-	void set_traction_types(const char *traction_types_text) { txt_traction_types.clear(); txt_traction_types.append(traction_types_text); }
+	void set_traction_types(const char *traction_types_text) { lb_traction_types.buf().append(traction_types_text); lb_traction_types.update(); }
 };
 
 #endif
