@@ -85,26 +85,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	scrolly_waggons(&cont_waggons),
 	lb_vehicle_filter("Filter:", SYSCOL_TEXT, gui_label_t::left)
 {
-	livery_selector.add_listener(this);
-	add_component(&livery_selector);
-	livery_selector.clear_elements();
-	livery_scheme_indices.clear();
-
-	vehicle_filter.set_highlight_color(depot_frame ? depot_frame->get_depot()->get_owner()->get_player_color1() + 1 : replace_frame ? replace_frame->get_convoy()->get_owner()->get_player_color1() + 1 : COL_BLACK);
-	vehicle_filter.add_listener(this);
-	add_component(&vehicle_filter);
-
-	veh_action = va_append;
-	action_selector.add_listener(this);
-	add_component(&action_selector);
-	action_selector.clear_elements();
-	static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
-	action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
-	action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
-	action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
-	action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
-	action_selector.set_selection(0);
-
 	/*
 	* These parameter are adjusted to resolution.
 	* - Some extra space looks nicer.new_component<gui_scrolled_list_t::const_text_scrollitem_t>
@@ -121,6 +101,7 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 
 	vehicles.clear();
 
+	add_component(&cont_vehicle_bar_legends);
 	/*
 	* [CONVOI]
 	*/
@@ -129,6 +110,7 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 
 	cont_convoi.add_component(&lb_convoi_number);
 	cont_convoi.add_component(&convoi);
+	add_component(&scrolly_convoi);
 
 	add_component(&lb_convoi_count);
 	add_component(&lb_convoi_count_fluctuation);
@@ -277,6 +259,26 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	bt_class_management.add_listener(this);
 	bt_class_management.set_tooltip("see_and_change_the_class_assignments");
 	add_component(&bt_class_management);
+
+	livery_selector.add_listener(this);
+	add_component(&livery_selector);
+	livery_selector.clear_elements();
+	livery_scheme_indices.clear();
+
+	vehicle_filter.set_highlight_color(depot_frame ? depot_frame->get_depot()->get_owner()->get_player_color1() + 1 : replace_frame ? replace_frame->get_convoy()->get_owner()->get_player_color1() + 1 : COL_BLACK);
+	vehicle_filter.add_listener(this);
+	add_component(&vehicle_filter);
+
+	veh_action = va_append;
+	action_selector.add_listener(this);
+	add_component(&action_selector);
+	action_selector.clear_elements();
+	static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
+	action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
+	action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
+	action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
+	action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
+	action_selector.set_selection(0);
 
 	lb_convoi_number.set_text_pointer(txt_convoi_number);
 	lb_convoi_count.set_text_pointer(txt_convoi_count);
@@ -443,7 +445,6 @@ void gui_convoy_assembler_t::layout()
 	const scr_coord_val c2_x = c1_x + ((lb_size.w / 5) * 4) + D_V_SPACE;
 	const scr_coord_val c3_x = c2_x + ((lb_size.w / 4) * 3) + D_V_SPACE;
 
-	add_component(&cont_vehicle_bar_legends);
 	cont_vehicle_bar_legends.set_pos(scr_coord(c1_x, grid.y/2-LINESPACE));
 
 	/*
@@ -463,7 +464,6 @@ void gui_convoy_assembler_t::layout()
 	scrolly_convoi.set_size_corner(false);
 	scrolly_convoi.set_pos(scr_coord(D_H_SPACE,y));
 	scrolly_convoi.set_scrollbar_mode(scrollbar_t::show_disabled);
-	add_component(&scrolly_convoi);
 	y = get_convoy_height();
 
 	// Convoy parameters ( = below convoy image)
