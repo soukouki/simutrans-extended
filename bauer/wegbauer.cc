@@ -2424,9 +2424,10 @@ sint64 way_builder_t::calc_costs() {
 		else if(!gr)
 		{
 			// No ground
-			costs += (welt->get_settings().get_forge_cost(desc->get_waytype()) + desc->get_value());
 			if(bautyp&tunnel_flag){
 				costs += tunnel_builder_t::get_total_cost(pos, tunnel_desc);
+			}else{
+				costs += (welt->get_settings().get_forge_cost(desc->get_waytype()) + desc->get_value());
 			}
 		}
 		else
