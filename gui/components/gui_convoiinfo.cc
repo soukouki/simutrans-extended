@@ -38,7 +38,7 @@ gui_convoiinfo_t::gui_convoiinfo_t(convoihandle_t cnv, bool show_line_name):
 
 	add_table(1,4)->set_spacing(scr_size(D_H_SPACE, 0));
 	{
-		add_table(3, 1);
+		add_table(4,1);
 		{
 			img_alert.set_image(IMG_EMPTY);
 			img_alert.set_rigid(false);
@@ -47,6 +47,9 @@ gui_convoiinfo_t::gui_convoiinfo_t(convoihandle_t cnv, bool show_line_name):
 			img_operation.set_rigid(false);
 			add_component(&img_operation);
 			add_component(&label_name);
+			img_reverse.set_image(IMG_EMPTY);
+			img_reverse.set_rigid(false);
+			add_component(&img_reverse);
 		}
 		end_table();
 
@@ -169,6 +172,13 @@ void gui_convoiinfo_t::update_label()
 			img_operation.set_image(skinverwaltung_t::alerts->get_image_id(2), true);
 			img_operation.set_tooltip("No load setting");
 			img_operation.set_visible(true);
+		}
+	}
+	if (skinverwaltung_t::reverse_arrows) {
+		img_reverse.set_visible(false);
+		if (cnv->get_reverse_schedule()) {
+			img_reverse.set_image(skinverwaltung_t::reverse_arrows->get_image_id(cnv->get_schedule()->is_mirrored() ? 0:1), true);
+			img_reverse.set_visible(true);
 		}
 	}
 
