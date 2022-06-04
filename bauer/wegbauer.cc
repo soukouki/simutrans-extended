@@ -2341,7 +2341,7 @@ sint64 way_builder_t::calc_costs() {
 				if( tunnel->get_desc() == tunnel_desc ) {
 					continue; // Nothing to pay on this tile.
 				}
-				single_cost = tunnel_desc->get_value();
+				single_cost = tunnel_builder_t::get_total_cost(pos, tunnel_desc);
 			}
 			else {
 				single_cost = desc->get_value();
@@ -2423,8 +2423,11 @@ sint64 way_builder_t::calc_costs() {
 		}
 		else if(!gr)
 		{
-			// No ground - building a new elevated way. Do not add the land value as it is still possible to build underneath an elevated way.
+			// No ground
 			costs += (welt->get_settings().get_forge_cost(desc->get_waytype()) + desc->get_value());
+			if(bautyp&tunnel_flag){
+				costs += tunnel_builder_t::get_total_cost(pos, tunnel_desc);
+			}
 		}
 		else
 		{
