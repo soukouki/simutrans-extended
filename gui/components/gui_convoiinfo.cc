@@ -188,7 +188,7 @@ void gui_convoiinfo_t::update_label()
 		case 1: // Next stop
 		{
 			if (!cnv->in_depot()) {
-				switchable_label_title.buf().printf("%s: ", translator::translate("Fahrtziel"));
+				switchable_label_title.buf().printf("%s: [%u]", translator::translate("Fahrtziel"), cnv->get_schedule()->get_current_stop()+1);
 				const schedule_t *schedule = cnv->get_schedule();
 				schedule_t::gimme_short_stop_name(switchable_label_value.buf(), world(), cnv->get_owner(), schedule, schedule->get_current_stop(), 50 - strlen(translator::translate("Fahrtziel")));
 				switchable_label_title.set_visible(true);
