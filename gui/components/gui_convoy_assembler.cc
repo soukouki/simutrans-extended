@@ -2077,6 +2077,7 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 	uint8 upgrade_count = 0;
 
 	if ((sel_index != -1) && (tabs.getroffen(x-pos.x,y-pos.y))) {
+	lb_too_heavy_notice.set_visible(false);
 		// cursor over a vehicle in the selection list
 		const vector_tpl<gui_image_list_t::image_data_t*>& vec = (lst == &electrics ? electrics_vec : (lst == &pas ? pas_vec : (lst == &pas2 ? pas2_vec : (lst == &loks ? loks_vec : waggons_vec))));
 		veh_type = vehicle_builder_t::get_info(vec[sel_index]->text);
@@ -2090,10 +2091,6 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 		if(vec[sel_index]->lcolor == COL_EXCEED_AXLE_LOAD_LIMIT)
 		{
 			lb_too_heavy_notice.set_visible(true);
-		}
-		else
-		{
-			lb_too_heavy_notice.set_visible(false);
 		}
 
 		// update tile occupancy bar
