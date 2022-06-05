@@ -488,37 +488,30 @@ void gui_convoy_assembler_t::layout()
 	pas.set_grid(grid);
 	pas.set_placement(placement);
 	pas.set_size(tabs.get_size());
-	pas.set_pos(scr_coord(1,1));
 	cont_pas.set_size(pas.get_size());
 	scrolly_pas.set_size(scrolly_pas.get_size());
 
 	pas2.set_grid(grid);
 	pas2.set_placement(placement);
 	pas2.set_size(tabs.get_size());
-	pas2.set_pos(scr_coord(1, 1));
-	cont_pas2.set_pos(scr_coord(0, 0));
 	cont_pas2.set_size(pas2.get_size());
 	scrolly_pas2.set_size(scrolly_pas2.get_size());
 
 	electrics.set_grid(grid);
 	electrics.set_placement(placement);
 	electrics.set_size(tabs.get_size());
-	electrics.set_pos(scr_coord(1,1));
 	cont_electrics.set_size(electrics.get_size());
 	scrolly_electrics.set_size(scrolly_electrics.get_size());
 
 	loks.set_grid(grid);
 	loks.set_placement(placement);
 	loks.set_size(tabs.get_size());
-	loks.set_pos(scr_coord(1,1));
-	cont_loks.set_pos(scr_coord(0,0));
 	cont_loks.set_size(loks.get_size());
 	scrolly_loks.set_size(scrolly_loks.get_size());
 
 	waggons.set_grid(grid);
 	waggons.set_placement(placement);
 	waggons.set_size(tabs.get_size());
-	waggons.set_pos(scr_coord(1,1));
 	cont_waggons.set_size(waggons.get_size());
 	scrolly_waggons.set_size(scrolly_waggons.get_size());
 
