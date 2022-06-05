@@ -60,11 +60,11 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	electrics(&electrics_vec),
 	loks(&loks_vec),
 	waggons(&waggons_vec),
-	scrolly_pas(&cont_pas),
-	scrolly_pas2(&cont_pas2),
-	scrolly_electrics(&cont_electrics),
-	scrolly_loks(&cont_loks),
-	scrolly_waggons(&cont_waggons),
+	scrolly_pas(&pas),
+	scrolly_pas2(&pas2),
+	scrolly_electrics(&electrics),
+	scrolly_loks(&loks),
+	scrolly_waggons(&waggons),
 	lb_vehicle_filter("Filter:", SYSCOL_TEXT, gui_label_t::left)
 {
 	/*
@@ -80,7 +80,17 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	//	placement.x -= (12*get_base_tile_raster_width())/64;
 	//	placement.y -= (6*get_base_tile_raster_width())/64;
 	//}
-
+	gui_image_list_t* ilists[] = { &convoi, &pas, &pas2, &electrics, &loks, &waggons };
+	for (uint32 i = 0; i < lengthof(ilists); i++) {
+		gui_image_list_t* il = ilists[i];
+		il->set_grid(scr_coord(grid.x - grid_dx, grid.y));
+		il->set_placement(scr_coord(placement.x - placement_dx, placement.y));
+		il->set_player_nr(player_nr);
+		il->add_listener(this);
+		// only convoi list gets overlapping images
+		grid_dx = 0;
+		placement_dx = 0;
+	}
 	vehicles.clear();
 
 	add_component(&cont_vehicle_bar_legends);
@@ -136,7 +146,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 
 	bool one = false;
 
-	cont_pas.add_component(&pas);
 	scrolly_pas.set_size_corner(false);
 
 	// add only if there are any
@@ -145,7 +154,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 		one = true;
 	}
 
-	cont_pas2.add_component(&pas2);
 	scrolly_pas2.set_size_corner(false);
 	// only add, if there are DMUs
 	if (!pas2_vec.empty()) {
@@ -153,7 +161,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 		one = true;
 	}
 
-	cont_electrics.add_component(&electrics);
 	scrolly_electrics.set_size_corner(false);
 	// add only if there are any trolleybuses
 	const uint16 shifter = 1 << vehicle_desc_t::electric;
@@ -165,7 +172,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 		one = true;
 	}
 
-	cont_loks.add_component(&loks);
 	scrolly_loks.set_size_corner(false);
 	// add, if waggons are there ...
 	if (!loks_vec.empty() || !waggons_vec.empty()) {
@@ -173,7 +179,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 		one = true;
 	}
 
-	cont_waggons.add_component(&waggons);
 	scrolly_waggons.set_size_corner(false);
 	// only add, if there are waggons
 	if (!waggons_vec.empty()) {
@@ -185,21 +190,6 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 		// add passenger as default
 		tabs.add_tab(&scrolly_pas, translator::translate( get_passenger_name(wt) ) );
  	}
-
-	pas.set_player_nr(player_nr);
-	pas.add_listener(this);
-
-	pas2.set_player_nr(player_nr);
-	pas2.add_listener(this);
-
-	electrics.set_player_nr(player_nr);
-	electrics.add_listener(this);
-
-	loks.set_player_nr(player_nr);
-	loks.add_listener(this);
-
-	waggons.set_player_nr(player_nr);
-	waggons.add_listener(this);
 
 	lb_too_heavy_notice.set_visible(false);
 
@@ -485,35 +475,11 @@ void gui_convoy_assembler_t::layout()
 	tabs.set_size(scr_size(size.w, get_panel_height()));
 	y += get_panel_height();
 
-	pas.set_grid(grid);
-	pas.set_placement(placement);
-	pas.set_size(tabs.get_size());
-	cont_pas.set_size(pas.get_size());
-	scrolly_pas.set_size(scrolly_pas.get_size());
-
-	pas2.set_grid(grid);
-	pas2.set_placement(placement);
-	pas2.set_size(tabs.get_size());
-	cont_pas2.set_size(pas2.get_size());
-	scrolly_pas2.set_size(scrolly_pas2.get_size());
-
-	electrics.set_grid(grid);
-	electrics.set_placement(placement);
-	electrics.set_size(tabs.get_size());
-	cont_electrics.set_size(electrics.get_size());
-	scrolly_electrics.set_size(scrolly_electrics.get_size());
-
-	loks.set_grid(grid);
-	loks.set_placement(placement);
-	loks.set_size(tabs.get_size());
-	cont_loks.set_size(loks.get_size());
-	scrolly_loks.set_size(scrolly_loks.get_size());
-
-	waggons.set_grid(grid);
-	waggons.set_placement(placement);
-	waggons.set_size(tabs.get_size());
-	cont_waggons.set_size(waggons.get_size());
-	scrolly_waggons.set_size(scrolly_waggons.get_size());
+	pas.set_max_width(tabs.get_size().w);
+	pas2.set_max_width(tabs.get_size().w);
+	electrics.set_max_width(tabs.get_size().w);
+	loks.set_max_width(tabs.get_size().w);
+	waggons.set_max_width(tabs.get_size().w);
 
 	div_tabbottom.set_pos(scr_coord(0, y));
 	div_tabbottom.set_size(scr_size(size.w,0));
@@ -2065,12 +2031,12 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 	const vehicle_desc_t *veh_type = NULL;
 	bool new_vehicle_length_sb_force_zero = false;
 	scr_coord relpos = scr_coord( 0, ((gui_scrollpane_t *)tabs.get_aktives_tab())->get_scroll_y() );
-	int sel_index = lst->index_at(pos + tabs.get_pos() - relpos, x, y - D_TAB_HEADER_HEIGHT);
+	int sel_index = lst->index_at(pos + tabs.get_pos() - relpos, x, y - D_TAB_HEADER_HEIGHT - tabs.get_required_size().h);
 	sint8 vehicle_fluctuation = 0;
 	uint8 upgrade_count = 0;
 
-	if ((sel_index != -1) && (tabs.getroffen(x-pos.x,y-pos.y))) {
 	lb_too_heavy_notice.set_visible(false);
+	if(  (sel_index != -1)  &&  (tabs.getroffen(x - pos.x, y - pos.y - D_TITLEBAR_HEIGHT)) ) {
 		// cursor over a vehicle in the selection list
 		const vector_tpl<gui_image_list_t::image_data_t*>& vec = (lst == &electrics ? electrics_vec : (lst == &pas ? pas_vec : (lst == &pas2 ? pas2_vec : (lst == &loks ? loks_vec : waggons_vec))));
 		veh_type = vehicle_builder_t::get_info(vec[sel_index]->text);

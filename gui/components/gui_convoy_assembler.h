@@ -185,11 +185,6 @@ class gui_convoy_assembler_t :
 	gui_image_list_t electrics;
 	gui_image_list_t loks;
 	gui_image_list_t waggons;
-	gui_container_t cont_pas;
-	gui_container_t cont_pas2;
-	gui_container_t cont_electrics;
-	gui_container_t cont_loks;
-	gui_container_t cont_waggons;
 	gui_scrollpane_t scrolly_pas;
 	gui_scrollpane_t scrolly_pas2;
 	gui_scrollpane_t scrolly_electrics;
