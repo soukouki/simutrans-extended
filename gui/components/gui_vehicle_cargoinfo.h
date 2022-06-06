@@ -83,6 +83,16 @@ public:
 
 class gui_cargo_info_t : public gui_aligned_container_t
 {
+public:
+	enum sort_mode_t {
+		by_amount   = 0,
+		by_via      = 1,
+		by_origin   = 2,
+		by_category = 3,
+		SORT_MODES  = 4
+	};
+
+private:
 	convoihandle_t cnv;
 
 

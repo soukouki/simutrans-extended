@@ -96,24 +96,17 @@ static uint8 statistic[convoi_t::MAX_CONVOI_COST] = {
 
 /**
  * This variable defines by which column the table is sorted
- * Values: 0 = destination
- *                 1 = via
- *                 2 = via_amount
- *                 3 = amount
+ * Values: 0 = amount
+ *         1 = via
+ *         2 = from
+ *         3 = goods
  */
-const char *convoi_info_t::sort_text[SORT_MODES] =
+const char *convoi_info_t::sort_text[gui_cargo_info_t::SORT_MODES] =
 {
-	"Zielort",
-	"via",
-	"via Menge",
 	"Menge",
-	"origin (detail)",
-	"origin (amount)",
-	"destination (detail)",
-	"wealth (detail)",
-	"wealth (via)",
-	"accommodation (detail)",
-	"accommodation (via)"
+	"via",
+	"origin",
+	"hd_category"
 };
 
 
@@ -349,11 +342,10 @@ void convoi_info_t::init_cargo_info_controller()
 		cont_tab_cargo_info.add_table(1, 2)->set_spacing(scr_size(0, 0));
 		{
 			cont_tab_cargo_info.new_component<gui_label_t>("Sort by");
-			freight_sort_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Menge"), SYSCOL_TEXT); // amount
-			freight_sort_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Unload halt"), SYSCOL_TEXT);
-			freight_sort_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Boarding stop"), SYSCOL_TEXT);
-			freight_sort_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Freight"), SYSCOL_TEXT);
-			freight_sort_selector.set_selection( env_t::default_sortmode<4 ? env_t::default_sortmode : 0 );
+			for( uint8 i=0; i<gui_cargo_info_t::SORT_MODES; ++i ) {
+				freight_sort_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
+			}
+			freight_sort_selector.set_selection( env_t::default_sortmode<gui_cargo_info_t::SORT_MODES ? env_t::default_sortmode : 0 );
 			freight_sort_selector.enable(enable_cargo_detail);
 			freight_sort_selector.add_listener(this);
 			cont_tab_cargo_info.add_component(&freight_sort_selector);

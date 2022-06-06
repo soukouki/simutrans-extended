@@ -696,20 +696,21 @@ void gui_cargo_info_t::init(uint8 info_depth_from, uint8 info_depth_to, bool div
 		// and sorting will not be correct.
 		switch (sort_mode)
 		{
-			case 0: // menge
+			case by_amount:
 				cargoes.sort(compare_amount);
 				break;
-			case 1: // via
+			case by_via:
 				if( info_depth_to ){
 					cargoes.sort(compare_via);
 				}
 				break;
-			case 2: // boarding
+			case by_origin:
 				if( info_depth_from ) {
 					cargoes.sort(compare_last_transfer);
 				}
 				break;
-			default: // goods
+			case by_category:
+			default:
 				cargoes.sort(compare_index);
 				break;
 		}

@@ -43,23 +43,6 @@
  */
 class convoi_info_t : public gui_frame_t, private action_listener_t
 {
-public:
-	enum sort_mode_t {
-		by_destination          = 0,
-		by_via                  = 1,
-		by_amount_via           = 2,
-		by_amount               = 3,
-		by_origin               = 4,
-		by_origin_sum           = 5,
-		by_destination_detail   = 6,
-		by_wealth_detail        = 7,
-		by_wealth_via           = 8,
-		by_accommodation_detail = 9,
-		by_accommodation_via    = 10,
-		SORT_MODES              = 11
-	};
-
-private:
 	obj_view_t view;
 	gui_label_buf_t speed_label, profit_label, running_cost_label, weight_label, target_label, line_label;
 	gui_label_buf_t distance_label, lb_working_method;
@@ -127,7 +110,7 @@ private:
 
 	//static bool route_search_in_progress;
 
-	static const char *sort_text[SORT_MODES];
+	static const char *sort_text[gui_cargo_info_t::SORT_MODES];
 
 	gui_button_to_chart_array_t button_to_chart;
 
