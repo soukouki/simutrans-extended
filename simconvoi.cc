@@ -5154,6 +5154,24 @@ void convoi_t::info(cbuffer_t & buf) const
 #endif
 
 
+void convoi_t::force_update_fare_related_dialogs()
+{
+	// info
+	convoi_info_t *info = dynamic_cast<convoi_info_t*>(win_get_magic(magic_convoi_info + self.get_id()));
+	if (info) {
+		info->update_cargo_info();
+	}
+
+	// detail
+	convoi_detail_t *detail = dynamic_cast<convoi_detail_t*>(win_get_magic(magic_convoi_detail + self.get_id()));
+	if (detail) {
+		detail->update_cargo_info();
+	}
+
+	return;
+}
+
+
 void convoi_t::open_schedule_window( bool show )
 {
 	DBG_MESSAGE("convoi_t::open_schedule_window()","Id = %hu, State = %d, Lock = %d", self.get_id(), (int)state, wait_lock);
@@ -6721,15 +6739,6 @@ void convoi_t::set_next_reservation_index(uint16 n)
 		n = route.get_count()-1;
 	}
 	next_reservation_index = n;
-}
-
-
-uint16 convoi_t::get_current_schedule_order() const
-{
-	if (reverse_schedule) {
-		return (uint16)((schedule->get_count()-1)*2-schedule->get_current_stop());
-	}
-	return (uint16)schedule->get_current_stop();
 }
 
 

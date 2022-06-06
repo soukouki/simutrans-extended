@@ -9917,6 +9917,7 @@ bool tool_change_convoi_t::init( player_t *player )
 				}
 				if (changed) {
 					cnv->calc_classes_carried();
+					cnv->force_update_fare_related_dialogs();
 					linehandle_t line = cnv->get_line();
 					if (line.is_bound())
 					{
@@ -9942,6 +9943,7 @@ bool tool_change_convoi_t::init( player_t *player )
 
 			veh->set_class_reassignment(accommo_class, fare_class);
 			cnv->calc_classes_carried();
+			cnv->force_update_fare_related_dialogs();
 			linehandle_t line = cnv->get_line();
 			if (line.is_bound())
 			{
@@ -9975,6 +9977,7 @@ bool tool_change_convoi_t::init( player_t *player )
 				}
 			}
 			cnv->calc_classes_carried();
+			cnv->force_update_fare_related_dialogs();
 			linehandle_t line = cnv->get_line();
 			if(line.is_bound())
 			{

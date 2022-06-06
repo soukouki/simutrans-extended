@@ -147,6 +147,9 @@ public:
 	 */
 	void update_data() { reset_cnv_name(); set_dirty(); }
 
+	// called when fare class was changed
+	void update_cargo_info() { cargo_info.update(); }
+
 	bool infowin_event(const event_t *ev) OVERRIDE;
 
 	void rdwr( loadsave_t *file ) OVERRIDE;

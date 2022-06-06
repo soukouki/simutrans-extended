@@ -809,10 +809,6 @@ public:
 	const koord3d get_schedule_target() const { return schedule_target; }
 	void set_schedule_target( koord3d t ) { schedule_target = t; }
 
-	// Sorting purpose for GUI
-	// Additional numbers will be assigned if convoy is moving backwards from the end of the schedule
-	uint16 get_current_schedule_order() const;
-
 	/**
 	* get line
 	*/
@@ -1156,6 +1152,9 @@ public:
 private:
 	journey_times_map average_journey_times;
 public:
+
+	// we need to detect the change in the dialog that is already open when the fare class changes
+	void force_update_fare_related_dialogs();
 
 	/**
 	* Opens the schedule window
