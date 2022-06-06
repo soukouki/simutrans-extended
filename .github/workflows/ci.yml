@@ -413,11 +413,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Install dependencies using vcpkg
-        uses: lukka/run-vcpkg@v4.1
+        uses: lukka/run-vcpkg@v7
         with:
           vcpkgDirectory: '${{ github.workspace }}/build/vcpkg'
           vcpkgArguments: '--disable-metrics zlib bzip2 libpng'
-          vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
+          vcpkgGitCommitId: 3e7517b24f826730a4f0fa05ecab427cf2b0004e
           vcpkgTriplet: x64-windows-static
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
@@ -448,11 +448,11 @@ jobs:
       - name: Set up build dir
         run: mkdir ${{ github.workspace }}/build
       - name: Install dependencies using vcpkg
-        uses: lukka/run-vcpkg@v4.1
+        uses: lukka/run-vcpkg@v7
         with:
           vcpkgDirectory: '${{ github.workspace }}/build/vcpkg'
           vcpkgArguments: '--disable-metrics zlib bzip2 sdl2 libpng'
-          vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
+          vcpkgGitCommitId: 3e7517b24f826730a4f0fa05ecab427cf2b0004e
           vcpkgTriplet: x64-windows-static
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
@@ -517,11 +517,11 @@ jobs:
       - name: Set up build dir
         run: mkdir ${{ github.workspace }}/build
       - name: Install dependencies using vcpkg
-        uses: lukka/run-vcpkg@v4.1
+        uses: lukka/run-vcpkg@v7
         with:
           vcpkgDirectory: '${{ github.workspace }}/build/vcpkg'
           vcpkgArguments: '--disable-metrics zlib bzip2 libpng'
-          vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
+          vcpkgGitCommitId: 3e7517b24f826730a4f0fa05ecab427cf2b0004e
           vcpkgTriplet: x64-windows-static
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
@@ -552,11 +552,11 @@ jobs:
       - name: Set up build dir
         run: mkdir ${{ github.workspace }}/build
       - name: Install dependencies using vcpkg
-        uses: lukka/run-vcpkg@v4.1
+        uses: lukka/run-vcpkg@v7
         with:
           vcpkgDirectory: '${{ github.workspace }}/build/vcpkg'
           vcpkgArguments: '--disable-metrics zlib bzip2 libpng'
-          vcpkgGitCommitId: 5568f110b509a9fd90711978a7cb76bae75bb092
+          vcpkgGitCommitId: 3e7517b24f826730a4f0fa05ecab427cf2b0004e
           vcpkgTriplet: x64-windows-static
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
