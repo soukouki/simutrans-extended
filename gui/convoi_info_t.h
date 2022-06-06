@@ -32,6 +32,7 @@
 #include "components/gui_colorbox.h"
 #include "components/gui_line_lettercode.h"
 #include "components/gui_line_network.h"
+#include "components/gui_vehicle_cargoinfo.h"
 
 
 #define BUTTON_COUNT convoi_t::MAX_CONVOI_COST
@@ -59,12 +60,6 @@ public:
 	};
 
 private:
-	/**
-	* Buffer for freight info text string.
-	*/
-	cbuffer_t freight_info;
-
-	gui_textarea_t text;
 	obj_view_t view;
 	gui_label_buf_t speed_label, profit_label, running_cost_label, weight_label, target_label, line_label;
 	gui_label_buf_t distance_label, lb_working_method;
@@ -85,6 +80,17 @@ private:
 	button_t details_button;
 	button_t reverse_button;
 
+	// new cargo detail
+	uint8 cargo_info_depth_from=0;
+	uint8 cargo_info_depth_to=1;
+	bool divide_by_wealth = false;
+	bool separate_by_fare = true;
+	gui_combobox_t selector_ci_depth_from, selector_ci_depth_to, freight_sort_selector;
+	button_t bt_divide_by_wealth, bt_separate_by_fare;
+	gui_aligned_container_t cont_tab_cargo_info;
+	void init_cargo_info_controller(); // build cont_tab_cargo_info table
+	gui_convoy_cargo_info_t cargo_info;
+
 	gui_aligned_container_t next_halt_cells;
 	gui_schedule_entry_number_t next_halt_number;
 
@@ -96,7 +102,6 @@ private:
 	gui_aligned_container_t container_freight, container_stats, container_line, *container_top;
 	gui_scrollpane_t scroll_freight, scroll_times_history, scroll_line_network;
 
-	gui_combobox_t freight_sort_selector;
 	button_t line_button; // goto line ...
 	bool line_bound;
 	gui_line_lettercode_t lc_preview;
