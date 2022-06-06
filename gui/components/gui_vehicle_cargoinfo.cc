@@ -779,7 +779,9 @@ void gui_cargo_info_t::init(uint8 info_depth_from, uint8 info_depth_to, bool div
 					add_table(4,1)->set_spacing(scr_size(D_H_SPACE,0));
 					{
 						if( info_depth_from  &&  ware.get_last_transfer().is_bound() ) {
-							new_component<gui_label_t>("Boarding from:");
+							new_component<gui_label_t>( (info_depth_from>1 && ware.get_origin().is_bound() && (ware.get_last_transfer()==ware.get_origin())) ?
+								(ware.is_passenger() ? "Origin:" : "Shipped from:") : (ware.is_passenger() ? "Boarding from:" : "Loaded at:")
+								);
 							bool is_interchange = (ware.get_last_transfer().get_rep()->registered_lines.get_count() + ware.get_last_transfer().get_rep()->registered_convoys.get_count()) > 1;
 							new_component<gui_schedule_entry_number_t>(cnv->get_schedule()->get_entry_index(ware.get_last_transfer(), cnv->get_owner(), !cnv->is_reversed()),
 								ware.get_last_transfer().get_rep()->get_owner()->get_player_color1(),
@@ -793,7 +795,7 @@ void gui_cargo_info_t::init(uint8 info_depth_from, uint8 info_depth_to, bool div
 							if( info_depth_from>1  &&  ware.get_origin().is_bound()  &&  (ware.get_last_transfer()!=ware.get_origin()) ) {
 								add_table(3,1);
 								{
-									new_component<gui_label_t>("Origin:");
+									new_component<gui_label_t>(ware.is_passenger() ? "Origin:" : "Shipped from:");
 									is_interchange = (ware.get_origin().get_rep()->registered_lines.get_count() + ware.get_origin().get_rep()->registered_convoys.get_count()) > 1;
 									new_component<gui_schedule_entry_number_t>(-1, ware.get_origin().get_rep()->get_owner()->get_player_color1(),
 										is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt,

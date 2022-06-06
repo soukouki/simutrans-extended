@@ -359,7 +359,7 @@ void convoi_info_t::init_cargo_info_controller()
 		{
 			cont_tab_cargo_info.new_component<gui_label_t>("info_depth_from:");
 			selector_ci_depth_from.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("-"), SYSCOL_TEXT);
-			selector_ci_depth_from.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Boarding stop"), SYSCOL_TEXT);
+			selector_ci_depth_from.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Loaded stop"), SYSCOL_TEXT);
 			selector_ci_depth_from.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Origin stop"), SYSCOL_TEXT);
 			selector_ci_depth_from.set_selection(cargo_info_depth_from);
 			selector_ci_depth_from.add_listener(this);
