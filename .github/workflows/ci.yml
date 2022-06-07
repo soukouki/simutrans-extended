@@ -17,7 +17,6 @@ jobs:
           commit_message: run ./cleanup_code.sh
 
 
-
   sim-linux-sdl2:
     name: Linux (SDL2)
     runs-on: ubuntu-latest
@@ -406,171 +405,39 @@ jobs:
 
   sim-windows-gdi:
     name: Windows (MSVC, GDI)
-    runs-on: windows-2022
     needs: check-code-formatting
     if: always()
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install dependencies using vcpkg
-        uses: lukka/run-vcpkg@v7
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/build/vcpkg'
-          vcpkgArguments: '--disable-metrics zlib bzip2 libpng'
-          vcpkgGitCommitId: 3e7517b24f826730a4f0fa05ecab427cf2b0004e
-          vcpkgTriplet: x64-windows-static
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-      - name: Configure
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=gdi -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
-      - name: Build
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake --build . --target simutrans-extended --config Release
-      - name: Upload Artifact (CI)
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ github.job }}-nightly
-          path: build/simutrans/simutrans-extended.exe
-          if-no-files-found: error
-
+    uses: ./.github/workflows/msvc-build.yml
+    with:
+      backend: gdi
 
   sim-windows-sdl2:
     name: Windows (MSVC, SDL2)
-    runs-on: windows-2022
     needs: check-code-formatting
     if: always()
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up build dir
-        run: mkdir ${{ github.workspace }}/build
-      - name: Install dependencies using vcpkg
-        uses: lukka/run-vcpkg@v7
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/build/vcpkg'
-          vcpkgArguments: '--disable-metrics zlib bzip2 sdl2 libpng'
-          vcpkgGitCommitId: 3e7517b24f826730a4f0fa05ecab427cf2b0004e
-          vcpkgTriplet: x64-windows-static
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-      - name: Configure
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=sdl2 -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
-      - name: Build
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake --build . --target simutrans-extended --config Release
-      - name: Upload Artifact (CI)
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ github.job }}-nightly
-          path: build/simutrans/simutrans-extended.exe
-          if-no-files-found: error
-
+    uses: ./.github/workflows/msvc-build.yml
+    with:
+      backend: sdl2
+      additional_dependencies: sdl2
 
   sim-windows-headless:
-    name: Windows (MSVC, headless, zstd, UPNP)
-    runs-on: windows-2022
+    name: Windows (MSVC, POSIX)
     needs: check-code-formatting
     if: always()
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up build dir
-        run: mkdir ${{ github.workspace }}/build
-      - name: Install dependencies using vcpkg
-        run: |
-          cd ${{ github.workspace }}/build
-          git clone https://github.com/Microsoft/vcpkg
-          ./vcpkg/bootstrap-vcpkg.bat
-          ./vcpkg/vcpkg --triplet x64-windows-static install zlib bzip2 libpng zstd sdl2 freetype miniupnpc
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-      - name: Configure
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=none -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
-      - name: Build
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake --build . --target simutrans-extended --config Release
-      - name: Upload Artifact (CI)
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ github.job }}-nightly
-          path: build/simutrans/simutrans-extended.exe
-          if-no-files-found: error
-
+    uses: ./.github/workflows/msvc-build.yml
 
   makeobj-windows:
-    name: Windows Makeobj (MSVC)
-    runs-on: windows-2022
+    name: Windows Makeobj(MSVC)
     needs: check-code-formatting
     if: always()
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up build dir
-        run: mkdir ${{ github.workspace }}/build
-      - name: Install dependencies using vcpkg
-        uses: lukka/run-vcpkg@v7
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/build/vcpkg'
-          vcpkgArguments: '--disable-metrics zlib bzip2 libpng'
-          vcpkgGitCommitId: 3e7517b24f826730a4f0fa05ecab427cf2b0004e
-          vcpkgTriplet: x64-windows-static
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-      - name: Configure
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=none -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
-      - name: Build
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake --build . --target makeobj-extended --config Release
-      - name: Upload Artifact (CI)
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ github.job }}-nightly
-          path: build/makeobj/Release/makeobj-extended.exe
-          if-no-files-found: error
-
+    uses: ./.github/workflows/msvc-build.yml
+    with:
+      target: makeobj
 
   nettool-windows:
     name: Windows Nettool (MSVC)
-    runs-on: windows-2022
     needs: check-code-formatting
     if: always()
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up build dir
-        run: mkdir ${{ github.workspace }}/build
-      - name: Install dependencies using vcpkg
-        uses: lukka/run-vcpkg@v7
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/build/vcpkg'
-          vcpkgArguments: '--disable-metrics zlib bzip2 libpng'
-          vcpkgGitCommitId: 3e7517b24f826730a4f0fa05ecab427cf2b0004e
-          vcpkgTriplet: x64-windows-static
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-      - name: Configure
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake .. -DSIMUTRANS_BACKEND=none -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/build/vcpkg/scripts/buildsystems/vcpkg.cmake
-      - name: Build
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake --build . --target nettool-extended --config Release
-      - name: Upload Artifact (CI)
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ github.job }}-nightly
-          path: build/nettools/Release/nettool-extended.exe
-          if-no-files-found: error
+    uses: ./.github/workflows/msvc-build.yml
+    with:
+      target: nettool
