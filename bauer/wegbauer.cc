@@ -1957,8 +1957,9 @@ void way_builder_t::intern_calc_straight_route(const koord3d start, const koord3
 			pos = bd_nach->get_pos();
 
 			// check new tile: ground must be above tunnel and below sea
+			// but do not check existing tunnel as it may be a portal
 			grund_t *gr = welt->lookup_kartenboden(pos.get_2d());
-			ok = ok  &&  (gr->get_hoehe() > pos.z)  &&  (!gr->is_water()  ||  (welt->lookup_hgt(pos.get_2d()) > pos.z) );
+			ok = ok  &&  (!bd_nach_new || ((gr->get_hoehe() > pos.z)  &&  (!gr->is_water()  ||  (welt->lookup_hgt(pos.get_2d()) > pos.z) )));
 
 			if (bd_von_new) {
 				delete bd_von;
