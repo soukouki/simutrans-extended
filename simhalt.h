@@ -414,9 +414,8 @@ private:
 	 * Reconnect and reroute if counter different from welt->get_schedule_counter()
 	 */
 	static uint8 reconnect_counter;
+	
 	// since we do partial routing, we remember the last offset
-
-	// since we do partial routing, we remeber the last offset
 	uint8 last_catg_index;
 	uint32 last_goods_index;
 
