@@ -6012,7 +6012,9 @@ station_tile_search_ready: ;
 					if(skip_convois || skip_vehicles)
 					{
 						// Not enough freight was available to fill vehicle, or the stop can't supply this type of cargo: don't try to load this category again from this halt onto vehicles in convois on this line this step.
-						skip_catg[catg_index] = true;
+						if( !v->get_desc()->get_mixed_load_prohibition() ) {
+							skip_catg[catg_index] = true;
+						}
 						if(!skip_vehicles  &&  line_data.line.is_bound())
 						{
 							line_data.catg_index = catg_index;
