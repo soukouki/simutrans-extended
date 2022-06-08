@@ -767,11 +767,6 @@ public:
 	void get_freight_info(cbuffer_t & buf);
 
 	/**
-	 * @param[out] buf short list of the waiting goods (i.e. 110 Wood, 15 Coal)
-	 */
-	void get_short_freight_info(cbuffer_t & buf) const;
-
-	/**
 	 * Opens an information window for this station.
 	 */
 	void show_info();
