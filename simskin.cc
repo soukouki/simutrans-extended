@@ -182,7 +182,6 @@ static special_obj_tpl<skin_desc_t> const fakultative_objekte[] = {
 	{ &skinverwaltung_t::mail_evaluation_icons, "MailEvaluation" },
 	{ &skinverwaltung_t::goods_categories,   "GoodsCategories"},
 	{ &skinverwaltung_t::ind_sector_symbol,  "IndustrySectors" },
-	{ &skinverwaltung_t::minimap,            "Minimap"        },
 	{ NULL, NULL }
 };
 
