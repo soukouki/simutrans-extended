@@ -682,41 +682,12 @@ bool fabrik_t::disconnect_consumer(koord consumer_pos) //Returns true if must be
 		remove_consumer(consumer_pos);
 	}
 
-	vector_tpl<const goods_desc_t*> available_consumers(desc->get_product_count());
-	for (auto other_consumer_pos : get_consumers())
-	{
-		if(const fabrik_t* consumer_factory = fabrik_t::get_fab(other_consumer_pos))
-		{
-			if(const factory_desc_t* consumer_factory_desc = consumer_factory->get_desc())
-			{
-				for (uint32 i = 0; i < consumer_factory_desc->get_supplier_count(); i++)
-				{
-					if(const goods_desc_t* product = consumer_factory_desc->get_supplier(i)->get_input_type())
-					{
-						available_consumers.append_unique(product);
-					}
-				}
-			}
-		}
-	}
-
 	vector_tpl<const goods_desc_t*> unfulfilled_requirements;
 	// Check to ensure that all supply types are still connected
-	for (const ware_production_t &output_type : output)
-	{
-		bool fulfilled = false;
-		const goods_desc_t* output_goods_type = output_type.get_typ();
-		for (const goods_desc_t* available_consumer_type : available_consumers)
-		{
-			if (available_consumer_type == output_goods_type)
-			{
-				fulfilled = true;
-				break;
-			}
-		}
-		if (!fulfilled)
-		{
-			unfulfilled_requirements.append(output_goods_type);
+
+	for(auto &ware : output){
+		if(!ware.link_count()){
+			unfulfilled_requirements.append(ware.get_typ());
 		}
 	}
 
@@ -760,41 +731,12 @@ bool fabrik_t::disconnect_supplier(koord supplier_pos) //Returns true if must be
 		remove_supplier(supplier_pos);
 	}
 
-	vector_tpl<const goods_desc_t*> available_inputs(desc->get_supplier_count());
-	for (auto other_supplier_pos : get_suppliers())
-	{
-		if(const fabrik_t* supplier_factory = fabrik_t::get_fab(other_supplier_pos))
-		{
-			if(const factory_desc_t* supplier_factory_desc = supplier_factory->get_desc())
-			{
-				for (uint32 i = 0; i < supplier_factory_desc->get_product_count(); i++)
-				{
-					if(const factory_product_desc_t* product = supplier_factory_desc->get_product(i))
-					{
-						available_inputs.append_unique(product->get_output_type());
-					}
-				}
-			}
-		}
-	}
-
 	vector_tpl<const goods_desc_t*> unfulfilled_requirements;
 	// Check to ensure that all supply types are still connected
-	for (const ware_production_t& input_type : input)
-	{
-		bool fulfilled = false;
-		const goods_desc_t* input_goods_type = input_type.get_typ();
-		for (const goods_desc_t* available_supply_type : available_inputs)
-		{
-			if (available_supply_type == input_goods_type)
-			{
-				fulfilled = true;
-				break;
-			}
-		}
-		if (!fulfilled)
-		{
-			unfulfilled_requirements.append(input_goods_type);
+
+	for(auto &ware : input){
+		if(!ware.link_count()){
+			unfulfilled_requirements.append(ware.get_typ());
 		}
 	}
 
@@ -3001,37 +2943,57 @@ void fabrik_t::new_month()
 
 					prodbase = prodbase > 0 ? prodbase : 1;
 
-					slist_tpl<const goods_desc_t*> input_products;
-
-					// create input information
-					input.resize(desc->get_supplier_count());
-					for (int g = 0; g < desc->get_supplier_count(); ++g) {
-						const factory_supplier_desc_t* const input_fac = desc->get_supplier(g);
-						input[g].set_typ(input_fac->get_input_type());
-						input_products.append(input_fac->get_input_type());
-					}
-
-					// The upgraded factory might not have the same inputs as its predecessor.
-					// Remove redundant inputs
 					bool disconnect_supplier_checked = false;
 					bool must_close = false;
-					for(auto k : get_suppliers())
-					{
-						fabrik_t* supplier = fabrik_t::get_fab(k);
-						bool match = false;
-						FOR(array_tpl<ware_production_t>, sw, supplier->get_output())
-						{
-							if (input_products.is_contained(sw.get_typ()))
-							{
-								match = true;
+					vector_tpl<uint32> kept_ware_indexes;
+					//find and unlink obsolete input ware types
+					for(uint32 j = 0; j < input.get_count(); j++){
+						auto &ware = input[j];
+						bool keep_ware=false;
+						for(uint16 i = 0; i < desc->get_supplier_count(); i++){
+							if(ware.get_typ()==desc->get_supplier(i)->get_input_type()){
+								keep_ware=true;
 								break;
 							}
 						}
-						if (!match)
-						{
-							must_close = disconnect_supplier(k);
-							disconnect_supplier_checked = true;
+						if(keep_ware){
+							kept_ware_indexes.append(j);
+						}else{
+							for(uint32 i = ware.link_count()-1; i < ware.link_count(); i--){
+								must_close = disconnect_supplier(ware.link_from_index(i));
+								disconnect_supplier_checked=true;
+							}
 						}
+					}
+					//find which input ware types are new
+					vector_tpl<uint16> new_ware_indexes;
+					for(uint16 i = 0; i < desc->get_supplier_count(); i++){
+						for(uint32 j = 0; j < input.get_count(); j++){
+							if(input[j].get_typ()==desc->get_supplier(i)->get_input_type()){
+								new_ware_indexes.append(i);
+							}
+						}
+					}
+
+					//rearange input wares keeping data transfers minimal
+					uint32 new_ware_index=0;
+					uint32 kept_ware_index=0;
+					uint32 idx;
+					for(idx = 0; idx < input.get_count(); idx++){
+						if(idx==kept_ware_indexes[kept_ware_index]){
+							kept_ware_index++;
+						}else if(new_ware_index < new_ware_indexes.get_count()){
+							input[idx].set_typ(desc->get_supplier(new_ware_indexes[new_ware_index])->get_input_type());
+							new_ware_index++;
+						}else if(kept_ware_index < kept_ware_indexes.get_count()){
+							input[idx]=input[kept_ware_indexes[kept_ware_index]];
+							kept_ware_index++;
+						}
+					}
+					input.resize(desc->get_supplier_count());
+					for(;idx<input.get_count(); idx++){
+						input[idx].set_typ(desc->get_supplier(new_ware_indexes[new_ware_index])->get_input_type());
+						new_ware_index++;
 					}
 
 					if (!disconnect_supplier_checked)

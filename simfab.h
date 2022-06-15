@@ -220,6 +220,7 @@ public:
 					}
 					if(ware_iterator->link_count()){
 						koord_iterator = ware_iterator->link_begin();
+						break;
 					}
 				}
 			}
@@ -314,6 +315,7 @@ public:
 					}
 					if(ware_iterator->link_count()){
 						koord_iterator = ware_iterator->link_begin();
+						break;
 					}
 				}
 			}
