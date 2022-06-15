@@ -646,14 +646,23 @@ fabrik_t *fabrik_t::get_fab(const koord &pos)
 }
 
 
-void fabrik_t::add_consumer(koord ziel)
+void fabrik_t::add_consumer(koord ziel, const goods_desc_t *desc)
 {
-	if(  !consumers.is_contained(ziel)  ) {
-		consumers.insert_ordered(ziel, RelativeDistanceOrdering(pos.get_2d()) );
-		// now tell factory too
-		fabrik_t * fab = fabrik_t::get_fab(ziel);
-		if (fab) {
-			fab->add_supplier(get_pos().get_2d());
+	for( auto& ware : get_output()){
+		if(ware.get_typ()==desc){
+			ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()));
+			if(fabrik_t *fab = get_fab( ziel )){
+				fab->add_supplier(get_pos().get_2d(),desc);
+			}
+		}else if(!desc){
+			if(fabrik_t *fab = get_fab( ziel )){
+				for(auto &dest_ware : fab->get_input()){
+					if(dest_ware.get_typ() == ware.get_typ()){
+						ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()));
+						fab->add_supplier(get_pos().get_2d(),ware.get_typ());
+					}
+				}
+			}
 		}
 	}
 }
@@ -661,7 +670,9 @@ void fabrik_t::add_consumer(koord ziel)
 
 void fabrik_t::remove_consumer(koord consumer_pos)
 {
-	consumers.remove(consumer_pos);
+	for(auto &ware : get_output()){
+		ware.link_remove(consumer_pos);
+	}
 }
 
 bool fabrik_t::disconnect_consumer(koord consumer_pos) //Returns true if must be destroyed.
@@ -672,7 +683,7 @@ bool fabrik_t::disconnect_consumer(koord consumer_pos) //Returns true if must be
 	}
 
 	vector_tpl<const goods_desc_t*> available_consumers(desc->get_product_count());
-	for (const koord other_consumer_pos : consumers)
+	for (auto other_consumer_pos : get_consumers())
 	{
 		if(const fabrik_t* consumer_factory = fabrik_t::get_fab(other_consumer_pos))
 		{
@@ -750,7 +761,7 @@ bool fabrik_t::disconnect_supplier(koord supplier_pos) //Returns true if must be
 	}
 
 	vector_tpl<const goods_desc_t*> available_inputs(desc->get_supplier_count());
-	for (const koord other_supplier_pos : suppliers)
+	for (auto other_supplier_pos : get_suppliers())
 	{
 		if(const fabrik_t* supplier_factory = fabrik_t::get_fab(other_supplier_pos))
 		{
@@ -1080,8 +1091,8 @@ fabrik_t::~fabrik_t()
 
 		// Disconnect this factory from all chains.
 		// @author: jamespetts
-		uint32 number_of_customers = consumers.get_count();
-		uint32 number_of_suppliers = suppliers.get_count();
+		uint32 number_of_customers = 999;//FIXTHIS
+		uint32 number_of_suppliers = 999;//FIXTHIS
 		const weighted_vector_tpl<stadt_t*>& staedte = welt->get_cities();
 		for(weighted_vector_tpl<stadt_t*>::const_iterator j = staedte.begin(), end = staedte.end(); j != end; ++j)
 		{
@@ -1091,25 +1102,28 @@ fabrik_t::~fabrik_t()
 		char buf[192];
 		sprintf(buf, translator::translate("Industry:\n%s\nhas closed,\nwith the loss\nof %d jobs.\n%d upstream\nsuppliers and\n%d downstream\ncustomers\nare affected."), translator::translate(get_name()), get_base_pax_demand(), number_of_suppliers, number_of_customers);
 		welt->get_message()->add_message(buf, pos.get_2d(), message_t::industry, color_idx_to_rgb(COL_DARK_RED), skinverwaltung_t::neujahrsymbol->get_image_id(0));
-		for(sint32 i = number_of_customers - 1; i >= 0; i --)
-		{
-			fabrik_t* tmp = get_fab(consumers[i]);
-			if(tmp && tmp->disconnect_supplier(pos.get_2d()))
+		for(auto &ware : get_output()){
+			for(sint32 i = ware.link_count() - 1; i >= 0; i --)
 			{
-				// Orphaned, must be deleted.
-				gebaeude_t* gb = tmp->get_building();
-				hausbauer_t::remove(welt->get_public_player(), gb, false);
+				fabrik_t* tmp = get_fab(ware.link_from_index(i));
+				if(tmp && tmp->disconnect_supplier(pos.get_2d()))
+				{
+					// Orphaned, must be deleted.
+					gebaeude_t* gb = tmp->get_building();
+					hausbauer_t::remove(welt->get_public_player(), gb, false);
+				}
 			}
 		}
-
-		for(sint32 i = number_of_suppliers - 1; i >= 0; i --)
-		{
-			fabrik_t* tmp = get_fab(suppliers[i]);
-			if(tmp && tmp->disconnect_consumer(pos.get_2d()))
+		for(auto &ware : get_input()){
+			for(sint32 i = ware.link_count() - 1; i >= 0; i --)
 			{
-				// Orphaned, must be deleted.
-				gebaeude_t* gb = tmp->get_building();
-				hausbauer_t::remove(welt->get_public_player(), gb, false);
+				fabrik_t* tmp = get_fab(ware.link_from_index(i));
+				if(tmp && tmp->disconnect_consumer(pos.get_2d()))
+				{
+					// Orphaned, must be deleted.
+					gebaeude_t* gb = tmp->get_building();
+					hausbauer_t::remove(welt->get_public_player(), gb, false);
+				}
 			}
 		}
 		if(transformer_connected)
@@ -1361,6 +1375,10 @@ void fabrik_t::rdwr(loadsave_t *file)
 	if(  file->is_saving()  ) {
 		input_count = input.get_count();
 		output_count = output.get_count();
+		consumers.clear();
+		for(auto pos : get_consumers()){
+			consumers.append(pos);
+		}
 		consumers_count = consumers.get_count();
 		const char *s = desc->get_name();
 		file->rdwr_str(s);
@@ -2138,6 +2156,7 @@ sint32 fabrik_t::goods_needed(const goods_desc_t *typ) const
 
 bool fabrik_t::is_consumer_active_at(koord consumer_pos ) const
 {
+	//FIXTHIS
 	if ( consumers.is_contained(consumer_pos) ) {
 		return 0 < (( 1 << consumers.index_of(consumer_pos) ) & consumers_active_last_month );
 	}
@@ -2466,7 +2485,7 @@ public:
 void fabrik_t::verteile_waren(const uint32 product)
 {
 	// Check consumers
-	if(  consumers.empty()  )
+	if(  !get_output()[product].link_count()  )
 	{
 		return;
 	}
@@ -2493,10 +2512,10 @@ void fabrik_t::verteile_waren(const uint32 product)
 	sint32 needed = 0;
 	sint32 needed_base_units = 0;
 
-	for (uint32 consumer_num = 0; consumer_num < consumers.get_count(); consumer_num++)
+	for (uint32 consumer_num = 0; consumer_num < get_output()[product].link_count(); consumer_num++)
 	{
 		// Check whether these can be carted to their destination.
-		const koord consumer_pos = consumers[(consumer_num + output[product].index_offset) % consumers.get_count()];
+		const koord consumer_pos = get_output()[product].link_from_index((consumer_num + output[product].index_offset) % get_output()[product].link_count());
 		const uint32 distance_to_consumer = shortest_distance(consumer_pos, pos.get_2d());
 		if (distance_to_consumer <= welt->get_settings().get_station_coverage_factories())
 		{
@@ -2563,9 +2582,9 @@ void fabrik_t::verteile_waren(const uint32 product)
 		nearby_halt_t nearby_halt = nearby_freight_halts[(nearby_halt_num + output[product].index_offset) % nearby_halts_count];
 
 		// Iterate over all targets
-		for(uint32 consumer_num=0; consumer_num < consumers.get_count(); consumer_num++  ) {
+		for(uint32 consumer_num=0; consumer_num < get_output()[product].link_count(); consumer_num++  ) {
 			// this way, the halt, that is tried first, will change. As a result, if all destinations are empty, it will be spread evenly
-			const koord consumer_pos = consumers[(consumer_num + output[product].index_offset) % consumers.get_count()];
+			const koord consumer_pos = get_output()[product].link_from_index((consumer_num + output[product].index_offset) % get_output()[product].link_count());
 			fabrik_t * this_consumer = get_fab(consumer_pos);
 
 			if(this_consumer)
@@ -2709,7 +2728,8 @@ void fabrik_t::verteile_waren(const uint32 product)
 		}
 		fabrik_t::update_transit( best_ware, true );
 		// add as active destination
-		consumers_active_last_month |= (1 << consumers.index_of(best_ware.get_zielpos()));
+		//FIXTHIS
+		//consumers_active_last_month |= (1 << consumers.index_of(best_ware.get_zielpos()));
 		output[product].book_stat(best_ware.menge, FAB_GOODS_DELIVERED);
 	}
 }
@@ -2995,7 +3015,7 @@ void fabrik_t::new_month()
 					// Remove redundant inputs
 					bool disconnect_supplier_checked = false;
 					bool must_close = false;
-					FOR(vector_tpl<koord>, k, suppliers)
+					for(auto k : get_suppliers())
 					{
 						fabrik_t* supplier = fabrik_t::get_fab(k);
 						bool match = false;
@@ -3099,14 +3119,14 @@ void fabrik_t::recalc_factory_status()
 			}
 			// Does each input goods have one or more suppliers? If not, this factory will not be operational.
 			bool found = false;
-			FOR(vector_tpl<koord>, k, suppliers)
+			for(auto k : get_suppliers())
 			{
 				const fabrik_t* supplier = fabrik_t::get_fab(k);
 				if (supplier->get_status() == missing_connections || supplier->get_status() == material_not_available) {
 					// An inoperable factory is synonymous with non-existence => skip!
 					continue;
 				}
-				FOR(array_tpl<ware_production_t>, sw, supplier->get_output())
+				for(auto& sw : supplier->get_output())
 				{
 					if (sw.get_typ() == j.get_typ())
 					{
@@ -3172,7 +3192,7 @@ void fabrik_t::recalc_factory_status()
 	// At least one must have a normal downstream industry
 	if (output.get_count()) {
 		bool has_any_consumer = false;
-		FOR(vector_tpl<koord>, k, consumers) {
+		for(auto k : get_consumers()) {
 			const fabrik_t* consumer = fabrik_t::get_fab(k);
 			// Focus on incomplete connections between manufacturers rather than missing end consumer's connection
 			if (consumer->get_sector()==end_consumer) {
@@ -3195,7 +3215,7 @@ void fabrik_t::recalc_factory_status()
 			}
 		}
 	}
-	if (sector==marine_resource && !consumers.get_count()) {
+	if (sector==marine_resource && !get_consumers().get_count()) {
 		if (!add_customer(this)) {
 			status = missing_consumer;
 			return;
@@ -3500,19 +3520,11 @@ void fabrik_t::finish_rd()
 	else {
 		// add as supplier to target(s)
 		for(uint32 i=0; i < consumers.get_count(); i++) {
-			fabrik_t * fab2 = fabrik_t::get_fab(consumers[i]);
-			if(fab2) {
-				fab2->add_supplier(pos.get_2d());
-				consumers[i] = fab2->get_pos().get_2d();
-			}
-			else {
-				// remove this ...
-				dbg->warning("fabrik_t::finish_rd()", "No factory at expected position %s!", consumers[i].get_str() );
-				consumers.remove_at(i);
-				i--;
-			}
+			add_consumer(consumers[i]);
 		}
 	}
+	consumers.clear();
+	consumers.resize(0);
 
 	// Set field production
 	adjust_production_for_fields(true);
@@ -3569,10 +3581,10 @@ void fabrik_t::rotate90( const sint16 y_size )
 	pos_origin.x -= desc->get_building()->get_x(rotate)-1;
 	pos.rotate90( y_size );
 
-	FOR(vector_tpl<koord>, & i, consumers) {
+	for(auto i : get_consumers()) {
 		i.rotate90(y_size);
 	}
-	FOR(vector_tpl<koord>, & i, suppliers) {
+	for(auto i : get_suppliers()) {
 		i.rotate90(y_size);
 	}
 	FOR(vector_tpl<field_data_t>, & i, fields) {
@@ -3583,31 +3595,33 @@ void fabrik_t::rotate90( const sint16 y_size )
 }
 
 
-void fabrik_t::add_supplier(koord ziel)
+void fabrik_t::add_supplier(koord ziel, const goods_desc_t *desc)
 {
-	if(  welt->get_settings().get_factory_maximum_intransit_percentage()  &&  !suppliers.is_contained(ziel)  ) {
-		if(  fabrik_t *fab = get_fab( ziel )  ) {
-			for(  uint32 i=0;  i < fab->get_output().get_count();  i++   ) {
-				const ware_production_t &w_out = fab->get_output()[i];
-				// now update transit limits
-				FOR(  array_tpl<ware_production_t>,  &w,  input ) {
-					if(  w_out.get_typ() == w.get_typ()  )
-					{
-						calc_max_intransit_percentages();
-						break;
+	for(auto &ware : get_input()){
+		if(ware.get_typ()==desc){
+			ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()));
+			calc_max_intransit_percentages();
+		}else if(!desc){
+			if(fabrik_t *fab = get_fab( ziel )){
+				bool calc_needed=false;
+				for(auto &source_ware : fab->get_output()){
+					if(source_ware.get_typ() == ware.get_typ()){
+						ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()));
+						calc_needed=true;
 					}
 				}
+				calc_max_intransit_percentages();
 			}
-			// since there could be more than one good, we have to iterate over all of them
 		}
 	}
-	suppliers.insert_unique_ordered( ziel, RelativeDistanceOrdering(pos.get_2d()) );
 }
 
 
 void fabrik_t::remove_supplier(koord supplier_pos)
 {
-	suppliers.remove(supplier_pos);
+	for(auto& ware : get_input()){
+		ware.link_remove(supplier_pos);
+	}
 
 	if(  welt->get_settings().get_factory_maximum_intransit_percentage()  ) {
 		// set to zero
@@ -3616,7 +3630,7 @@ void fabrik_t::remove_supplier(koord supplier_pos)
 		}
 
 		// unfortunately we have to bite the bullet and recalc the values from scratch ...
-		FOR( vector_tpl<koord>, ziel, suppliers ) {
+		for(auto ziel : get_suppliers() ) {
 			if(  fabrik_t *fab = get_fab( ziel )  ) {
 				for(  uint32 i=0;  i < fab->get_output().get_count();  i++   ) {
 					// now update transit limits
@@ -3914,7 +3928,7 @@ void fabrik_t::display_status(sint16 xpos, sint16 ypos)
 
 uint32 fabrik_t::get_lead_time(const goods_desc_t* wtype)
 {
-	if(suppliers.empty())
+	if(get_suppliers().empty())
 	{
 		return UINT32_MAX_VALUE;
 	}
@@ -3922,7 +3936,7 @@ uint32 fabrik_t::get_lead_time(const goods_desc_t* wtype)
 	// Tenths of minutes.
 	uint32 longest_lead_time = UINT32_MAX_VALUE;
 
-	FOR(vector_tpl<koord>, const& supplier, suppliers)
+	for(auto supplier : get_suppliers())
 	{
 		const fabrik_t *fab = get_fab(supplier);
 		if(!fab)

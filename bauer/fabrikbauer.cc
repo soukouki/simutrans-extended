@@ -1116,7 +1116,7 @@ int factory_builder_t::increase_industry_density( bool tell_me, bool do_not_add_
 				const factory_supplier_desc_t* supplier_type = fab->get_desc()->get_supplier(l);
 				const goods_desc_t* input_type = supplier_type->get_input_type();
 				missing_goods.append_unique(input_type);
-				const vector_tpl<koord> suppliers = fab->get_suppliers();
+				auto suppliers = fab->get_suppliers();
 
 				// Check how much of this product that the current factory needs
 				consumption_level = fab->get_base_production() * (supplier_type ? supplier_type->get_consumption() : 1);
@@ -1130,7 +1130,7 @@ int factory_builder_t::increase_industry_density( bool tell_me, bool do_not_add_
 					}
 
 					// Check whether the factory's actual suppliers supply any of this product.
-					const fabrik_t* supplier = fabrik_t::get_fab(supplier_koord);
+					fabrik_t* supplier = fabrik_t::get_fab(supplier_koord);
 					if(!supplier)
 					{
 						continue;
@@ -1146,10 +1146,9 @@ int factory_builder_t::increase_industry_density( bool tell_me, bool do_not_add_
 							// Check to see whether this existing supplier is able to supply *enough* of this product
 							const sint32 total_output_supplier = supplier->get_base_production() * consumer_type->get_factor();
 							sint32 used_output = 0;
-							vector_tpl<koord> competing_consumers = supplier->get_consumers();
-							for(uint32 n = 0; n < competing_consumers.get_count(); n ++)
+							for(auto competing_consumers : supplier->get_consumers())
 							{
-								const fabrik_t* competing_consumer = fabrik_t::get_fab(competing_consumers.get_element(n));
+								const fabrik_t* competing_consumer = fabrik_t::get_fab(competing_consumers);
 								for(int x = 0; x < competing_consumer->get_desc()->get_supplier_count(); x ++)
 								{
 									const goods_desc_t* consumer_output_type = consumer_type->get_output_type();
