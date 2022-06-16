@@ -689,12 +689,31 @@ public:
 
 	void rotate90( const sint16 y_size );
 
+	static const vector_tpl<koord> null_vector;
+
 	ware_link_iteratable_t get_consumers() { return ware_link_iteratable_t(&output); } // "Delivery destinations" (Google)
 	ware_link_const_iteratable_t get_consumers() const {return ware_link_const_iteratable_t(&output);}
+	const vector_tpl<koord>& get_consumers(const goods_desc_t* ware_type) const {
+		for(auto& ware : get_output()){
+			if(ware.get_typ()==ware_type){
+				return ware.get_links();
+			}
+		}
+		return null_vector;
+	}
 	bool is_consumer_active_at(koord consumer_pos ) const;
 
 	ware_link_iteratable_t get_suppliers() { return ware_link_iteratable_t(&input); }
 	ware_link_const_iteratable_t get_suppliers() const {return ware_link_const_iteratable_t(&input);}
+	const vector_tpl<koord>& get_suppliers(const goods_desc_t* ware_type) const {
+		for(auto& ware : get_input()){
+			if(ware.get_typ()==ware_type){
+				return ware.get_links();
+			}
+		}
+		return null_vector;
+	}
+
 
 	const vector_tpl<nearby_halt_t>& get_nearby_freight_halts() const { return nearby_freight_halts; }
 

@@ -67,6 +67,7 @@ static const sint32 FAB_PRODFACT_UNIT_HALF = ((sint32)1 << (DEFAULT_PRODUCTION_F
 
 karte_ptr_t fabrik_t::welt;
 
+const vector_tpl<koord> fabrik_t::null_vector = vector_tpl<koord>();
 
 /**
  * Convert internal values to displayed values
@@ -3080,26 +3081,7 @@ void fabrik_t::recalc_factory_status()
 				status_ein |= FL_WARE_FEHLT_WAS;
 			}
 			// Does each input goods have one or more suppliers? If not, this factory will not be operational.
-			bool found = false;
-			for(auto k : get_suppliers())
-			{
-				const fabrik_t* supplier = fabrik_t::get_fab(k);
-				if (supplier->get_status() == missing_connections || supplier->get_status() == material_not_available) {
-					// An inoperable factory is synonymous with non-existence => skip!
-					continue;
-				}
-				for(auto& sw : supplier->get_output())
-				{
-					if (sw.get_typ() == j.get_typ())
-					{
-						found = true;
-						break;
-					}
-				}
-				if (found) {
-					break; // same goods count only once
-				}
-			}
+			bool found = j.link_count() ? true : false;
 
 			if (found || (!found && (j.get_in_transit() || j.menge))) {
 				active_input_count++;
@@ -3572,7 +3554,9 @@ void fabrik_t::add_supplier(koord ziel, const goods_desc_t *desc)
 						calc_needed=true;
 					}
 				}
-				calc_max_intransit_percentages();
+				if(calc_needed){
+					calc_max_intransit_percentages();
+				}
 			}
 		}
 	}
@@ -3591,20 +3575,7 @@ void fabrik_t::remove_supplier(koord supplier_pos)
 			w.max_transit = 0;
 		}
 
-		// unfortunately we have to bite the bullet and recalc the values from scratch ...
-		for(auto ziel : get_suppliers() ) {
-			if(  fabrik_t *fab = get_fab( ziel )  ) {
-				for(  uint32 i=0;  i < fab->get_output().get_count();  i++   ) {
-					// now update transit limits
-					FOR(  array_tpl<ware_production_t>,  &w,  input )
-					{
-						(void)w;
-						calc_max_intransit_percentages();
-					}
-				}
-				// since there could be more than one good, we have to iterate over all of them
-			}
-		}
+		calc_max_intransit_percentages();
 	}
 }
 
@@ -3890,61 +3861,60 @@ void fabrik_t::display_status(sint16 xpos, sint16 ypos)
 
 uint32 fabrik_t::get_lead_time(const goods_desc_t* wtype)
 {
-	if(get_suppliers().empty())
-	{
-		return UINT32_MAX_VALUE;
-	}
-
 	// Tenths of minutes.
 	uint32 longest_lead_time = UINT32_MAX_VALUE;
 
-	for(auto supplier : get_suppliers())
-	{
-		const fabrik_t *fab = get_fab(supplier);
-		if(!fab)
-		{
-			continue;
-		}
-		for (uint i = 0; i < fab->get_desc()->get_product_count(); i++)
-		{
-			const factory_product_desc_t *product = fab->get_desc()->get_product(i);
-			if(product->get_output_type() == wtype)
-			{
-				uint32 best_journey_time = UINT32_MAX_VALUE;
-				const uint32 transfer_journey_time_factor = ((uint32)welt->get_settings().get_meters_per_tile() * 6) * 10;
-
-				FOR(vector_tpl<nearby_halt_t>, const& nearby_halt, fab->nearby_freight_halts)
+	for(auto &ware : input){
+		if(ware.get_typ()==wtype){
+			for(auto supplier : ware.get_links()){
+				const fabrik_t *fab = get_fab(supplier);
+				if(!fab)
 				{
-					// now search route
-					const uint32 origin_transfer_time = (((uint32)nearby_halt.distance * transfer_journey_time_factor) / 100) + nearby_halt.halt->get_transshipment_time();
-					ware_t tmp;
-					tmp.set_desc(wtype);
-					tmp.set_zielpos(pos.get_2d());
-					tmp.set_origin(nearby_halt.halt);
-					uint32 current_journey_time = (uint32)nearby_halt.halt->find_route(tmp, best_journey_time);
-					if (current_journey_time < UINT32_MAX_VALUE)
+					continue;
+				}
+				for (uint i = 0; i < fab->get_desc()->get_product_count(); i++)
+				{
+					const factory_product_desc_t *product = fab->get_desc()->get_product(i);
+					if(product->get_output_type() == wtype)
 					{
-						current_journey_time += origin_transfer_time;
-						if (tmp.get_ziel().is_bound())
+						uint32 best_journey_time = UINT32_MAX_VALUE;
+						const uint32 transfer_journey_time_factor = ((uint32)welt->get_settings().get_meters_per_tile() * 6) * 10;
+
+						FOR(vector_tpl<nearby_halt_t>, const& nearby_halt, fab->nearby_freight_halts)
 						{
-							const uint32 destination_distance_to_stop = shortest_distance(tmp.get_zielpos(), tmp.get_ziel()->get_basis_pos());
-							const uint32 destination_transfer_time = ((destination_distance_to_stop * transfer_journey_time_factor) / 100) + tmp.get_ziel()->get_transshipment_time();
-							current_journey_time += destination_transfer_time;
+							// now search route
+							const uint32 origin_transfer_time = (((uint32)nearby_halt.distance * transfer_journey_time_factor) / 100) + nearby_halt.halt->get_transshipment_time();
+							ware_t tmp;
+							tmp.set_desc(wtype);
+							tmp.set_zielpos(pos.get_2d());
+							tmp.set_origin(nearby_halt.halt);
+							uint32 current_journey_time = (uint32)nearby_halt.halt->find_route(tmp, best_journey_time);
+							if (current_journey_time < UINT32_MAX_VALUE)
+							{
+								current_journey_time += origin_transfer_time;
+								if (tmp.get_ziel().is_bound())
+								{
+									const uint32 destination_distance_to_stop = shortest_distance(tmp.get_zielpos(), tmp.get_ziel()->get_basis_pos());
+									const uint32 destination_transfer_time = ((destination_distance_to_stop * transfer_journey_time_factor) / 100) + tmp.get_ziel()->get_transshipment_time();
+									current_journey_time += destination_transfer_time;
+								}
+
+								if (current_journey_time < best_journey_time)
+								{
+									best_journey_time = current_journey_time;
+								}
+							}
 						}
 
-						if (current_journey_time < best_journey_time)
+						if(best_journey_time < UINT32_MAX_VALUE && (best_journey_time > longest_lead_time || longest_lead_time == UINT32_MAX_VALUE))
 						{
-							best_journey_time = current_journey_time;
+							longest_lead_time = best_journey_time;
 						}
+						break;
 					}
 				}
-
-				if(best_journey_time < UINT32_MAX_VALUE && (best_journey_time > longest_lead_time || longest_lead_time == UINT32_MAX_VALUE))
-				{
-					longest_lead_time = best_journey_time;
-				}
-				break;
 			}
+			break;
 		}
 	}
 
