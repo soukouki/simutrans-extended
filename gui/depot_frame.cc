@@ -119,7 +119,6 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	 * [CONVOY ASSEMBLER]
 	 */
 	convoy_assembler.set_depot_frame(this);
-	convoy_assembler.add_listener(this);
 	update_convoy();
 
 
