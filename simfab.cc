@@ -1034,8 +1034,8 @@ fabrik_t::~fabrik_t()
 
 		// Disconnect this factory from all chains.
 		// @author: jamespetts
-		uint32 number_of_customers = 999;//FIXTHIS
-		uint32 number_of_suppliers = 999;//FIXTHIS
+		uint32 number_of_customers = get_consumers().get_count();
+		uint32 number_of_suppliers = get_suppliers().get_count();
 		const weighted_vector_tpl<stadt_t*>& staedte = welt->get_cities();
 		for(weighted_vector_tpl<stadt_t*>::const_iterator j = staedte.begin(), end = staedte.end(); j != end; ++j)
 		{
