@@ -39,6 +39,8 @@ private:
 	// for oversized entries
 	scr_coord_val max_width;
 
+	scr_coord_val fixed_height=0;
+
 protected:
 	/**
 	 * The scrolling component
@@ -61,6 +63,8 @@ public:
 	* @param width the minimum width it should strech to
 	*/
 	virtual void set_min_width( scr_coord_val width ) { max_width = width; }
+
+	void set_fixed_height(scr_coord_val height) { fixed_height = height; }
 
 	/**
 	 * This method MUST be used to set the size of scrollpanes.
