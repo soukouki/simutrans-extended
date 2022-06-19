@@ -119,6 +119,8 @@ const char *tool_t::id_to_string(uint16 id)
 
 		CASE_TO_STRING(TOOL_BUILD_SIGNALBOX);
 		CASE_TO_STRING(TOOL_REASSIGN_SIGNAL);
+		CASE_TO_STRING(TOOL_PATH_REMOVER);
+		CASE_TO_STRING(TOOL_FLATTEN_PATH);
 		}
 	}
 	else if (id & SIMPLE_TOOL) {
@@ -280,10 +282,14 @@ tool_t *create_general_tool(int toolnr)
 		case TOOL_SET_CLIMATE:                 tool = new tool_set_climate_t();         break;
 		case TOOL_ROTATE_BUILDING:             tool = new tool_rotate_building_t();     break;
 		case TOOL_PLANT_GROUNDOBJ:             tool = new tool_plant_groundobj_t();     break;
+		case TOOL_ADD_MESSAGE:                 tool = new tool_add_message_t();         break;
+		case TOOL_REMOVE_SIGNAL:               tool = new tool_remove_signal_t();       break;
 		case TOOL_REASSIGN_SIGNAL_DEPRECATED:
 		case TOOL_REASSIGN_SIGNAL:             tool = new tool_reassign_signal_t();     break;
 		case TOOL_BUILD_PIER:                  tool = new tool_build_pier_t();          break;
 		case TOOL_BUILD_PIER_AUTO:             tool = new tool_build_pier_auto_t();     break;
+		case TOOL_PATH_REMOVER:                tool = new tool_path_remover_t();        break;
+		case TOOL_FLATTEN_PATH:	               tool = new tool_flatten_path_t();        break;
 		case TOOL_EXEC_SCRIPT:
 		case TOOL_EXEC_TWO_CLICK_SCRIPT:
 			return NULL; // Tools reserved by standard
@@ -338,7 +344,6 @@ tool_t *create_simple_tool(int toolnr)
 		case TOOL_CHANGE_TRAFFIC_LIGHT: tool = new tool_change_traffic_light_t(); break;
 		case TOOL_CHANGE_CITY:          tool = new tool_change_city_t();          break;
 		case TOOL_RENAME:               tool = new tool_rename_t();               break;
-		case TOOL_ADD_MESSAGE:          tool = new tool_add_message_t();          break;
 		case TOOL_TOGGLE_RESERVATION:   tool = new tool_toggle_reservation_t();   break;
 		case TOOL_VIEW_OWNER:           tool = new tool_view_owner_t();           break;
 		case TOOL_HIDE_UNDER_CURSOR:    tool = new tool_hide_under_cursor_t();    break;

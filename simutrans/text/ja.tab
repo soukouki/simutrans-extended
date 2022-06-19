@@ -1667,6 +1667,8 @@ remove narrowgauge tracks
 ナローゲージの撤去
 remove powerlines
 送電線の撤去
+remove signal
+信号の撤去
 remove roads
 道路の撤去
 remove tracks
@@ -1800,7 +1802,7 @@ Show map scale
 Show mismatched
 不適合のサーバーを表示
 Show obsolete
-旧型を表示
+老朽車両を含む
 Show offline
 オフラインを表示
 Show only used
@@ -1851,8 +1853,6 @@ Smart hide objects
 カーソル周辺を隠す
 Sort by
 並び替え規則
-Sort by:
-ソート:
 Sort waiting list by
 待機表の並び変え
 Sound
@@ -2512,7 +2512,7 @@ city_threshold_size
 class
 クラス
 Class
-クラス
+運賃等級
 class_manager
 旅客/郵便クラスの割当て
 classes
@@ -2769,6 +2769,10 @@ Industry:\n%s\nhas closed,\nwith the loss\nof %d jobs.\n%d upstream\nsuppliers a
 産業:%sの閉鎖に伴い、%d人の雇用が失われ、%dの供給元と%dの需要先の産業が影響を受けました。
 infinite_range
 有効範囲の制限なし
+Infinite mouse scrolling
+マップスクロール時にポインタ位置を固定（マウス使用時推奨）
+Infinite scrolling using mouse
+windowモードではオフにした場合に画面の外にマウスポインタが移動することがあります。※タッチスクリーンでは動作しない可能性があります！
 Interest
 利子
 intermediate_signal
@@ -3214,7 +3218,7 @@ Show in the ticker
 Show in ticker
 画面下部にスクロールで表示します。
 Show outdated
-古い車両を表示
+古い車両を含む
 Show the condition of ways
 軌道の状態を表示します。
 Show the map in the same isometric orientation as the main game window
@@ -3844,7 +3848,7 @@ Available:
 Show future
 登場予定
 Show upgraded
-改造車両を表示
+改造車両を含む
 GUI settings
 GUI設定
 map view

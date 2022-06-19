@@ -1377,8 +1377,8 @@ const fabrik_t* minimap_t::draw_factory_connections(const fabrik_t* const fab, b
 	if(fab) {
 		PIXVAL color = supplier_link ? color_idx_to_rgb(COL_RED) : color_idx_to_rgb(COL_WHITE);
 		scr_coord fabpos = map_to_screen_coord( fab->get_pos().get_2d() ) + pos;
-		const vector_tpl<koord>& lieferziele = supplier_link ? fab->get_suppliers() : fab->get_consumers();
-		FOR(vector_tpl<koord>, lieferziel, lieferziele) {
+		const vector_tpl<koord>& consumer = supplier_link ? fab->get_suppliers() : fab->get_consumers();
+		FOR(vector_tpl<koord>, lieferziel, consumer) {
 			const fabrik_t * fab2 = fabrik_t::get_fab(lieferziel);
 			if (fab2) {
 				const scr_coord end = map_to_screen_coord( lieferziel ) + pos;
@@ -2096,13 +2096,14 @@ void minimap_t::draw(scr_coord pos)
 			display_ddd_proportional_clip(boxpos.x, boxpos.y, name_width, 0, color_idx_to_rgb(10), color_idx_to_rgb(COL_WHITE), name, true);
 		}
 
-		for (uint32 i = 0; i < win_get_open_count(); i++) {
+		for (int i = win_get_open_count()-1; i>=0; i--) {
 			gui_frame_t *g = win_get_index(i);
 			if(g->get_rdwr_id()== magic_factory_info) {
 				// is a factory info window
 				const fabrik_t * const fab = dynamic_cast<fabrik_info_t *>(g)->get_factory();
 				draw_factory_connections(fab, true, pos);
 				draw_factory_connections(fab, false, pos);
+				break;
 			}
 		}
 

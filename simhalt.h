@@ -414,9 +414,8 @@ private:
 	 * Reconnect and reroute if counter different from welt->get_schedule_counter()
 	 */
 	static uint8 reconnect_counter;
-	// since we do partial routing, we remember the last offset
 
-	// since we do partial routing, we remeber the last offset
+	// since we do partial routing, we remember the last offset
 	uint8 last_catg_index;
 	uint32 last_goods_index;
 
@@ -547,9 +546,6 @@ public:
 	uint8 get_sortby() { return sortierung; }
 	void set_sortby(uint8 sm) { resort_freight_info =true; sortierung = sm; }
 
-	void force_resort() { resort_freight_info = true; }
-
-
 	/**
 	 * Calculates a status color for status bars
 	 */
@@ -628,6 +624,11 @@ public:
 		}
 		return enables&WARE;
 	}
+
+	// for gui purpose
+	// Compare convoy/line and halt to determine if it has a matching attribute. If not, loading cannot be executed.
+	bool can_serve(linehandle_t line) const;
+	bool can_serve(convoihandle_t cnv) const;
 
 	/**
 	 * Found route and station uncrowded
@@ -766,14 +767,10 @@ public:
 	void get_freight_info(cbuffer_t & buf);
 
 	/**
-	 * @param[out] buf short list of the waiting goods (i.e. 110 Wood, 15 Coal)
-	 */
-	void get_short_freight_info(cbuffer_t & buf) const;
-
-	/**
 	 * Opens an information window for this station.
 	 */
 	void show_info();
+	void show_detail();
 
 	/**
 	 * @return the type of a station

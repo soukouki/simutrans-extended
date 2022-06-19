@@ -27,25 +27,23 @@
 
 karte_ptr_t interaction_t::world;
 
-
 void interaction_t::move_view( const event_t &ev )
 {
 	koord new_ij = viewport->get_world_position();
 
-	sint16 new_xoff = viewport->get_x_off() - (ev.mx-ev.cx) * env_t::scroll_multi;
-	sint16 new_yoff = viewport->get_y_off() - (ev.my-ev.cy) * env_t::scroll_multi;
+	sint16 new_xoff = viewport->get_x_off() - (ev.mx - ev.cx) * env_t::scroll_multi;
+	sint16 new_yoff = viewport->get_y_off() - (ev.my - ev.cy) * env_t::scroll_multi;
 
 	// this sets the new position and mark screen dirty
 	// => with next refresh we will be at a new location
 	viewport->change_world_position( new_ij, new_xoff, new_yoff );
 
 	// move the mouse pointer back to starting location => infinite mouse movement
-	if(  (ev.mx - ev.cx) != 0  ||  (ev.my-ev.cy) !=0  ) {
-#ifdef __BEOS__
-		change_drag_start(ev.mx - ev.cx, ev.my - ev.cy);
-#else
-		move_pointer(ev.cx, ev.cy);
-#endif
+	if ((ev.mx - ev.cx) != 0 || (ev.my - ev.cy) != 0) {
+		if(!env_t::scroll_infinite  ||  !move_pointer(ev.cx, ev.cy)) {
+			// fails in finger mode
+			change_drag_start(ev.mx - ev.cx, ev.my - ev.cy);
+		}
 	}
 }
 
@@ -388,6 +386,7 @@ bool interaction_t::process_event( event_t &ev )
 	else if(IS_RIGHTDRAG(&ev)) {
 		// unset following
 		world->get_viewport()->set_follow_convoi( convoihandle_t() );
+		catch_dragging();
 		move_view(ev);
 	}
 	else if( (left_drag || world->get_tool(world->get_active_player_nr())->get_id() == (TOOL_QUERY | GENERAL_TOOL)) && IS_LEFTDRAG(&ev) ) {
@@ -398,6 +397,7 @@ bool interaction_t::process_event( event_t &ev )
 			left_drag = true;
 		}
 		world->get_viewport()->set_follow_convoi( convoihandle_t() );
+		catch_dragging();
 		move_view(ev);
 		ev.ev_code = IGNORE_EVENT;
 	}

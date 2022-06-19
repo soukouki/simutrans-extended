@@ -73,13 +73,37 @@ public:
 	bool is_init_network_safe() const OVERRIDE { return true; }
 };
 
+class tool_path_tool_t : public two_click_tool_t {
+public:
+	tool_path_tool_t(const uint16 tool_id) : two_click_tool_t(tool_id) {}
+	virtual const char * tile_work(player_t*, koord3d const &, koord3d const &)=0;
+	virtual void tile_mark(player_t*, koord3d const &,koord3d const &)=0;
+
+	const char * do_work(player_t *, const koord3d &start, const koord3d &end) override;
+	void mark_tiles(player_t *, const koord3d &start, const koord3d &end) override;
+	uint8 is_valid_pos(player_t *, const koord3d &, const char *&, const koord3d &) override {return 2;}
+	bool is_init_network_safe() const OVERRIDE { return true; }
+	virtual char const *get_tooltip(player_t const*) const override {return "";}
+};
+
+//call tool_remover along path
+class tool_path_remover_t : public tool_path_tool_t {
+public:
+	tool_path_remover_t() : tool_path_tool_t(TOOL_PATH_REMOVER | GENERAL_TOOL) {}
+	void tile_mark(player_t *, const koord3d &, koord3d const &) override;
+	const char * tile_work(player_t *, const koord3d &, koord3d const &) override;
+	char const* get_tooltip(player_t const*) const override { return translator::translate("Path Remove");}
+private:
+	koord3d get_work_pos(koord3d pos, koord3d start);
+};
+
+
 // alter land height tools
 class tool_raise_lower_base_t : public tool_t {
 protected:
 	bool is_dragging;
 	sint16 drag_height;
 
-	const char* drag(player_t*, koord k, sint16 h, int &n, bool allow_deep_water);
 	virtual sint16 get_drag_height(koord k) = 0;
 	bool check_dragging();
 
@@ -108,6 +132,9 @@ public:
 	bool is_grid_tool() const OVERRIDE {return true;}
 
 	bool update_pos_after_use() const OVERRIDE { return true; }
+
+	static const char* drag(player_t*, koord k, sint16 h, int &n, bool allow_deep_water);
+
 };
 
 class tool_raise_t : public tool_raise_lower_base_t {
@@ -126,6 +153,14 @@ public:
 	char const* check_pos(player_t*, koord3d) OVERRIDE;
 	char const* work(player_t*, koord3d) OVERRIDE;
 	sint16 get_drag_height(koord k) OVERRIDE;
+};
+
+class tool_flatten_path_t : public tool_path_tool_t{
+public:
+	tool_flatten_path_t() : tool_path_tool_t(TOOL_FLATTEN_PATH | GENERAL_TOOL) {}
+	void tile_mark(player_t *, const koord3d &, const koord3d &) override;
+	const char * tile_work(player_t *, const koord3d &, const koord3d &) override;
+	char const* get_tooltip(player_t const*) const override { return translator::translate("Flatten Path");}
 };
 
 /* slope tool definitions */
@@ -165,6 +200,7 @@ public:
 class tool_clear_reservation_t : public tool_t {
 public:
 	tool_clear_reservation_t() : tool_t(TOOL_CLEAR_RESERVATION | GENERAL_TOOL) {}
+	bool is_selected() const OVERRIDE;
 	char const* get_tooltip(player_t const*) const OVERRIDE { return translator::translate("Clear block reservation"); }
 	bool init(player_t*) OVERRIDE;
 	bool exit(player_t*) OVERRIDE;
@@ -785,6 +821,16 @@ public:
 };
 
 
+// removes signal from tile
+class tool_remove_signal_t : public tool_t {
+public:
+	tool_remove_signal_t() : tool_t(TOOL_REMOVE_SIGNAL | GENERAL_TOOL) {}
+	char const* get_tooltip(player_t const*) const OVERRIDE { return translator::translate("remove signal"); }
+	char const* work(player_t*, koord3d) OVERRIDE;
+	bool is_init_network_safe() const OVERRIDE { return true; }
+};
+
+
 // internal tool: show error message at specific coordinate
 // used for scenario error messages send by server
 class tool_error_message_t : public tool_t {
@@ -1367,12 +1413,13 @@ public:
 	bool is_init_network_safe() const OVERRIDE { return false; }
 };
 
-// internal tool: send message (could be used for chats)
+// internal tool: send message, with additional coordinate information
 class tool_add_message_t : public tool_t {
 public:
-	tool_add_message_t() : tool_t(TOOL_ADD_MESSAGE | SIMPLE_TOOL) {}
-	bool init(player_t*) OVERRIDE;
-	bool is_init_network_safe() const OVERRIDE { return false; }
+	tool_add_message_t() : tool_t(TOOL_ADD_MESSAGE | GENERAL_TOOL) {}
+	const char *work( player_t*, koord3d) OVERRIDE;
+	bool is_init_network_safe() const OVERRIDE { return true; }
+	// work is not safe, has to be send over network
 };
 
 // internal tool: change conncted signal box

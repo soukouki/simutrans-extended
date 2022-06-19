@@ -661,9 +661,10 @@ bool rail_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, ui
 			}
 			uint16 modified_route_index = min(route_index + i, route_count - 1u);
 			ribi_t::ribi ribi = ribi_type(cnv->get_route()->at(max(1u, modified_route_index) - 1u), cnv->get_route()->at(min(cnv->get_route()->get_count() - 1u, modified_route_index + 1u)));
-			signal_current = way->get_signal(ribi);
-			if (signal_current)
+			signal_t* sig = way->get_signal(ribi);
+			if (sig)
 			{
+				signal_current = sig;
 				// Check for non-adjacent one train staff cabinets - these should be ignored.
 				const koord3d first_pos = cnv->get_last_signal_pos();
 				if (shortest_distance(get_pos().get_2d(), first_pos.get_2d()) < 3)
@@ -2676,6 +2677,10 @@ sint32 rail_vehicle_t::block_reserver(route_t *route, uint16 start_index, uint16
 				else
 				{
 					success = false;
+					if (first_stop_signal_index < INVALID_INDEX && next_signal_index >= INVALID_INDEX)
+					{
+						next_signal_index = first_stop_signal_index;
+					}
 				}
 			} while((schedule_index != cnv->get_schedule()->get_current_stop()) && token_block_blocks && no_reverse && !break_loop_recursive);
 		}

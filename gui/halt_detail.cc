@@ -25,6 +25,7 @@
 #include "map_frame.h"
 #include "components/gui_label.h"
 #include "components/gui_line_lettercode.h"
+#include "components/gui_halthandled_lines.h"
 
 
 #define GOODS_SYMBOL_CELL_WIDTH 14
@@ -39,7 +40,6 @@ sint16 halt_detail_t::tabstate = -1;
 halt_detail_t::halt_detail_t(halthandle_t halt_) :
 	gui_frame_t(""),
 	halt(halt_),
-	line_number(halt_),
 	pas(halt_),
 	goods(halt_),
 	cont_service(halt_),
@@ -69,7 +69,7 @@ void halt_detail_t::init()
 	set_margin(scr_size(D_MARGIN_LEFT, 0), scr_size(D_MARGIN_RIGHT, 0));
 	set_spacing(scr_size(0, D_V_SPACE));
 
-	add_component(&line_number);
+	new_component<gui_halthandled_lines_t>(halt);
 	waiting_bar = new_component<gui_halt_waiting_indicator_t>(halt);
 
 	tabs.set_pos(scr_coord(0, LINESPACE*4 + D_MARGIN_TOP + D_V_SPACE));
@@ -142,7 +142,7 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_PAS, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_fare_class_name(goods_manager_t::INDEX_PAS, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				if (classes>1) {
 					if (c == 0) { cb->set_typ(button_t::roundbox_left_state);  }
 					else if(c == classes-1) { cb->set_typ(button_t::roundbox_right_state); }
@@ -177,7 +177,7 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_MAIL, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_fare_class_name(goods_manager_t::INDEX_MAIL, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				if (classes > 1) {
 					if (c == 0) { cb->set_typ(button_t::roundbox_left_state); }
 					else if (c == classes - 1) { cb->set_typ(button_t::roundbox_right_state); }
@@ -438,8 +438,7 @@ void halt_detail_t::update_components()
 		}
 		lb_selected_route_catg.buf().append(translator::translate(goods_manager_t::get_info_catg_index(selected_route_catg_index)->get_catg_name()));
 		if (goods_manager_t::get_info_catg_index(selected_route_catg_index)->get_number_of_classes()>1) {
-			// TODO: wealth class => fare class
-			lb_selected_route_catg.buf().printf(" > %s", goods_manager_t::get_translated_wealth_name(selected_route_catg_index, selected_class));
+			lb_selected_route_catg.buf().printf(" > %s", goods_manager_t::get_translated_fare_class_name(selected_route_catg_index, selected_class));
 		}
 		destinations.build_halt_list(selected_route_catg_index, selected_class, list_by_station);
 		lb_selected_route_catg.update();
@@ -858,7 +857,7 @@ void halt_detail_pas_t::draw(scr_coord offset)
 				pas_info.clear();
 				pas_info.printf("%u (%4.1f%%)", arround_population_by_class, arround_population ? 100.0 * arround_population_by_class / arround_population : 0.0);
 				uint colored_with = arround_population ? ((DEMANDS_CELL_WIDTH*arround_population_by_class) + (arround_population-1)) / arround_population : 0;
-				display_linear_gradient_wh_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH+5, offset.y + top+1, colored_with, LINESPACE - 3, color_idx_to_rgb(COL_DARK_GREEN+1), 70, 15, true);
+				display_linear_gradient_wh_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH+5, offset.y + top+1, colored_with, LINESPACE - 3, color_idx_to_rgb(COL_DARK_GREEN+1), 70, 15);
 				display_proportional_clip_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + DEMANDS_CELL_WIDTH, offset.y + top, pas_info, ALIGN_RIGHT, SYSCOL_TEXT, true);
 
 				// visitor demand
@@ -866,7 +865,7 @@ void halt_detail_pas_t::draw(scr_coord offset)
 				pas_info.clear();
 				pas_info.printf("%u (%4.1f%%)", arround_visitor_demand_by_class, arround_visitor_demand ? 100.0 * arround_visitor_demand_by_class / arround_visitor_demand : 0.0);
 				colored_with = arround_visitor_demand ? ((DEMANDS_CELL_WIDTH*arround_visitor_demand_by_class) + (arround_visitor_demand-1)) / arround_visitor_demand : 0;
-				display_linear_gradient_wh_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + DEMANDS_CELL_WIDTH+5, offset.y + top + 1, colored_with, LINESPACE - 3, col_passenger, 70, 15, true);
+				display_linear_gradient_wh_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + DEMANDS_CELL_WIDTH+5, offset.y + top + 1, colored_with, LINESPACE - 3, col_passenger, 70, 15);
 				display_proportional_clip_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + DEMANDS_CELL_WIDTH *2 + 5, offset.y + top, pas_info, ALIGN_RIGHT, SYSCOL_TEXT, true);
 
 				// job demand
@@ -874,7 +873,7 @@ void halt_detail_pas_t::draw(scr_coord offset)
 				pas_info.clear();
 				pas_info.printf("%u (%4.1f%%)", arround_job_demand_by_class, arround_job_demand ? 100.0 * arround_job_demand_by_class / arround_job_demand : 0.0);
 				colored_with = arround_job_demand ? ((DEMANDS_CELL_WIDTH*arround_job_demand_by_class) + (arround_job_demand-1)) / arround_job_demand : 0;
-				display_linear_gradient_wh_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + (DEMANDS_CELL_WIDTH+5) *2, offset.y + top + 1, colored_with, LINESPACE - 3, color_idx_to_rgb(COL_COMMUTER-1), 70, 15, true);
+				display_linear_gradient_wh_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + (DEMANDS_CELL_WIDTH+5) *2, offset.y + top + 1, colored_with, LINESPACE - 3, color_idx_to_rgb(COL_COMMUTER-1), 70, 15);
 				display_proportional_clip_rgb(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + DEMANDS_CELL_WIDTH *3 + 5 + 4, offset.y + top, pas_info, ALIGN_RIGHT, SYSCOL_TEXT, true);
 
 				top += LINESPACE;
@@ -1692,6 +1691,9 @@ bool gui_halt_route_info_t::infowin_event(const event_t * ev)
 		if (IS_LEFTRELEASE(ev)) {
 			if (ev->cx > 0 && ev->cx < 15) {
 				welt->get_viewport()->change_world_position(halt_pos);
+			}
+			else if (IS_SHIFT_PRESSED(ev)) {
+				halt->show_detail();
 			}
 			else {
 				halt->show_info();
