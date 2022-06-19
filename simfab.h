@@ -264,6 +264,7 @@ public:
 	}
 
 	uint32 get_count() const{
+		if(!ware_list) return 0;
 		uint32 cnt=0;
 		for(auto ware : *ware_list){
 			cnt+=ware.link_count();
@@ -272,6 +273,7 @@ public:
 	}
 
 	bool empty() const {
+		if(!ware_list) return true;
 		for(auto ware : *ware_list){
 			if(ware.link_count()){
 				return false;
@@ -942,12 +944,12 @@ public:
 	/* adds a new supplier to this factory
 	 * fails if no matching goods are there
 	 */
-	bool add_supplier(fabrik_t* fab);
+	bool add_supplier(fabrik_t* fab, const goods_desc_t* product=0);
 
 	/* adds a new customer to this factory
 	 * fails if no matching goods are accepted
 	 */
-	bool add_customer(fabrik_t* fab);
+	bool add_customer(fabrik_t* fab, const goods_desc_t* product=0);
 
 	stadt_t* get_city() const { return city; }
 	void clear_city() { city = NULL; }

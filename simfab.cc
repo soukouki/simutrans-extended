@@ -701,19 +701,19 @@ bool fabrik_t::disconnect_consumer(koord consumer_pos) //Returns true if must be
 
 		for(sint16 i = welt->get_fab_list().get_count() - 1; i >= 0; i --)
 		{
-			if(fabrik_t* fab = welt->get_fab_list()[i]){
-				if(add_customer(fab))
+			fabrik_t* fab = welt->get_fab_list()[i];
+			const factory_desc_t* fab_desc = fab->get_desc();
+
+			for(uint32 k = 0; k < unfulfilled_requirements.get_count(); k++){
+				auto unfilled_product = unfulfilled_requirements[k];
+				for (uint32 j = 0; j < fab_desc->get_product_count(); j++)
 				{
-					// Check which consumer, if any, that we are still short of.
-					for (uint32 j = 0; j < fab->get_desc()->get_supplier_count(); j++)
-					{
-						if(const goods_desc_t* product = fab->get_desc()->get_supplier(j)->get_input_type()) {
-							unfulfilled_requirements.remove(product);
-						}
+					if(unfilled_product == fab_desc->get_product(j)->get_output_type()) {
+						add_customer(fab,unfilled_product);
+						unfulfilled_requirements.remove(unfilled_product);
+						k--;
 					}
-					if (unfulfilled_requirements.empty())
-					{
-						// Keep connecting until we are not short of anything
+					if(unfulfilled_requirements.empty()){
 						return false;
 					}
 				}
@@ -751,20 +751,20 @@ bool fabrik_t::disconnect_supplier(koord supplier_pos) //Returns true if must be
 		for(sint16 i = welt->get_fab_list().get_count() - 1; i >= 0; i --)
 		{
 			fabrik_t* fab = welt->get_fab_list()[i];
-			if(add_supplier(fab))
-			{
-				const factory_desc_t* fab_desc = fab->get_desc();
-				// Check which supplies, if any, that we are still short of.
+			const factory_desc_t* fab_desc = fab->get_desc();
+
+			for(uint32 k = 0; k < unfulfilled_requirements.get_count(); k++){
+				auto unfilled_product = unfulfilled_requirements[k];
 				for (uint32 j = 0; j < fab_desc->get_product_count(); j++)
 				{
-					if(const factory_product_desc_t* product = fab_desc->get_product(j)) {
-						unfulfilled_requirements.remove(product->get_output_type());
+					if(unfilled_product == fab_desc->get_product(j)->get_output_type()) {
+						add_supplier(fab,unfilled_product);
+						unfulfilled_requirements.remove(unfilled_product);
+						k--;
 					}
-				}
-				if (unfulfilled_requirements.empty())
-				{
-					// Keep connecting until we are not short of anything
-					return false;
+					if(unfulfilled_requirements.empty()){
+						return false;
+					}
 				}
 			}
 		}
@@ -3602,7 +3602,7 @@ void fabrik_t::add_all_suppliers()
 /* adds a new supplier to this factory
  * fails if no matching goods are there
  */
-bool fabrik_t::add_supplier(fabrik_t* fab)
+bool fabrik_t::add_supplier(fabrik_t* fab, const goods_desc_t* product)
 {
 	for(int i=0; i < desc->get_supplier_count(); i++) {
 		const factory_supplier_desc_t *supplier = desc->get_supplier(i);
@@ -3611,9 +3611,13 @@ bool fabrik_t::add_supplier(fabrik_t* fab)
 			// connect to an existing one, if this is an producer
 			if(  fab!=this  && fab->count_output_stock(ware) > -1  ) { //"inventory to" (Google)
 				// add us to this factory
-				fab->add_consumer(pos.get_2d());
+				fab->add_consumer(pos.get_2d(),product);
 				cbuffer_t buf;
-				buf.printf(translator::translate("New shipping destination added to Factory %s"), translator::translate(fab->get_name()));
+				if(product){
+					buf.printf(translator::translate("New shipping destination added to Factory %s for %s"), translator::translate(fab->get_name()), translator::translate(product->get_name()));
+				}else{
+					buf.printf(translator::translate("New shipping destination added to Factory %s"), translator::translate(fab->get_name()));
+				}
 				welt->get_message()->add_message(buf, fab->get_pos().get_2d(), message_t::industry, CITY_KI, fab->get_desc()->get_building()->get_tile(0)->get_background(0, 0, 0));
 				return true;
 			}
@@ -3625,7 +3629,7 @@ bool fabrik_t::add_supplier(fabrik_t* fab)
  * fails if no matching goods are accepted
  */
 
-bool fabrik_t::add_customer(fabrik_t* fab)
+bool fabrik_t::add_customer(fabrik_t* fab, const goods_desc_t* product)
 {
 	for(int i=0; i < fab->get_desc()->get_supplier_count(); i++) {
 		const factory_supplier_desc_t *supplier = fab->get_desc()->get_supplier(i);
@@ -3634,7 +3638,7 @@ bool fabrik_t::add_customer(fabrik_t* fab)
 			// connect to an existing one, if it is a consumer
 			if(fab!=this && count_output_stock(ware) > -1) { //"inventory to" (Google)
 				// add this factory
-				add_consumer(fab->pos.get_2d());
+				add_consumer(fab->pos.get_2d(),product);
 				return true;
 			}
 	}
