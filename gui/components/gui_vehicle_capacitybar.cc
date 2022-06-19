@@ -38,11 +38,11 @@ void gui_convoy_loading_info_t::update_list()
 
 				bool is_lowest_class = true; // for display catgroy symbol
 				for (uint8 i = 0; i < g_classes; i++) {
-					const goods_desc_t* ware = goods_manager_t::get_info_catg_index(catg_index);
 					const uint16 capacity = get_unique_fare_capacity(catg_index,i);
 					if (!capacity) {
 						continue;
 					}
+					const goods_desc_t* ware = goods_manager_t::get_info_catg_index(catg_index);
 					// 1: goods category symbol
 					if (is_lowest_class) {
 						new_component<gui_image_t>(ware->get_catg_symbol(), 0, ALIGN_CENTER_V, true);
@@ -60,7 +60,7 @@ void gui_convoy_loading_info_t::update_list()
 					}
 					else {
 						// "fare" class name
-						lb->buf().printf("%s", ( goods_manager_t::get_translated_wealth_name(catg_index,i) )); // UI TODO: wealth => fare
+						lb->buf().printf("%s", ( goods_manager_t::get_translated_fare_class_name(catg_index,i) ));
 					}
 					lb->update();
 

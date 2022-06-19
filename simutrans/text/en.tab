@@ -3485,7 +3485,7 @@ Freight planes
 Airport
 Airport
 AIRTOOLS
-Airport Tools
+Air transport tools
 All
 All
 Allow player change
@@ -4077,7 +4077,7 @@ Map legend
 MAGLEVTOOLS
 Maglev tools
 NARROWGAUGETOOLS
-Narrow gauge tools
+Narrow gauge railway tools
 Leistung
 Power
 Leistung: %d kW
@@ -4521,7 +4521,7 @@ Sound volume:
 special freight
 Special Freight
 SPECIALTOOLS
-Special Construction Tools
+Special tools
 Speedlimit
 Speed limit
 Speichern
@@ -4625,7 +4625,7 @@ Trolleybuses
 Trams are not available yet!
 Trams are not yet available.
 TRAMTOOLS
-Trams/light rail tools
+Tramway tools
 Travelled
 Transported
 Travellers now\nuse %s's\nbusses between\n%s \nand %s.\n
@@ -4639,7 +4639,7 @@ Tunnels must start on a straight double height slope.\n
 Tunnel must end on single way!
 Tunnels must end on a single way with a slope.
 Tunnel must start on single way!
-Tunnels must start on a single way, on a double height slope, and with a matching slope at the other end.
+This is not a suitable place for building this type of tunnel entrance.
 Tunnelboden
 Tunnel
 Tunnelmuendung
@@ -5405,7 +5405,7 @@ Unpowered
 this_vehicle_carries_no_good
 This vehicle carries no goods
 high_clearance_under_bridges_(no_low_bridges)
-High clearance under bridges (no low bridges)
+High clearance under bridges (no low bridges/tunnels)
 equipped_with
 Equipped with
 tilting_vehicle_equipment
@@ -6398,3 +6398,41 @@ per tile apprx.
 per tile approx.
 Pierdeck
 Elevated way support
+The gradient does not fit a tunnel
+This tunnel cannot be built on this gradient.
+Path Remove
+Remove path
+Flatten Path
+Flatten path
+Low bridge
+Low bridge/tunnel
+Depth Limit
+depth limit
+Per-Depth
+depth cost
+Per-Depth-Squared
+depth cost squared
+Max. Dist. to Shore
+max. dist. to shore
+Sub-Sea Prohibited
+sub-sea prohibited
+Sub-Sea Permitted
+sub-sea permitted
+Sub-Sea Depth Limit
+sub-sea depth limit
+Sub-Groundwater Prohibited
+sub-groundwater prohibited
+Sub-Groundwater Permitted
+sub-groundwater permitted
+Sub-Building
+sub-building cost
+Sub-Building Prohibited
+sub-building prohibited
+Sub-Way
+beneath way cost
+Half Height
+low height
+remove signal
+Remove signal
+Map Editing Tools
+Map editing tools

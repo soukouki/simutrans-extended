@@ -247,7 +247,7 @@ void display_blend_wh_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord
 {
 }
 
-void display_linear_gradient_wh_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, int, int, bool)
+void display_linear_gradient_wh_rgb(scr_coord_val, scr_coord_val, scr_coord_val, scr_coord_val, PIXVAL, int, int)
 {
 }
 
@@ -347,7 +347,7 @@ int display_calc_proportional_string_len_width(const char*, size_t)
 
 void display_calc_proportional_multiline_string_len_width( int &xw, int &yh, const char *, size_t )
 {
-	xw = yh = 0;;
+	xw = yh = 0;
 }
 
 
