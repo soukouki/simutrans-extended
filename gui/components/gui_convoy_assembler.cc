@@ -44,6 +44,7 @@
 
 #define COL_LACK_OF_MONEY color_idx_to_rgb(COL_DARK_ORANGE)
 #define COL_EXCEED_AXLE_LOAD_LIMIT color_idx_to_rgb(COL_GREY3)
+#define COL_UPGRADE_RESTRICTION color_idx_to_rgb(COL_DARK_PURPLE)
 
 gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_nr, bool electrified) :
 	way_type(wt), way_electrified(electrified),
@@ -2989,43 +2990,37 @@ void depot_convoi_capacity_t::draw(scr_coord offset)
 }
 
 //#define VEHICLE_BAR_COLORS 9
-//
-//static uint8 bar_colors[VEHICLE_BAR_COLORS] =
-//{
-//	COL_DARK_GREEN,
-//	COL_YELLOW,
-//	COL_OUT_OF_PRODUCTION,
-//	COL_BLUE,
-//	COL_RED,
-//	COL_DARK_ORANGE,
-//	COL_GREY3,
-//	COL_UPGRADEABLE,
-//	COL_DARK_PURPLE
-//};
-//static const char bar_color_helptexts[VEHICLE_BAR_COLORS][64] =
-//{
-//	"help_text0",
-//	"need to connect vehicle",
-//	"out of production",
-//	"become obsolete",
-//	"cannot select",
-//	"lack of money",
-//	"axle weight is excessive",
-//	"appears only in upgrades",
-//	"cannot upgrade"
-//};
+/*
+static const PIXVAL bar_colors[] =
+{
+	COL_SAFETY,
+	COL_CAUTION,
+	COL_OUT_OF_PRODUCTION,
+	COL_OBSOLETE,
+	COL_DANGER,
+	COL_LACK_OF_MONEY,
+	COL_EXCEED_AXLE_LOAD_LIMIT,
+	COL_UPGRADEABLE,
+	COL_UPGRADE_RESTRICTION
+};*/
+
+static const char bar_color_helptexts[][64] =
+{
+	"hlptxt_vh_normal_state",
+	"need to connect vehicle",
+	"out of production",
+	"become obsolete",
+	"cannot select",
+	"lack of money",
+	"axle weight is excessive",
+	"appears only in upgrades",
+	"cannot upgrade"
+};
 
 gui_vehicle_bar_legends_t::gui_vehicle_bar_legends_t()
 {
 	set_table_layout(1,0);
 	set_spacing( scr_size(D_H_SPACE,2) );
-	add_table(3,1)->set_spacing( scr_size(D_H_SPACE,0) );
-	{
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_label_t>("Select vehicles to make up a convoy", SYSCOL_TEXT_INACTIVE);
-		new_component<gui_fill_t>();
-	}
-	end_table();
 	new_component<gui_margin_t>(0,LINESPACE);
 
 	new_component<gui_label_t>("Vehicle bar shape legend:");
@@ -3058,6 +3053,46 @@ gui_vehicle_bar_legends_t::gui_vehicle_bar_legends_t()
 		new_component<gui_margin_t>(D_MARGIN_LEFT);
 		new_component<gui_image_t>(skinverwaltung_t::upgradable ? skinverwaltung_t::upgradable->get_image_id(0):IMG_EMPTY, 0, ALIGN_NONE, true);
 		new_component<gui_label_t>(world()->get_settings().get_show_future_vehicle_info() ? "Upgrade is not available yet" : "Upgrade will be available in the near future", SYSCOL_TEXT_WEAK);
+	}
+	end_table();
+
+	new_component<gui_divider_t>();
+
+	add_table(6,0)->set_spacing( scr_size(D_H_SPACE,1) );
+	{
+		const scr_size color_box_size=scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_SAFETY, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>(bar_color_helptexts[0], SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_LACK_OF_MONEY, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>(bar_color_helptexts[5], SYSCOL_TEXT_WEAK);
+
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_CAUTION, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>(bar_color_helptexts[1], SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_EXCEED_AXLE_LOAD_LIMIT, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>(bar_color_helptexts[6], SYSCOL_TEXT_WEAK);
+
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_OUT_OF_PRODUCTION, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>(bar_color_helptexts[2], SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_UPGRADEABLE, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>(bar_color_helptexts[7], SYSCOL_TEXT_WEAK);
+
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_OBSOLETE, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>(bar_color_helptexts[3], SYSCOL_TEXT_WEAK);
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_UPGRADE_RESTRICTION, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>(bar_color_helptexts[8], SYSCOL_TEXT_WEAK);
+
+		new_component<gui_margin_t>(D_MARGIN_LEFT);
+		new_component<gui_vehicle_bar_t>(COL_DANGER, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
+		new_component<gui_label_t>(bar_color_helptexts[4], SYSCOL_TEXT_WEAK);
+
 	}
 	end_table();
 
