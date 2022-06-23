@@ -254,12 +254,27 @@ goods_frame_t::goods_frame_t() :
 
 	update_fare_charts();
 
+	// comfort chart
+	cont_comfort_chart.set_table_layout(1, 0);
+	cont_comfort_chart.add_component(&comfort_chart);
+	comfort_chart.set_ltr(2);
+	comfort_chart.set_dimension(COMFORT_RECORDS, 86400);
+	comfort_chart.set_background(SYSCOL_CHART_BACKGROUND);
+	comfort_chart.set_x_axis_span(5);
+	comfort_chart.show_curve(0);
+	comfort_chart.set_min_size(scr_size(0, 6*LINESPACE));
+	for (uint8 i = 0; i < COMFORT_RECORDS; i++) {
+		comfort_curve[i] = world()->get_settings().max_tolerable_journey(i*5);
+	}
+	comfort_chart.add_curve(COL_SAFETY, (sint64*)comfort_curve, 1, 0, COMFORT_RECORDS, gui_chart_t::TIME, true, false, 0);
+
 	tabs_chart.add_tab(&cont_fare_short, translator::translate("fare_short"));
 	tabs_chart.add_tab(&cont_fare_long,  translator::translate("fare_long"));
 	cont_fare_chart.add_component(&tabs_chart);
 
 	tabs.add_tab(&cont_goods_list, translator::translate("Goods list"));
 	tabs.add_tab(&cont_fare_chart, translator::translate("fare_chart"));
+	tabs.add_tab(&cont_comfort_chart, translator::translate("comfort_chart"));
 	add_component(&tabs);
 
 	reset_min_windowsize();
