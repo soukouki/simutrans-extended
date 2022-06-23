@@ -255,7 +255,9 @@ goods_frame_t::goods_frame_t() :
 	update_fare_charts();
 
 	// comfort chart
-	cont_comfort_chart.set_table_layout(1, 0);
+	cont_comfort_chart.set_table_layout(1,0);
+	cont_comfort_chart.new_component<gui_label_t>("(Max. comfortable journey time: ");
+	cont_comfort_chart.new_component<gui_margin_t>(1,LINEASCENT>>1);
 	cont_comfort_chart.add_component(&comfort_chart);
 	comfort_chart.set_ltr(2);
 	comfort_chart.set_dimension(COMFORT_RECORDS, 86400);
