@@ -266,7 +266,7 @@ goods_frame_t::goods_frame_t() :
 	for (uint8 i = 0; i < COMFORT_RECORDS; i++) {
 		comfort_curve[i] = world()->get_settings().max_tolerable_journey(i*5);
 	}
-	comfort_chart.add_curve(COL_SAFETY, (sint64*)comfort_curve, 1, 0, COMFORT_RECORDS, gui_chart_t::TIME, true, false, 0);
+	comfort_chart.add_curve(15911, (sint64*)comfort_curve, 1, 0, COMFORT_RECORDS, gui_chart_t::TIME, true, false, 0);
 
 	tabs_chart.add_tab(&cont_fare_short, translator::translate("fare_short"));
 	tabs_chart.add_tab(&cont_fare_long,  translator::translate("fare_long"));
