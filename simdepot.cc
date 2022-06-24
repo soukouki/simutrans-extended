@@ -804,7 +804,7 @@ void depot_t::update_win()
 {
 	depot_frame_t *depot_frame = dynamic_cast<depot_frame_t *>(win_get_magic( (ptrdiff_t)this ));
 	if(depot_frame) {
-		depot_frame->build_vehicle_lists();
+		depot_frame->set_convoy();
 	}
 }
 

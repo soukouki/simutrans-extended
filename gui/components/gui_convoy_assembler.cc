@@ -55,8 +55,7 @@ uint16 gui_convoy_assembler_t::livery_scheme_index = 0;
 int gui_convoy_assembler_t::selected_filter = VEHICLE_FILTER_RELEVANT;
 
 
-gui_vehicle_spec_t::gui_vehicle_spec_t(const vehicle_desc_t* desc) :
-	name(&name_buf)
+gui_vehicle_spec_t::gui_vehicle_spec_t(const vehicle_desc_t* desc)
 {
 	veh_type = desc;
 	update(0,0);
@@ -72,12 +71,8 @@ void gui_vehicle_spec_t::update(uint8 mode, uint32 resale_value)
 		vehicle_as_potential_convoy_t convoy(*veh_type);
 
 		// Name and traction type
-		name_buf.clear();
-		name_buf.printf("%s", translator::translate(veh_type->get_name(), world()->get_settings().get_name_language_id()));
 		add_table(2,1);
 		{
-			//add_component(&name);
-			name.recalc_size();
 			new_component<gui_label_t>(translator::translate(veh_type->get_name(), world()->get_settings().get_name_language_id()));
 			if (veh_type->get_power() > 0) {
 				const uint8 et = (uint8)veh_type->get_engine_type() + 1;

@@ -18,7 +18,6 @@
 #include "gui_scrollpane.h"
 #include "gui_tab_panel.h"
 #include "gui_speedbar.h"
-#include "gui_textarea.h"
 #include "../gui_theme.h"
 
 #include "gui_container.h"
@@ -40,8 +39,7 @@
 class gui_vehicle_spec_t : public gui_aligned_container_t
 {
 	const vehicle_desc_t *veh_type;
-	cbuffer_t name_buf, comfort_tooltip_buf;
-	gui_textarea_t name;
+	cbuffer_t comfort_tooltip_buf;
 
 	scr_coord_val min_h;
 
