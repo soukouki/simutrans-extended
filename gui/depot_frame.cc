@@ -751,7 +751,8 @@ void depot_frame_t::draw(scr_coord pos, scr_size size)
 	bt_sell.enable( action_allowed );
 
 	convoihandle_t cnv = depot->get_convoi(icnv);
-	line_button.enable( action_allowed && cnv.is_bound() );
+	line_button.enable( action_allowed && cnv.is_bound() && cnv->get_line().is_bound() );
+	bt_details.enable( action_allowed && cnv.is_bound() );
 
 	// number of convoys
 	if (old_vehicle_count != depot->get_vehicle_list().get_count()) {
