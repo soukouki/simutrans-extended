@@ -3057,7 +3057,7 @@ gui_vehicle_bar_legends_t::gui_vehicle_bar_legends_t()
 	end_table();
 
 	new_component<gui_divider_t>();
-
+/*
 	add_table(6,0)->set_spacing( scr_size(D_H_SPACE,1) );
 	{
 		const scr_size color_box_size=scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT);
@@ -3095,6 +3095,6 @@ gui_vehicle_bar_legends_t::gui_vehicle_bar_legends_t()
 
 	}
 	end_table();
-
+*/
 	set_size(get_size());
 }
