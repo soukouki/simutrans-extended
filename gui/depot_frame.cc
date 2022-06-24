@@ -131,7 +131,7 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	convoy_assembler.init(depot->get_wegtyp(), depot->get_owner_nr(), check_way_electrified(true));
 	init_table();
 	set_convoy();
-	   
+
 	if(depot->get_tile()->get_desc()->get_enabled() == 0)
 	{
 		lb_traction_types.buf().printf("%s", translator::translate("Unpowered vehicles only"));

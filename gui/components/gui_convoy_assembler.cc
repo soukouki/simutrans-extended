@@ -295,7 +295,7 @@ void gui_vehicle_spec_t::update(uint8 mode, uint32 resale_value)
 					// compartment info
 					const uint8 catg_index = veh_type->get_freight_type()->get_catg_index();
 					if( catg_index==goods_manager_t::INDEX_PAS  ||  goods_manager_t::get_classes_catg_index(catg_index)>1 ) {
-						// | margin | capacity | accommo rank | accommo name | comfort(+tooltip) | 
+						// | margin | capacity | accommo rank | accommo name | comfort(+tooltip) |
 						add_table(5,0)->set_spacing(scr_size(D_H_SPACE,1));
 						{
 							for( uint8 ac=0; ac<goods_manager_t::get_classes_catg_index(catg_index); ac++ ) {
@@ -619,7 +619,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 					cont_convoi_spec.add_component(&lb_convoi_brake_force);
 					cont_convoi_spec.new_component<gui_label_t>("Way wear factor");
 					cont_convoi_spec.add_component(&lb_convoi_way_wear);
-				
+
 					cont_convoi_spec.add_component(&lb_convoi_brake_distance,2);
 					cont_convoi_spec.new_component<gui_label_t>("Rolling resistance:");
 					cont_convoi_spec.add_component(&lb_convoi_rolling_resistance);
@@ -1523,7 +1523,7 @@ void gui_convoy_assembler_t::update_convoi()
 void gui_convoy_assembler_t::update_data()
 {
 	const vehicle_desc_t *veh = NULL;
-	
+
 	if (vehicles.get_count()) {
 		if(veh_action == va_insert) {
 			veh = vehicles[0];
