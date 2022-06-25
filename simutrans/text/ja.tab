@@ -4307,6 +4307,16 @@ Save your changes and close the dialog.
 変更を保存してダイアログを閉じます
 helptxt_linecode_use_sub_background
 文字の背景に使用される色が基調色とは異なる色に入れ替わります
+Accommodation
+客室グレード
+Compartments
+区画
+fare_management_by_vehicle
+車両別
+fare_management_by_accommo
+客室(区画)グレード別
+Convoy running costs per km
+編成の運行費用
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
