@@ -31,7 +31,10 @@ void accommodation_summary_t::add_vehicle(vehicle_t *veh)
 			if (!veh->get_accommodation_capacity(ac)) continue;
 
 			// append accommo capacity
-			accommodation_t accommo = { catg_index, ac, veh->get_desc()->get_accommodation_name(ac) };
+			accommodation_t accommo;
+			accommo.catg_index = catg_index;
+			accommo.accommo_class = ac;
+			accommo.name = veh->get_desc()->get_accommodation_name(ac);
 
 			bool found=false;
 			FOR(slist_tpl<accommodation_info_t>, &info, accommo_list) {
@@ -200,8 +203,6 @@ gui_cabin_fare_changer_t::gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_
 {
 	vehicle = v;
 	cabin_class = original_class;
-	old_assingned_fare = original_class;
-	const vehicle_desc_t *desc = vehicle->get_desc();
 
 	set_table_layout(4, 1);
 	set_alignment(ALIGN_LEFT | ALIGN_TOP);
@@ -214,8 +215,6 @@ gui_cabin_fare_changer_t::gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_
 
 	if (cabin_class != 255) {
 		add_component(&up_or_down);
-		lb_assigned_fare.buf().append(goods_manager_t::get_translated_fare_class_name(vehicle->get_cargo_type()->get_catg_index(), (uint8)vehicle->get_reassigned_class(cabin_class)));
-		lb_assigned_fare.update();
 		add_component(&lb_assigned_fare);
 		bt_down.init(button_t::arrowdown, NULL);
 		bt_up.init( button_t::arrowup, NULL);
@@ -232,7 +231,7 @@ gui_cabin_fare_changer_t::gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_
 void gui_cabin_fare_changer_t::draw(scr_coord offset)
 {
 	if (cabin_class != 255) {
-		const uint8 current_fare = (uint8)vehicle->get_reassigned_class(cabin_class);
+		const uint8 current_fare = vehicle->get_reassigned_class(cabin_class);
 		bt_down.enable(current_fare!=0);
 		bt_up.enable( current_fare != vehicle->get_cargo_type()->get_number_of_classes()-1);
 		if (current_fare != old_assingned_fare) {
@@ -253,7 +252,7 @@ void gui_cabin_fare_changer_t::draw(scr_coord offset)
 bool gui_cabin_fare_changer_t::action_triggered(gui_action_creator_t *comp, value_t)
 {
 	if( vehicle->get_owner()==world()->get_active_player()  &&  !world()->get_active_player()->is_locked()  &&  cabin_class!=255 ) {
-		const uint8 current_fare = (uint8)vehicle->get_reassigned_class(cabin_class);
+		const uint8 current_fare = vehicle->get_reassigned_class(cabin_class);
 		const uint8 g_classes = vehicle->get_cargo_type()->get_number_of_classes();
 		if( (comp==&bt_up  &&  current_fare < g_classes-1)  ||  (comp==&bt_down  &&  current_fare > 0)) {
 			convoihandle_t cnv = vehicle->get_convoi()->self;
@@ -301,7 +300,7 @@ gui_accommo_fare_changer_t::gui_accommo_fare_changer_t(linehandle_t line_, accom
 void gui_accommo_fare_changer_t::init(uint8 current_fare_class)
 {
 	set_table_layout(4,1);
-	set_alignment(ALIGN_LEFT | ALIGN_TOP);
+	set_alignment(ALIGN_LEFT | ALIGN_CENTER_V);
 
 	const uint8 g_classes = goods_manager_t::get_classes_catg_index(acm.catg_index);
 
@@ -609,9 +608,9 @@ void vehicle_class_manager_t::recalc_income()
 			uint8 lowest_class = 255; // for standing capacity
 			for (uint8 ac = 0; ac < number_of_classes; ac++) {
 				if (!veh->get_accommodation_capacity(ac)) continue;
-				const uint8 current_fare = (uint8)veh->get_reassigned_class(ac);
-				lowest_class = min(lowest_class, current_fare);
-				revenue += (veh->get_cargo_type()->get_total_fare(1000, 0u, veh->get_desc()->get_comfort(ac), cnv->get_catering_level(veh->get_cargo_type()->get_catg_index()), min(current_fare, number_of_classes-1), 0)) * veh->get_accommodation_capacity(ac);
+				const uint8 current_fare_class = veh->get_reassigned_class(ac);
+				lowest_class = min(lowest_class, current_fare_class);
+				revenue += (veh->get_cargo_type()->get_total_fare(1000, 0u, veh->get_desc()->get_comfort(ac), cnv->get_catering_level(veh->get_cargo_type()->get_catg_index()), min(current_fare_class, number_of_classes-1), 0)) * veh->get_accommodation_capacity(ac);
 			}
 
 			if (veh->get_desc()->get_overcrowded_capacity()) {
@@ -654,8 +653,6 @@ void vehicle_class_manager_t::draw(scr_coord pos, scr_size size)
 
 	gui_frame_t::draw(pos, size);
 }
-
-// TODO: restore rdwr
 
 
 /**
@@ -742,3 +739,4 @@ void vehicle_class_manager_t::rdwr(loadsave_t *file)
 		destroy_win( this );
 	}
 }
+

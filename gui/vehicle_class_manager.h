@@ -155,7 +155,7 @@ class vehicle_class_manager_t : public gui_frame_t , private action_listener_t
 
 	gui_aligned_container_t cont_by_vehicle;
 	gui_accommodation_fare_manager_t cont_by_accommo;
-	gui_scrollpane_t scrolly_by_accommo, scrolly_by_vehicle;
+	gui_scrollpane_t scrolly_by_vehicle, scrolly_by_accommo;
 
 	// update triggar
 	uint8 old_vehicle_count = 0;
