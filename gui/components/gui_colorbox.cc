@@ -169,3 +169,17 @@ void gui_capacity_bar_t::draw(scr_coord offset)
 		}
 	}
 }
+
+
+gui_fluctuation_triangle_t::gui_fluctuation_triangle_t(sint64 value_, uint8 height_)
+{
+	value = value_;
+	height = height_;
+	gui_component_t::set_size(scr_size(height, height));
+}
+
+void gui_fluctuation_triangle_t::draw(scr_coord offset)
+{
+	offset += pos;
+	display_fluctuation_triangle_rgb(offset.x, offset.y, height, false, value);
+}
