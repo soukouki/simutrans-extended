@@ -1154,7 +1154,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 				const uint16 month_now = welt->get_timeline_year_month();
 				vector_tpl<livery_scheme_t*>* schemes = welt->get_settings().get_livery_schemes();
 
-				ITERATE_PTR(schemes, i)
+				for(uint32 i = 0; i < schemes->get_count(); i ++)
 				{
 					bool found = false;
 					livery_scheme_t* scheme = schemes->get_element(i);
