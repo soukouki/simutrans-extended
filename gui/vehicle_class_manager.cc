@@ -263,15 +263,9 @@ bool gui_cabin_fare_changer_t::action_triggered(gui_action_creator_t *comp, valu
 					cbuffer_t buf;
 					buf.printf("%hhi,%hhi,%hhi", i, cabin_class, target_fare);
 					cnv->call_convoi_tool('j', buf);
-					vehicle_class_manager_t *win = dynamic_cast<vehicle_class_manager_t*>(win_get_magic((ptrdiff_t)(magic_class_manager + cnv.get_id())));
-					if (win) {
-						win->recalc_income();
-					}
-
 					break;
 				}
 			}
-
 			return true;
 		}
 	}
