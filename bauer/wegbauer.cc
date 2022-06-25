@@ -840,13 +840,13 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 	if(  welt->get_settings().get_way_height_clearance()==2  ) {
 		// cannot build if conversion factor 2, we aren't powerline and way with maximum speed > 0 or powerline 1 tile below except for roads, waterways and tram lines: but mark those as being a "low bridge" type that only allows some vehicles to pass.
 		grund_t *to2 = welt->lookup( to->get_pos() + koord3d(0, 0, -1) );
-		if(  to2 && (((bautyp&bautyp_mask)!=leitung && to2->get_weg_nr(0) && to2->get_weg_nr(0)->get_desc()->get_topspeed() > 0 && to2->get_weg_nr(0)->get_desc()->get_waytype() != water_wt && to2->get_weg_nr(0)->get_desc()->get_waytype() != road_wt && to2->get_weg_nr(0)->get_desc()->get_waytype() != tram_wt) || to2->get_leitung())  )
+		if(  to2 && (((bautyp&bautyp_mask)!=leitung && to2->get_weg_nr(0) && to2->get_weg_nr(0)->get_desc()->get_topspeed() > 0 && !to2->get_weg_nr(0)->get_desc()->is_low_clearence()) || to2->get_leitung())  )
 		{
 			return false;
 		}
 		// tile above cannot have way unless we are a way (not powerline) with a maximum speed of 0 (and is not a road, waterway or tram line as above), or be surface if we are underground
 		to2 = welt->lookup( to->get_pos() + koord3d(0, 0, 1) );
-		if(  to2  &&  ((to2->get_weg_nr(0)  &&  ((desc->get_topspeed() > 0 && desc->get_waytype() != water_wt && desc->get_waytype() != road_wt && desc->get_waytype() != tram_wt) || (bautyp&bautyp_mask)==leitung))  ||  (bautyp & tunnel_flag) != 0)  )
+		if(  to2  &&  ((to2->get_weg_nr(0)  &&  ((!desc->is_low_clearence()) || (bautyp&bautyp_mask)==leitung))  ||  ((bautyp & tunnel_flag) != 0 && (bautyp & low_clearence_flag) == 0))  )
 		{
 			return false;
 		}
@@ -877,6 +877,54 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 	}
 	if( to->get_typ()==grund_t::tunnelboden  &&  from->get_typ() != grund_t::tunnelboden   &&  !to->ist_karten_boden() ) {
 		return false;
+	}
+
+	// univeral check: tunnel restrictions
+	if((bautyp&tunnel_flag) && tunnel_desc){
+		if(!tunnel_desc->get_subsea_allowed()){
+			if(welt->lookup_kartenboden(to->get_pos().get_2d())->is_water()){
+				return false;
+			}
+			if(welt->lookup_kartenboden(from->get_pos().get_2d())->is_water()){
+				return false;
+			}
+		}
+		if(!tunnel_desc->get_subbuilding_allowed()){
+			if(tunnel_builder_t::get_is_under_building(to->get_pos(),tunnel_desc)){
+				return false;
+			}
+			if(tunnel_builder_t::get_is_under_building(from->get_pos(),tunnel_desc)){
+				return false;
+			}
+		}
+		if(!tunnel_desc->get_subwaterline_allowed()){
+			if(tunnel_builder_t::get_is_below_waterline(to->get_pos())){
+				return false;
+			}
+			if(tunnel_builder_t::get_is_below_waterline(from->get_pos())){
+				return false;
+			}
+		}
+		if(tunnel_desc->get_depth_limit()){
+			if(welt->lookup_hgt(to->get_pos().get_2d()) - to->get_pos().z > (sint8)tunnel_desc->get_depth_limit()){
+				return false;
+			}
+			if(welt->lookup_hgt(from->get_pos().get_2d()) - from->get_pos().z > (sint8)tunnel_desc->get_depth_limit()){
+				return false;
+			}
+		}
+		if(tunnel_desc->get_underwater_limit()){
+			if(const grund_t* gr = welt->lookup_kartenboden(from->get_pos().get_2d())){
+				if(gr->is_water() && gr->get_pos().z - from->get_pos().z > (sint8)tunnel_desc->get_underwater_limit()){
+					return false;
+				}
+			}
+			if(const grund_t* gr = welt->lookup_kartenboden(to->get_pos().get_2d())){
+				if(gr->is_water() && gr->get_pos().z - to->get_pos().z > (sint8)tunnel_desc->get_underwater_limit()){
+					return false;
+				}
+			}
+		}
 	}
 
 	// universal check for crossings
@@ -938,7 +986,7 @@ bool way_builder_t::is_allowed_step( const grund_t *from, const grund_t *to, sin
 				}
 			}
 			if(grund_t *from2 = welt->lookup( from->get_pos() + koord3d(0, 0, 1) ) ){
-				if((desc->get_topspeed() > 0 && desc->get_waytype() != water_wt && desc->get_waytype() != road_wt && desc->get_waytype() != tram_wt) || (bautyp&bautyp_mask)==leitung){
+				if((desc->get_topspeed() > 0 && desc->is_low_clearence()) || (bautyp&bautyp_mask)==leitung){
 					ribimask = pier_t::get_below_ribi_total(from2);
 					if( (ribimask|zvribi)!=ribimask){
 							return false;
@@ -1915,8 +1963,9 @@ void way_builder_t::intern_calc_straight_route(const koord3d start, const koord3
 			pos = bd_nach->get_pos();
 
 			// check new tile: ground must be above tunnel and below sea
+			// but do not check existing tunnel as it may be a portal
 			grund_t *gr = welt->lookup_kartenboden(pos.get_2d());
-			ok = ok  &&  (gr->get_hoehe() > pos.z)  &&  (!gr->is_water()  ||  (welt->lookup_hgt(pos.get_2d()) > pos.z) );
+			ok = ok  &&  (!bd_nach_new || ((gr->get_hoehe() > pos.z)  &&  (!gr->is_water()  ||  (welt->lookup_hgt(pos.get_2d()) > pos.z) )));
 
 			if (bd_von_new) {
 				delete bd_von;
@@ -2299,7 +2348,7 @@ sint64 way_builder_t::calc_costs() {
 				if( tunnel->get_desc() == tunnel_desc ) {
 					continue; // Nothing to pay on this tile.
 				}
-				single_cost = tunnel_desc->get_value();
+				single_cost = tunnel_builder_t::get_total_cost(pos, tunnel_desc);
 			}
 			else {
 				single_cost = desc->get_value();
@@ -2381,8 +2430,12 @@ sint64 way_builder_t::calc_costs() {
 		}
 		else if(!gr)
 		{
-			// No ground - building a new elevated way. Do not add the land value as it is still possible to build underneath an elevated way.
-			costs += (welt->get_settings().get_forge_cost(desc->get_waytype()) + desc->get_value());
+			// No ground
+			if(bautyp&tunnel_flag){
+				costs += tunnel_builder_t::get_total_cost(pos, tunnel_desc);
+			}else{
+				costs += (welt->get_settings().get_forge_cost(desc->get_waytype()) + desc->get_value());
+			}
 		}
 		else
 		{
@@ -2426,152 +2479,44 @@ sint64 way_builder_t::calc_costs() {
 // Builds the inside of tunnels
 bool way_builder_t::build_tunnel_tile()
 {
+	if (desc == NULL)
+	{
+		desc = tunnel_desc->get_way_desc();
+	}
+	if(desc ==NULL) {
+		// now we search a matching way for the tunnels top speed
+		// ignore timeline to get consistent results
+		desc = way_builder_t::weg_search( tunnel_desc->get_waytype(), tunnel_desc->get_topspeed(), 0, type_flat );
+	}
+
 	sint64 cost = 0;
 	for(uint32 i=0; i<get_count(); i++) {
 
 		grund_t* gr = welt->lookup(route[i]);
 
-		if (desc == NULL)
-		{
-			desc = tunnel_desc->get_way_desc();
-		}
-		if(desc ==NULL) {
-			// now we search a matching way for the tunnels top speed
-			// ignore timeline to get consistent results
-			desc = way_builder_t::weg_search( tunnel_desc->get_waytype(), tunnel_desc->get_topspeed(), 0, type_flat );
-		}
+		tunnelboden_t* tunnel_ground;
+		tunnel_t* tunnel;
+		sint64 old_maintenance;
+		sint64 new_maintenance;
 
-		if(gr==NULL) {
-			// make new tunnelboden
-			tunnelboden_t* tunnel = new tunnelboden_t(route[i], 0);
-			welt->access(route[i].get_2d())->boden_hinzufuegen(tunnel);
-			if(  tunnel_desc->get_waytype() != powerline_wt  ) {
-				weg_t *weg = weg_t::alloc(tunnel_desc->get_waytype());
-				weg->set_desc(desc);
-				tunnel->neuen_weg_bauen(weg, route.get_ribi(i), player_builder);
-				tunnel->obj_add(new tunnel_t(route[i], player_builder, tunnel_desc));
-				if(  tunnel_desc->get_waytype()==road_wt  ) {
-					strasse_t* str = (strasse_t*) weg;
-					assert(str);
-					str->set_overtaking_mode(overtaking_mode, player_builder);
-					update_ribi_mask_oneway(str,i);
-				}
-				const slope_t::type hang = gr ? gr->get_weg_hang() : slope_t::flat;
-				if(hang != slope_t::flat)
-				{
-					const uint slope_height = (hang & 7) ? 1 : 2;
-					if(slope_height == 1)
-					{
-						weg->set_max_speed(min(desc->get_topspeed_gradient_1(), tunnel_desc->get_topspeed_gradient_1()));
-					}
-					else
-					{
-						weg->set_max_speed(min(desc->get_topspeed_gradient_2(), tunnel_desc->get_topspeed_gradient_2()));
-					}
-				}
-				else
-				{
-					weg->set_max_speed(min(desc->get_topspeed(), tunnel_desc->get_topspeed()));
-				}
-				weg->set_max_axle_load(tunnel_desc->get_max_axle_load());
-				weg->add_way_constraints(desc->get_way_constraints());
-			} else {
-				tunnel->obj_add(new tunnel_t(route[i], player_builder, tunnel_desc));
-				leitung_t *lt = new leitung_t(tunnel->get_pos(), player_builder);
-				lt->set_desc(desc);
-				tunnel->obj_add( lt );
-				lt->finish_rd();
-				player_t::add_maintenance( player_builder, -lt->get_desc()->get_maintenance(), powerline_wt);
+		if(gr==NULL){
+			tunnel_ground = new tunnelboden_t(route[i],0);
+			welt->access(route[i].get_2d())->boden_hinzufuegen(tunnel_ground);
+			tunnel = new tunnel_t(route[i], player_builder, tunnel_desc);
+			tunnel_ground->obj_add(tunnel);
+			old_maintenance=0;
+			cost-=tunnel_builder_t::get_total_cost(tunnel_ground->get_pos(),tunnel_desc);
+		}else if(gr->get_typ() == grund_t::tunnelboden){
+			tunnel_ground = (tunnelboden_t*)gr;
+			tunnel = gr->find<tunnel_t>();
+			if(tunnel->get_desc()!=tunnel_desc){
+				cost-=tunnel_builder_t::get_total_cost(tunnel_ground->get_pos(),tunnel_desc);
 			}
-			tunnel->calc_image();
-			cost -= tunnel_desc->get_value();
-			player_t::add_maintenance( player_builder,  tunnel_desc->get_maintenance(), tunnel_desc->get_finance_waytype() );
+			old_maintenance = tunnel_builder_t::get_total_maintenance(gr->get_pos(),tunnel->get_desc());
+			tunnel->set_desc(tunnel_desc);
 		}
-		else if(  gr->get_typ() == grund_t::tunnelboden  ) {
-			// check for extension only ...
-			if(  tunnel_desc->get_waytype() != powerline_wt  ) {
-				gr->weg_erweitern( tunnel_desc->get_waytype(), route.get_ribi(i) );
-
-				tunnel_t *tunnel = gr->find<tunnel_t>();
-				assert( tunnel );
-				// take the faster way
-				if(  !keep_existing_faster_ways  ||  (tunnel->get_desc()->get_topspeed() < tunnel_desc->get_topspeed())  ) {
-
-					tunnel->set_desc(tunnel_desc);
-					weg_t *weg = gr->get_weg(tunnel_desc->get_waytype());
-					weg->set_desc(desc);
-					weg->set_max_speed(tunnel_desc->get_topspeed());
-					if(  tunnel_desc->get_waytype()==road_wt  ) {
-						strasse_t* str = (strasse_t*)gr->get_weg(road_wt);
-						assert(str);
-						str->set_overtaking_mode(overtaking_mode, player_builder);
-					}
-					// respect max speed of catenary
-					wayobj_t const* const wo = gr->get_wayobj(tunnel_desc->get_waytype());
-					if (wo  &&  wo->get_desc()->get_topspeed() < weg->get_max_speed()) {
-						weg->set_max_speed( wo->get_desc()->get_topspeed() );
-					}
-					gr->calc_image();
-
-					cost -= tunnel_desc->get_value();
-				}
-				if(  tunnel_desc->get_waytype()==road_wt  ) {
-					strasse_t *str = (strasse_t*)gr->get_weg(road_wt);
-					update_ribi_mask_oneway(str,i);
-				}
-			}
-			else {
-				leitung_t *lt = gr->get_leitung();
-				if(!lt) {
-					lt = new leitung_t(gr->get_pos(), player_builder);
-					lt->set_desc(desc);
-					gr->obj_add( lt );
-				}
-				else {
-					lt->leitung_t::finish_rd(); // only change powerline aspect
-					player_t::add_maintenance( player_builder, -lt->get_desc()->get_maintenance(), powerline_wt);
-				}
-			}
-
-			tunnel_t *tunnel = gr->find<tunnel_t>();
-			assert( tunnel );
-			// take the faster way
-			if (!keep_existing_faster_ways || (tunnel->get_desc()->get_topspeed() < tunnel_desc->get_topspeed())) {
-				tunnel->set_desc(tunnel_desc);
-				weg_t *weg = gr->get_weg(tunnel_desc->get_waytype());
-				if (weg)
-				{
-					weg->set_desc(desc);
-					const slope_t::type hang = gr->get_weg_hang();
-					if (hang != slope_t::flat)
-					{
-						const uint slope_height = (hang & 7) ? 1 : 2;
-						if (slope_height == 1)
-						{
-							weg->set_max_speed(min(desc->get_topspeed_gradient_1(), tunnel_desc->get_topspeed_gradient_1()));
-						}
-						else
-						{
-							weg->set_max_speed(min(desc->get_topspeed_gradient_2(), tunnel_desc->get_topspeed_gradient_2()));
-						}
-					}
-					else
-					{
-						weg->set_max_speed(min(desc->get_topspeed(), tunnel_desc->get_topspeed()));
-					}
-					weg->set_max_axle_load(tunnel_desc->get_max_axle_load());
-					// respect max speed of catenary
-					wayobj_t const* const wo = gr->get_wayobj(tunnel_desc->get_waytype());
-					if (wo  &&  wo->get_desc()->get_topspeed() < weg->get_max_speed()) {
-						weg->set_max_speed(wo->get_desc()->get_topspeed());
-					}
-					gr->calc_image();
-					// respect speed limit of crossing
-					weg->count_sign();
-				}
-				cost -= tunnel_desc->get_value();
-			}
-		}
+		new_maintenance = tunnel_builder_t::get_total_maintenance(tunnel_ground->get_pos(),tunnel_desc);
+		player_t::add_maintenance(player_builder,new_maintenance-old_maintenance,tunnel_desc->get_waytype());
 	}
 	player_t::book_construction_costs(player_builder, cost, route[0].get_2d(), tunnel_desc->get_waytype());
 	return true;
@@ -3133,7 +3078,6 @@ long ms=dr_time();
 		// first add all new underground tiles ... (and finished if successful)
 		if(bautyp&tunnel_flag) {
 			build_tunnel_tile();
-			return;
 		}
 
 		// add elevated ground for elevated tracks

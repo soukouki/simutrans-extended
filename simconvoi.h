@@ -808,6 +808,10 @@ public:
 	const koord3d get_schedule_target() const { return schedule_target; }
 	void set_schedule_target( koord3d t ) { schedule_target = t; }
 
+	// Sorting purpose for GUI
+	// Additional numbers will be assigned if convoy is moving backwards from the end of the schedule
+	uint16 get_current_schedule_order() const;
+
 	/**
 	* get line
 	*/
@@ -1156,7 +1160,6 @@ public:
 	* @param[out] buf Filled with freight description
 	*/
 	void get_freight_info(cbuffer_t & buf);
-	void get_freight_info_by_class(cbuffer_t & buf);
 	void set_sortby(uint8 order);
 	inline uint8 get_sortby() const { return freight_info_order; }
 
@@ -1480,6 +1483,10 @@ public:
 	void clear_estimated_times();
 
 	void calc_classes_carried();
+
+	uint16 get_total_cargo() const;
+	// Exclude overcrowding capacity
+	uint16 get_cargo_max() const;
 
 	uint16 get_total_cargo_by_fare_class(uint8 catg, uint8 g_class) const;
 	uint16 get_unique_fare_capacity(uint8 catg, uint8 g_class) const;
