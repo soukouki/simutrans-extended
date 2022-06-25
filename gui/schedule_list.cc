@@ -256,7 +256,7 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	scrolly_haltestellen(&cont_tab_haltlist, true, true),
 	scroll_times_history(&cont_times_history, true, true),
 	scrolly_line_info(&cont_line_info, true, true),
-	scrolly_fare_manager(&cont_by_accommo, true, true),
+	scrolly_fare_manager(&cont_tab_fare_manager, true, true),
 	scl(gui_scrolled_list_t::listskin, line_scrollitem_t::compare),
 	lbl_filter("Line Filter"),
 	convoy_infos(),
@@ -540,6 +540,35 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	cont_tab_haltlist.add_component(&bt_show_halt_name);
 	cont_tab_haltlist.add_component(&cont_haltlist);
 	info_tabs.add_tab(&scrolly_haltestellen, translator::translate("waiting_status"));
+
+	cont_tab_fare_manager.set_table_layout(1,0);
+	cont_tab_fare_manager.add_table(2,1);
+	{
+		cont_tab_fare_manager.new_component<gui_fill_t>();
+		cont_tab_fare_manager.add_table(2,1);
+		{
+			reset_all_pass_button.set_visible(false);
+			reset_all_pass_button.set_rigid(false);
+			reset_all_pass_button.set_typ(button_t::roundbox);
+			reset_all_pass_button.set_text("reset_all_pass_classes");
+			reset_all_pass_button.add_listener(this);
+			reset_all_pass_button.set_tooltip("resets_all_passenger_classes_to_their_defaults");
+			cont_tab_fare_manager.add_component(&reset_all_pass_button);
+
+			reset_all_mail_button.set_visible(false);
+			reset_all_mail_button.set_rigid(false);
+			reset_all_mail_button.set_typ(button_t::roundbox);
+			reset_all_mail_button.set_text("reset_all_mail_classes");
+			reset_all_mail_button.add_listener(this);
+			reset_all_mail_button.set_tooltip("resets_all_mail_classes_to_their_defaults");
+			cont_tab_fare_manager.add_component(&reset_all_mail_button);
+		}
+		cont_tab_fare_manager.end_table();
+	}
+	cont_tab_fare_manager.end_table();
+	cont_tab_fare_manager.new_component<gui_empty_t>();
+	cont_tab_fare_manager.add_component(&cont_by_accommo);
+
 	info_tabs.add_tab(&scrolly_fare_manager, translator::translate("line_class_manager"));
 
 	// recover last selected line
@@ -786,6 +815,26 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 		bt_show_halt_name.pressed = !bt_show_halt_name.pressed;
 		cont_haltlist.set_show_name( bt_show_halt_name.pressed );
 	}
+	else if (comp == &reset_all_pass_button) {
+		cbuffer_t buf;
+		buf.printf("%hhi", goods_manager_t::INDEX_PAS);
+		for (uint32 icnv = 0; icnv < line->count_convoys(); icnv++)
+		{
+			convoihandle_t cnv = line->get_convoy(icnv);
+			cnv->call_convoi_tool('i', buf);
+		}
+		update_lineinfo( line );
+		return true;
+	}
+	else if (comp == &reset_all_mail_button) {
+		cbuffer_t buf;
+		buf.printf("%hhi", goods_manager_t::INDEX_MAIL);
+		for (uint32 icnv = 0; icnv < line->count_convoys(); icnv++)
+		{
+			convoihandle_t cnv = line->get_convoy(icnv);
+			cnv->call_convoi_tool('i', buf);
+		}
+	}
 	else {
 		if (line.is_bound()) {
 			for ( int i = 0; i<MAX_LINE_COST; i++) {
@@ -857,6 +906,8 @@ void schedule_list_gui_t::draw(scr_coord pos, scr_size size)
 		bt_withdraw_line.set_visible( activate );
 		livery_selector.enable( activate );
 		bt_line_color_editor.enable( activate );
+		reset_all_pass_button.enable( activate );
+		reset_all_mail_button.enable( activate );
 	}
 
 	// if search string changed, update line selection
@@ -1085,6 +1136,12 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		livery_selector.set_visible(true);
 		bt_line_color_editor.set_visible(true);
 
+		if( goods_manager_t::passengers->get_number_of_classes()>1 ) {
+			reset_all_pass_button.set_visible(new_line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS));
+		}
+		if( goods_manager_t::mail->get_number_of_classes()>1 ) {
+			reset_all_mail_button.set_visible(new_line->get_goods_catg_index().is_contained(goods_manager_t::INDEX_MAIL));
+		}
 		cont_line_capacity_by_catg.set_line(new_line);
 		cont_by_accommo.set_line(new_line);
 
@@ -1308,6 +1365,8 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		cont_times_history.set_visible(false);
 		cont_transport_density.set_visible(false);
 		cont_haltlist.set_visible(false);
+		reset_all_pass_button.set_visible(false);
+		reset_all_mail_button.set_visible(false);
 		scl.set_selection(-1);
 		bt_delete_line.disable();
 		bt_edit_line.disable();
