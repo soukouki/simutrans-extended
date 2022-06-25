@@ -336,10 +336,6 @@ bool gui_accommo_fare_changer_t::action_triggered(gui_action_creator_t *comp, va
 				for (uint8 icnv=0; icnv < line->count_convoys(); icnv++) {
 					change_convoy_fare_class(line->get_convoy(icnv), target_fare);
 				}
-				schedule_list_gui_t *win = dynamic_cast<schedule_list_gui_t*>(win_get_magic((ptrdiff_t)(magic_line_management_t + owner->get_player_nr())));
-				if (win) {
-					win->update_data(line);
-				}
 			}
 			else {
 				change_convoy_fare_class(cnv, target_fare);
