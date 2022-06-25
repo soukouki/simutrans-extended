@@ -3057,44 +3057,5 @@ gui_vehicle_bar_legends_t::gui_vehicle_bar_legends_t()
 	end_table();
 
 	new_component<gui_divider_t>();
-/*
-	add_table(6,0)->set_spacing( scr_size(D_H_SPACE,1) );
-	{
-		const scr_size color_box_size=scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT);
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_vehicle_bar_t>(COL_SAFETY, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		new_component<gui_label_t>(bar_color_helptexts[0], SYSCOL_TEXT_WEAK);
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_vehicle_bar_t>(COL_LACK_OF_MONEY, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		new_component<gui_label_t>(bar_color_helptexts[5], SYSCOL_TEXT_WEAK);
-
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_vehicle_bar_t>(COL_CAUTION, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		new_component<gui_label_t>(bar_color_helptexts[1], SYSCOL_TEXT_WEAK);
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_vehicle_bar_t>(COL_EXCEED_AXLE_LOAD_LIMIT, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		new_component<gui_label_t>(bar_color_helptexts[6], SYSCOL_TEXT_WEAK);
-
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_vehicle_bar_t>(COL_OUT_OF_PRODUCTION, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		new_component<gui_label_t>(bar_color_helptexts[2], SYSCOL_TEXT_WEAK);
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_vehicle_bar_t>(COL_UPGRADEABLE, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		new_component<gui_label_t>(bar_color_helptexts[7], SYSCOL_TEXT_WEAK);
-
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_vehicle_bar_t>(COL_OBSOLETE, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		new_component<gui_label_t>(bar_color_helptexts[3], SYSCOL_TEXT_WEAK);
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_vehicle_bar_t>(COL_UPGRADE_RESTRICTION, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		new_component<gui_label_t>(bar_color_helptexts[8], SYSCOL_TEXT_WEAK);
-
-		new_component<gui_margin_t>(D_MARGIN_LEFT);
-		new_component<gui_vehicle_bar_t>(COL_DANGER, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
-		new_component<gui_label_t>(bar_color_helptexts[4], SYSCOL_TEXT_WEAK);
-
-	}
-	end_table();
-*/
 	set_size(get_size());
 }
