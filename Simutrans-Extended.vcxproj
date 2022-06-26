@@ -2037,7 +2037,6 @@
     <ClCompile Include="gui\factory_legend.cc" />
     <ClCompile Include="gui\gui_theme.cc" />
     <ClCompile Include="gui\loadfont_frame.cc" />
-    <ClCompile Include="gui\line_class_manager.cc" />
     <ClCompile Include="gui\line_color_gui.cc" />
     <ClCompile Include="gui\line_item.cc" />
     <ClCompile Include="gui\onewaysign_info.cc" />
@@ -2605,7 +2604,6 @@
     <ClInclude Include="gui\factory_legend.h" />
     <ClInclude Include="gui\gui_theme.h" />
     <ClInclude Include="gui\loadfont_frame.h" />
-    <ClInclude Include="gui\line_class_manager.h" />
     <ClInclude Include="gui\line_color_gui.h" />
     <ClInclude Include="gui\onewaysign_info.h" />
     <ClInclude Include="gui\overtaking_mode.h" />
