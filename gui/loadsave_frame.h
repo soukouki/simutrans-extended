@@ -42,7 +42,6 @@ public:
 
 class loadsave_frame_t : public savegame_frame_t
 {
-	//friend class gui_loadsave_table_row_t;
 private:
 	bool do_load;
 
