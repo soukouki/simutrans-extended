@@ -125,14 +125,6 @@ public:
 };
 
 
-class gui_file_table_t : public	gui_table_t
-{
-protected:
-	virtual void paint_cell(const scr_coord& offset, coordinate_t x, coordinate_t y);
-};
-
-
-
 /**
  * Base class from which all GUI dialogs to load/save generics can inherit from
  * @note When I refer to a "qualified" path I mean it can contain sub-directories or even fully qualified path. i.e. : "save/a.sve" or "c:\simutrans\scenario\file.nut"

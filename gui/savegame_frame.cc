@@ -685,18 +685,6 @@ gui_file_table_row_t::gui_file_table_row_t(const char *pathname, const char *but
 }
 
 
-// BG, 26.03.2010
-void gui_file_table_t::paint_cell(const scr_coord& offset, coordinate_t x, coordinate_t y)
-{
-	gui_file_table_column_t *column_def = (gui_file_table_column_t *)get_column(x);
-	gui_table_row_t *row_def = get_row(y);
-	if (column_def && row_def)
-	{
-		column_def->paint_cell(offset, x, y, *row_def);
-	}
-}
-
-
 /**
  * ONLY WIN32
  * Translates all / into \ in a given path string. If a drive
