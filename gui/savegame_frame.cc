@@ -508,59 +508,6 @@ bool savegame_frame_t::action_triggered(gui_action_creator_t *component, value_t
 		cancel_action(buf);
 		destroy_win(this);
 	}
-	else if (component == &file_table) {
-		const gui_table_event_t *event = (const gui_table_event_t *) p.p;
-		if (event->is_cell_hit) {
-			const event_t *ev = event->get_event();
-			if (file_table_button_pressed && event->cell != pressed_file_table_button) {
-				release_file_table_button();
-			}
-			switch (ev->ev_code) {
-				case MOUSE_LEFTBUTTON: {
-					coordinate_t x = event->cell.get_x();
-					if (x < 2) {
-						const bool action_btn = x == 1;
-						coordinate_t y = event->cell.get_y();
-						gui_file_table_row_t *row = (gui_file_table_row_t*) file_table.get_row(y);
-						switch (ev->ev_class) {
-							case EVENT_CLICK:
-								press_file_table_button(event->cell);
-								break;
-
-							case EVENT_RELEASE:
-								if (row->get_pressed())
-								{
-									if(action_btn) {
-										if (item_action(row->get_name())) {
-											destroy_win(this);
-										}
-									}
-									else {
-										if( del_action(row->get_name()) ) {
-											destroy_win(this);
-										}
-										else {
-											file_table.remove_row(y);
-										}
-									}
-								}
-								break;
-							default:
-								break;
-						}
-					}
-					else {
-						release_file_table_button();
-						//qsort();
-					}
-					break;
-				}
-			}
-		}
-		else if (file_table_button_pressed) {
-			release_file_table_button();
-		}
-	}
 	else {
 		// File in list selected
 		//--------------------------
@@ -641,33 +588,6 @@ void savegame_frame_t::set_filename(const char *file_name)
 			tstrncpy(ibuf, file_name, len-3);
 		}
 		input.set_text(ibuf, 128);
-	}
-}
-
-void savegame_frame_t::press_file_table_button(const coordinates_t &cell)
-{
-	pressed_file_table_button = cell;
-	file_table_button_pressed = true;
-	for (coordinate_t i = file_table.get_grid_size().get_x(); i > 0; ) {
-		--i;
-		((gui_file_table_column_t*)file_table.get_column(i))->set_pressed(i == cell.get_x());
-	}
-	for (coordinate_t i = file_table.get_grid_size().get_y(); i > 0; ) {
-		--i;
-		((gui_file_table_row_t*)file_table.get_row(i))->set_pressed(i == cell.get_y());
-	}
-}
-
-void savegame_frame_t::release_file_table_button()
-{
-	file_table_button_pressed = false;
-	for (coordinate_t i = file_table.get_grid_size().get_x(); i > 0; ) {
-		--i;
-		((gui_file_table_column_t*)file_table.get_column(i))->set_pressed(false);
-	}
-	for (coordinate_t i = file_table.get_grid_size().get_y(); i > 0; ) {
-		--i;
-		((gui_file_table_row_t*)file_table.get_row(i))->set_pressed(false);
 	}
 }
 

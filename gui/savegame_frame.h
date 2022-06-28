@@ -209,7 +209,6 @@ protected:
 	                 top_frame,     //@< Contains input field
 					 bottom_left_frame, //@< container for elements on the left of the last row
 	                 button_frame;  //@< Gui container for all items
-	gui_file_table_t file_table;
 	gui_scrollpane_t scrolly;       //@< Scroll panel for the GUI container
 
 	slist_tpl<dir_entry_t> entries;  //@< Internal list representing the file listing
@@ -220,9 +219,6 @@ protected:
 
 	bool file_table_button_pressed;
 	coordinates_t pressed_file_table_button;
-
-	void press_file_table_button(const coordinates_t &cell);
-	void release_file_table_button();
 
 	/**
 	 * Called on each entry that passed the check
