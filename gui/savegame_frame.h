@@ -15,7 +15,6 @@
 #include "../tpl/slist_tpl.h"
 #include "../tpl/vector_tpl.h"
 #include "components/action_listener.h"
-#include "components/gui_table.h"
 #include "components/gui_container.h"
 #include "components/gui_scrollpane.h"
 #include "components/gui_textinput.h"
@@ -115,7 +114,6 @@ protected:
 	bool             label_enabled;  //@< Show the third column of labels.
 
 	bool file_table_button_pressed;
-	coordinates_t pressed_file_table_button;
 
 	/**
 	 * Called on each entry that passed the check
