@@ -137,7 +137,7 @@ class gui_label_buf_t : public gui_label_t
 	cbuffer_t buffer_write, buffer_read;
 
 public:
-	gui_label_buf_t(PIXVAL color=SYSCOL_TEXT, align_t align=left) : gui_label_t(NULL, color, align), buf_changed(true) { underlined = false; }
+	gui_label_buf_t(PIXVAL color=SYSCOL_TEXT, align_t align=left) : gui_label_t(NULL, color, align), buf_changed(true) { }
 
 	void init(PIXVAL color_par=SYSCOL_TEXT, align_t align_par=left);
 
