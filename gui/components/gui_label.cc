@@ -123,6 +123,9 @@ void gui_label_t::draw(scr_coord offset)
 					}
 					display_text_proportional_len_clip_rgb(right.x, right.y, text, ALIGN_RIGHT | DT_CLIP, color, true, separator-text );
 				}
+				if (underlined) {
+					display_fillbox_wh_clip_rgb(right.x, right.y + LINEASCENT - 1, proportional_string_width(separator)+2, 1, color, true);
+				}
 			}
 			else {
 				// integer or normal text
@@ -130,6 +133,9 @@ void gui_label_t::draw(scr_coord offset)
 					display_proportional_clip_rgb(right.x + 1, right.y + 1, text, ALIGN_RIGHT | DT_CLIP, color_shadow, true);
 				}
 				display_proportional_clip_rgb(right.x, right.y, text, ALIGN_RIGHT, color, true);
+				if (underlined) {
+					display_fillbox_wh_clip_rgb(right.x, right.y + LINEASCENT - 1, proportional_string_width(text)+2, 1, color, true);
+				}
 			}
 		}
 	}
@@ -138,7 +144,7 @@ void gui_label_t::draw(scr_coord offset)
 		const scr_coord offset_left = scr_coord((align==left) ? padding.w:0, 0);
 		const scr_rect area( offset+pos+offset_left, size );
 		int a = align == left ? ALIGN_LEFT : ( align == right ? ALIGN_RIGHT : ALIGN_CENTER_H);
-		display_proportional_ellipsis_rgb( area, text,  a | DT_CLIP| ALIGN_CENTER_V, color, true, shadowed, color_shadow );
+		display_proportional_ellipsis_rgb( area, text,  a | DT_CLIP| ALIGN_CENTER_V, color, true, shadowed, color_shadow, underlined );
 	}
 
 	if ( tooltip  &&  getroffen(get_mouse_x()-offset.x, get_mouse_y()-offset.y) ) {
