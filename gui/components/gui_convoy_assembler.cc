@@ -1855,6 +1855,7 @@ void gui_convoy_assembler_t::image_from_storage_list(gui_image_list_t::image_dat
 				}
 				// No action for sell - not available in the replacer window.
 			}
+			update_convoi();
 		}
 	}
 }
