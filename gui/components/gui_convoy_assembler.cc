@@ -2242,6 +2242,9 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 					tile_occupancy.set_new_veh_length(0);
 				}
 			}
+			else {
+				veh_type =vehicles[sel_index];
+			}
 		}
 	}
 
@@ -2272,10 +2275,8 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 		else {
 			// update vehicle text
 			if (convoi_number!=-1 && (veh_action!=va_upgrade)) {
-				convoihandle_t cnv = depot_frame->get_convoy(); // If convoi_number! = -1, depot_frame and cnv are assumed to be non-null
-				vehicle_t *v= cnv->get_vehicle(convoi_number);
 				const uint16 month_now = world()->get_timeline_year_month();
-				if (veh_action == va_upgrade && v->get_desc()->has_available_upgrade(month_now)) {
+				if (veh_action == va_upgrade && veh_type->has_available_upgrade(month_now)) {
 					cont_vspec.set_vehicle(veh_type, veh_action); // upgrade mode
 				}
 				else {
