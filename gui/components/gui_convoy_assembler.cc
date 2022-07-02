@@ -629,14 +629,16 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 			cont_convoi_capacity.set_table_layout(1,0);
 			cont_convoi_capacity.set_margin(scr_size(0, 0), scr_size(D_MARGIN_RIGHT, 0));
 			{
-				bt_class_management.init(button_t::roundbox, "class_manager");
-				bt_class_management.set_tooltip("see_and_change_the_class_assignments");
-				if (skinverwaltung_t::open_window) {
-					bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
-					bt_class_management.set_image_position_right(true);
+				if( depot_frame ) {
+					bt_class_management.init(button_t::roundbox, "class_manager");
+					bt_class_management.set_tooltip("see_and_change_the_class_assignments");
+					if (skinverwaltung_t::open_window) {
+						bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
+						bt_class_management.set_image_position_right(true);
+					}
+					bt_class_management.add_listener(this);
+					cont_convoi_capacity.add_component(&bt_class_management);
 				}
-				bt_class_management.add_listener(this);
-				cont_convoi_capacity.add_component(&bt_class_management);
 
 				//cont_convoi_capacity.add_component(&capacity_info);
 
