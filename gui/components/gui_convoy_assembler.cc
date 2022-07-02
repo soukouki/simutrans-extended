@@ -1892,6 +1892,7 @@ void gui_convoy_assembler_t::image_from_convoi_list(uint nr)
 	{
 		// We're in a replacer.  Less work.
 		vehicles.remove_at(nr);
+		update_convoi();
 	}
 }
 
