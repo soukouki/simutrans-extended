@@ -627,31 +627,46 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 			end_table();
 
 			// top right
-			cont_convoi_capacity.set_table_layout(1,0);
-			cont_convoi_capacity.set_margin(scr_size(0, 0), scr_size(D_MARGIN_RIGHT, 0));
+			add_table(1,3)->set_spacing(scr_size(0,0));
 			{
-				if( depot_frame ) {
-					bt_class_management.init(button_t::roundbox, "class_manager");
-					bt_class_management.set_tooltip("see_and_change_the_class_assignments");
-					if (skinverwaltung_t::open_window) {
-						bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
-						bt_class_management.set_image_position_right(true);
+				cont_convoi_capacity.set_table_layout(1,0);
+				cont_convoi_capacity.set_margin(scr_size(0, 0), scr_size(D_MARGIN_RIGHT, 0));
+				{
+					if( depot_frame ) {
+						bt_class_management.init(button_t::roundbox | button_t::flexible, "class_manager");
+						bt_class_management.set_tooltip("see_and_change_the_class_assignments");
+						if (skinverwaltung_t::open_window) {
+							bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
+							bt_class_management.set_image_position_right(true);
+						}
+						bt_class_management.add_listener(this);
+						cont_convoi_capacity.add_component(&bt_class_management);
 					}
-					bt_class_management.add_listener(this);
-					cont_convoi_capacity.add_component(&bt_class_management);
+
+					//cont_convoi_capacity.add_component(&capacity_info);
+
+					cont_convoi_capacity.new_component<gui_label_t>("FIX ME(capacity)");
 				}
+				add_component(&scrolly_convoi_capacity);
+				new_component<gui_fill_t>(false, true);
 
-				//cont_convoi_capacity.add_component(&capacity_info);
-
-				cont_convoi_capacity.new_component<gui_label_t>("FIX ME(capacity)");
+				veh_action = va_append;
+				static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
+				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
+				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
+				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
+				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
+				action_selector.set_selection(0);
+				action_selector.add_listener(this);
+				add_component(&action_selector);
 			}
-			add_component(&scrolly_convoi_capacity);
+			end_table();
 		}
 		end_table();
 		new_component<gui_border_t>();
 
 		// filter
-		add_table(5,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
+		add_table(4,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
 		{
 			// TODO: text filter, filter count
 
@@ -680,16 +695,6 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 					add_component(&bt_obsolete);
 				}
 			}
-
-			veh_action = va_append;
-			static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
-			action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
-			action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
-			action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
-			action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
-			action_selector.set_selection(0);
-			action_selector.add_listener(this);
-			add_component(&action_selector);
 		}
 		end_table();
 
