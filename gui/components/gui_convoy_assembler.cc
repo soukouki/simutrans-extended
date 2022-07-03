@@ -708,10 +708,11 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 		new_component<gui_divider_t>();
 
 		// livery selector
-		add_table(5,1);
+		add_table(5,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
 		{
 			lb_too_heavy_notice.set_visible(false);
 			lb_too_heavy_notice.init("too heavy", scr_coord(0, 0), SYSCOL_TEXT_STRONG);
+			lb_too_heavy_notice.set_rigid(true);
 			add_component(&lb_too_heavy_notice);
 			new_component<gui_fill_t>();
 			new_component<gui_label_t>("Livery scheme:");
@@ -2058,7 +2059,6 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 	int sel_index = lst->index_at(pos + tabs.get_pos() - relpos, x, y - tabs.get_required_size().h);
 	sint8 vehicle_fluctuation = 0;
 
-	lb_too_heavy_notice.set_visible(false);
 	if(  (sel_index != -1)  &&  (tabs.getroffen(x - pos.x, y - pos.y)) ) {
 		// cursor over a vehicle in the selection list
 		const vector_tpl<gui_image_list_t::image_data_t*>& vec = (lst == &electrics ? electrics_vec : (lst == &pas ? pas_vec : (lst == &pas2 ? pas2_vec : (lst == &locos ? locos_vec : waggons_vec))));
@@ -2076,6 +2076,9 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 			if(vec[sel_index]->lcolor == COL_EXCEED_AXLE_LOAD_LIMIT)
 			{
 				lb_too_heavy_notice.set_visible(true);
+			}
+			else{
+				lb_too_heavy_notice.set_visible(false);
 			}
 
 			// update tile occupancy bar
@@ -2212,6 +2215,7 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 		}
 	}
 	else {
+		lb_too_heavy_notice.set_visible(false);
 		// cursor over a vehicle in the convoi
 		relpos = scr_coord(scrollx_convoi.get_scroll_x(), 0);
 
