@@ -42,6 +42,8 @@ protected:
 
 	static slist_tpl<depot_t *> all_depots;
 
+	char name[128];
+
 public:
 	/**
 	 * Is this depot suitable for this vehicle?
@@ -222,6 +224,9 @@ public:
 	inline unsigned get_max_convoi_length() const { return get_max_convoy_length(get_wegtyp()); }
 
 	void add_to_world_list(bool lock = false);
+
+	void set_name(const char* value);
+	const char* get_name() const;
 
 private:
 	linehandle_t last_selected_line;
