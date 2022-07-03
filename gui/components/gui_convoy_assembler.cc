@@ -53,6 +53,7 @@ bool gui_convoy_assembler_t::show_obsolete_vehicles = false;
 uint16 gui_convoy_assembler_t::livery_scheme_index = 0;
 
 int gui_convoy_assembler_t::selected_filter = VEHICLE_FILTER_RELEVANT;
+char gui_convoy_assembler_t::name_filter_value[64] = "";
 
 
 gui_vehicle_spec_t::gui_vehicle_spec_t(const vehicle_desc_t* desc)
@@ -666,9 +667,11 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 		new_component<gui_border_t>();
 
 		// filter
-		add_table(4,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
+		add_table(5,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
 		{
-			// TODO: text filter, filter count
+			name_filter_input.set_text(name_filter_value, 24);
+			add_component(&name_filter_input);
+			name_filter_input.add_listener(this);
 
 			// goods filter => category?
 			add_component(&vehicle_filter);
@@ -959,14 +962,17 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 			bt_outdated.pressed = show_outdated_vehicles;
 			build_vehicle_lists();
 		}
-		else if (  comp == &bt_obsolete  ) {
+		else if(  comp == &bt_obsolete  ) {
 			show_obsolete_vehicles = (show_obsolete_vehicles == 0);
 			bt_obsolete.pressed = show_obsolete_vehicles;
 			build_vehicle_lists();
 		}
-		else if (  comp == &bt_show_all  ) {
+		else if(  comp == &bt_show_all  ) {
 			show_all = (show_all == 0);
 			bt_show_all.pressed = show_all;
+			build_vehicle_lists();
+		}
+		else if(  comp == &name_filter_input  ) {
 			build_vehicle_lists();
 		}
 		else if(comp == &action_selector) {
@@ -1266,7 +1272,9 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 				}
 				if((append && (veh_action == va_append || veh_action == va_insert)) || (upgradeable &&  veh_action == va_upgrade) || (show_all && veh_action == va_sell))
 				{
-					add_to_vehicle_list( info );
+					if(  name_filter_value[0]==0  ||  (utf8caseutf8(info->get_name(), name_filter_value)  ||  utf8caseutf8(translator::translate(info->get_name()), name_filter_value))  ) {
+						add_to_vehicle_list( info );
+					}
 				}
 			}
 
@@ -1977,7 +1985,7 @@ void gui_convoy_assembler_t::set_vehicles(const vector_tpl<const vehicle_desc_t 
 }
 
 
-/*
+
 bool gui_convoy_assembler_t::infowin_event(const event_t *ev)
 {
 	bool swallowed = gui_aligned_container_t::infowin_event(ev);
@@ -1988,8 +1996,13 @@ bool gui_convoy_assembler_t::infowin_event(const event_t *ev)
 	//	return true;
 	//}
 
+	if(  get_focus()==&name_filter_input  &&  (ev->ev_class == EVENT_KEYBOARD  ||  ev->ev_class == EVENT_STRING)  ) {
+		build_vehicle_lists();
+		return true;
+	}
+
 	return swallowed;
-}*/
+}
 
 void gui_convoy_assembler_t::set_panel_width()
 {

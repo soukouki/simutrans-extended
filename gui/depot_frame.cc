@@ -670,7 +670,6 @@ bool depot_frame_t::infowin_event(const event_t *ev)
 	}
 
 	const bool swallowed = gui_frame_t::infowin_event(ev);
-	return false;
 
 	// HACK make line_selector focusable again
 	// now we can release focus
