@@ -53,6 +53,7 @@ bool gui_convoy_assembler_t::show_obsolete_vehicles = false;
 uint16 gui_convoy_assembler_t::livery_scheme_index = 0;
 
 int gui_convoy_assembler_t::selected_filter = VEHICLE_FILTER_RELEVANT;
+char gui_convoy_assembler_t::name_filter_value[64] = "";
 
 
 gui_vehicle_spec_t::gui_vehicle_spec_t(const vehicle_desc_t* desc)
@@ -627,25 +628,40 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 			end_table();
 
 			// top right
-			cont_convoi_capacity.set_table_layout(1,0);
-			cont_convoi_capacity.set_margin(scr_size(0, 0), scr_size(D_MARGIN_RIGHT, 0));
+			add_table(1,3)->set_spacing(scr_size(0,0));
 			{
-				if( depot_frame ) {
-					bt_class_management.init(button_t::roundbox, "class_manager");
-					bt_class_management.set_tooltip("see_and_change_the_class_assignments");
-					if (skinverwaltung_t::open_window) {
-						bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
-						bt_class_management.set_image_position_right(true);
+				cont_convoi_capacity.set_table_layout(1,0);
+				cont_convoi_capacity.set_margin(scr_size(0, 0), scr_size(D_MARGIN_RIGHT, 0));
+				{
+					if( depot_frame ) {
+						bt_class_management.init(button_t::roundbox | button_t::flexible, "class_manager");
+						bt_class_management.set_tooltip("see_and_change_the_class_assignments");
+						if (skinverwaltung_t::open_window) {
+							bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
+							bt_class_management.set_image_position_right(true);
+						}
+						bt_class_management.add_listener(this);
+						cont_convoi_capacity.add_component(&bt_class_management);
 					}
-					bt_class_management.add_listener(this);
-					cont_convoi_capacity.add_component(&bt_class_management);
+
+					//cont_convoi_capacity.add_component(&capacity_info);
+
+					cont_convoi_capacity.new_component<gui_label_t>("FIX ME(capacity)");
 				}
+				add_component(&scrolly_convoi_capacity);
+				new_component<gui_fill_t>(false, true);
 
-				//cont_convoi_capacity.add_component(&capacity_info);
-
-				cont_convoi_capacity.new_component<gui_label_t>("FIX ME(capacity)");
+				veh_action = va_append;
+				static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
+				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
+				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
+				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
+				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
+				action_selector.set_selection(0);
+				action_selector.add_listener(this);
+				add_component(&action_selector);
 			}
-			add_component(&scrolly_convoi_capacity);
+			end_table();
 		}
 		end_table();
 		new_component<gui_border_t>();
@@ -653,7 +669,9 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 		// filter
 		add_table(5,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
 		{
-			// TODO: text filter, filter count
+			name_filter_input.set_text(name_filter_value, 24);
+			add_component(&name_filter_input);
+			name_filter_input.add_listener(this);
 
 			// goods filter => category?
 			add_component(&vehicle_filter);
@@ -680,16 +698,6 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 					add_component(&bt_obsolete);
 				}
 			}
-
-			veh_action = va_append;
-			static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
-			action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
-			action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
-			action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
-			action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
-			action_selector.set_selection(0);
-			action_selector.add_listener(this);
-			add_component(&action_selector);
 		}
 		end_table();
 
@@ -954,14 +962,17 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 			bt_outdated.pressed = show_outdated_vehicles;
 			build_vehicle_lists();
 		}
-		else if (  comp == &bt_obsolete  ) {
+		else if(  comp == &bt_obsolete  ) {
 			show_obsolete_vehicles = (show_obsolete_vehicles == 0);
 			bt_obsolete.pressed = show_obsolete_vehicles;
 			build_vehicle_lists();
 		}
-		else if (  comp == &bt_show_all  ) {
+		else if(  comp == &bt_show_all  ) {
 			show_all = (show_all == 0);
 			bt_show_all.pressed = show_all;
+			build_vehicle_lists();
+		}
+		else if(  comp == &name_filter_input  ) {
 			build_vehicle_lists();
 		}
 		else if(comp == &action_selector) {
@@ -1261,7 +1272,9 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 				}
 				if((append && (veh_action == va_append || veh_action == va_insert)) || (upgradeable &&  veh_action == va_upgrade) || (show_all && veh_action == va_sell))
 				{
-					add_to_vehicle_list( info );
+					if(  name_filter_value[0]==0  ||  (utf8caseutf8(info->get_name(), name_filter_value)  ||  utf8caseutf8(translator::translate(info->get_name()), name_filter_value))  ) {
+						add_to_vehicle_list( info );
+					}
 				}
 			}
 
@@ -1972,7 +1985,7 @@ void gui_convoy_assembler_t::set_vehicles(const vector_tpl<const vehicle_desc_t 
 }
 
 
-/*
+
 bool gui_convoy_assembler_t::infowin_event(const event_t *ev)
 {
 	bool swallowed = gui_aligned_container_t::infowin_event(ev);
@@ -1983,8 +1996,13 @@ bool gui_convoy_assembler_t::infowin_event(const event_t *ev)
 	//	return true;
 	//}
 
+	if(  get_focus()==&name_filter_input  &&  (ev->ev_class == EVENT_KEYBOARD  ||  ev->ev_class == EVENT_STRING)  ) {
+		build_vehicle_lists();
+		return true;
+	}
+
 	return swallowed;
-}*/
+}
 
 void gui_convoy_assembler_t::set_panel_width()
 {
