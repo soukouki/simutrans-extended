@@ -718,6 +718,8 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 			new_component<gui_label_t>("Livery scheme:");
 			livery_selector.add_listener(this);
 			add_component(&livery_selector);
+			lb_livery_counter.set_color(SYSCOL_TEXT_HIGHLIGHT);
+			lb_livery_counter.set_fixed_width(proportional_string_width("(888)"));
 			add_component(&lb_livery_counter);
 		}
 		end_table();
@@ -2278,6 +2280,8 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 			// nothing select, initialize
 			old_veh_type = NULL;
 			new_vehicle_length = 0;
+			lb_too_heavy_notice.set_visible(false);
+			lb_livery_counter.set_visible(false);
 			if (way_type != water_wt && way_type != air_wt) {
 				tile_occupancy.set_new_veh_length(0);
 				vehicle_fluctuation = 0;
@@ -2310,6 +2314,15 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 			else {
 				cont_vspec.set_vehicle(veh_type, (veh_type->is_available_only_as_upgrade()&& veh_action!=va_sell) ? va_upgrade : veh_action, resale_value);
 			}
+
+			if (veh_type->get_livery_count() > 0) {
+				lb_livery_counter.buf().printf("(%i)", veh_type->get_available_livery_count(world()));
+				lb_livery_counter.set_visible(true);
+			}
+			else {
+				lb_livery_counter.set_visible(false);
+			}
+			lb_livery_counter.update();
 		}
 		if (way_type != water_wt && way_type != air_wt) {
 			lb_convoi_count_fluctuation.set_visible(false);
