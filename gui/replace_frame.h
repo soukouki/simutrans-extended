@@ -87,7 +87,7 @@ private:
 	void init();
 	void init_table();
 
-	// registered convoy vehicles to assembler and convoy(only init). 
+	// registered convoy vehicles to assembler and convoy(only init).
 	void set_vehicles(bool init=false);
 
 public:
