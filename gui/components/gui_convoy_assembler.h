@@ -110,8 +110,10 @@ class gui_convoy_assembler_t : public gui_aligned_container_t, public gui_action
 	 * Originally in simdepot.h.  Based in the code of:
 	 */
 	static scr_coord get_placement(waytype_t wt);
+public:
 	static scr_coord get_grid(waytype_t wt);
 
+private:
 	waytype_t way_type;
 	bool way_electrified;
 
