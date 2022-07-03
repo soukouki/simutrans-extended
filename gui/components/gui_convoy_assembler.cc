@@ -551,7 +551,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 		add_table(2,1)->set_alignment(ALIGN_TOP);
 		{
 			// top left
-			add_table(1,2)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
+			add_table(1,2)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(0,0));
 			{
 				cont_convoi.set_table_layout(2,2);
 				cont_convoi.set_margin(scr_size(0,0), scr_size(0,0));
@@ -564,6 +564,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 				scrollx_convoi.set_maximize(true);
 				add_component(&scrollx_convoi);
 				cont_convoi_spec.set_table_layout(1,2);
+				cont_convoi_spec.set_margin(scr_size(0,0), scr_size(0,0));
 				// convoy length
 				cont_convoi_spec.add_table(5,1);
 				{
