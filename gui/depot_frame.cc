@@ -112,7 +112,6 @@ void depot_frame_t::init(depot_t *dep)
 {
 	depot = dep;
 	reset_depot_name();
-	set_name(translator::translate(depot->get_name()));
 	set_owner(depot->get_owner());
 	icnv = depot->convoi_count()-1;
 
@@ -185,6 +184,7 @@ void depot_frame_t::init_table()
 	add_table(1,0)->set_margin(scr_size(D_MARGIN_LEFT, D_MARGIN_TOP), scr_size(D_MARGIN_RIGHT, 0));
 		add_table(3,1);
 		{
+			name_input.set_text(name, sizeof(name));
 			name_input.add_listener(this);
 			add_component(&name_input);
 
@@ -484,24 +484,25 @@ void depot_frame_t::rename_depot()
 	const char *t = name_input.get_text();
 	// only change if old name and current name are the same
 	// otherwise some unintended undo if renaming would occur
-	if (t  &&  t[0] && strcmp(t, depot->get_name()) != 0 && strcmp(old_name, depot->get_name()) == 0) {
+	if(  t  &&  t[0]  &&  strcmp(t, depot->get_name())  &&  strcmp(old_name, depot->get_name())==0) {
 		// text changed => call tool
 		cbuffer_t buf;
-		buf.printf("d%s,%s", depot->get_pos().get_str(), name);
+		buf.printf("d%s,%s", depot->get_pos().get_str(), t);
 		tool_t *tool = create_tool(TOOL_RENAME | SIMPLE_TOOL);
 		tool->set_default_param(buf);
 		welt->set_tool(tool, depot->get_owner());
 		// since init always returns false, it is safe to delete immediately
 		delete tool;
+		// do not trigger this command again
+		tstrncpy(old_name, depot->get_name(), sizeof(old_name));
 	}
-	set_name(translator::translate(depot->get_name()));
 }
 
 void depot_frame_t::reset_depot_name()
 {
 	tstrncpy(old_name, depot->get_name(), sizeof(old_name));
 	tstrncpy(name, depot->get_name(), sizeof(name));
-	name_input.set_text(name, sizeof(name));
+	set_name(translator::translate(depot->get_name()));
 }
 
 

@@ -113,7 +113,6 @@ private:
 
 	/// Renames the depot to the name given in the text input field
 	void rename_depot();
-	void reset_depot_name();
 
 public:
 	// the next two are only needed for depot_t update notifications
@@ -125,6 +124,8 @@ public:
 	 * Update texts, image lists and buttons according to the current state.
 	 */
 	void update_data();
+
+	void reset_depot_name();
 
 	// more general functions ...
 	depot_frame_t(depot_t* depot = NULL);
