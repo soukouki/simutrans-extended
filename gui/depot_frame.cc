@@ -111,6 +111,7 @@ depot_frame_t::depot_frame_t(depot_t* depot) :
 void depot_frame_t::init(depot_t *dep)
 {
 	depot = dep;
+	reset_depot_name();
 	set_name(translator::translate(depot->get_name()));
 	set_owner(depot->get_owner());
 	icnv = depot->convoi_count()-1;
@@ -184,13 +185,14 @@ void depot_frame_t::init_table()
 	add_table(1,0)->set_margin(scr_size(D_MARGIN_LEFT, D_MARGIN_TOP), scr_size(D_MARGIN_RIGHT, 0));
 		add_table(3,1);
 		{
+			name_input.add_listener(this);
+			add_component(&name_input);
+
 			// Bolt image for electrified depots:
 			img_bolt.set_image(skinverwaltung_t::electricity->get_image_id(0), true);
 			img_bolt.set_rigid(true);
 			add_component(&img_bolt);
 			add_component(&lb_traction_types);
-			lb_vehicle_count.init(SYSCOL_TEXT,gui_label_t::right);
-			add_component(&lb_vehicle_count);
 		}
 		end_table();
 		add_table(2,2);
@@ -198,9 +200,15 @@ void depot_frame_t::init_table()
 			// text will be translated by ourselves (after update data)!
 			add_component(&lb_convois);
 
-			convoy_selector.set_highlight_color(color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
-			convoy_selector.add_listener(this);
-			add_component(&convoy_selector);
+			add_table(2,1);
+			{
+				convoy_selector.set_highlight_color(color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
+				convoy_selector.add_listener(this);
+				add_component(&convoy_selector);
+				lb_vehicle_count.init(SYSCOL_TEXT,gui_label_t::right);
+				add_component(&lb_vehicle_count);
+			}
+			end_table();
 
 			/*
 			 * [SELECT ROUTE]:
@@ -471,6 +479,33 @@ void depot_frame_t::build_line_list()
 }
 
 
+void depot_frame_t::rename_depot()
+{
+	const char *t = name_input.get_text();
+	// only change if old name and current name are the same
+	// otherwise some unintended undo if renaming would occur
+	if (t  &&  t[0] && strcmp(t, depot->get_name()) != 0 && strcmp(old_name, depot->get_name()) == 0) {
+		// text changed => call tool
+		cbuffer_t buf;
+		buf.printf("d%s,%s", depot->get_pos().get_str(), name);
+		tool_t *tool = create_tool(TOOL_RENAME | SIMPLE_TOOL);
+		tool->set_default_param(buf);
+		welt->set_tool(tool, depot->get_owner());
+		// since init always returns false, it is safe to delete immediately
+		delete tool;
+	}
+	set_name(translator::translate(depot->get_name()));
+}
+
+void depot_frame_t::reset_depot_name()
+{
+	tstrncpy(old_name, depot->get_name(), sizeof(old_name));
+	tstrncpy(name, depot->get_name(), sizeof(name));
+	name_input.set_text(name, sizeof(name));
+}
+
+
+
 sint64 depot_frame_t::calc_sale_value(const vehicle_desc_t *veh_type)
 {
 	sint64 wert = 0;
@@ -653,6 +688,10 @@ bool depot_frame_t::action_triggered( gui_action_creator_t *comp, value_t p)
 			filter_btn_all_freights.pressed = line_type_flags & (1 << simline_t::all_freight);
 			build_line_list();
 			return true;
+		}
+		else if (comp == &name_input) {
+			// send rename command if necessary
+			rename_depot();
 		}
 		else {
 			return false;

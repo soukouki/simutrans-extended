@@ -51,6 +51,9 @@ private:
 	 */
 	gui_label_buf_t lb_convois, lb_vehicle_count, lb_traction_types;
 
+	char name[256], old_name[256];
+	gui_textinput_t name_input;
+
 	/// contains the current translation of "new convoi"
 	const char* new_convoy_text;
 	gui_combobox_t convoy_selector;
@@ -107,6 +110,10 @@ private:
 	uint32 old_vehicle_count;
 
 	static bool compare_line(linehandle_t const& l1, linehandle_t const& l2);
+
+	/// Renames the depot to the name given in the text input field
+	void rename_depot();
+	void reset_depot_name();
 
 public:
 	// the next two are only needed for depot_t update notifications
