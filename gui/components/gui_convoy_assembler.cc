@@ -630,33 +630,32 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 			end_table();
 
 			// top right
-			add_table(1,3)->set_spacing(scr_size(0,0));
+			add_table(1,3)->set_margin(scr_size(0,0), scr_size(D_V_SPACE, 0));
 			{
-				cont_convoi_capacity.set_table_layout(2,0);
-				cont_convoi_capacity.set_margin(scr_size(0, 0), scr_size(0, 0));
-				{
-					if( depot_frame ) {
-						bt_class_management.init(button_t::roundbox | button_t::flexible, "class_manager");
-						bt_class_management.set_tooltip("see_and_change_the_class_assignments");
-						if (skinverwaltung_t::open_window) {
-							bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
-							bt_class_management.set_image_position_right(true);
-						}
-						bt_class_management.add_listener(this);
-						cont_convoi_capacity.add_component(&bt_class_management);
-						cont_convoi_capacity.new_component<gui_margin_t>(D_MARGIN_RIGHT);
+				if( depot_frame ) {
+					bt_class_management.init(button_t::roundbox | button_t::flexible, "class_manager");
+					bt_class_management.set_tooltip("see_and_change_the_class_assignments");
+					if (skinverwaltung_t::open_window) {
+						bt_class_management.set_image(skinverwaltung_t::open_window->get_image_id(0));
+						bt_class_management.set_image_position_right(true);
 					}
+					bt_class_management.add_listener(this);
+					add_component(&bt_class_management);
+				}
+				cont_convoi_capacity.set_table_layout(1,0);
+				cont_convoi_capacity.set_margin(scr_size(0, D_V_SPACE), scr_size(0, D_V_SPACE));
+				{
 
 					if (depot_frame) {
-						cont_convoi_capacity.add_component(&capacity_info,2);
+						cont_convoi_capacity.add_component(&capacity_info);
 					}
 					else {
-						cont_convoi_capacity.new_component<gui_label_t>("FIX ME(capacity)",2);
+						cont_convoi_capacity.new_component<gui_label_t>("FIX ME(capacity)");
 					}
 					cont_convoi_capacity.new_component<gui_fill_t>(false,true);
 				}
+				scrolly_convoi_capacity.set_maximize(true);
 				add_component(&scrolly_convoi_capacity);
-				new_component<gui_fill_t>(false, true);
 
 				veh_action = va_append;
 				static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
