@@ -21,7 +21,7 @@
 #include "../gui_theme.h"
 
 #include "gui_container.h"
-//#include "gui_vehicle_capacitybar.h"
+#include "gui_vehicle_capacitybar.h"
 
 #include "../../convoihandle_t.h"
 
@@ -133,7 +133,7 @@ private:
 	gui_scrollpane_t scrollx_convoi, scrolly_convoi_capacity;
 
 	button_t bt_class_management;
-	//gui_convoy_loading_info_t capacity_info;
+	gui_convoy_loading_info_t capacity_info;
 
 	gui_label_buf_t lb_convoi_count;
 	gui_label_buf_t lb_convoi_count_fluctuation;

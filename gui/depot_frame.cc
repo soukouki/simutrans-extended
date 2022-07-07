@@ -396,6 +396,8 @@ void depot_frame_t::update_data()
 	build_line_list();
 	set_resale_value();
 
+	reset_min_windowsize();
+	set_windowsize(scr_size(max(get_min_windowsize().w, get_windowsize().w), max(get_min_windowsize().h, get_windowsize().h)));
 	resize(scr_size(0,0));
 }
 

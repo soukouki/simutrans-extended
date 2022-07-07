@@ -504,6 +504,7 @@ scr_size gui_vehicle_spec_t::get_max_size() const
 gui_convoy_assembler_t::gui_convoy_assembler_t(depot_frame_t *frame) :
 	convoi(&convoi_pics),
 	scrollx_convoi(&cont_convoi, true, false),
+	capacity_info(linehandle_t(), convoihandle_t(), false),
 	scrolly_convoi_capacity(&cont_convoi_capacity, false, true),
 	pas(&pas_vec),
 	pas2(&pas2_vec),
@@ -523,6 +524,7 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(depot_frame_t *frame) :
 gui_convoy_assembler_t::gui_convoy_assembler_t(replace_frame_t *frame) :
 	convoi(&convoi_pics),
 	scrollx_convoi(&cont_convoi, true, false),
+	capacity_info(linehandle_t(), convoihandle_t(), false),
 	scrolly_convoi_capacity(&cont_convoi_capacity, false, true),
 	pas(&pas_vec),
 	pas2(&pas2_vec),
@@ -630,8 +632,8 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 			// top right
 			add_table(1,3)->set_spacing(scr_size(0,0));
 			{
-				cont_convoi_capacity.set_table_layout(1,0);
-				cont_convoi_capacity.set_margin(scr_size(0, 0), scr_size(D_MARGIN_RIGHT, 0));
+				cont_convoi_capacity.set_table_layout(2,0);
+				cont_convoi_capacity.set_margin(scr_size(0, 0), scr_size(0, 0));
 				{
 					if( depot_frame ) {
 						bt_class_management.init(button_t::roundbox | button_t::flexible, "class_manager");
@@ -642,11 +644,16 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 						}
 						bt_class_management.add_listener(this);
 						cont_convoi_capacity.add_component(&bt_class_management);
+						cont_convoi_capacity.new_component<gui_margin_t>(D_MARGIN_RIGHT);
 					}
 
-					//cont_convoi_capacity.add_component(&capacity_info);
-
-					cont_convoi_capacity.new_component<gui_label_t>("FIX ME(capacity)");
+					if (depot_frame) {
+						cont_convoi_capacity.add_component(&capacity_info,2);
+					}
+					else {
+						cont_convoi_capacity.new_component<gui_label_t>("FIX ME(capacity)",2);
+					}
+					cont_convoi_capacity.new_component<gui_fill_t>(false,true);
 				}
 				add_component(&scrolly_convoi_capacity);
 				new_component<gui_fill_t>(false, true);
@@ -1776,6 +1783,7 @@ DBG_DEBUG("gui_convoy_assembler_t::update_data()","current %s with colors %i,%i"
 				}
 			}
 		}
+		capacity_info.set_convoy(depot_frame->get_depot()->get_convoi(depot_frame->get_icnv()));
 	}
 }
 
@@ -1972,6 +1980,10 @@ void gui_convoy_assembler_t::set_vehicles(convoihandle_t cnv)
 		for (uint8 i=0; i<cnv->get_vehicle_count(); i++) {
 			vehicles.append(cnv->get_vehicle(i)->get_desc());
 		}
+		capacity_info.set_convoy(cnv);
+	}
+	else {
+		capacity_info.set_convoy(convoihandle_t());
 	}
 	update_convoi();
 }
