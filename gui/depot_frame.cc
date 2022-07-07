@@ -167,6 +167,8 @@ DBG_DEBUG("depot_frame_t::depot_frame_t()","get_max_convoi_length()=%i",depot->g
 	//set_windowsize(size);
 	convoy_assembler.update_convoi();
 
+	line_selector.set_width(convoy_selector.get_size().w);
+	line_selector.set_width_fixed(true);
 	set_resizemode( diagonal_resize );
 	resize(scr_size(0,0));
 
@@ -195,20 +197,16 @@ void depot_frame_t::init_table()
 			add_component(&lb_traction_types);
 		}
 		end_table();
-		add_table(2,2);
+		add_table(3,2);
 		{
 			// text will be translated by ourselves (after update data)!
 			add_component(&lb_convois);
 
-			add_table(2,1);
-			{
-				convoy_selector.set_highlight_color(color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
-				convoy_selector.add_listener(this);
-				add_component(&convoy_selector);
-				lb_vehicle_count.init(SYSCOL_TEXT,gui_label_t::right);
-				add_component(&lb_vehicle_count);
-			}
-			end_table();
+			convoy_selector.set_highlight_color(color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
+			convoy_selector.add_listener(this);
+			add_component(&convoy_selector);
+			lb_vehicle_count.init(SYSCOL_TEXT,gui_label_t::right);
+			add_component(&lb_vehicle_count);
 
 			/*
 			 * [SELECT ROUTE]:
@@ -229,14 +227,14 @@ void depot_frame_t::init_table()
 			}
 			end_table();
 
-			add_table(4,1)->set_spacing(scr_size(0,0));
-			{
-				line_selector.add_listener(this);
-				line_selector.set_highlight_color( color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
-				line_selector.set_wrapping(false);
-				line_selector.set_focusable(true);
-				add_component(&line_selector);
+			line_selector.add_listener(this);
+			line_selector.set_highlight_color( color_idx_to_rgb(depot->get_owner()->get_player_color1() + 1));
+			line_selector.set_wrapping(false);
+			line_selector.set_focusable(true);
+			add_component(&line_selector);
 
+			add_table(3,1)->set_spacing(scr_size(0,0));
+			{
 				// [freight type filter buttons]
 				filter_btn_all_pas.init(button_t::roundbox_state, NULL, scr_coord(0,0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
 				filter_btn_all_pas.set_image(skinverwaltung_t::passengers->get_image_id(0));
@@ -474,10 +472,6 @@ void depot_frame_t::build_line_list()
 		// no line selected
 		selected_line = linehandle_t();
 	}
-	line_selector.set_width(line_selector.get_min_size().w);
-	line_selector.set_width_fixed(true);
-	//line_selector.sort( last_selected_line.is_bound()+extra_option ); // line list is now pre-sorted
-	reset_min_windowsize();
 }
 
 
