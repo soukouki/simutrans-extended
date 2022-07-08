@@ -9,7 +9,7 @@
 #include "simwin.h"
 #include "../simworld.h"
 #include "../player/simplay.h"
-//#include "../player/finance.h"
+#include "../player/finance.h" // NOTICE_INSUFFICIENT_FUNDS
 #include "../simline.h"
 
 #include "../dataobj/translator.h"
@@ -19,6 +19,7 @@
 
 #include "../bauer/vehikelbauer.h"
 #include "linelist_stats_t.h"
+#include "messagebox.h"
 #include "components/gui_convoi_button.h"
 #include "convoi_detail_t.h"
 
@@ -324,6 +325,10 @@ void replace_frame_t::update_data()
 {
 	//	convoy_assembler.update_convoi();
 
+	uint32 n[3];
+	n[0] = 0;
+	n[1] = 0;
+	n[2] = 0;
 	money = 0;
 	sint64 base_total_cost = calc_total_cost();
 	if (replace_line || replace_all) {
@@ -333,17 +338,47 @@ void replace_frame_t::update_data()
 	}
 	if (replace_line) {
 		linehandle_t line=cnv.is_bound()?cnv->get_line():linehandle_t();
+		if (line.is_bound()) {
+			for (uint32 i=0; i<line->count_convoys(); i++)
+			{
+				convoihandle_t cnv_aux=line->get_convoy(i);
+				if (cnv->has_same_vehicles(cnv_aux))
+				{
+					uint8 present_state=get_present_state();
+					if (present_state==(uint8)(-1))
+					{
+						continue;
+					}
 
-		// TODO:
+					money -= base_total_cost;
+					n[present_state]++;
+				}
+			}
+		}
+	} else if (replace_all) {
+		for (uint32 i=0; i<welt->convoys().get_count(); i++) {
+			convoihandle_t cnv_aux=welt->convoys()[i];
+			if (cnv_aux.is_bound() && cnv_aux->get_owner()==cnv->get_owner() && cnv->has_same_vehicles(cnv_aux))
+			{
+				uint8 present_state=get_present_state();
+				if (present_state==(uint8)(-1))
+				{
+					continue;
+				}
 
+				money -= base_total_cost;
+				n[present_state]++;
+			}
+		}
+	}
+	if (replace_all || replace_line) {
+		for (uint8 i = 0; i < n_states; ++i) {
+			lb_text[i].buf().append(n[i],0);
+			lb_text[i].update();
+		}
 	}
 
-	for( uint8 i=0; i<n_states; ++i ) {
-
-	}
-
-	//if (convoy_assembler.get_vehicles()->get_count()>0) {
-	{
+	if (convoy_assembler.get_vehicles()->get_count()>0) {
 		lb_money.append_money(money/100.0);
 		lb_money.set_color(money>=0?MONEY_PLUS:MONEY_MINUS);
 	}
@@ -368,7 +403,6 @@ uint8 replace_frame_t::get_present_state()
 }
 
 
-/*
 bool replace_frame_t::replace_convoy(convoihandle_t cnv_rpl, bool mark)
 {
 	uint8 state=get_present_state();
@@ -377,7 +411,58 @@ bool replace_frame_t::replace_convoy(convoihandle_t cnv_rpl, bool mark)
 		return false;
 	}
 
-}*/
+	switch (state)
+	{
+	case state_replace:
+	{
+		if(convoy_assembler.get_vehicles()->get_count()==0)
+		{
+			break;
+		}
+
+		if(!welt->get_active_player()->can_afford(0 - money))
+		{
+			const char *err = NOTICE_INSUFFICIENT_FUNDS;
+			news_img *box = new news_img(err);
+			create_win(box, w_time_delete, magic_none);
+			break;
+		}
+
+		if(!copy)
+		{
+			rpl->set_replacing_vehicles(convoy_assembler.get_vehicles());
+
+			cbuffer_t buf;
+			rpl->sprintf_replace(buf);
+
+			cnv_rpl->call_convoi_tool('R', buf);
+		}
+
+		else
+		{
+			cbuffer_t buf;
+			buf.append((long)master_convoy.get_id());
+			cnv_rpl->call_convoi_tool('C', buf);
+		}
+
+		if(!mark && depot && !rpl->get_autostart())
+		{
+			cnv_rpl->call_convoi_tool('D', NULL);
+		}
+
+	}
+		break;
+
+	case state_sell:
+		cnv_rpl->call_convoi_tool('T');
+		break;
+	case state_skip:
+	break;
+	}
+
+	replaced_so_far++;
+	return true;
+}
 
 
 bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/)
@@ -421,7 +506,7 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 		start_replacing();
 		if (!replace_line && !replace_all)
 		{
-//FIX ME			replace_convoy(cnv, comp == &bt_mark);
+			replace_convoy(cnv, comp == &bt_mark);
 		}
 		else if (replace_line)
 		{
@@ -434,7 +519,7 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 					convoihandle_t cnv_aux = line->get_convoy(i);
 					if (cnv->has_same_vehicles(cnv_aux))
 					{
-						//first_success = replace_convoy(cnv_aux, comp == &bt_mark);
+						first_success = replace_convoy(cnv_aux, comp == &bt_mark);
 						if(copy == false)
 						{
 							master_convoy = cnv_aux;
@@ -448,7 +533,7 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 			}
 			else
 			{
-				//replace_convoy(cnv, comp == &bt_mark);
+				replace_convoy(cnv, comp == &bt_mark);
 			}
 		}
 		else if (replace_all)
@@ -459,7 +544,7 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 				convoihandle_t cnv_aux=welt->convoys()[i];
 				if (cnv_aux.is_bound() && cnv_aux->get_owner()==cnv->get_owner() && cnv->has_same_vehicles(cnv_aux))
 				{
-					//first_success = replace_convoy(cnv_aux, comp == &bt_mark);
+					first_success = replace_convoy(cnv_aux, comp == &bt_mark);
 					if(copy == false)
 					{
 						master_convoy = cnv_aux;
