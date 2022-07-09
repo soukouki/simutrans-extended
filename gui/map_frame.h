@@ -14,7 +14,6 @@
 #include "components/gui_button.h"
 #include "components/gui_combobox.h"
 #include "components/gui_label.h"
-#include "../descriptor/factory_desc.h"
 #include "../tpl/stringhashtable_tpl.h"
 #include "../player/simplay.h"
 #include "../simline.h"
@@ -22,6 +21,27 @@
 class karte_ptr_t;
 
 #define MAP_MAX_BUTTONS (31)
+
+
+/**
+ * Scroll-container of map, so we can rightdrag and zoom with wheel
+ */
+class gui_scrollpane_map_t : public gui_scrollpane_t
+{
+private:
+	bool is_dragging;
+	bool is_cursor_hidden;
+
+public:
+	gui_scrollpane_map_t(gui_component_t* comp);
+
+	// we use rightclick dragging and scrollwhell for zoom, so we need to catch some events before
+	bool infowin_event(event_t const*) OVERRIDE;
+
+	scr_size get_max_size() const OVERRIDE { return scr_size::inf; }
+
+	void zoom(bool magnify);
+};
 
 /**
  * Minimap window
@@ -39,37 +59,21 @@ private:
 	 * so we use a static variable here.
 	 */
 	static scr_size window_size;
-	static scr_coord screenpos;
 
 	static bool legend_visible;
 	static bool network_option_visible;
 	static bool scale_visible;
-	static bool directory_visible;
-	static bool filter_factory_list;
-
-	static bool is_cursor_hidden;
 
 	cbuffer_t title_buf;
 	convoihandle_t selected_cnv = convoihandle_t(); // for title name cache
-
-	/**
-	 * We need to keep track of drag/click events
-	 */
-	bool is_dragging;
-
-	/**
-	 * remember that we zoomed
-	 * to center map
-	 */
-	bool zoomed;
 
 	int viewable_players[MAX_PLAYER_COUNT+1];
 
 	vector_tpl<const goods_desc_t *> viewable_freight_types;
 
-	gui_aligned_container_t filter_container, network_filter_container, scale_container, directory_container, *zoom_row;
+	gui_aligned_container_t filter_container, network_filter_container, scale_container, *zoom_row;
 
-	gui_scrollpane_t* p_scrolly;
+	gui_scrollpane_map_t* p_scrolly;
 
 	button_t filter_buttons[MAP_MAX_BUTTONS];
 	button_t zoom_buttons[2];
@@ -80,7 +84,6 @@ private:
 	button_t b_show_directory;
 	button_t b_overlay_networks;
 	button_t b_overlay_networks_load_factor;
-	button_t b_filter_factory_list;
 	button_t b_show_contour;
 	button_t b_show_buildings;
 
@@ -91,20 +94,21 @@ private:
 	gui_combobox_t transport_type_c;
 	gui_combobox_t freight_type_c;
 
-	void zoom(bool zoom_out);
+//	void zoom(bool zoom_out);
 	void update_buttons();
-	void update_factory_legend();
 	void show_hide_legend(const bool show);
 	void show_hide_network_option(const bool show);
 	void show_hide_scale(const bool show);
-	void show_hide_directory(const bool show);
 
 public:
 	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
 	 */
-	const char * get_help_filename() const OVERRIDE {return "map.txt";}
+	const char *get_help_filename() const OVERRIDE {return "map.txt";}
+
+	static bool zoomed; // if true, zoom label will be uopdated on next redraw
+	static scr_coord screenpos;
 
 	/**
 	 * Constructor. Adds all necessary Subcomponents.

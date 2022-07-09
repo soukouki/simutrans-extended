@@ -32,6 +32,7 @@
 #include "gui/replace_frame.h"
 #include "gui/messagebox.h"
 #include "gui/convoi_detail_t.h"
+#include "gui/vehicle_class_manager.h"
 #include "boden/grund.h"
 #include "boden/wege/schiene.h" // for railblocks
 #include "boden/wege/strasse.h"
@@ -1173,7 +1174,7 @@ convoi_t::route_infos_t& convoi_t::get_route_infos()
 			convoi_t::route_info_t &this_info = route_infos.get_element(i);
 			const koord3d this_tile = route.at(i);
 			const koord3d next_tile = route.at(min(i + 1, route_count - 1));
-			this_info.speed_limit = welt->lookup_kartenboden(this_tile.get_2d())->is_water() ? vehicle_t::speed_unlimited() : kmh_to_speed(950); // Do not alow supersonic flight over land.
+			this_info.speed_limit = welt->lookup_kartenboden(this_tile.get_2d())->is_water() ? vehicle_t::speed_unlimited() : kmh_to_speed(990); // Do not alow supersonic flight over land.
 			this_info.steps_from_start = current_info.steps_from_start + front.get_tile_steps(current_tile.get_2d(), next_tile.get_2d(), this_info.direction);
 			const grund_t* this_gr = welt->lookup(this_tile);
 			const weg_t *this_weg = get_weg_on_grund(this_gr, waytype);
@@ -5279,11 +5280,6 @@ void convoi_t::get_freight_info(cbuffer_t & buf)
 	}
 }
 
-void convoi_t::get_freight_info_by_class(cbuffer_t &)
-{
-
-}
-
 
 void convoi_t::open_schedule_window( bool show )
 {
@@ -6028,7 +6024,9 @@ station_tile_search_ready: ;
 					if(skip_convois || skip_vehicles)
 					{
 						// Not enough freight was available to fill vehicle, or the stop can't supply this type of cargo: don't try to load this category again from this halt onto vehicles in convois on this line this step.
-						skip_catg[catg_index] = true;
+						if( !v->get_desc()->get_mixed_load_prohibition() ) {
+							skip_catg[catg_index] = true;
+						}
 						if(!skip_vehicles  &&  line_data.line.is_bound())
 						{
 							line_data.catg_index = catg_index;
@@ -6270,27 +6268,11 @@ sint64 convoi_t::calc_sale_value() const
  */
 void convoi_t::calc_loading()
 {
-	int fracht_max = 0;
-	int fracht_menge = 0;
-	int seats_max = 0;
-	int seats_menge = 0;
+	const uint16 seats_max    = get_cargo_max();
+	const uint16 fracht_max   = seats_max + get_overcrowded_capacity();
+	const uint16 fracht_menge = get_total_cargo();
+	const uint16 seats_menge  = fracht_menge - get_overcrowded();
 
-	for(unsigned i=0; i<vehicle_count; i++) {
-		const vehicle_t* v = vehicle[i];
-		if ( v->get_cargo_type() == goods_manager_t::passengers ) {
-			seats_max += v->get_cargo_max();
-			seats_menge += v->get_total_cargo();
-		}
-		else {
-			fracht_max += v->get_cargo_max();
-			fracht_menge += v->get_total_cargo();
-		}
-	}
-	if (seats_max)
-	{
-		fracht_max += seats_max;
-		fracht_menge += seats_menge;
-	}
 	loading_level = fracht_max > 0 ? (fracht_menge*100)/fracht_max : 100;
 	loading_limit = 0;	// will be set correctly from hat_gehalten() routine
 	free_seats = seats_max > seats_menge ? seats_max - seats_menge : 0;
@@ -6859,6 +6841,15 @@ void convoi_t::set_next_reservation_index(uint16 n)
 		n = route.get_count()-1;
 	}
 	next_reservation_index = n;
+}
+
+
+uint16 convoi_t::get_current_schedule_order() const
+{
+	if (reverse_schedule) {
+		return (uint16)((schedule->get_count()-1)*2-schedule->get_current_stop());
+	}
+	return (uint16)schedule->get_current_stop();
 }
 
 
@@ -8401,6 +8392,29 @@ void convoi_t::calc_classes_carried()
 			}
 		}
 	}
+	// update dialog
+	vehicle_class_manager_t *win = dynamic_cast<vehicle_class_manager_t*>(win_get_magic((ptrdiff_t)(magic_class_manager + self.get_id())));
+	if (win) {
+		win->recalc_income();
+	}
+}
+
+uint16 convoi_t::get_total_cargo() const
+{
+	uint16 sum = 0;
+	for (uint8 i = 0; i < vehicle_count; i++) {
+		sum += vehicle[i]->get_total_cargo();
+	}
+	return sum;
+}
+
+uint16 convoi_t::get_cargo_max() const
+{
+	uint16 sum = 0;
+	for (uint8 i = 0; i < vehicle_count; i++) {
+		sum += vehicle[i]->get_cargo_max();
+	}
+	return sum;
 }
 
 uint16 convoi_t::get_total_cargo_by_fare_class(uint8 catg, uint8 g_class) const
