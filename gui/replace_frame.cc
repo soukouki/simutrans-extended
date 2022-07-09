@@ -377,11 +377,18 @@ void replace_frame_t::update_data()
 			}
 		}
 	}
-	if (replace_all || replace_line) {
-		for (uint8 i = 0; i < n_states; ++i) {
+	for (uint8 i = 0; i < n_states; ++i) {
+		if (replace_all || replace_line) {
+			numinp[i].enable();
+			lb_inp[i].set_color(SYSCOL_TEXT);
 			lb_text[i].buf().append(n[i],0);
-			lb_text[i].update();
 		}
+		else {
+			numinp[i].disable();
+			// Make replace cycle grey if not in use
+			lb_inp[i].set_color(SYSCOL_BUTTON_TEXT_DISABLED);
+		}
+		lb_text[i].update();
 	}
 
 	if (convoy_assembler.get_vehicles()->get_count()>0) {
@@ -480,6 +487,7 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 	if( comp==&cb_replace_target ) {
 		replace_all = (cb_replace_target.get_selection() == 1);
 		replace_line = (cb_replace_target.get_selection() == 2);
+		update_data();
 	}
 	else if (comp == &bt_retain_in_depot)
 	{
@@ -571,11 +579,20 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 		destroy_win(this);
 #endif
 		copy = false;
+		update_data();
 		return true;
 	}
 	else if (comp == &bt_details) {
 		create_win(20, 20, new convoi_detail_t(cnv), w_info, magic_convoi_detail + cnv.get_id());
 		return true;
+	}
+
+	if (replace_all || replace_line) {
+		for (uint8 i = 0; i < n_states; ++i) {
+			if( comp==&numinp[i] ) {
+				update_data();
+			}
+		}
 	}
 
 	copy = false;
