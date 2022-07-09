@@ -66,6 +66,7 @@
 #endif
 #include "scenario_info.h"
 #include "depot_frame.h"
+#include "replace_frame.h"
 #include "depotlist_frame.h"
 #include "vehiclelist_frame.h"
 #include "halt_list_frame.h"
@@ -667,6 +668,9 @@ void rdwr_all_win(loadsave_t *file)
 						}
 						else if (id >= magic_depotlist && id < magic_depotlist + MAX_PLAYER_COUNT) {
 							w = new depotlist_frame_t(wl->get_player(id - magic_depotlist));
+						}
+						else if(  id>=magic_replace && id < magic_replace +0x10000  ) {
+							w = new replace_frame_t();
 						}
 						else {
 							dbg->error( "rdwr_all_win()", "No idea how to restore magic 0x%X", id );

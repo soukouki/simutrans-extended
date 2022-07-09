@@ -91,7 +91,10 @@ private:
 	void set_vehicles(bool init=false);
 
 public:
-	replace_frame_t(convoihandle_t cnv, const char *name);
+	replace_frame_t(convoihandle_t cnv = convoihandle_t());
+
+	// This is also called when the convoy name is changed.
+	void set_title();
 
 	/**
 	 * Update texts, image lists and buttons according to the current state.
@@ -114,11 +117,11 @@ public:
 
 	virtual ~replace_frame_t();
 
-	// TODO:
-	//void set_convoy(convoihandle_t cnv) { this->cnv=cnv; init(); }
-	//uint32 get_rdwr_id() OVERRIDE;
+	// for reload from the save
+	void set_convoy(convoihandle_t cnv) { this->cnv=cnv; init(); }
+	uint32 get_rdwr_id() OVERRIDE;
 
-	//void rdwr(loadsave_t *) OVERRIDE;
+	void rdwr(loadsave_t *) OVERRIDE;
 };
 
 #endif

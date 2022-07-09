@@ -40,7 +40,7 @@ static bool _is_electrified(const karte_t* welt, const convoihandle_t& cnv)
 	return way ? way->is_electrified() : false;
 }
 
-replace_frame_t::replace_frame_t(convoihandle_t cnv, const char *name) :
+replace_frame_t::replace_frame_t(convoihandle_t cnv) :
 	gui_frame_t("", NULL),
 	current_convoi(&current_convoi_pics),
 	scrollx_convoi(&current_convoi, true, false),
@@ -58,8 +58,7 @@ void replace_frame_t::init()
 {
 	if( cnv.is_null() ) return; // Reload measures
 
-	title_buf.printf("%s > %s", translator::translate("Replace"), cnv->get_name());
-	set_name(title_buf);
+	set_title();
 	set_owner(cnv->get_owner());
 
 	convoy_assembler.init(cnv->front()->get_desc()->get_waytype(), cnv->get_owner()->get_player_nr(), _is_electrified(welt, cnv));
@@ -76,6 +75,13 @@ void replace_frame_t::init()
 	reset_min_windowsize();
 	set_resizemode(diagonal_resize);
 	resize(scr_size(0, 0));
+}
+
+void replace_frame_t::set_title()
+{
+	if (cnv.is_null()) return; // Reload measures
+	title_buf.printf("%s > %s", translator::translate("Replace"), cnv->get_name());
+	set_name(title_buf);
 }
 
 // Construct the framework of the entire of this UI.
@@ -672,4 +678,32 @@ replace_frame_t::~replace_frame_t()
 
 	// TODO: Find why this causes crashes. Without it, there is a small memory leak.
 	//delete rpl;
+}
+
+uint32 replace_frame_t::get_rdwr_id()
+{
+	return magic_replace + cnv.get_id();
+}
+
+void replace_frame_t::rdwr(loadsave_t *file)
+{
+	// convoy data
+	convoi_t::rdwr_convoihandle_t(file, cnv);
+
+	// window size
+	scr_size size = get_windowsize();
+	size.rdwr(file);
+
+	// init window
+	if(  file->is_loading() && cnv.is_bound() ) {
+		set_convoy(cnv);
+		set_windowsize(size);
+	}
+
+	// convoy vanished
+	if (!cnv.is_bound()) {
+		dbg->error("replace_frame_t::rdwr()", "Could not restore replace window of (%d)", cnv.get_id());
+		destroy_win(this);
+		return;
+	}
 }
