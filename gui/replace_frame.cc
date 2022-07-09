@@ -576,14 +576,14 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 				}
 			}
 		}
-#ifndef DEBUG
-		// FIXME: Oddly, this line causes crashes in 10.13 and over when
-		// the replace window is closed automatically with "full replace".
-		// The difficulty appears to relate to the objects comprising the
-		// window being destroyed before they have finished being used by
-		// the GUI system leading to access violations.
+//#ifndef DEBUG
+		//// FIXME: Oddly, this line causes crashes in 10.13 and over when
+		//// the replace window is closed automatically with "full replace".
+		//// The difficulty appears to relate to the objects comprising the
+		//// window being destroyed before they have finished being used by
+		//// the GUI system leading to access violations.
 		destroy_win(this);
-#endif
+//#endif
 		copy = false;
 		update_data();
 		return true;
