@@ -1315,7 +1315,7 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 		FORX(vector_tpl<uint16>, const& i, livery_scheme_indices, ++j) {
 			livery_scheme_t* scheme = schemes->get_element(i);
 			livery_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(scheme->get_name()), SYSCOL_TEXT);
-			if (i==livery_scheme_index) {
+			if (j==livery_scheme_index) {
 				livery_selector.set_selection(j);
 			}
 		}
