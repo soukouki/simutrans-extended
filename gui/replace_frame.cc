@@ -170,18 +170,21 @@ void replace_frame_t::init_table()
 			// [OPTION BUTTONS]
 			add_table(3,1);
 			{
-				bt_retain_in_depot.init(button_t::square, "Retain in depot");
+				bt_retain_in_depot.init(button_t::square_state, "Retain in depot");
 				bt_retain_in_depot.set_tooltip("Keep replaced vehicles in the depot for future use rather than selling or upgrading them.");
+				bt_retain_in_depot.pressed = rpl->get_retain_in_depot();
 				bt_retain_in_depot.add_listener(this);
 				add_component(&bt_retain_in_depot);
 
-				bt_use_home_depot.init(button_t::square, "Use home depot");
+				bt_use_home_depot.init(button_t::square_state, "Use home depot");
 				bt_use_home_depot.set_tooltip("Send the convoy to its home depot for replacing rather than the nearest depot.");
+				bt_use_home_depot.pressed = rpl->get_use_home_depot();
 				bt_use_home_depot.add_listener(this);
 				add_component(&bt_use_home_depot);
 
-				bt_allow_using_existing_vehicles.init(button_t::square, "Use existing vehicles");
+				bt_allow_using_existing_vehicles.init(button_t::square_state, "Use existing vehicles");
 				bt_allow_using_existing_vehicles.set_tooltip("Use any vehicles already present in the depot, if available, instead of buying new ones or upgrading.");
+				bt_allow_using_existing_vehicles.pressed = rpl->get_allow_using_existing_vehicles();
 				bt_allow_using_existing_vehicles.add_listener(this);
 				add_component(&bt_allow_using_existing_vehicles);
 			}
@@ -492,14 +495,17 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 	else if (comp == &bt_retain_in_depot)
 	{
 		rpl->set_retain_in_depot(!rpl->get_retain_in_depot());
+		bt_retain_in_depot.pressed = rpl->get_retain_in_depot();
 	}
 	else if (comp == &bt_use_home_depot)
 	{
 		rpl->set_use_home_depot(!rpl->get_use_home_depot());
+		bt_use_home_depot.pressed = rpl->get_use_home_depot();
 	}
 	else if (comp == &bt_allow_using_existing_vehicles)
 	{
 		rpl->set_allow_using_existing_vehicles(!rpl->get_allow_using_existing_vehicles());
+		bt_allow_using_existing_vehicles.pressed = rpl->get_allow_using_existing_vehicles();
 	}
 	else if (comp == &bt_clear)
 	{
