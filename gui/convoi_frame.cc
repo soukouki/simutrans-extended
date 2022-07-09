@@ -260,12 +260,16 @@ convoi_frame_t::convoi_frame_t() :
 
 	add_table(4,2);
 	{
-		new_component<gui_label_t>("Filter:");
-		name_filter_input.set_text(name_filter, lengthof(name_filter));
+		if( skinverwaltung_t::search ) {
+			new_component<gui_image_t>(skinverwaltung_t::search->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(translator::translate("Filter:"));
+		}
+		else {
+			new_component<gui_label_t>("Filter:");
+		}		name_filter_input.set_text(name_filter, lengthof(name_filter));
 		add_component(&name_filter_input);
 
 		filter_details.init(button_t::roundbox, "cl_btn_filter_settings");
-		if (skinverwaltung_t::open_window) {
+		if( skinverwaltung_t::open_window ) {
 			filter_details.set_image(skinverwaltung_t::open_window->get_image_id(0));
 			filter_details.set_image_position_right(true);
 		}

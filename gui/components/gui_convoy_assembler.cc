@@ -673,8 +673,11 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 		new_component<gui_border_t>();
 
 		// filter
-		add_table(5,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
+		add_table(6,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
 		{
+			if( skinverwaltung_t::search ) {
+				new_component<gui_image_t>(skinverwaltung_t::search->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(translator::translate("Filter:"));
+			}
 			name_filter_input.set_text(name_filter_value, 24);
 			add_component(&name_filter_input);
 			name_filter_input.add_listener(this);
