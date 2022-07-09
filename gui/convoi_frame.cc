@@ -260,7 +260,7 @@ convoi_frame_t::convoi_frame_t() :
 
 	add_table(4,2);
 	{
-		new_component<gui_label_t>("cl_txt_sort");
+		new_component<gui_label_t>("Filter:");
 		name_filter_input.set_text(name_filter, lengthof(name_filter));
 		add_component(&name_filter_input);
 
