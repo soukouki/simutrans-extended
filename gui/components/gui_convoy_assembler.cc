@@ -1315,7 +1315,7 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 		FORX(vector_tpl<uint16>, const& i, livery_scheme_indices, ++j) {
 			livery_scheme_t* scheme = schemes->get_element(i);
 			livery_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(scheme->get_name()), SYSCOL_TEXT);
-			if (i==livery_scheme_index) {
+			if (j==livery_scheme_index) {
 				livery_selector.set_selection(j);
 			}
 		}
@@ -1533,10 +1533,11 @@ void gui_convoy_assembler_t::update_convoi()
 
 		lb_convoi_way_wear.buf().printf("%.4f", way_wear_factor/10000.0);
 		lb_convoi_way_wear.update();
+		cont_convoi.set_size(cont_convoi.get_min_size()); // Update the size when the number of vehicles changes
 	}
 
 	if (replace_frame) {
-		replace_frame->update_data(); // TODO: recheck
+		replace_frame->update_data(); // update money
 	}
 
 	build_vehicle_lists();
