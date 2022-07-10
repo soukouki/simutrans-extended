@@ -74,7 +74,7 @@ public:
 	void draw(scr_coord offset) OVERRIDE;
 
 	using gui_aligned_container_t::get_min_size;
-	using gui_aligned_container_t::get_max_size;
+	scr_size get_max_size() const OVERRIDE { return scr_size::inf; }
 };
 
 

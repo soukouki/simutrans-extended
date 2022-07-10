@@ -694,7 +694,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 			end_table();
 
 			// top right
-			add_table(1,3)->set_margin(scr_size(0,0), scr_size(D_V_SPACE, 0));
+			add_table(1,2)->set_margin(scr_size(0,0), scr_size(D_V_SPACE, 0));
 			{
 				if( depot_frame ) {
 					bt_class_management.init(button_t::roundbox | button_t::flexible, "class_manager");
@@ -713,16 +713,27 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 					if (depot_frame) {
 						// "Fare" capacity
 						cont_convoi_capacity.add_component(&capacity_info);
+						cont_convoi_capacity.new_component<gui_fill_t>(false,true);
 					}
 					else {
 						// "Accommodation" capacity
 						cont_convoi_capacity.new_component<gui_vehicles_capacity_info_t>(&vehicles);
 					}
-					cont_convoi_capacity.new_component<gui_fill_t>(false,true);
 				}
 				scrolly_convoi_capacity.set_maximize(true);
 				add_component(&scrolly_convoi_capacity);
+			}
+			end_table();
+		}
+		end_table();
+		new_component<gui_border_t>();
 
+		add_table(3,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
+		{
+			add_table(2,1);
+			{
+				// mode
+				new_component<gui_label_t>("Fahrzeuge:");
 				veh_action = va_append;
 				static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
 				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
@@ -734,49 +745,58 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 				add_component(&action_selector);
 			}
 			end_table();
+			new_component<gui_margin_t>(D_H_SPACE);
+
+			// filters
+			add_table(1,2);
+			{
+				add_table(5,1);
+				{
+					if( skinverwaltung_t::search ) {
+						new_component<gui_image_t>(skinverwaltung_t::search->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(translator::translate("Filter:"));
+					}
+					name_filter_input.set_text(name_filter_value, 32);
+					add_component(&name_filter_input);
+					name_filter_input.add_listener(this);
+					new_component<gui_margin_t>(D_H_SPACE);
+
+					// goods filter => category?
+					new_component<gui_image_t>(skinverwaltung_t::goods->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(translator::translate("clf_chk_waren"));
+					add_component(&vehicle_filter);
+				}
+				end_table();
+
+				// checkboxes
+				add_table(3, 1);
+				{
+					bt_show_all.init(button_t::square_state, "Show all");
+					bt_show_all.set_tooltip("Show also vehicles that do not match for current action.");
+					bt_show_all.pressed = show_all;
+					bt_show_all.add_listener(this);
+					add_component(&bt_show_all);
+
+					if( world()->use_timeline() ) {
+						if( world()->get_settings().get_allow_buying_obsolete_vehicles() ) {
+							bt_outdated.init(button_t::square_state, "Show outdated");
+							bt_outdated.set_tooltip("Show also vehicles no longer in production.");
+							bt_outdated.pressed = show_outdated_vehicles;
+							bt_outdated.add_listener(this);
+							add_component(&bt_outdated);
+						}
+						if( world()->get_settings().get_allow_buying_obsolete_vehicles() == 1 ) {
+							bt_obsolete.init(button_t::square_state, "Show obsolete");
+							bt_obsolete.set_tooltip("Show also vehicles whose maintenance costs have increased due to obsolescence.");
+							bt_obsolete.pressed = show_obsolete_vehicles;
+							bt_obsolete.add_listener(this);
+							add_component(&bt_obsolete);
+						}
+					}
+				}
+				end_table();
+			}
+			end_table();
 		}
 		end_table();
-		new_component<gui_border_t>();
-
-		// filter
-		add_table(6,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
-		{
-			if( skinverwaltung_t::search ) {
-				new_component<gui_image_t>(skinverwaltung_t::search->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(translator::translate("Filter:"));
-			}
-			name_filter_input.set_text(name_filter_value, 24);
-			add_component(&name_filter_input);
-			name_filter_input.add_listener(this);
-
-			// goods filter => category?
-			add_component(&vehicle_filter);
-
-			bt_show_all.init(button_t::square_state, "Show all");
-			bt_show_all.set_tooltip("Show also vehicles that do not match for current action.");
-			bt_show_all.pressed = show_all;
-			bt_show_all.add_listener(this);
-			add_component(&bt_show_all);
-
-			if( world()->use_timeline() ) {
-				if( world()->get_settings().get_allow_buying_obsolete_vehicles() ) {
-					bt_outdated.init(button_t::square_state, "Show outdated");
-					bt_outdated.set_tooltip("Show also vehicles no longer in production.");
-					bt_outdated.pressed = show_outdated_vehicles;
-					bt_outdated.add_listener(this);
-					add_component(&bt_outdated);
-				}
-				if( world()->get_settings().get_allow_buying_obsolete_vehicles() == 1 ) {
-					bt_obsolete.init(button_t::square_state, "Show obsolete");
-					bt_obsolete.set_tooltip("Show also vehicles whose maintenance costs have increased due to obsolescence.");
-					bt_obsolete.pressed = show_obsolete_vehicles;
-					bt_obsolete.add_listener(this);
-					add_component(&bt_obsolete);
-				}
-			}
-		}
-		end_table();
-
-		// mode?
 
 		// tab
 		add_component(&tabs);
@@ -1601,6 +1621,8 @@ void gui_convoy_assembler_t::update_convoi()
 		lb_convoi_way_wear.update();
 		cont_convoi.set_size(cont_convoi.get_min_size()); // Update the size when the number of vehicles changes
 	}
+
+	cont_convoi_capacity.set_size(cont_convoi_capacity.get_min_size());
 
 	if (replace_frame) {
 		replace_frame->update_data(); // update money
