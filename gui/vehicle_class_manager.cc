@@ -118,7 +118,7 @@ void accommodation_summary_t::add_convoy(convoihandle_t cnv)
 	for (uint8 v=0; v<cnv->get_vehicle_count(); v++) {
 		add_vehicle(cnv->get_vehicle(v));
 	}
-	accommo_list.sort(accommodation_info_t::compare);
+	sort();
 }
 
 
@@ -130,9 +130,13 @@ void accommodation_summary_t::add_line(linehandle_t line)
 			add_vehicle(cnv->get_vehicle(v));
 		}
 	}
-	accommo_list.sort(accommodation_info_t::compare);
+	sort();
 }
 
+void accommodation_summary_t::sort()
+{
+	accommo_list.sort(accommodation_info_t::compare);
+}
 
 gui_accommodation_fare_manager_t::gui_accommodation_fare_manager_t(linehandle_t line)
 {

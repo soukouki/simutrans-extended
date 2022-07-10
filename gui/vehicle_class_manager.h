@@ -80,6 +80,9 @@ public:
 	void add_convoy(convoihandle_t cnv);
 	void add_line(linehandle_t line);
 
+	// execute sorting by catg_index
+	void sort();
+
 	const slist_tpl<accommodation_info_t>& get_accommodations() const { return accommo_list; }
 };
 
