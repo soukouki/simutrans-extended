@@ -20,7 +20,6 @@
 #include "../../simconvoi.h"
 #include "../simwin.h"
 #include "../../convoy.h"
-#include "../vehicle_class_manager.h"
 
 
 #include "../../bauer/goods_manager.h"
@@ -501,6 +500,71 @@ scr_size gui_vehicle_spec_t::get_max_size() const
 	return scr_size(scr_size::inf.w, size.h);
 }
 
+
+gui_vehicles_capacity_info_t::gui_vehicles_capacity_info_t(vector_tpl<const vehicle_desc_t *> *vehs)
+{
+	vehicles = vehs;
+	if (vehicles->get_count()) {
+		update_accommodations();
+	}
+}
+
+void gui_vehicles_capacity_info_t::update_accommodations()
+{
+	accommodations.clear();
+	old_vehicle_count = vehicles->get_count();
+	for( uint8 i=0; i < vehicles->get_count(); ++i ) {
+		accommodations.add_vehicle_desc(vehicles->get_element(i));
+	}
+	init_table();
+}
+
+void gui_vehicles_capacity_info_t::init_table()
+{
+	remove_all();
+	set_table_layout(3,0);
+	if (vehicles->get_count()) {
+		accommodations.sort();
+		for (auto &acm : accommodations.get_accommodations()) {
+			const uint8 g_classes = goods_manager_t::get_classes_catg_index(acm.accommodation.catg_index);
+			const goods_desc_t* ware_type = goods_manager_t::get_info_catg_index(acm.accommodation.catg_index);
+
+			// 1: goods category symbol
+			new_component<gui_image_t>(ware_type->get_catg_symbol(), 0, ALIGN_CENTER_V, true);
+
+			// 2: fare class name / category name
+			if (g_classes>1) {
+				// "accommodation" class name
+				gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+				lb->buf().printf("[%u] %s", acm.assingned_class+1, translator::translate(acm.accommodation.name) );
+				lb->update();
+			}
+			else {
+				// no classes => show the category name
+				new_component<gui_label_t>(ware_type->get_catg_name());
+			}
+
+			// 3: capacity text
+			gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+			lb->buf().append(acm.capacity, 0);
+			lb->set_fixed_width(proportional_string_width("88,888"));
+			lb->update();
+		}
+	}
+
+	set_size(get_min_size());
+}
+
+void gui_vehicles_capacity_info_t::draw(scr_coord offset)
+{
+	if (old_vehicle_count!=vehicles->get_count()) {
+		update_accommodations();
+	}
+
+	gui_aligned_container_t::draw(offset);
+}
+
+
 gui_convoy_assembler_t::gui_convoy_assembler_t(depot_frame_t *frame) :
 	convoi(&convoi_pics),
 	scrollx_convoi(&cont_convoi, true, false),
@@ -647,10 +711,12 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 				{
 
 					if (depot_frame) {
+						// "Fare" capacity
 						cont_convoi_capacity.add_component(&capacity_info);
 					}
 					else {
-						cont_convoi_capacity.new_component<gui_label_t>("FIX ME(capacity)");
+						// "Accommodation" capacity
+						cont_convoi_capacity.new_component<gui_vehicles_capacity_info_t>(&vehicles);
 					}
 					cont_convoi_capacity.new_component<gui_fill_t>(false,true);
 				}

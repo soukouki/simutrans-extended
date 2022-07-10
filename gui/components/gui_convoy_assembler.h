@@ -19,6 +19,7 @@
 #include "gui_tab_panel.h"
 #include "gui_speedbar.h"
 #include "../gui_theme.h"
+#include "../vehicle_class_manager.h"
 
 #include "gui_container.h"
 #include "gui_vehicle_capacitybar.h"
@@ -54,6 +55,26 @@ public:
 	scr_size get_min_size() const OVERRIDE;
 
 	scr_size get_max_size() const OVERRIDE;
+};
+
+
+class gui_vehicles_capacity_info_t : public gui_aligned_container_t
+{
+	accommodation_summary_t accommodations;
+	uint8 old_vehicle_count = 0;
+	vector_tpl<const vehicle_desc_t *> *vehicles;
+
+public:
+	gui_vehicles_capacity_info_t(vector_tpl<const vehicle_desc_t *> *vehicles);
+
+	void update_accommodations();
+
+	void init_table();
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	using gui_aligned_container_t::get_min_size;
+	using gui_aligned_container_t::get_max_size;
 };
 
 
