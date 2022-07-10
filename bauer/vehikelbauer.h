@@ -26,6 +26,27 @@ template <class T> class slist_tpl;
 class vehicle_builder_t
 {
 public:
+	// sorting categories
+	enum sort_mode_t {
+		best,
+		sb_name,
+		sb_value,
+		sb_running_cost,
+		sb_capacity,
+		sb_speed,
+		sb_power,
+		sb_tractive_force,
+		//sb_weight,
+		sb_axle_load,
+		sb_intro_date,
+		sb_retire_date,
+		sb_length // MAX
+	};
+	static const char *vehicle_sort_by[sb_length];
+
+	// default compare function
+	static bool compare_vehicles(const vehicle_desc_t* a, const vehicle_desc_t* b, sort_mode_t mode);
+
 	static const char *engine_type_names[11];
 
 	// Retained for compatibility only

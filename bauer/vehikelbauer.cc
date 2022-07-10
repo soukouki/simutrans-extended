@@ -14,6 +14,7 @@
 #include "../dataobj/environment.h"
 #include "../dataobj/tabfile.h"
 #include "../dataobj/loadsave.h"
+#include "../dataobj/translator.h"
 #include "../dataobj/livery_scheme.h"
 
 #include "../descriptor/vehicle_desc.h"
@@ -42,11 +43,27 @@ const char* vehicle_builder_t::engine_type_names[11] =
   "turbine"
 };
 
+const char *vehicle_builder_t::vehicle_sort_by[vehicle_builder_t::sb_length] =
+{
+	"Unsorted",
+	"Name",
+	"Price",
+	"Maintenance:",
+	"Capacity:",
+	"Max. speed:",
+	"Power:",
+	"Tractive Force:",
+	"Axle load:",
+	"Intro. date:",
+	"Retire. date:"
+};
+
 static stringhashtable_tpl< vehicle_desc_t*, N_BAGS_SMALL> name_fahrzeuge;
 
 // index 0 aur, 1...8 at normal waytype index
 #define GET_WAYTYPE_INDEX(wt) ((int)(wt)>8 ? 0 : (wt))
 static slist_tpl<vehicle_desc_t*> typ_fahrzeuge[9];
+static uint8 tmp_sort_idx;
 
 
 void vehicle_builder_t::rdwr_speedbonus(loadsave_t *file)
@@ -205,6 +222,101 @@ static bool compare_vehicle_desc(const vehicle_desc_t* a, const vehicle_desc_t* 
 		}
 	}
 	return cmp < 0;
+}
+
+
+// compare funcions to sort vehicle in the list
+static int compare_freight(const vehicle_desc_t* a, const vehicle_desc_t* b)
+{
+	int cmp = a->get_freight_type()->get_catg() - b->get_freight_type()->get_catg();
+	if (cmp != 0) return cmp;
+	if (a->get_freight_type()->get_catg() == 0) {
+		cmp = a->get_freight_type()->get_index() - b->get_freight_type()->get_index();
+	}
+	return cmp;
+}
+
+static int compare_intro_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return a->get_intro_year_month() - b->get_intro_year_month();}
+static int compare_retire_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return a->get_retire_year_month() - b->get_retire_year_month();}
+
+
+// default compare function with mode parameter
+bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_desc_t* b, sort_mode_t mode)
+{
+	int cmp = compare_freight(a, b);
+	if (cmp != 0) return cmp < 0;
+	switch(mode) {
+		//case sb_freight:
+		//	cmp = compare_freight(a, b);
+		//	if (cmp != 0) return cmp < 0;
+		//	break;
+		case sb_name:
+			cmp = strcmp(translator::translate(a->get_name()), translator::translate(b->get_name()));
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_intro_date:
+			cmp = compare_intro_year_month(a, b);
+			if (cmp != 0) return cmp < 0;
+			// fall-through
+		case sb_retire_date:
+			cmp = compare_retire_year_month(a, b);
+			if (cmp != 0) return cmp < 0;
+			cmp = compare_intro_year_month(a, b);
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_value:
+			cmp = a->get_value() - b->get_value();
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_running_cost:
+			cmp = a->get_running_cost(world()) - b->get_running_cost(world());
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_speed:
+			cmp = a->get_topspeed() - b->get_topspeed();
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_power:
+			cmp = a->get_power() - b->get_power();
+			if (cmp != 0) return cmp < 0;
+			// fall-through
+		case sb_tractive_force:
+			cmp = a->get_tractive_effort() - b->get_tractive_effort();
+			if (cmp == 0) {
+				cmp = a->get_power() - b->get_power();
+			}
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_axle_load:
+		{
+			const uint16 a_axle_load = a->get_waytype() == water_wt ? 0 : a->get_axle_load();
+			const uint16 b_axle_load = b->get_waytype() == water_wt ? 0 : b->get_axle_load();
+			cmp = a_axle_load - b_axle_load;
+			if (cmp == 0) {
+				cmp = a->get_weight() - b->get_weight();
+			}
+			if (cmp != 0) return cmp < 0;
+			break;
+		}
+		case sb_capacity:
+			cmp = a->get_total_capacity() - b->get_total_capacity();
+			if (cmp == 0) {
+				cmp = a->get_overcrowded_capacity() - b->get_overcrowded_capacity();
+			}
+			if (cmp != 0) return cmp < 0;
+			break;
+		default:
+		case best:
+			return 0;
+	}
+	cmp = strcmp(translator::translate(a->get_name()), translator::translate(b->get_name()));
+	return cmp < 0;
+}
+
+
+static bool compare( const vehicle_desc_t* a, const vehicle_desc_t* b )
+{
+	return vehicle_builder_t::compare_vehicles( a, b, (vehicle_builder_t::sort_mode_t)tmp_sort_idx );
 }
 
 
