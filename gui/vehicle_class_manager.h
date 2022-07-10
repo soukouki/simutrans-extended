@@ -76,6 +76,7 @@ class accommodation_summary_t
 public:
 	void clear() { accommo_list.clear(); }
 	void add_vehicle(vehicle_t *veh);
+	void add_vehicle_desc(const vehicle_desc_t* veh_type);
 	void add_convoy(convoihandle_t cnv);
 	void add_line(linehandle_t line);
 
