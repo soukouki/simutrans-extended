@@ -101,7 +101,6 @@ void accommodation_summary_t::add_vehicle_desc(const vehicle_desc_t *veh_type)
 				temp.accommodation = accommo;
 				temp.count = 1;
 				temp.assingned_class = ac;
-				temp.accommodation = accommo;
 				temp.capacity = veh_type->get_capacity(ac);
 				if (catg_index == goods_manager_t::INDEX_PAS) {
 					temp.min_comfort = veh_type->get_comfort(ac);
