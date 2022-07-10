@@ -102,6 +102,11 @@ public:
 	void update_data();
 
 	/**
+	 * Set the window size
+	 */
+	void set_windowsize(scr_size size) OVERRIDE;
+
+	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
 	 */

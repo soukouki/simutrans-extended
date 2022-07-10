@@ -552,13 +552,13 @@ void gui_vehicles_capacity_info_t::init_table()
 		}
 	}
 
-	set_size(get_min_size());
 }
 
 void gui_vehicles_capacity_info_t::draw(scr_coord offset)
 {
 	if (old_vehicle_count!=vehicles->get_count()) {
 		update_accommodations();
+		set_size(get_min_size());
 	}
 
 	gui_aligned_container_t::draw(offset);

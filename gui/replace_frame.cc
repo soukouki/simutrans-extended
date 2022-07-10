@@ -69,9 +69,9 @@ void replace_frame_t::init()
 	init_table();
 
 	update_data();
-
-	reset_min_windowsize();
 	set_resizemode(diagonal_resize);
+	reset_min_windowsize();
+	set_windowsize(get_min_size());
 	resize(scr_size(0, 0));
 }
 
@@ -324,8 +324,6 @@ void replace_frame_t::set_vehicles(bool init)
 		}
 		convoy_assembler.set_vehicles(existing_vehicles);
 	}
-
-
 }
 
 void replace_frame_t::update_data()
@@ -395,6 +393,15 @@ void replace_frame_t::update_data()
 		lb_money.set_color(money>=0?MONEY_PLUS:MONEY_MINUS);
 	}
 	lb_money.update();
+	reset_min_windowsize();
+	set_windowsize(scr_size(max(get_min_size().w, convoy_assembler.get_min_size().w), max(get_min_windowsize().h, get_windowsize().h)));
+	resize(scr_size(0,0));
+}
+
+void replace_frame_t::set_windowsize( scr_size size )
+{
+	convoy_assembler.set_panel_width();
+	gui_frame_t::set_windowsize(size);
 }
 
 uint8 replace_frame_t::get_present_state()
@@ -611,6 +618,10 @@ void replace_frame_t::draw(scr_coord pos, scr_size size)
 
 	bt_details.pressed = win_get_magic(magic_convoi_detail + cnv.get_id());
 
+	if (convoy_assembler.get_min_size().w>get_min_size().w) {
+		reset_min_windowsize();
+		resize(scr_size(0,0));
+	}
 	gui_frame_t::draw(pos, size);
 }
 
