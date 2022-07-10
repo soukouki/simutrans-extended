@@ -98,7 +98,7 @@ void replace_frame_t::init_table()
 		new_component<gui_margin_t>(D_H_SPACE);
 		new_component<gui_convoi_button_t>(cnv);
 		new_component<gui_label_t>("Current convoy:");
-		bt_details.init(button_t::roundbox_state | button_t::flexible, "Details", scr_coord(0,0), scr_size(D_BUTTON_WIDTH/2,D_BUTTON_HEIGHT));
+		bt_details.init(button_t::roundbox_state, "Details");
 		if (skinverwaltung_t::open_window) {
 			bt_details.set_image(skinverwaltung_t::open_window->get_image_id(0));
 			bt_details.set_image_position_right(true);
