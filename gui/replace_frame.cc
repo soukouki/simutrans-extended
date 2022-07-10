@@ -68,8 +68,6 @@ void replace_frame_t::init()
 
 	init_table();
 
-	//convoy_assembler.update_convoi();
-
 	update_data();
 
 	reset_min_windowsize();
@@ -332,8 +330,6 @@ void replace_frame_t::set_vehicles(bool init)
 
 void replace_frame_t::update_data()
 {
-	//	convoy_assembler.update_convoi();
-
 	uint32 n[3];
 	n[0] = 0;
 	n[1] = 0;
