@@ -182,6 +182,8 @@ private:
 	button_t bt_outdated;
 	button_t bt_obsolete;
 
+	gui_combobox_t sort_by;
+	button_t sort_order;
 
 	// [MODE SELECTOR]
 	uint8 veh_action;

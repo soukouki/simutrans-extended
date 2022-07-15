@@ -54,6 +54,8 @@ uint16 gui_convoy_assembler_t::livery_scheme_index = 0;
 int gui_convoy_assembler_t::selected_filter = VEHICLE_FILTER_RELEVANT;
 char gui_convoy_assembler_t::name_filter_value[64] = "";
 
+static int sort_by_action;
+
 
 gui_vehicle_spec_t::gui_vehicle_spec_t(const vehicle_desc_t* desc)
 {
@@ -730,19 +732,34 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 
 		add_table(3,1)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(D_MARGIN_RIGHT,0));
 		{
-			add_table(2,1);
+			add_table(1,2);
 			{
-				// mode
-				new_component<gui_label_t>("Fahrzeuge:");
-				veh_action = va_append;
-				static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
-				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
-				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
-				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
-				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
-				action_selector.set_selection(0);
-				action_selector.add_listener(this);
-				add_component(&action_selector);
+				add_table(2,1);
+				{
+					// mode
+					new_component<gui_label_t>("Fahrzeuge:");
+					veh_action = va_append;
+					static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
+					action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
+					action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
+					action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
+					action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
+					action_selector.set_selection(0);
+					action_selector.add_listener(this);
+					add_component(&action_selector);
+				}
+				end_table();
+
+				// sort
+				add_table(2,1);
+				{
+					// mode
+					new_component<gui_label_t>("cl_txt_sort");
+					sort_by.add_listener(this);
+					add_component(&sort_by);
+				}
+				end_table();
+
 			}
 			end_table();
 			new_component<gui_margin_t>(D_H_SPACE);
