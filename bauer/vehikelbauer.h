@@ -34,6 +34,7 @@ public:
 		sb_running_cost,
 		sb_capacity,
 		sb_speed,
+		sb_range,
 		sb_power,
 		sb_tractive_force,
 		//sb_weight,

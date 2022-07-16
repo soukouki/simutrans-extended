@@ -51,6 +51,7 @@ const char *vehicle_builder_t::vehicle_sort_by[vehicle_builder_t::sb_length] =
 	"Maintenance:",
 	"Capacity:",
 	"Max. speed:",
+	"Range",
 	"Power:",
 	"Tractive Force:",
 	"Axle load:",
@@ -289,6 +290,14 @@ bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_
 			cmp = a->get_topspeed() - b->get_topspeed();
 			if (cmp != 0) return cmp < 0;
 			break;
+		case sb_range:
+		{
+			const uint16 a_range = a->get_range()==0 ? 65535 : a->get_range();
+			const uint16 b_range = b->get_range()==0 ? 65535 : b->get_range();
+			cmp = a_range - b_range;
+			if (cmp != 0) return cmp < 0;
+			break;
+		}
 		case sb_power:
 			cmp = a->get_power() - b->get_power();
 			if (cmp != 0) return cmp < 0;
