@@ -152,7 +152,7 @@ void gui_vehicle_spec_t::update(uint8 mode, uint32 resale_value)
 				new_component_span<gui_border_t>(2);
 
 				// Physics information:
-				new_component<gui_label_t>("Max.speed:");
+				new_component<gui_label_t>("Max. speed:");
 				gui_label_buf_t *lb = new_component<gui_label_buf_t>();
 				lb->buf().printf("%3d %s", veh_type->get_topspeed(), "km/h");
 				lb->update();

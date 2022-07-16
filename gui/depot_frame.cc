@@ -801,7 +801,7 @@ void depot_frame_t::draw(scr_coord pos, scr_size size)
 				break;
 			}
 			case 1: {
-				lb_vehicle_count.buf().append("1 Einzelfahrzeug im Depot");
+				lb_vehicle_count.buf().append(translator::translate("1 Einzelfahrzeug im Depot"));
 				break;
 			}
 			default: {

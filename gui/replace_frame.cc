@@ -220,7 +220,7 @@ void replace_frame_t::init_table()
 		lb_money.set_fixed_width(D_LABEL_WIDTH);
 		add_component(&lb_money);
 
-		bt_reset.init(button_t::roundbox, "Reset", scr_coord(0,0), D_BUTTON_SIZE);
+		bt_reset.init(button_t::roundbox, "reset", scr_coord(0,0), D_BUTTON_SIZE);
 		bt_reset.set_tooltip("Reset this replacing operation");
 		bt_reset.add_listener(this);
 		add_component(&bt_reset);
