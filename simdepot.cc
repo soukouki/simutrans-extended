@@ -804,12 +804,6 @@ const char * depot_t:: is_deletable(const player_t *player)
 }
 
 
-slist_tpl<vehicle_desc_t*> const & depot_t::get_vehicle_type()
-{
-	return vehicle_builder_t::get_info(get_waytype());
-}
-
-
 vehicle_t* depot_t::get_oldest_vehicle(const vehicle_desc_t* desc)
 {
 	vehicle_t* oldest_veh = NULL;
