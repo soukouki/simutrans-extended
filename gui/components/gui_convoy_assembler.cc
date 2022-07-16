@@ -54,7 +54,7 @@ uint16 gui_convoy_assembler_t::livery_scheme_index = 0;
 int gui_convoy_assembler_t::selected_filter = VEHICLE_FILTER_RELEVANT;
 char gui_convoy_assembler_t::name_filter_value[64] = "";
 
-static int sort_by_action;
+static int sort_by_action=0;
 
 
 gui_vehicle_spec_t::gui_vehicle_spec_t(const vehicle_desc_t* desc)
@@ -755,12 +755,15 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 				add_table(2,1);
 				{
 					// mode
-					new_component<gui_label_t>("cl_txt_sort");
+					new_component<gui_label_t>("hl_txt_sort");
+					for (int i = 0; i < vehicle_builder_t::sb_length; i++) {
+						sort_by.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(vehicle_builder_t::vehicle_sort_by[i]), SYSCOL_TEXT);
+					}
 					sort_by.add_listener(this);
+					sort_by.set_selection(sort_by_action);
 					add_component(&sort_by);
 				}
 				end_table();
-
 			}
 			end_table();
 			new_component<gui_margin_t>(D_H_SPACE);
@@ -1105,6 +1108,9 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 		else if(  comp == &vehicle_filter  ) {
 			selected_filter = vehicle_filter.get_selection();
 		}
+		else if (comp == &sort_by) {
+			build_vehicle_lists();
+		}
 		else if (comp == &bt_class_management)
 		{
 			convoihandle_t cnv;
@@ -1270,18 +1276,34 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 	const uint16 month_now = world()->get_timeline_year_month();
 	vector_tpl<livery_scheme_t*>* schemes = world()->get_settings().get_livery_schemes();
 
+	sort_by_action = sort_by.get_selection();
+	vector_tpl<const vehicle_desc_t*> typ_list;
+
+	if(!show_all  &&  veh_action==va_sell && depot_frame) {
+		// show only sellable vehicles
+		for(vehicle_t* const v : depot_frame->get_depot()->get_vehicle_list()) {
+			vehicle_desc_t const* const d = v->get_desc();
+			typ_list.append(d);
+		}
+	}
+	else {
+		slist_tpl<vehicle_desc_t*> const& tmp_list = vehicle_builder_t::get_info(way_type, sort_by_action);
+		for(slist_tpl<vehicle_desc_t*>::const_iterator itr = tmp_list.begin(); itr != tmp_list.end(); ++itr) {
+			typ_list.append(*itr);
+		}
+	}
+
 	// use this to show only sellable vehicles
 	if(!show_all  &&  veh_action==va_sell && depot_frame) {
 		// just list the one to sell
-		for(vehicle_t* const v : depot_frame->get_depot()->get_vehicle_list()) {
-			vehicle_desc_t const* const info = v->get_desc();
+		for(vehicle_desc_t const* const info : typ_list) {
 			if (vehicle_map.get(info)) continue;
 			add_to_vehicle_list(info);
 		}
 	}
 	else {
 		// list only matching ones
-		for(vehicle_desc_t const* const info : vehicle_builder_t::get_info(way_type)) {
+		for(vehicle_desc_t const* const info : typ_list) {
 			const vehicle_desc_t *veh = NULL;
 			if(vehicles.get_count()>0) {
 				veh = (veh_action == va_insert) ? vehicles[0] : vehicles[vehicles.get_count()-1];

@@ -62,7 +62,7 @@ static stringhashtable_tpl< vehicle_desc_t*, N_BAGS_SMALL> name_fahrzeuge;
 
 // index 0 aur, 1...8 at normal waytype index
 #define GET_WAYTYPE_INDEX(wt) ((int)(wt)>8 ? 0 : (wt))
-static slist_tpl<vehicle_desc_t*> typ_fahrzeuge[9];
+static slist_tpl<vehicle_desc_t*> typ_fahrzeuge[vehicle_builder_t::sb_length][9];
 static uint8 tmp_sort_idx;
 
 
@@ -170,17 +170,30 @@ vehicle_t* vehicle_builder_t::build(koord3d k, player_t* player, convoi_t* cnv, 
 bool vehicle_builder_t::register_desc(vehicle_desc_t *desc)
 {
 	// register waytype list
-	const int idx = GET_WAYTYPE_INDEX( desc->get_waytype() );
-	if(  vehicle_desc_t *old_desc = name_fahrzeuge.remove( desc->get_name() )  ) {
-		dbg->doubled( "vehicle", desc->get_name() );
-		typ_fahrzeuge[idx].remove(old_desc);
+	const int wt_idx = GET_WAYTYPE_INDEX( desc->get_waytype() );
+
+	// first hashtable
+	vehicle_desc_t *old_desc = name_fahrzeuge.get( desc->get_name() );
+	if(  old_desc  ) {
+		dbg->doubled("vehicle", desc->get_name());
+		name_fahrzeuge.remove( desc->get_name() );
 	}
 	name_fahrzeuge.put(desc->get_name(), desc);
-	typ_fahrzeuge[idx].append(desc);
+
+	// now add it to sorter (may be more than once!)
+	for(  int sort_idx = 0;  sort_idx < vehicle_builder_t::sb_length;  sort_idx++  ) {
+		if(  old_desc  ) {
+			typ_fahrzeuge[sort_idx][wt_idx].remove(old_desc);
+		}
+		typ_fahrzeuge[sort_idx][wt_idx].append(desc);
+	}
+	// we cannot delete old_desc, since then xref-resolving will crash
+
 	return true;
 }
 
 
+// not in use. TODO: merge this to compare_vehicles
 static bool compare_vehicle_desc(const vehicle_desc_t* a, const vehicle_desc_t* b)
 {
 	// Sort by:
@@ -269,7 +282,7 @@ bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_
 			if (cmp != 0) return cmp < 0;
 			break;
 		case sb_running_cost:
-			cmp = a->get_running_cost(world()) - b->get_running_cost(world());
+			//cmp = a->get_running_cost(world()) - b->get_running_cost(world()); // TODO: FIXME. this cause crash
 			if (cmp != 0) return cmp < 0;
 			break;
 		case sb_speed:
@@ -324,24 +337,27 @@ bool vehicle_builder_t::successfully_loaded()
 {
 	// first: check for bonus tables
 	DBG_MESSAGE("vehicle_builder_t::sort_lists()","called");
-	for(  int wt_idx=0;  wt_idx<9;  wt_idx++  ) {
-		slist_tpl<vehicle_desc_t*>& typ_liste = typ_fahrzeuge[wt_idx];
-		uint count = typ_liste.get_count();
-		if (count == 0) {
-			continue;
-		}
-		vehicle_desc_t** const tmp     = new vehicle_desc_t*[count];
-		vehicle_desc_t** const tmp_end = tmp + count;
-		for(  vehicle_desc_t** tmpptr = tmp;  tmpptr != tmp_end;  tmpptr++  ) {
-			*tmpptr = typ_liste.remove_first();
-		}
-		std::sort(tmp, tmp_end, compare_vehicle_desc);
-		for(  vehicle_desc_t** tmpptr = tmp;  tmpptr != tmp_end;  tmpptr++  ) {
-			typ_liste.append(*tmpptr);
+	for (  int sort_idx = 0; sort_idx < vehicle_builder_t::sb_length; sort_idx++  ) {
+		for(  int wt_idx=0;  wt_idx<9;  wt_idx++  ) {
+			tmp_sort_idx = sort_idx;
+			slist_tpl<vehicle_desc_t*>& typ_liste = typ_fahrzeuge[sort_idx][wt_idx];
+			uint count = typ_liste.get_count();
+			if (count == 0) {
+				continue;
+			}
+			vehicle_desc_t** const tmp     = new vehicle_desc_t*[count];
+			vehicle_desc_t** const tmp_end = tmp + count;
+			for(  vehicle_desc_t** tmpptr = tmp;  tmpptr != tmp_end;  tmpptr++  ) {
+				*tmpptr = typ_liste.remove_first();
+			}
+			std::sort(tmp, tmp_end, compare);
+			for(  vehicle_desc_t** tmpptr = tmp;  tmpptr != tmp_end;  tmpptr++  ) {
+				typ_liste.append(*tmpptr);
 
-			(*tmpptr)->fix_number_of_classes();
+				(*tmpptr)->fix_number_of_classes();
+			}
+			delete [] tmp;
 		}
-		delete [] tmp;
 	}
 	return true;
 }
@@ -353,9 +369,9 @@ const vehicle_desc_t *vehicle_builder_t::get_info(const char *name)
 	return name_fahrzeuge.get(name);
 }
 
-slist_tpl<vehicle_desc_t*> const & vehicle_builder_t::get_info(waytype_t typ)
+slist_tpl<vehicle_desc_t*> const & vehicle_builder_t::get_info(waytype_t typ, uint8 sortkey)
 {
-	return typ_fahrzeuge[GET_WAYTYPE_INDEX(typ)];
+	return typ_fahrzeuge[sortkey][GET_WAYTYPE_INDEX(typ)];
 }
 
 
@@ -366,7 +382,7 @@ slist_tpl<vehicle_desc_t*> const & vehicle_builder_t::get_info(waytype_t typ)
  */
 const vehicle_desc_t *vehicle_builder_t::vehicle_search( waytype_t wt, const uint16 month_now, const uint32 target_weight, const sint32 target_speed, const goods_desc_t * target_freight, bool include_electric, bool not_obsolete )
 {
-	if(  (target_freight!=NULL  ||  target_weight!=0)  &&  !typ_fahrzeuge[GET_WAYTYPE_INDEX(wt)].empty()  )
+	if(  (target_freight!=NULL  ||  target_weight!=0)  &&  !typ_fahrzeuge[0][GET_WAYTYPE_INDEX(wt)].empty()  )
 	{
 		struct best_t {
 			uint32 power;
@@ -379,46 +395,37 @@ const vehicle_desc_t *vehicle_builder_t::vehicle_search( waytype_t wt, const uin
 		best.index = -100000;
 
 		const vehicle_desc_t *desc = NULL;
-		FOR(slist_tpl<vehicle_desc_t *>, const test_desc, typ_fahrzeuge[GET_WAYTYPE_INDEX(wt)])
-		{
+		for (vehicle_desc_t const* const test_desc : typ_fahrzeuge[0][GET_WAYTYPE_INDEX(wt)]) {
 			// no constricts allow for rail vehicles concerning following engines
-			if(wt==track_wt  &&  !test_desc->can_follow_any()  )
-			{
+			if(wt==track_wt  &&  !test_desc->can_follow_any()  ) {
 				continue;
 			}
 			// do not buy incomplete vehicles
-			if(wt==road_wt && !test_desc->can_lead(NULL))
-			{
+			if(wt==road_wt && !test_desc->can_lead(NULL)) {
 				continue;
 			}
 
 			// engine, but not allowed to lead a convoi, or no power at all or no electrics allowed
-			if(target_weight)
-			{
-				if(test_desc->get_power()==0  ||  !test_desc->can_follow(NULL)  ||  (!include_electric  &&  test_desc->get_engine_type()==vehicle_desc_t::electric) )
-				{
+			if(target_weight) {
+				if(test_desc->get_power()==0  ||  !test_desc->can_follow(NULL)  ||  (!include_electric  &&  test_desc->get_engine_type()==vehicle_desc_t::electric) ) {
 					continue;
 				}
 			}
 
 			// check for wegetype/too new
-			if(test_desc->get_waytype()!=wt  ||  test_desc->is_future(month_now)  )
-			{
+			if(test_desc->get_waytype()!=wt  ||  test_desc->is_future(month_now)  ) {
 				continue;
 			}
 
-			if(  not_obsolete  &&  test_desc->is_retired(month_now)  )
-			{
+			if(  not_obsolete  &&  test_desc->is_retired(month_now)  ) {
 				// not using vintage cars here!
 				continue;
 			}
 
-			test.power = (test_desc->get_power() * test_desc->get_gear()) / 64;
-			if(target_freight)
-			{
+			test.power = (test_desc->get_power()*test_desc->get_gear())/64;
+			if(target_freight) {
 				// this is either a railcar/trailer or a truck/boat/plane
-				if(  test_desc->get_total_capacity()==0  ||  !test_desc->get_freight_type()->is_interchangeable(target_freight)  )
-				{
+				if(  test_desc->get_total_capacity()==0  ||  !test_desc->get_freight_type()->is_interchangeable(target_freight)  ) {
 					continue;
 				}
 
@@ -501,12 +508,10 @@ const vehicle_desc_t *vehicle_builder_t::get_best_matching( waytype_t wt, const 
 	const vehicle_desc_t *desc = NULL;
 	sint32 desc_index =- 100000;
 
-	if(  !typ_fahrzeuge[GET_WAYTYPE_INDEX(wt)].empty()  )
+	if(  !typ_fahrzeuge[0][GET_WAYTYPE_INDEX(wt)].empty()  )
 	{
-		FOR(slist_tpl<vehicle_desc_t *>, const test_desc, typ_fahrzeuge[GET_WAYTYPE_INDEX(wt)])
-		{
-			if(target_power>0  &&  test_desc->get_power()==0)
-			{
+		for(vehicle_desc_t const* const test_desc : typ_fahrzeuge[0][GET_WAYTYPE_INDEX(wt)]) {
+			if(target_power>0  &&  test_desc->get_power()==0) {
 				continue;
 			}
 
