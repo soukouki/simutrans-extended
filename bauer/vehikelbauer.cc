@@ -282,7 +282,7 @@ bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_
 			if (cmp != 0) return cmp < 0;
 			break;
 		case sb_running_cost:
-			//cmp = a->get_running_cost(world()) - b->get_running_cost(world()); // TODO: FIXME. this cause crash
+			cmp = a->get_running_cost() - b->get_running_cost();
 			if (cmp != 0) return cmp < 0;
 			break;
 		case sb_speed:
