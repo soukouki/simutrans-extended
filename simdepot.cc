@@ -747,7 +747,7 @@ void depot_t::rdwr_vehicle(slist_tpl<vehicle_t *> &list, loadsave_t *file)
 		}
 	}
 
-	if (file->get_extended_version() >= 15)
+	if (file->is_version_ex_atleast(14, 56))
 	{
 		file->rdwr_str(name, lengthof(name));
 	}
