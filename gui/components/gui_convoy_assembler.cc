@@ -746,7 +746,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 				end_table();
 
 				// sort
-				add_table(2,1);
+				add_table(3,1);
 				{
 					// mode
 					new_component<gui_label_t>("hl_txt_sort");
@@ -756,6 +756,12 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 					sort_by.add_listener(this);
 					sort_by.set_selection(sort_by_action);
 					add_component(&sort_by);
+
+					sort_order.init(button_t::sortarrow_state, "");
+					sort_order.set_tooltip(translator::translate("hl_btn_sort_order"));
+					sort_order.pressed = false;
+					sort_order.add_listener(this);
+					add_component(&sort_order);
 				}
 				end_table();
 			}
@@ -1100,11 +1106,11 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 				build_vehicle_lists();
 			}
 		}
-		else if(  comp == &vehicle_filter  ) {
-			selected_filter = vehicle_filter.get_selection();
+		else if( comp==&vehicle_filter  ||  comp==&sort_by ) {
 			build_vehicle_lists();
 		}
-		else if (comp == &sort_by) {
+		else if(  comp==&sort_order  ) {
+			sort_order.pressed = !sort_order.pressed;
 			build_vehicle_lists();
 		}
 		else if (comp == &bt_class_management)
@@ -1272,6 +1278,7 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 	const uint16 month_now = world()->get_timeline_year_month();
 	vector_tpl<livery_scheme_t*>* schemes = world()->get_settings().get_livery_schemes();
 
+	selected_filter = vehicle_filter.get_selection();
 	sort_by_action = sort_by.get_selection();
 	vector_tpl<const vehicle_desc_t*> typ_list;
 
@@ -1285,7 +1292,12 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 	else {
 		slist_tpl<vehicle_desc_t*> const& tmp_list = vehicle_builder_t::get_info(way_type, sort_by_action);
 		for(slist_tpl<vehicle_desc_t*>::const_iterator itr = tmp_list.begin(); itr != tmp_list.end(); ++itr) {
-			typ_list.append(*itr);
+			if( sort_order.pressed ) {
+				typ_list.insert_at(0, *itr);
+			}
+			else {
+				typ_list.append(*itr);
+			}
 		}
 	}
 
