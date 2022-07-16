@@ -783,6 +783,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 
 					// goods filter => category?
 					new_component<gui_image_t>(skinverwaltung_t::goods->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(translator::translate("clf_chk_waren"));
+					vehicle_filter.add_listener(this);
 					add_component(&vehicle_filter);
 				}
 				end_table();
@@ -1107,6 +1108,7 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 		}
 		else if(  comp == &vehicle_filter  ) {
 			selected_filter = vehicle_filter.get_selection();
+			build_vehicle_lists();
 		}
 		else if (comp == &sort_by) {
 			build_vehicle_lists();
