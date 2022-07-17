@@ -917,6 +917,7 @@ void depot_frame_t::rdwr(loadsave_t *file)
 	file->rdwr_bool(convoy_assembler.show_all);
 	file->rdwr_bool(convoy_assembler.show_outdated_vehicles);
 	file->rdwr_bool(convoy_assembler.show_obsolete_vehicles);
+	file->rdwr_bool(convoy_assembler.sort_reverse);
 
 	if(  file->is_loading()  ) {
 		depot_t *dep = welt->lookup(pos)->get_depot();

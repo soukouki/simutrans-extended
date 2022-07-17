@@ -102,6 +102,7 @@ public:
 	static bool show_obsolete_vehicles; // (same for all depot)
 
 	static sint16 sort_by_action;
+	static bool sort_reverse;
 
 	uint8 veh_action = va_append;
 

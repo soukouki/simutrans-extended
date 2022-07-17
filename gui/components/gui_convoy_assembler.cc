@@ -55,6 +55,7 @@ int gui_convoy_assembler_t::selected_filter = VEHICLE_FILTER_RELEVANT;
 char gui_convoy_assembler_t::name_filter_value[64] = "";
 
 sint16 gui_convoy_assembler_t::sort_by_action=0;
+bool gui_convoy_assembler_t::sort_reverse = false;
 
 
 gui_vehicle_spec_t::gui_vehicle_spec_t(const vehicle_desc_t* desc)
@@ -758,7 +759,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 
 					sort_order.init(button_t::sortarrow_state, "");
 					sort_order.set_tooltip(translator::translate("hl_btn_sort_order"));
-					sort_order.pressed = false;
+					sort_order.pressed = sort_reverse;
 					sort_order.add_listener(this);
 					add_component(&sort_order);
 				}
@@ -1113,7 +1114,8 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 			build_vehicle_lists();
 		}
 		else if(  comp==&sort_order  ) {
-			sort_order.pressed = !sort_order.pressed;
+			sort_reverse = !sort_reverse;
+			sort_order.pressed = sort_reverse;
 			build_vehicle_lists();
 		}
 		else if (comp == &bt_class_management)
@@ -1290,7 +1292,7 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 	else {
 		slist_tpl<vehicle_desc_t*> const& tmp_list = vehicle_builder_t::get_info(way_type, sort_by_action);
 		for(slist_tpl<vehicle_desc_t*>::const_iterator itr = tmp_list.begin(); itr != tmp_list.end(); ++itr) {
-			if( sort_order.pressed ) {
+			if( sort_reverse ) {
 				typ_list.insert_at(0, *itr);
 			}
 			else {
