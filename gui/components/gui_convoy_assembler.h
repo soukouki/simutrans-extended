@@ -285,6 +285,10 @@ public:
 	void set_electrified(bool ele);
 
 	static uint16 get_livery_scheme_index() { return livery_scheme_index; }
+
+	// for save and reload
+	int get_current_tab_index() const { return tabs.get_active_tab_index(); }
+	void set_current_tab_index(int idx) { tabs.set_active_tab_index(idx); }
 };
 
 #endif
