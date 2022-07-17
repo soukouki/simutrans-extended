@@ -911,6 +911,13 @@ void depot_frame_t::rdwr(loadsave_t *file)
 	scr_size size = get_windowsize();
 	size.rdwr( file );
 
+	file->rdwr_byte(convoy_assembler.veh_action);
+	file->rdwr_short(convoy_assembler.sort_by_action);
+	//file->rdwr_long(convoy_assembler.selected_filter); // not working
+	file->rdwr_bool(convoy_assembler.show_all);
+	file->rdwr_bool(convoy_assembler.show_outdated_vehicles);
+	file->rdwr_bool(convoy_assembler.show_obsolete_vehicles);
+
 	if(  file->is_loading()  ) {
 		depot_t *dep = welt->lookup(pos)->get_depot();
 		if (dep) {

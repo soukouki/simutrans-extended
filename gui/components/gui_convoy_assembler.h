@@ -97,6 +97,14 @@ class gui_convoy_assembler_t : public gui_aligned_container_t, public gui_action
 public:
 	static scr_coord get_grid(waytype_t wt);
 
+	static bool show_all;               // show available vehicles (same for all depot)
+	static bool show_outdated_vehicles; // shoe vehicled that production is stopped but not increase maintenance yet.
+	static bool show_obsolete_vehicles; // (same for all depot)
+
+	static sint16 sort_by_action;
+
+	uint8 veh_action = va_append;
+
 private:
 	waytype_t way_type;
 	bool way_electrified;
@@ -171,9 +179,7 @@ private:
 	gui_textinput_t name_filter_input;
 
 	gui_combobox_t vehicle_filter;
-	static bool show_all;               // show available vehicles (same for all depot)
-	static bool show_outdated_vehicles; // shoe vehicled that production is stopped but not increase maintenance yet.
-	static bool show_obsolete_vehicles; // (same for all depot)
+
 	button_t bt_show_all;
 	button_t bt_outdated;
 	button_t bt_obsolete;
@@ -182,7 +188,6 @@ private:
 	button_t sort_order;
 
 	// [MODE SELECTOR]
-	uint8 veh_action;
 	gui_combobox_t action_selector;
 
 	/**

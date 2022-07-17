@@ -54,7 +54,7 @@ uint16 gui_convoy_assembler_t::livery_scheme_index = 0;
 int gui_convoy_assembler_t::selected_filter = VEHICLE_FILTER_RELEVANT;
 char gui_convoy_assembler_t::name_filter_value[64] = "";
 
-static int sort_by_action=0;
+sint16 gui_convoy_assembler_t::sort_by_action=0;
 
 
 gui_vehicle_spec_t::gui_vehicle_spec_t(const vehicle_desc_t* desc)
@@ -733,13 +733,12 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 				{
 					// mode
 					new_component<gui_label_t>("Fahrzeuge:");
-					veh_action = va_append;
 					static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
 					action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
 					action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
 					action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
 					action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
-					action_selector.set_selection(0);
+					action_selector.set_selection(veh_action);
 					action_selector.add_listener(this);
 					add_component(&action_selector);
 				}
@@ -1106,7 +1105,11 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 				build_vehicle_lists();
 			}
 		}
-		else if( comp==&vehicle_filter  ||  comp==&sort_by ) {
+		else if( comp==&vehicle_filter ) {
+			selected_filter = vehicle_filter.get_selection();
+			build_vehicle_lists();
+		}
+		else if( comp==&sort_by ) {
 			build_vehicle_lists();
 		}
 		else if(  comp==&sort_order  ) {
@@ -1145,10 +1148,6 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 		{
 			return false;
 		}
-	}
-	else {
-		update_convoi();
-		update_tabs();
 	}
 	return true;
 }
@@ -1278,7 +1277,6 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 	const uint16 month_now = world()->get_timeline_year_month();
 	vector_tpl<livery_scheme_t*>* schemes = world()->get_settings().get_livery_schemes();
 
-	selected_filter = vehicle_filter.get_selection();
 	sort_by_action = sort_by.get_selection();
 	vector_tpl<const vehicle_desc_t*> typ_list;
 
