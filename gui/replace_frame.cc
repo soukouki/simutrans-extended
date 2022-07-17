@@ -515,6 +515,10 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 		cnv->call_convoi_tool('X', NULL);
 		rpl = new replace_data_t();
 		convoy_assembler.set_vehicles(convoihandle_t());
+		bt_retain_in_depot.pressed = rpl->get_retain_in_depot();
+		bt_use_home_depot.pressed = rpl->get_use_home_depot();
+		bt_allow_using_existing_vehicles.pressed = rpl->get_allow_using_existing_vehicles();
+		update_data();
 	}
 	else if (comp == &bt_reset)
 	{
