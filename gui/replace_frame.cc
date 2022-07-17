@@ -728,10 +728,42 @@ void replace_frame_t::rdwr(loadsave_t *file)
 	scr_size size = get_windowsize();
 	size.rdwr(file);
 
+	// Prefer edited content over rpl, so temporarily memorize it here and restore it later.
+	bool retain_in_depot = bt_retain_in_depot.pressed;
+	file->rdwr_bool(retain_in_depot);
+	bool use_home_depot = bt_use_home_depot.pressed;
+	file->rdwr_bool(use_home_depot);
+	bool use_existing_vehicles = bt_allow_using_existing_vehicles.pressed;
+	file->rdwr_bool(use_existing_vehicles);
+	sint32 selectet_target = cb_replace_target.get_selection();
+	file->rdwr_long(selectet_target);
+	sint32 num_temp[n_states];
+	for (uint8 i = 0; i < n_states; ++i) {
+		num_temp[i] = numinp[i].get_value();
+		file->rdwr_long(num_temp[i]);
+	}
+
+
 	// init window
 	if(  file->is_loading() && cnv.is_bound() ) {
 		set_convoy(cnv);
 		set_windowsize(size);
+
+		// Overwrite with changes
+		rpl->set_retain_in_depot(retain_in_depot);
+		rpl->set_use_home_depot(use_home_depot);
+		rpl->set_allow_using_existing_vehicles(use_existing_vehicles);
+		bt_retain_in_depot.pressed = retain_in_depot;
+		bt_use_home_depot.pressed  = use_home_depot;
+		bt_allow_using_existing_vehicles.pressed = use_existing_vehicles;
+
+		cb_replace_target.set_selection(selectet_target);
+		replace_all  = (selectet_target == 1);
+		replace_line = (selectet_target == 2);
+		for (uint8 i = 0; i < n_states; ++i) {
+			numinp[i].set_value(num_temp[i]);
+		}
+		update_data();
 	}
 
 	// convoy vanished
