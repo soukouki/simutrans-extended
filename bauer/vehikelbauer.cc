@@ -247,9 +247,14 @@ static int compare_freight(const vehicle_desc_t* a, const vehicle_desc_t* b)
 	if (a->get_freight_type()->get_catg() == 0) {
 		cmp = a->get_freight_type()->get_index() - b->get_freight_type()->get_index();
 	}
+	if (cmp==0) {
+		cmp = a->get_min_accommodation_class() - b->get_min_accommodation_class();
+	}
+	if (cmp==0) {
+		cmp = a->get_max_accommodation_class() - b->get_max_accommodation_class();
+	}
 	return cmp;
 }
-
 static int compare_price(const vehicle_desc_t* a, const vehicle_desc_t* b) { return a->get_base_price() - b->get_base_price(); }
 static int compare_intro_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return a->get_intro_year_month() - b->get_intro_year_month();}
 static int compare_retire_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return a->get_retire_year_month() - b->get_retire_year_month();}
@@ -258,8 +263,7 @@ static int compare_retire_year_month(const vehicle_desc_t* a, const vehicle_desc
 // default compare function with mode parameter
 bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_desc_t* b, sort_mode_t mode)
 {
-	int cmp = compare_freight(a, b);
-	if (cmp != 0) return cmp < 0;
+	int cmp = 0;
 	switch(mode) {
 		//case sb_freight:
 		//	cmp = compare_freight(a, b);
@@ -330,8 +334,10 @@ bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_
 			break;
 		default:
 		case best:
-			return 0;
+			break;
 	}
+	cmp = compare_freight(a, b);
+	if (cmp != 0) return cmp < 0;
 	cmp = strcmp(translator::translate(a->get_name()), translator::translate(b->get_name()));
 	return cmp < 0;
 }
