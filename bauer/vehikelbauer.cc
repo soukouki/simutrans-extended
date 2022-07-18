@@ -250,6 +250,7 @@ static int compare_freight(const vehicle_desc_t* a, const vehicle_desc_t* b)
 	return cmp;
 }
 
+static int compare_price(const vehicle_desc_t* a, const vehicle_desc_t* b) { return a->get_base_price() - b->get_base_price(); }
 static int compare_intro_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return a->get_intro_year_month() - b->get_intro_year_month();}
 static int compare_retire_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return a->get_retire_year_month() - b->get_retire_year_month();}
 
@@ -279,7 +280,7 @@ bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_
 			if (cmp != 0) return cmp < 0;
 			break;
 		case sb_value:
-			cmp = a->get_value() - b->get_value();
+			cmp = compare_price(a, b);
 			if (cmp != 0) return cmp < 0;
 			break;
 		case sb_running_cost:
