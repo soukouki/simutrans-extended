@@ -194,51 +194,6 @@ bool vehicle_builder_t::register_desc(vehicle_desc_t *desc)
 }
 
 
-// not in use. TODO: merge this to compare_vehicles
-static bool compare_vehicle_desc(const vehicle_desc_t* a, const vehicle_desc_t* b)
-{
-	// Sort by:
-	//  1. cargo category
-	//  2. cargo (if special freight)
-	//  3. engine_type
-	//  4. speed
-	//  5. power
-	//  6. intro date
-	//  7. name
-	int cmp = a->get_freight_type()->get_catg() - b->get_freight_type()->get_catg();
-	if (cmp == 0) {
-		if (a->get_freight_type()->get_catg() == 0) {
-			cmp = a->get_freight_type()->get_index() - b->get_freight_type()->get_index();
-		}
-		if (cmp == 0) {
-			cmp = a->get_total_capacity() - b->get_total_capacity();
-			if (cmp == 0) {
-				// to handle tender correctly
-				uint8 b_engine = (a->get_total_capacity() + a->get_power() == 0 ? (uint8)vehicle_desc_t::steam : a->get_engine_type());
-				uint8 a_engine = (b->get_total_capacity() + b->get_power() == 0 ? (uint8)vehicle_desc_t::steam : b->get_engine_type());
-				cmp = b_engine - a_engine;
-				if (cmp == 0) {
-					cmp = a->get_topspeed() - b->get_topspeed();
-					if (cmp == 0) {
-						// put tender at the end of the list ...
-						int b_power = (a->get_power() == 0 ? 0x7FFFFFF : a->get_power());
-						int a_power = (b->get_power() == 0 ? 0x7FFFFFF : b->get_power());
-						cmp = b_power - a_power;
-						if (cmp == 0) {
-							cmp = a->get_intro_year_month() - b->get_intro_year_month();
-							if (cmp == 0) {
-								cmp = strcmp(a->get_name(), b->get_name());
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return cmp < 0;
-}
-
-
 // compare funcions to sort vehicle in the list
 static int compare_freight(const vehicle_desc_t* a, const vehicle_desc_t* b)
 {
@@ -255,7 +210,14 @@ static int compare_freight(const vehicle_desc_t* a, const vehicle_desc_t* b)
 	}
 	return cmp;
 }
+static int compare_capacity(const vehicle_desc_t* a, const vehicle_desc_t* b) { return a->get_capacity() - b->get_capacity(); }
+static int compare_engine(const vehicle_desc_t* a, const vehicle_desc_t* b) {
+	return (a->get_capacity() + a->get_power() == 0 ? (uint8)vehicle_desc_t::steam : a->get_engine_type()) - (b->get_capacity() + b->get_power() == 0 ? (uint8)vehicle_desc_t::steam : b->get_engine_type());
+}
 static int compare_price(const vehicle_desc_t* a, const vehicle_desc_t* b) { return a->get_base_price() - b->get_base_price(); }
+static int compare_topspeed(const vehicle_desc_t* a, const vehicle_desc_t* b) { return a->get_topspeed() - b->get_topspeed(); }
+static int compare_power(const vehicle_desc_t* a, const vehicle_desc_t* b) {return (a->get_power() == 0 ? 0x7FFFFFF : a->get_power()) - (b->get_power() == 0 ? 0x7FFFFFF : b->get_power());}
+static int compare_tractive_effort(const vehicle_desc_t* a, const vehicle_desc_t* b) { return (a->get_power() == 0 ? 0x7FFFFFF : a->get_tractive_effort()) - (b->get_power() == 0 ? 0x7FFFFFF : b->get_tractive_effort()); }
 static int compare_intro_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return a->get_intro_year_month() - b->get_intro_year_month();}
 static int compare_retire_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return a->get_retire_year_month() - b->get_retire_year_month();}
 
@@ -276,7 +238,7 @@ bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_
 		case sb_intro_date:
 			cmp = compare_intro_year_month(a, b);
 			if (cmp != 0) return cmp < 0;
-			// fall-through
+			/* FALLTHROUGH */
 		case sb_retire_date:
 			cmp = compare_retire_year_month(a, b);
 			if (cmp != 0) return cmp < 0;
@@ -292,7 +254,7 @@ bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_
 			if (cmp != 0) return cmp < 0;
 			break;
 		case sb_speed:
-			cmp = a->get_topspeed() - b->get_topspeed();
+			cmp = compare_topspeed(a, b);
 			if (cmp != 0) return cmp < 0;
 			break;
 		case sb_range:
@@ -304,13 +266,13 @@ bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_
 			break;
 		}
 		case sb_power:
-			cmp = a->get_power() - b->get_power();
+			cmp = compare_power(a, b);
 			if (cmp != 0) return cmp < 0;
-			// fall-through
+			/* FALLTHROUGH */
 		case sb_tractive_force:
-			cmp = a->get_tractive_effort() - b->get_tractive_effort();
+			cmp = compare_tractive_effort(a, b);
 			if (cmp == 0) {
-				cmp = a->get_power() - b->get_power();
+				cmp = compare_power(a, b);
 			}
 			if (cmp != 0) return cmp < 0;
 			break;
@@ -336,7 +298,27 @@ bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_
 		case best:
 			break;
 	}
+	// Sort by:
+	//  1. cargo category
+	//  2. cargo (if special freight)
+	//  3. engine_type
+	//  4. speed
+	//  5. power
+	//  6. intro date
+	//  7. name
 	cmp = compare_freight(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_capacity(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_engine(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_topspeed(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_power(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_tractive_effort(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_intro_year_month(a, b);
 	if (cmp != 0) return cmp < 0;
 	cmp = strcmp(translator::translate(a->get_name()), translator::translate(b->get_name()));
 	return cmp < 0;
