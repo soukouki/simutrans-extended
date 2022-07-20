@@ -4669,6 +4669,18 @@ bool karte_t::rem_fab(fabrik_t *fab)
 	return true;
 }
 
+void karte_t::fab_init_contracts(){
+	for(auto &fab : get_fab_list()){
+		fab->init_contracts();
+	}
+}
+
+void karte_t::fab_remove_contracts(){
+	for(auto &fab : get_fab_list()){
+		fab->remove_contracts();
+	}
+}
+
 /*----------------------------------------------------------------------------------------------------------------------*/
 /* same procedure for tourist attractions */
 

@@ -635,11 +635,11 @@ fabrik_t *fabrik_t::get_fab(const koord &pos)
 }
 
 
-void fabrik_t::add_consumer(koord ziel, const goods_desc_t *desc)
+void fabrik_t::add_consumer(koord ziel, const goods_desc_t *desc, const sint64 contract)
 {
 	for( auto& ware : get_output()){
 		if(ware.get_typ()==desc){
-			ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()));
+			ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()),contract);
 			if(fabrik_t *fab = get_fab( ziel )){
 				fab->add_supplier(get_pos().get_2d(),desc);
 			}
@@ -647,7 +647,7 @@ void fabrik_t::add_consumer(koord ziel, const goods_desc_t *desc)
 			if(fabrik_t *fab = get_fab( ziel )){
 				for(auto &dest_ware : fab->get_input()){
 					if(dest_ware.get_typ() == ware.get_typ()){
-						ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()));
+						ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()),contract);
 						fab->add_supplier(get_pos().get_2d(),ware.get_typ());
 					}
 				}
@@ -2138,6 +2138,22 @@ void fabrik_t::reset_consumer_active(){
 	consumers_active_this_month.set_count((get_consumers().get_count()>>5) + 1);
 	for(auto& i : consumers_active_this_month){
 		i=0;
+	}
+}
+
+void fabrik_t::init_contracts(){
+	for(auto &output : get_output()){
+		output.set_using_contracts();
+		output.reset_total_contracts();
+	}
+	for(auto &input : get_input()){
+		input.reset_total_contracts();
+	}
+}
+
+void fabrik_t::remove_contracts(){
+	for(auto &output : get_output()){
+		output.reset_using_contracts();
 	}
 }
 
@@ -3815,8 +3831,9 @@ void fabrik_t::calc_max_intransit_percentages()
 		const uint32 time_to_consume = max(1u, get_time_to_consume_stock(index));
 		const sint32 ratio = ((sint32)lead_time * 1000 / (sint32)time_to_consume);
 		const sint32 modified_max_intransit_percentage = (ratio * (sint64)base_max_intransit_percentage) / 1000;
+		const sint32 input_max=input[index].max;
 		max_intransit_percentages.put(catg, (uint16)modified_max_intransit_percentage);
-		input[index].max_transit = max(1, (modified_max_intransit_percentage * input[index].max) / 100); // This puts max_transit in internal units
+		input[index].max_transit = max(1, (modified_max_intransit_percentage * input_max) / 100); // This puts max_transit in internal units
 		index ++;
 	}
 }
@@ -4034,7 +4051,9 @@ uint32 fabrik_t::get_time_to_consume_stock(uint32 index)
 		}
 	}
 
-	const sint32 input_capacity = max((input[index].max >> fabrik_t::precision_bits), 1);
+	const sint32 input_max=input[index].max;
+
+	const sint32 input_capacity = max((input_max >> fabrik_t::precision_bits), 1);
 
 	const sint64 tick_units = input_capacity * welt->ticks_per_world_month;
 

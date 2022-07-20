@@ -95,12 +95,17 @@ private:
 
 	///factory links to supplier or consumer
 	vector_tpl<koord> links;
+	vector_tpl<sint64> link_aux;
+
+	sint64 total_contracts;
 
 	/// clears statistics, transit, and weighted_sum_storage
 	void init_stats();
 
+	bool using_contracts;
+
 public:
-	ware_production_t() : type(NULL), menge(0), max(0)/*, transit(statistics[0][FAB_GOODS_TRANSIT])*/,
+	ware_production_t() : type(NULL), total_contracts(0), using_contracts(0), menge(0), max(0)/*, transit(statistics[0][FAB_GOODS_TRANSIT])*/,
 		max_transit(0), index_offset(0)
 	{
 		init_stats();
@@ -154,9 +159,42 @@ public:
 
 	const vector_tpl<koord>& get_links() const {return links;}
 
+	void set_using_contracts(sint64 default_contracts=0){
+		if(!using_contracts){
+			link_aux.set_count(links.get_count());
+			for(uint32 i = 0; i < link_aux.get_count(); i++){
+				link_aux[i]=default_contracts;
+			}
+			using_contracts=true;
+		}
+	}
+
+	void reset_using_contracts(){
+		link_aux.clear();
+		link_aux.resize(0);
+		using_contracts=false;
+	}
+
+	void reset_total_contracts(){total_contracts=0;}
+
 	template<class StrictWeakOrdering>
-	void link_add(koord pos, StrictWeakOrdering T ){
-		links.insert_unique_ordered(pos, T);
+	void link_add(koord pos, StrictWeakOrdering T, sint64 aux = 0 ){
+		//Note this is simular to vector<>::insert_unique_ordered but for two vectors
+		sint32 low = -1, high = links.get_count();
+		while( high - low > 1){
+			const sint32 mid = ((uint32)(low + high)) / 2;
+			if( links[mid] == pos ){
+				return;
+			}else if( T(pos,links[mid])){
+				high=mid;
+			}else{
+				low=mid;
+			}
+		}
+		links.insert_at(high,pos);
+		if(using_contracts){
+			link_aux.insert_at(high,aux);
+		}
 	}
 
 	bool link_contained(koord pos) const{
@@ -164,7 +202,16 @@ public:
 	}
 
 	bool link_remove(koord pos){
-		return links.remove(pos);
+		for(uint32 i = 0; i < links.get_count(); i++){
+			if(links[i]==pos){
+				links.remove_at(i);
+				if(using_contracts){
+					link_aux.remove_at(i);
+				}
+				return true;
+			}
+		}
+		return false;
 	}
 
 	uint32 link_count() const{
@@ -749,6 +796,8 @@ public:
 		return null_vector;
 	}
 
+	void init_contracts();
+	void remove_contracts();
 
 	const vector_tpl<nearby_halt_t>& get_nearby_freight_halts() const { return nearby_freight_halts; }
 
@@ -777,7 +826,7 @@ public:
 	/**
 	 * Adds a new delivery goal
 	 */
-	void add_consumer(koord ziel, const goods_desc_t *desc=0);
+	void add_consumer(koord ziel, const goods_desc_t *desc=0, const sint64 contract=0);
 	void remove_consumer(koord consumer_pos);
 
 	bool disconnect_consumer(koord consumer_pos);
