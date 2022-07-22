@@ -3798,8 +3798,6 @@ void fabrik_t::calc_max_intransit_percentages()
 	uint32 index = 0;
 	FOR(array_tpl<ware_production_t>, &w, input)
 	{
-		const uint8 catg = w.get_typ()->get_catg();
-
 		const uint32 lead_time = get_lead_time(w.get_typ());
 		if(lead_time == UINT32_MAX_VALUE)
 		{
@@ -3820,7 +3818,6 @@ uint32 fabrik_t::get_total_input_capacity() const
 {
 	uint32 i = 0;
 	uint32 capacity_sum = 0;
-	uint32 stock_sum = 0;
 	FORX(array_tpl<ware_production_t>, const& goods, input, i++) {
 		const sint64 pfactor =desc->get_supplier(i) ? (sint64)desc->get_supplier(i)->get_consumption() : 1ll;
 		const uint32 storage_capacity = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max * pfactor) >> (fabrik_t::precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
