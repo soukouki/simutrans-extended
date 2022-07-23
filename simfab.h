@@ -91,7 +91,6 @@ private:
 	const goods_desc_t *type;
 	// statistics for each goods
 	sint64 statistics[MAX_MONTH][MAX_FAB_GOODS_STAT];
-	sint64 weighted_sum_storage;
 
 	///factory links to supplier or consumer
 	vector_tpl<koord> links;
@@ -115,7 +114,7 @@ public:
 	void set_typ(const goods_desc_t *t) { type=t; }
 
 	// functions for manipulating goods statistics
-	void roll_stats(uint32 factor, sint64 aggregate_weight);
+	void roll_stats(uint32 factor);
 	void rdwr(loadsave_t *file);
 	const sint64* get_stats() const { return *statistics; }
 	void book_stat(sint64 value, int stat_type) { assert(stat_type<MAX_FAB_GOODS_STAT); statistics[0][stat_type] += value; }
@@ -143,7 +142,7 @@ public:
 		return value;
 	}
 
-	void book_weighted_sum_storage(uint32 factor, sint64 delta_time);
+	void book_weighted_sum_storage(uint32 factor);
 
 	sint32 menge; // in internal units shifted by precision_bits (see step)
 	sint32 max;
@@ -486,19 +485,13 @@ private:
 	 * Factory statistics
 	 */
 	sint64 statistics[MAX_MONTH][MAX_FAB_STAT];
-	sint64 weighted_sum_production;
-	sint64 weighted_sum_boost_electric;
-	sint64 weighted_sum_boost_pax;
-	sint64 weighted_sum_boost_mail;
-	sint64 weighted_sum_power;
-	sint64 aggregate_weight;
 
 	// Functions for manipulating factory statistics
 	void init_stats();
 	void set_stat(sint64 value, int stat_type) { assert(stat_type<MAX_FAB_STAT); statistics[0][stat_type] = value; }
 
 	// For accumulating weighted sums for average statistics
-	void book_weighted_sums(sint64 delta_time);
+	void book_weighted_sums();
 
 	/// Possible destinations for produced goods
 	/// Deprecated, only used for read/write
