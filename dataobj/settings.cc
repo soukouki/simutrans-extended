@@ -3530,16 +3530,16 @@ void settings_t::set_scale()
 }
 
 void settings_t::set_just_in_time(uint8 b){
-	if(just_in_time_is_contract(b) == just_in_time_is_contract()){
+	if(using_fab_contracts(b) == using_fab_contracts()){
 		just_in_time=b;
 		return;
 	}
 	karte_ptr_t welt;
-	if(just_in_time_is_contract(b)){
+	if(using_fab_contracts(b)){
 		just_in_time=b;
 		welt->fab_init_contracts();
 	}
-	if(just_in_time_is_contract()){
+	if(using_fab_contracts()){
 		welt->fab_remove_contracts();
 	}
 

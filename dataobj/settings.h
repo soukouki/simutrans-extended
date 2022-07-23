@@ -883,8 +883,8 @@ public:
 	void set_just_in_time(uint8 b);
 	uint8 get_just_in_time() const {return just_in_time;}
 
-	bool just_in_time_is_contract(uint8 b) const { return b==5;}
-	bool just_in_time_is_contract() const { return just_in_time_is_contract(just_in_time);}
+	bool using_fab_contracts(uint8 b) const { return b==5;}
+	bool using_fab_contracts() const { return using_fab_contracts(just_in_time);}
 
 	void set_default_climates();
 	const sint16 *get_climate_borders() const { return climate_borders; }

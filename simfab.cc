@@ -559,6 +559,11 @@ void fabrik_t::update_prodfactor_mail()
 
 void fabrik_t::recalc_storage_capacities()
 {
+	if(welt->get_settings().using_fab_contracts()){
+		//TODO
+		return;
+	}
+
 	if (desc->get_field_group()) {
 		// with fields -> calculate based on capacities contributed by fields
 		const uint32 ware_types = input.get_count() + output.get_count();
@@ -1893,6 +1898,11 @@ sint32 fabrik_t::liefere_an(const goods_desc_t *typ, sint32 menge)
 	}
 	else {
 		// case : freight
+		if(welt->get_settings().using_fab_contracts()){
+			//TODO
+			return menge;
+		}
+
 		for (uint32 in = 0; in < input.get_count(); in++) {
 			ware_production_t& ware = input[in];
 			if(  ware.get_typ() == typ  ) {
@@ -2142,23 +2152,49 @@ void fabrik_t::reset_consumer_active(){
 }
 
 void fabrik_t::init_contracts(){
-	for(auto &output : get_output()){
+	for(uint32 i = 0; i < get_output().get_count(); i++){
+		auto &output = get_output()[i];
 		output.set_using_contracts();
 		output.reset_total_contracts();
+		const uint32 prod_factor = desc->get_product(i)->get_factor();
+		output.menge = (sint32)(((sint64)output.menge * (sint64)(prod_factor)) >> (sint64)(DEFAULT_PRODUCTION_FACTOR_BITS));
 	}
-	for(auto &input : get_input()){
+	for(uint32 i = 0; i < get_input().get_count(); i++){
+		auto &input = get_input()[i];
 		input.reset_total_contracts();
+		const uint32 prod_factor = desc->get_supplier(i)->get_consumption();
+		input.menge = (sint32)(((sint64)input.menge * (sint64)(prod_factor)) >> (sint64)(DEFAULT_PRODUCTION_FACTOR_BITS));
 	}
+	recalc_nearby_halts();
+	recalc_storage_capacities();
 }
 
 void fabrik_t::remove_contracts(){
-	for(auto &output : get_output()){
+	for(uint32 i = 0; i < get_output().get_count(); i++){
+		auto &output = get_output()[i];
 		output.reset_using_contracts();
+		const uint32 prod_factor = desc->get_product(i)->get_factor();
+		output.menge = (sint32)((((sint64)output.menge << (sint64)DEFAULT_PRODUCTION_FACTOR_BITS) + prod_factor-1) / prod_factor);
 	}
+
+	for(uint32 i = 0; i < get_input().get_count(); i++){
+		auto &input = get_input()[i];
+		const uint32 prod_factor = desc->get_supplier(i)->get_consumption();
+		input.menge = (sint32)((((sint64)input.menge << (sint64)DEFAULT_PRODUCTION_FACTOR_BITS) + prod_factor-1) / prod_factor);
+	}
+	recalc_nearby_halts();
+	recalc_storage_capacities();
+	calc_max_intransit_percentages();
 }
 
 void fabrik_t::step(uint32 delta_t)
 {
+	if(welt->get_settings().using_fab_contracts()){
+		//TODO
+		return;
+	}
+
+
 	if(!has_calculated_intransit_percentages)
 	{
 		// Can only do it here (once after loading) as paths
@@ -3803,6 +3839,12 @@ void fabrik_t::calc_max_intransit_percentages()
 	}
 
 	has_calculated_intransit_percentages = true;
+
+	if(welt->get_settings().using_fab_contracts()){
+		//TODO
+		return;
+	}
+
 	const uint16 base_max_intransit_percentage = welt->get_settings().get_factory_maximum_intransit_percentage();
 
 	if(base_max_intransit_percentage == 0)
