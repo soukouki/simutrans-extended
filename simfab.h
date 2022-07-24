@@ -96,7 +96,7 @@ private:
 	vector_tpl<koord> links;
 	vector_tpl<sint64> link_aux;
 
-	sint64 total_contracts;
+	sint32 total_contracts;
 
 	/// clears statistics, transit, and weighted_sum_storage
 	void init_stats();
@@ -175,6 +175,7 @@ public:
 	}
 
 	void reset_total_contracts(){total_contracts=0;}
+	sint32 get_total_contracts() const {return total_contracts;}
 
 	template<class StrictWeakOrdering>
 	void link_add(koord pos, StrictWeakOrdering T, sint64 aux = 0 ){

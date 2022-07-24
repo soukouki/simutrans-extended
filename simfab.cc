@@ -307,10 +307,10 @@ void fabrik_t::book_weighted_sums()
 {
 	// storage level of input/output stores
 	for (uint32 in = 0; in < input.get_count(); in++) {
-		input[in].book_weighted_sum_storage(desc->get_supplier(in)->get_consumption());
+		input[in].book_weighted_sum_storage(welt->get_settings().using_fab_contracts() ? 1 : desc->get_supplier(in)->get_consumption());
 	}
 	for (uint32 out = 0; out < output.get_count(); out++) {
-		output[out].book_weighted_sum_storage(desc->get_product(out)->get_factor());
+		output[out].book_weighted_sum_storage(welt->get_settings().using_fab_contracts() ? 1 : desc->get_product(out)->get_factor());
 	}
 
 	// production rate
@@ -540,11 +540,6 @@ void fabrik_t::update_prodfactor_mail()
 
 void fabrik_t::recalc_storage_capacities()
 {
-	if(welt->get_settings().using_fab_contracts()){
-		//TODO
-		return;
-	}
-
 	if (desc->get_field_group()) {
 		// with fields -> calculate based on capacities contributed by fields
 		const uint32 ware_types = input.get_count() + output.get_count();
@@ -560,7 +555,7 @@ void fabrik_t::recalc_storage_capacities()
 			FOR(array_tpl<ware_production_t>, &g, input) {
 				if(const factory_supplier_desc_t *const input = desc->get_supplier(g.get_typ())){
 					// Inputs are now normalized to factory production.
-					uint32 prod_factor = input->get_consumption();
+					uint32 prod_factor = welt->get_settings().using_fab_contracts() ? 1 : input->get_consumption();
 					g.max = (sint32)(welt->scale_for_distance_only((((sint64)((input->get_capacity() << precision_bits) + share) << DEFAULT_PRODUCTION_FACTOR_BITS) + (sint64)(prod_factor - 1)) / (sint64)prod_factor));
 				}
 			}
@@ -568,7 +563,7 @@ void fabrik_t::recalc_storage_capacities()
 			FOR(array_tpl<ware_production_t>, &g, output) {
 				if(const factory_product_desc_t *const output = desc->get_product(g.get_typ())){
 					// Outputs are now normalized to factory production.
-					uint32 prod_factor = output->get_factor();
+					uint32 prod_factor = welt->get_settings().using_fab_contracts() ? 1 : output->get_factor();
 					g.max = (sint32)(welt->scale_for_distance_only((((sint64)((output->get_capacity() << precision_bits) + share) << DEFAULT_PRODUCTION_FACTOR_BITS) + (sint64)(prod_factor - 1)) / (sint64)prod_factor));
 				}
 			}
@@ -580,7 +575,7 @@ void fabrik_t::recalc_storage_capacities()
 		FOR(array_tpl<ware_production_t>, &g, input) {
 			if(const factory_supplier_desc_t *const input = desc->get_supplier(g.get_typ())){
 				// Inputs are now normalized to factory production.
-				uint32 prod_factor = input->get_consumption();
+				uint32 prod_factor = welt->get_settings().using_fab_contracts() ? 1 : input->get_consumption();
 				g.max = (sint32)(welt->scale_for_distance_only(((((sint64)input->get_capacity() * (sint64)prodbase) << (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS)) + (sint64)(prod_factor - 1)) / ((sint64)desc->get_productivity() * (sint64)prod_factor)));
 			}
 		}
@@ -588,7 +583,7 @@ void fabrik_t::recalc_storage_capacities()
 		FOR(array_tpl<ware_production_t>, &g, output) {
 			if(const factory_product_desc_t *const output = desc->get_product(g.get_typ())){
 				// Outputs are now normalized to factory production.
-				uint32 prod_factor = output->get_factor();
+				uint32 prod_factor = welt->get_settings().using_fab_contracts() ? 1 : output->get_factor();
 				g.max = (sint32)(welt->scale_for_distance_only(((((sint64)output->get_capacity() * (sint64)prodbase) << (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS)) + (sint64)(prod_factor - 1)) / ((sint64)desc->get_productivity() * (sint64)prod_factor)));
 			}
 		}
@@ -3802,10 +3797,6 @@ void fabrik_t::calc_max_intransit_percentages()
 
 	has_calculated_intransit_percentages = true;
 
-	if(welt->get_settings().using_fab_contracts()){
-		//TODO
-		return;
-	}
 
 	const uint16 base_max_intransit_percentage = welt->get_settings().get_factory_maximum_intransit_percentage();
 
@@ -3824,6 +3815,17 @@ void fabrik_t::calc_max_intransit_percentages()
 			// No factories connected; use the default intransit percentage for now.
 			input[index].max_transit = max(1, ((sint64)base_max_intransit_percentage * input[index].max) / 100); // This puts max_transit in internal units
 			index ++;
+			continue;
+		}
+		if(welt->get_settings().using_fab_contracts()){
+			sint64 max_transit;
+			max_transit = base_max_intransit_percentage; //percentage
+			max_transit *= lead_time; //tenths of a minute
+			max_transit *= input[index].get_total_contracts(); //goods * precision / month
+			max_transit /= welt->ticks_to_tenths_of_minutes(welt->ticks_per_world_month);
+			max_transit /= 100;
+			input[index].max_transit=max(1,max_transit); //goods * precision
+			index++;
 			continue;
 		}
 		const uint32 time_to_consume = max(1u, get_time_to_consume_stock(index));
