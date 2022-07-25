@@ -283,7 +283,7 @@ void gui_vehicle_spec_t::update(uint8 mode, uint32 resale_value)
 						gui_label_buf_t *lb = new_component<gui_label_buf_t>();
 						lb->buf().printf(" %3d", veh_type->get_total_capacity());
 						if (veh_type->get_overcrowded_capacity()) {
-							lb->buf().printf("(%d)", veh_type->get_overcrowded_capacity());
+							lb->buf().printf(" (%d)", veh_type->get_overcrowded_capacity());
 						}
 						lb->buf().printf("%s %s", translator::translate(veh_type->get_freight_type()->get_mass()), translator::translate(veh_type->get_freight_type()->get_catg_name()));
 						lb->update();
