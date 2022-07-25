@@ -408,8 +408,8 @@ void gui_vehicle_spec_t::update(uint8 mode, uint32 resale_value)
 						if (way_constraints.get_permissive(i))
 						{
 							if (!any_permissive) {
-								new_component<gui_image_t>(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2):IMG_EMPTY, 0, ALIGN_CENTER_V, true);
-								new_component<gui_label_t>("\nMUST USE: ", 64262); // TODO: Remove "\n" from the translation
+								new_component<gui_image_t>(skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(4):IMG_EMPTY, 0, ALIGN_CENTER_V, true);
+								new_component<gui_label_t>("\nMUST USE: ", COL_DANGER); // TODO: Remove "\n" from the translation
 							}
 							new_component<gui_margin_t>(D_FIXED_SYMBOL_WIDTH-D_H_SPACE);
 							gui_label_buf_t *lb = new_component<gui_label_buf_t>();
