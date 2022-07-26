@@ -18,8 +18,9 @@
 #include "../../simskin.h"
 #include "../../simworld.h"
 #include "../../simconvoi.h"
-#include "../simwin.h"
 #include "../../convoy.h"
+#include "../simwin.h"
+#include "../messagebox.h"
 
 
 #include "../../bauer/goods_manager.h"
@@ -1634,6 +1635,7 @@ void gui_convoy_assembler_t::update_convoi()
 		}
 
 		lb_convoi_count.buf().append(number_of_vehicles,0);
+		lb_convoi_count.set_color(number_of_vehicles==depot_t::get_max_convoy_length(way_type) ? COL_DANGER : SYSCOL_TEXT);
 		lb_convoi_count.update();
 		lb_convoi_tiles.buf().printf("%s %i",
 			translator::translate("Station tiles:"), vsum.tiles);
@@ -2040,6 +2042,7 @@ void gui_convoy_assembler_t::image_from_storage_list(gui_image_list_t::image_dat
 			const uint32 length = vehicles.get_count() + 1;
 			if( length > depot_t::get_max_convoy_length(way_type) ) {
 				// Do not add vehicles over maximum length.
+				create_win(new news_img("Do not add vehicles over maximum length!"), w_time_delete, magic_none);
 				return;
 			}
 		}
@@ -2349,20 +2352,23 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 					vehicle_fluctuation++;
 					lb_convoi_count.set_visible(true);
 				}
-				tile_occupancy.set_new_veh_length(new_vehicle_length + auto_addition_length, (veh_action == va_insert), new_vehicle_length_sb_force_zero ? 0xFFu : new_vehicle_length);
-				if (!new_vehicle_length_sb_force_zero) {
-					if (veh_action == va_append && auto_addition_length == 0) {
-						tile_occupancy.set_assembling_incomplete(vec[sel_index]->rcolor == COL_YELLOW);
+
+				if (vehicle_fluctuation + vehicles.get_count() <= depot_t::get_max_convoy_length(way_type)) {
+					tile_occupancy.set_new_veh_length(new_vehicle_length + auto_addition_length, (veh_action == va_insert), new_vehicle_length_sb_force_zero ? 0xFFu : new_vehicle_length);
+					if (!new_vehicle_length_sb_force_zero) {
+						if (veh_action == va_append && auto_addition_length == 0) {
+							tile_occupancy.set_assembling_incomplete(vec[sel_index]->rcolor == COL_YELLOW);
+						}
+						else if (veh_action == va_insert && auto_addition_length == 0) {
+							tile_occupancy.set_assembling_incomplete(vec[sel_index]->lcolor == COL_YELLOW);
+						}
+						else {
+							tile_occupancy.set_assembling_incomplete(false);
+						}
 					}
-					else if (veh_action == va_insert && auto_addition_length == 0) {
-						tile_occupancy.set_assembling_incomplete(vec[sel_index]->lcolor == COL_YELLOW);
+					else if(convoi_pics.get_count()){
+						tile_occupancy.set_assembling_incomplete((convoi_pics[0]->lcolor == COL_YELLOW || convoi_pics[convoi_pics.get_count() - 1]->rcolor == COL_YELLOW));
 					}
-					else {
-						tile_occupancy.set_assembling_incomplete(false);
-					}
-				}
-				else if(convoi_pics.get_count()){
-					tile_occupancy.set_assembling_incomplete((convoi_pics[0]->lcolor == COL_YELLOW || convoi_pics[convoi_pics.get_count() - 1]->rcolor == COL_YELLOW));
 				}
 			}
 
@@ -2583,7 +2589,7 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 		}
 		if (way_type != water_wt && way_type != air_wt) {
 			lb_convoi_count_fluctuation.set_visible(false);
-			if (vehicle_fluctuation != 0) {
+			if(  vehicle_fluctuation!=0  &&  (vehicle_fluctuation+vehicles.get_count() <= depot_t::get_max_convoy_length(way_type))  ) {
 				// vehicle number fluctuation counter
 				lb_convoi_count_fluctuation.buf().printf("%s%i", vehicle_fluctuation > 0 ? "+" : "", vehicle_fluctuation);
 				lb_convoi_count_fluctuation.set_color(vehicle_fluctuation > 0 ? SYSCOL_UP_TRIANGLE : SYSCOL_DOWN_TRIANGLE);
