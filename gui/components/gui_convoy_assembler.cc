@@ -327,17 +327,15 @@ void gui_vehicle_spec_t::update(uint8 action, uint32 resale_value, uint16 curren
 											{
 												char time_str[32];
 												world()->sprintf_time_secs(time_str, 32, world()->get_settings().max_tolerable_journey(veh_type->get_comfort(ac)));
-												comfort_tooltip_buf.clear();
-												comfort_tooltip_buf.append(time_str);
 												if( skinverwaltung_t::comfort ) {
-													new_component<gui_image_t>(skinverwaltung_t::comfort->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(comfort_tooltip_buf);
+													new_component<gui_image_t>(skinverwaltung_t::comfort->get_image_id(0), 0, ALIGN_NONE, true);
 													lb = new_component<gui_label_buf_t>();
-													lb->buf().append(veh_type->get_comfort(ac), 0);
+													lb->buf().append(time_str);
 													lb->update();
 												}
 												else {
 													lb = new_component<gui_label_buf_t>();
-													lb->buf().printf("%s %u", translator::translate("Comfort:"), veh_type->get_comfort(ac));
+													lb->buf().printf("%s %s", translator::translate("(Max. comfortable journey time: "), time_str);
 													lb->update();
 												}
 											}
@@ -2710,12 +2708,25 @@ gui_vehicle_bar_legends_t::gui_vehicle_bar_legends_t()
 		new_component<gui_margin_t>(D_MARGIN_LEFT);
 		new_component<gui_vehicle_bar_t>(COL_DANGER, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
 		new_component<gui_label_t>(bar_color_helptexts[4], SYSCOL_TEXT_WEAK);
-
 	}
 	end_table();
 
+	if (skinverwaltung_t::comfort) {
+		new_component<gui_divider_t>();
+		add_table(4,1)->set_spacing(scr_size(D_H_SPACE, 1));
+		{
+			new_component<gui_margin_t>(D_MARGIN_LEFT);
+			new_component<gui_image_t>(skinverwaltung_t::comfort ? skinverwaltung_t::comfort->get_image_id(0) : IMG_EMPTY, 0, ALIGN_NONE, true);
+			new_component<gui_label_t>("(Max.comfortable journey time : ", SYSCOL_TEXT_WEAK);
+			new_component<gui_fill_t>();
+		}
+		end_table();
+	}
+	else {
+		new_component<gui_margin_t>(1, D_LABEL_HEIGHT);
+	}
+
 	// Margin for adjusting to the height of the spac table
-	new_component<gui_margin_t>(1, D_LABEL_HEIGHT);
 	new_component<gui_margin_t>(1, D_LABEL_HEIGHT);
 	new_component<gui_margin_t>(1, D_LABEL_HEIGHT);
 

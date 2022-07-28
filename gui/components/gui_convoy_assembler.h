@@ -40,7 +40,6 @@
 class gui_vehicle_spec_t : public gui_aligned_container_t, private action_listener_t
 {
 	const vehicle_desc_t *veh_type;
-	cbuffer_t comfort_tooltip_buf;
 
 	bool is_secondary_view = false;
 	button_t bt_main_view, bt_secondary_view;
