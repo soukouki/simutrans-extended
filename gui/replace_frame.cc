@@ -122,9 +122,9 @@ void replace_frame_t::init_table()
 	current_convoi.set_grid(grid);
 	//set_placement(scr_coord(placement.x - placement_dx, placement.y));
 	current_convoi.set_player_nr( cnv->get_owner()->get_player_nr() );
-	// dont set the listner // TODO: pass veh_type to assembler and show info
 
 	scrollx_convoi.set_maximize(true);
+	scrollx_convoi.set_min_height(scrollx_convoi.get_max_size().h);
 	add_component(&scrollx_convoi);
 
 	add_table(2,1)->set_margin(scr_size(D_MARGIN_LEFT, 0), scr_size(D_MARGIN_RIGHT, 0));
@@ -395,7 +395,9 @@ void replace_frame_t::update_data()
 	}
 	lb_money.update();
 	reset_min_windowsize();
-	set_windowsize(scr_size(max(get_min_size().w, convoy_assembler.get_min_size().w), max(get_min_windowsize().h, get_windowsize().h)));
+	if( get_size().w < get_min_size().w ) {
+		set_windowsize(scr_size(get_min_size().w, get_size().h));
+	}
 	resize(scr_size(0,0));
 }
 
