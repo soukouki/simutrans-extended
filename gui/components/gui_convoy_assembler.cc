@@ -1600,9 +1600,44 @@ void gui_convoy_assembler_t::update_convoi()
 				add_to_vehicle_list( info );
 			}
 
-			//bool vehicle_available = false;
 			if( replace_frame ) {
-				gui_image_list_t::image_data_t* img_data = new gui_image_list_t::image_data_t(info->get_name(), info->get_base_image());
+				bool vehicle_available = false;
+				image_id image;
+				convoihandle_t cnv = replace_frame->get_convoy();
+				for(uint8 n = 0; n < cnv->get_vehicle_count(); n++)
+				{
+					if(cnv->get_vehicle(n)->get_desc() == info)
+					{
+						vehicle_available = true;
+						image = info->get_base_image(cnv->get_vehicle(n)->get_current_livery());
+						break;
+					}
+				}
+				if( !vehicle_available ) {
+					const uint16 date = world()->get_timeline_year_month();
+					image = vehicles[i]->get_base_image();
+					if( const livery_scheme_t* const scheme = world()->get_settings().get_livery_scheme(livery_scheme_index) )
+					{
+						if( const char* livery = scheme->get_latest_available_livery(date, vehicles[i]) )
+						{
+							image = vehicles[i]->get_base_image(livery);
+						}
+						else
+						{
+							for(uint32 j = 0; j < world()->get_settings().get_livery_schemes()->get_count(); j++)
+							{
+								const livery_scheme_t* const new_scheme = world()->get_settings().get_livery_scheme(j);
+								if( const char* new_livery = new_scheme->get_latest_available_livery(date, vehicles[i]) )
+								{
+									image = vehicles[i]->get_base_image(new_livery);
+									break;
+								}
+							}
+						}
+					}
+				}
+
+				gui_image_list_t::image_data_t* img_data = new gui_image_list_t::image_data_t(info->get_name(), image);
 				convoi_pics.append(img_data);
 			}
 
