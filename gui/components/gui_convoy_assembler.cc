@@ -737,7 +737,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 			add_table(1,2)->set_margin(scr_size(D_MARGIN_LEFT,0), scr_size(0,0));
 			{
 				cont_convoi.set_table_layout(2,2);
-				cont_convoi.set_margin(scr_size(0,0), scr_size(0,0));
+				cont_convoi.set_margin(scr_size(0,0), scr_size(get_grid(wt).x/2,0));
 				cont_convoi.set_spacing(scr_size(0,0));
 				cont_convoi.add_component(&convoi);
 				lb_makeup.init("Select vehicles to make up a convoy", scr_coord(0,0), SYSCOL_TEXT_INACTIVE, gui_label_t::centered);
