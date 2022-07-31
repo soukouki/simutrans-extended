@@ -177,6 +177,9 @@ public:
 	void reset_total_contracts(){total_contracts=0;}
 	sint32 get_total_contracts() const {return total_contracts;}
 
+	/// returns 0 when normal, else factor to reduce shipment (out of 256)
+	uint8 get_overflowing_reduction() const {return 0;}
+
 	template<class StrictWeakOrdering>
 	void link_add(koord pos, StrictWeakOrdering T, sint64 aux = 0 ){
 		//Note this is simular to vector<>::insert_unique_ordered but for two vectors
@@ -1056,8 +1059,6 @@ public:
 
 	// Average journey time to delivery goods of this type
 	uint32 get_lead_time (const goods_desc_t* wtype);
-	// Time to consume the full input store of these goods at full capacity
-	uint32 get_time_to_consume_stock(uint32 index);
 
 	int get_passenger_level_jobs() const;
 	int get_passenger_level_visitors() const;
