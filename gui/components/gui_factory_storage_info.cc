@@ -126,9 +126,9 @@ void gui_factory_storage_info_t::draw(scr_coord offset)
 					}
 
 					// [monthly production]
-					const uint32 monthly_prod = (uint32)(fab->get_current_production()*pfactor * 10 >> DEFAULT_PRODUCTION_FACTOR_BITS);
+					const uint32 monthly_prod = (uint32)(fab->get_current_production()*pfactor * 10 >> fabrik_t::precision_bits);
 					if(welt->get_settings().using_fab_contracts()){
-						const uint32 monthly_cont = 10 * goods.get_total_contracts() >> DEFAULT_PRODUCTION_FACTOR_BITS;
+						const uint32 monthly_cont = 10 * goods.get_total_contracts() >> fabrik_t::precision_bits;
 						if(monthly_prod < 100 || monthly_cont < 100){
 							buf.printf(translator::translate("Monthly Contract %.1f/%.1f Units"), (float) monthly_cont / 10.0, (float) monthly_prod / 10.0);
 						}else{
@@ -203,9 +203,9 @@ void gui_factory_storage_info_t::draw(scr_coord offset)
 
 				// [monthly production]
 				buf.clear();
-				const uint32 monthly_prod = (uint32)(fab->get_current_production()*pfactor * 10 >> DEFAULT_PRODUCTION_FACTOR_BITS);
+				const uint32 monthly_prod = (uint32)(fab->get_current_production()*pfactor * 10 >> fabrik_t::precision_bits);
 				if(welt->get_settings().using_fab_contracts()){
-					const uint32 monthly_cont = 10 * goods.get_total_contracts() >> DEFAULT_PRODUCTION_FACTOR_BITS;
+					const uint32 monthly_cont = 10 * goods.get_total_contracts() >> fabrik_t::precision_bits;
 					if(monthly_prod < 100 || monthly_cont < 100){
 						buf.printf(translator::translate("Monthly Contract %.1f/%.1f Units"), (float) monthly_cont / 10.0, (float) monthly_prod / 10.0);
 					}else{
@@ -405,7 +405,13 @@ void gui_factory_connection_stat_t::draw(scr_coord offset)
 				int index = 0;
 				if (!is_input_display) {
 					if(welt->get_settings().using_fab_contracts()){
-						//TODO
+						uint32 idx=it.get_ware_index();
+						sint32 contract=(it.get_ware().get_contract(idx) * 10) >> fabrik_t::precision_bits;
+						if(contract < 100){
+							buf.printf(translator::translate("%f Units per Mo."),(float)contract / 10.0);
+						}else{
+							buf.printf(translator::translate("%u Units per Mo."),contract / 10);
+						}
 					}else{
 						// NOTE: this is not the only shipping situation from THIS factory.
 						// may have been shipped from another factory.
@@ -438,7 +444,7 @@ void gui_factory_connection_stat_t::draw(scr_coord offset)
 				}
 				else {
 					if(welt->get_settings().using_fab_contracts()){
-						//TODO
+
 					}else{
 						// - supplier
 						// We do not know which supplier the goods are coming from.

@@ -4670,13 +4670,13 @@ bool karte_t::rem_fab(fabrik_t *fab)
 }
 
 void karte_t::fab_init_contracts(){
-	for(auto &fab : get_fab_list()){
+	for(fabrik_t* fab : fab_list){
 		fab->init_contracts();
 	}
 }
 
 void karte_t::fab_remove_contracts(){
-	for(auto &fab : get_fab_list()){
+	for(fabrik_t* fab : fab_list){
 		fab->remove_contracts();
 	}
 }

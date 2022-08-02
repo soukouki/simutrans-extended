@@ -94,7 +94,7 @@ private:
 
 	///factory links to supplier or consumer
 	vector_tpl<koord> links;
-	vector_tpl<sint64> link_aux;
+	vector_tpl<sint32> link_aux;
 
 	sint32 total_contracts;
 
@@ -158,14 +158,12 @@ public:
 
 	const vector_tpl<koord>& get_links() const {return links;}
 
-	void set_using_contracts(sint64 default_contracts=0){
-		if(!using_contracts){
-			link_aux.set_count(links.get_count());
-			for(uint32 i = 0; i < link_aux.get_count(); i++){
-				link_aux[i]=default_contracts;
-			}
-			using_contracts=true;
+	void set_using_contracts(sint32 default_contracts=0){
+		link_aux.set_count(links.get_count());
+		for(uint32 i = 0; i < link_aux.get_count(); i++){
+			link_aux[i]=default_contracts;
 		}
+		using_contracts=true;
 	}
 
 	void reset_using_contracts(){
@@ -174,11 +172,10 @@ public:
 		using_contracts=false;
 	}
 
+	sint32 get_contract(uint32 idx){ return using_contracts ? link_aux[idx] : 0;}
+
 	void reset_total_contracts(){total_contracts=0;}
 	sint32 get_total_contracts() const {return total_contracts;}
-
-	/// returns 0 when normal, else factor to reduce shipment (out of 256)
-	uint8 get_overflowing_reduction() const {return 0;}
 
 	template<class StrictWeakOrdering>
 	void link_add(koord pos, StrictWeakOrdering T, sint64 aux = 0 ){
@@ -286,6 +283,7 @@ public:
 		bool operator !=(iterator const& o) const {return ware_iterator!=o.ware_iterator || koord_iterator!=o.koord_iterator;}
 
 		ware_production_t& get_ware() {return *ware_iterator;}
+		uint32 get_ware_index(){return koord_iterator - ware_iterator->link_begin();}
 
 	private:
 		array_tpl<ware_production_t>::iterator ware_iterator;

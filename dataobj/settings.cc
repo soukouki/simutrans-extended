@@ -3536,8 +3536,9 @@ void settings_t::set_just_in_time(uint8 b){
 	}
 	karte_ptr_t welt;
 	if(using_fab_contracts(b)){
-		just_in_time=b;
 		welt->fab_init_contracts();
+		just_in_time=b;
+		return;
 	}
 	if(using_fab_contracts()){
 		welt->fab_remove_contracts();

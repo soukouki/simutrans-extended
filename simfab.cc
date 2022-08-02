@@ -2130,17 +2130,15 @@ void fabrik_t::reset_consumer_active(){
 
 void fabrik_t::init_contracts(){
 	for(uint32 i = 0; i < get_output().get_count(); i++){
-		auto &output = get_output()[i];
-		output.set_using_contracts();
-		output.reset_total_contracts();
+		output[i].set_using_contracts();
+		output[i].reset_total_contracts();
 		const uint32 prod_factor = desc->get_product(i)->get_factor();
-		output.menge = (sint32)(((sint64)output.menge * (sint64)(prod_factor)) >> (sint64)(DEFAULT_PRODUCTION_FACTOR_BITS));
+		output[i].menge = (sint32)(((sint64)output[i].menge * (sint64)(prod_factor)) >> (sint64)(DEFAULT_PRODUCTION_FACTOR_BITS));
 	}
 	for(uint32 i = 0; i < get_input().get_count(); i++){
-		auto &input = get_input()[i];
-		input.reset_total_contracts();
+		input[i].reset_total_contracts();
 		const uint32 prod_factor = desc->get_supplier(i)->get_consumption();
-		input.menge = (sint32)(((sint64)input.menge * (sint64)(prod_factor)) >> (sint64)(DEFAULT_PRODUCTION_FACTOR_BITS));
+		input[i].menge = (sint32)(((sint64)input[i].menge * (sint64)(prod_factor)) >> (sint64)(DEFAULT_PRODUCTION_FACTOR_BITS));
 	}
 	recalc_nearby_halts();
 	recalc_storage_capacities();
@@ -2148,16 +2146,14 @@ void fabrik_t::init_contracts(){
 
 void fabrik_t::remove_contracts(){
 	for(uint32 i = 0; i < get_output().get_count(); i++){
-		auto &output = get_output()[i];
-		output.reset_using_contracts();
+		output[i].reset_using_contracts();
 		const uint32 prod_factor = desc->get_product(i)->get_factor();
-		output.menge = (sint32)((((sint64)output.menge << (sint64)DEFAULT_PRODUCTION_FACTOR_BITS) + prod_factor-1) / prod_factor);
+		output[i].menge = (sint32)((((sint64)output[i].menge << (sint64)DEFAULT_PRODUCTION_FACTOR_BITS) + prod_factor-1) / prod_factor);
 	}
 
 	for(uint32 i = 0; i < get_input().get_count(); i++){
-		auto &input = get_input()[i];
 		const uint32 prod_factor = desc->get_supplier(i)->get_consumption();
-		input.menge = (sint32)((((sint64)input.menge << (sint64)DEFAULT_PRODUCTION_FACTOR_BITS) + prod_factor-1) / prod_factor);
+		input[i].menge = (sint32)((((sint64)input[i].menge << (sint64)DEFAULT_PRODUCTION_FACTOR_BITS) + prod_factor-1) / prod_factor);
 	}
 	recalc_nearby_halts();
 	recalc_storage_capacities();
