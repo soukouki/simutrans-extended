@@ -126,7 +126,7 @@ void gui_factory_storage_info_t::draw(scr_coord offset)
 					}
 
 					// [monthly production]
-					const uint32 monthly_prod = (uint32)(fab->get_current_production()*pfactor * 10 >> fabrik_t::precision_bits);
+					const uint32 monthly_prod = (uint32)(fab->get_current_production()*pfactor * 10 >> DEFAULT_PRODUCTION_FACTOR_BITS);
 					if(welt->get_settings().using_fab_contracts()){
 						const uint32 monthly_cont = 10 * goods.get_total_contracts() >> fabrik_t::precision_bits;
 						if(monthly_prod < 100 || monthly_cont < 100){
@@ -203,7 +203,7 @@ void gui_factory_storage_info_t::draw(scr_coord offset)
 
 				// [monthly production]
 				buf.clear();
-				const uint32 monthly_prod = (uint32)(fab->get_current_production()*pfactor * 10 >> fabrik_t::precision_bits);
+				const uint32 monthly_prod = (uint32)(fab->get_current_production()*pfactor * 10 >> DEFAULT_PRODUCTION_FACTOR_BITS);
 				if(welt->get_settings().using_fab_contracts()){
 					const uint32 monthly_cont = 10 * goods.get_total_contracts() >> fabrik_t::precision_bits;
 					if(monthly_prod < 100 || monthly_cont < 100){

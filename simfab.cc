@@ -3109,8 +3109,102 @@ void fabrik_t::new_month()
 		}
 
 		welt->closed_factories_this_month.append(this);
+	}else if(welt->get_settings().using_fab_contracts()){
+		negotiate_contracts();
 	}
 	// NOTE: No code should come after this part, as the closing down code may cause this object to be deleted.
+}
+
+void fabrik_t::negotiate_contracts(){
+	//first check output and reduce contracts that cannot be filled
+	for(uint32 i = 0; i < output.get_count(); i++){
+		const sint64 pfactor = (sint64)get_desc()->get_product(i)->get_factor();
+		const sint32 monthly_prod = (uint32)(get_current_production()*pfactor * 10 >> DEFAULT_PRODUCTION_FACTOR_BITS) << fabrik_t::precision_bits;
+		const sint32 monthly_cont = output[i].get_total_contracts();
+		if(monthly_prod < monthly_cont){
+			//reduce contracts starting with furthest factory
+			for(uint32 j = output[i].link_count()-1; j < output[i].link_count(); j--){
+				sint32 contract_diff=output[i].get_total_contracts() - monthly_prod;
+				sint32 average_removal=(j+1 + contract_diff) / (j+1);
+				sint32 this_removal;
+				if(output[i].get_contract(j) > average_removal){
+					this_removal=average_removal;
+				}else{
+					this_removal=output[i].get_contract(j);
+				}
+				if(fabrik_t* affected_fab = get_fab(output[i].link_from_index(j))){
+					for(auto &affected_ware : affected_fab->get_input()){
+						if(affected_ware.get_typ()==output[i].get_typ()){
+							affected_ware.sub_total_contracts(this_removal);
+						}
+					}
+				}
+				output[i].sub_total_contracts(this_removal);
+				output[i].sub_contract(j,this_removal);
+			}
+		}
+	}
+
+	//check input to increase or decrease contracts as needed
+	for(uint32 i = 0; i < input.get_count(); i++){
+		const sint64 pfactor = (sint64)get_desc()->get_supplier(i)->get_consumption();
+		sint32 monthly_prod = (uint32)(get_current_production()*pfactor * 10 >> DEFAULT_PRODUCTION_FACTOR_BITS) << fabrik_t::precision_bits;
+		monthly_prod = max(adjust_consumption_by_passenger_level(monthly_prod),1024); //scale consumption by customers
+		//TODO scale down used monthly production figure when intransit levels are too high
+		const sint32 monthly_cont = input[i].get_total_contracts();
+		if(monthly_prod * 10 < monthly_cont * 11){
+			//too much input
+			//reduce contracts starting with furthest factory
+			for(uint32 j = input[i].link_count()-1; j < input[i].link_count(); j--){
+				sint32 contract_diff=input[i].get_total_contracts() - monthly_prod;
+				sint32 average_removal=(j+1 + contract_diff) / (j+1);
+				sint32 this_removal=average_removal;
+				//verify that contract exists in first place and reduce it
+				if(fabrik_t* affected_fab = get_fab(input[i].link_from_index(j))){
+					for(auto &affected_ware : affected_fab->get_output()){
+						if(affected_ware.get_typ()==input[i].get_typ()){
+							for(uint32 k = 0; k < affected_ware.link_count(); k++){
+								if(affected_ware.link_from_index(k) == get_pos().get_2d()){
+									if(affected_ware.get_contract(k) < this_removal){
+										this_removal=affected_ware.get_contract(k);
+									}
+									affected_ware.sub_contract(k,this_removal);
+									affected_ware.sub_total_contracts(this_removal);
+								}
+							}
+						}
+					}
+				}
+
+				input[i].sub_total_contracts(this_removal);
+			}
+		}else if(monthly_prod * 9 > monthly_cont * 10){
+			//too little input
+			//add some contracts starting with farthest, but do so conservatively
+			for(uint32 j = input[i].link_count()-1; j < input[i].link_count(); j--){
+				sint32 contract_diff=monthly_prod - input[i].get_total_contracts();
+				sint32 average_addition=(contract_diff) / (j+1);
+				sint32 this_addition=average_addition;
+				//verify that contract exists in first place and reduce it
+				if(fabrik_t* affected_fab = get_fab(input[i].link_from_index(j))){
+					for(auto &affected_ware : affected_fab->get_output()){
+						if(affected_ware.get_typ()==input[i].get_typ()){
+							for(uint32 k = 0; k < affected_ware.link_count(); k++){
+								if(affected_ware.link_from_index(k) == get_pos().get_2d()){
+									//TODO check for maximum output
+									affected_ware.add_contract(k,this_addition);
+									affected_ware.add_total_contracts(this_addition);
+								}
+							}
+						}
+					}
+				}
+
+				input[i].add_total_contracts(this_addition);
+			}
+		}
+	}
+
 }
 
 // static !
@@ -3830,33 +3924,7 @@ void fabrik_t::calc_max_intransit_percentages()
 		const sint32 base_production = get_current_production();
 		uint64 consumed_per_month = max((uint64)base_production * (uint64)vb, 256);
 
-		if(desc->is_consumer_only())
-		{
-			// Consumer industries adjust their consumption according to the number of visitors. Adjust for this.
-			// We cannot use actual consumption figures, as this could lead to deadlocks.
-
-			// Do not use the current month, as this is not complete yet, and the number of visitors will therefore be low.
-			sint64 average_consumers = 0;
-			if(get_stat(3, FAB_CONSUMER_ARRIVED))
-			{
-				average_consumers = (get_stat(1, FAB_CONSUMER_ARRIVED) + get_stat(2, FAB_CONSUMER_ARRIVED) + get_stat(3, FAB_CONSUMER_ARRIVED)) / 3ll;
-			}
-			else if(get_stat(2, FAB_CONSUMER_ARRIVED))
-			{
-				average_consumers = (get_stat(1, FAB_CONSUMER_ARRIVED) + get_stat(2, FAB_CONSUMER_ARRIVED) / 2ll);
-			}
-			else
-			{
-				average_consumers = get_stat(1, FAB_CONSUMER_ARRIVED);
-			}
-			// Only make the adjustment if we have data.
-			if (average_consumers)
-			{
-				const sint64 visitor_demand = (sint64)building->get_adjusted_visitor_demand();
-				const sint64 percentage = std::max(100ll, (average_consumers * 100ll) / visitor_demand);
-				consumed_per_month = (consumed_per_month * percentage) / 100;
-			}
-		}
+		consumed_per_month = adjust_consumption_by_passenger_level(consumed_per_month);
 		uint64 max_transit = max(consumed_per_month,256);
 		max_transit *= base_max_intransit_percentage;
 		max_transit *= lead_time;
@@ -3865,6 +3933,37 @@ void fabrik_t::calc_max_intransit_percentages()
 		input[index].max_transit = max_transit;
 		index ++;
 	}
+}
+
+sint64 fabrik_t::adjust_consumption_by_passenger_level(sint64 consumed_per_month){
+	if(desc->is_consumer_only())
+	{
+		// Consumer industries adjust their consumption according to the number of visitors. Adjust for this.
+		// We cannot use actual consumption figures, as this could lead to deadlocks.
+
+		// Do not use the current month, as this is not complete yet, and the number of visitors will therefore be low.
+		sint64 average_consumers = 0;
+		if(get_stat(3, FAB_CONSUMER_ARRIVED))
+		{
+			average_consumers = (get_stat(1, FAB_CONSUMER_ARRIVED) + get_stat(2, FAB_CONSUMER_ARRIVED) + get_stat(3, FAB_CONSUMER_ARRIVED)) / 3ll;
+		}
+		else if(get_stat(2, FAB_CONSUMER_ARRIVED))
+		{
+			average_consumers = (get_stat(1, FAB_CONSUMER_ARRIVED) + get_stat(2, FAB_CONSUMER_ARRIVED) / 2ll);
+		}
+		else
+		{
+			average_consumers = get_stat(1, FAB_CONSUMER_ARRIVED);
+		}
+		// Only make the adjustment if we have data.
+		if (average_consumers)
+		{
+			const sint64 visitor_demand = (sint64)building->get_adjusted_visitor_demand();
+			const sint64 percentage = std::max(100ll, (average_consumers * 100ll) / visitor_demand);
+			consumed_per_month = (consumed_per_month * percentage) / 100;
+		}
+	}
+	return consumed_per_month;
 }
 
 uint32 fabrik_t::get_total_input_capacity() const

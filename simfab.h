@@ -173,8 +173,22 @@ public:
 	}
 
 	sint32 get_contract(uint32 idx){ return using_contracts ? link_aux[idx] : 0;}
+	void set_contract(uint32 idx, sint32 contract){
+		assert(using_contracts);
+		link_aux[idx]=contract;
+	}
+	void add_contract(uint32 idx, sint32 diff){
+		assert(using_contracts);
+		link_aux[idx]+=diff;
+	}void sub_contract(uint32 idx, sint32 diff){
+		assert(using_contracts);
+		link_aux[idx]-=diff;
+	}
 
 	void reset_total_contracts(){total_contracts=0;}
+	void add_total_contracts(sint32 diff){total_contracts+=diff;}
+	void sub_total_contracts(sint32 diff){total_contracts-=diff;}
+
 	sint32 get_total_contracts() const {return total_contracts;}
 
 	template<class StrictWeakOrdering>
@@ -791,6 +805,8 @@ public:
 	void init_contracts();
 	void remove_contracts();
 
+	void negotiate_contracts();
+
 	const vector_tpl<nearby_halt_t>& get_nearby_freight_halts() const { return nearby_freight_halts; }
 
 	/**
@@ -1055,6 +1071,8 @@ public:
 	inline uint32 get_base_mail_demand() const { return arrival_stats_mail.get_scaled_demand(); }
 
 	void calc_max_intransit_percentages();
+
+	sint64 adjust_consumption_by_passenger_level(sint64 original_consumption);
 
 	// Average journey time to delivery goods of this type
 	uint32 get_lead_time (const goods_desc_t* wtype);
