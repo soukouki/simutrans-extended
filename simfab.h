@@ -983,6 +983,24 @@ public:
 	const array_tpl<ware_production_t>& get_output() const { return output; }
 	array_tpl<ware_production_t>& get_output() { return output; }
 
+	ware_production_t* get_input(const goods_desc_t* ware){
+		for(uint32 i = 0; i < input.get_count(); i++){
+			if(input[i].get_typ()==ware){
+				return &(input[i]);
+			}
+		}
+		return NULL;
+	}
+
+	ware_production_t* get_output(const goods_desc_t* ware){
+		for(uint32 i = 0; i < output.get_count(); i++){
+			if(output[i].get_typ()==ware){
+				return &(output[i]);
+			}
+		}
+		return NULL;
+	}
+
 	/**
 	 * Production multipliers
 	 */
@@ -1002,6 +1020,10 @@ public:
 	sint32 get_current_productivity() const { return welt->calc_adjusted_monthly_figure(prodbase) ? get_current_production() * 100 / welt->calc_adjusted_monthly_figure(prodbase) : 0; }
 	// returns the current productivity including the effect of staff shortage
 	sint32 get_actual_productivity() const { return status == inactive ? 0 : is_staff_shortage() ? get_current_productivity() * get_staffing_level_percentage() / 100 : get_current_productivity(); }
+
+	sint32 get_monthly_production(const sint32 pfactor) const {
+		return (uint32)(get_current_production()*pfactor << (fabrik_t::precision_bits - DEFAULT_PRODUCTION_FACTOR_BITS));
+	}
 
 	/* returns the status of the current factory, as well as output */
 	enum {

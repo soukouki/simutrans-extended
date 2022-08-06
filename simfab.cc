@@ -3119,7 +3119,7 @@ void fabrik_t::negotiate_contracts(){
 	//first check output and reduce contracts that cannot be filled
 	for(uint32 i = 0; i < output.get_count(); i++){
 		const sint64 pfactor = (sint64)get_desc()->get_product(i)->get_factor();
-		const sint32 monthly_prod = (uint32)(get_current_production()*pfactor * 10 >> DEFAULT_PRODUCTION_FACTOR_BITS) << fabrik_t::precision_bits;
+		const sint32 monthly_prod = get_monthly_production(pfactor);
 		const sint32 monthly_cont = output[i].get_total_contracts();
 		if(monthly_prod < monthly_cont){
 			//reduce contracts starting with furthest factory
@@ -3133,10 +3133,8 @@ void fabrik_t::negotiate_contracts(){
 					this_removal=output[i].get_contract(j);
 				}
 				if(fabrik_t* affected_fab = get_fab(output[i].link_from_index(j))){
-					for(auto &affected_ware : affected_fab->get_input()){
-						if(affected_ware.get_typ()==output[i].get_typ()){
-							affected_ware.sub_total_contracts(this_removal);
-						}
+					if(auto affected_ware = affected_fab->get_input(output[i].get_typ())){
+							affected_ware->sub_total_contracts(this_removal);
 					}
 				}
 				output[i].sub_total_contracts(this_removal);
@@ -3148,59 +3146,75 @@ void fabrik_t::negotiate_contracts(){
 	//check input to increase or decrease contracts as needed
 	for(uint32 i = 0; i < input.get_count(); i++){
 		const sint64 pfactor = (sint64)get_desc()->get_supplier(i)->get_consumption();
-		sint32 monthly_prod = (uint32)(get_current_production()*pfactor * 10 >> DEFAULT_PRODUCTION_FACTOR_BITS) << fabrik_t::precision_bits;
-		monthly_prod = max(adjust_consumption_by_passenger_level(monthly_prod),1024); //scale consumption by customers
+		sint32 monthly_prod = get_monthly_production(pfactor);
+		monthly_prod = max(adjust_consumption_by_passenger_level(monthly_prod),1 << fabrik_t::precision_bits); //scale consumption by customers
 		//TODO scale down used monthly production figure when intransit levels are too high
-		const sint32 monthly_cont = input[i].get_total_contracts();
-		if(monthly_prod * 10 < monthly_cont * 11){
-			//too much input
-			//reduce contracts starting with furthest factory
-			for(uint32 j = input[i].link_count()-1; j < input[i].link_count(); j--){
-				sint32 contract_diff=input[i].get_total_contracts() - monthly_prod;
-				sint32 average_removal=(j+1 + contract_diff) / (j+1);
-				sint32 this_removal=average_removal;
-				//verify that contract exists in first place and reduce it
-				if(fabrik_t* affected_fab = get_fab(input[i].link_from_index(j))){
-					for(auto &affected_ware : affected_fab->get_output()){
-						if(affected_ware.get_typ()==input[i].get_typ()){
-							for(uint32 k = 0; k < affected_ware.link_count(); k++){
-								if(affected_ware.link_from_index(k) == get_pos().get_2d()){
-									if(affected_ware.get_contract(k) < this_removal){
-										this_removal=affected_ware.get_contract(k);
-									}
-									affected_ware.sub_contract(k,this_removal);
-									affected_ware.sub_total_contracts(this_removal);
-								}
-							}
-						}
-					}
-				}
-
-				input[i].sub_total_contracts(this_removal);
-			}
-		}else if(monthly_prod * 9 > monthly_cont * 10){
+		sint32 monthly_cont = input[i].get_total_contracts();
+		if(monthly_prod * 10 < monthly_cont * 11 || monthly_prod > monthly_cont){
 			//too little input
-			//add some contracts starting with farthest, but do so conservatively
+			//add or remove some contracts starting with farthest
+			sint32 untapped_sources=0;
 			for(uint32 j = input[i].link_count()-1; j < input[i].link_count(); j--){
 				sint32 contract_diff=monthly_prod - input[i].get_total_contracts();
-				sint32 average_addition=(contract_diff) / (j+1);
+				if(contract_diff==0){
+					break;
+				}
+				sint32 average_addition=max((contract_diff + (j+1)/2) / (j+1),1);
 				sint32 this_addition=average_addition;
-				//verify that contract exists in first place and reduce it
+				//verify that contract exists in first place and add to or reduce from it
 				if(fabrik_t* affected_fab = get_fab(input[i].link_from_index(j))){
-					for(auto &affected_ware : affected_fab->get_output()){
-						if(affected_ware.get_typ()==input[i].get_typ()){
-							for(uint32 k = 0; k < affected_ware.link_count(); k++){
-								if(affected_ware.link_from_index(k) == get_pos().get_2d()){
-									//TODO check for maximum output
-									affected_ware.add_contract(k,this_addition);
-									affected_ware.add_total_contracts(this_addition);
+					if(auto affected_ware = affected_fab->get_output(input[i].get_typ())){
+						for(uint32 k = 0; k < affected_ware->link_count(); k++){
+							if(affected_ware->link_from_index(k) == get_pos().get_2d()){
+								//check for maximum output
+								const sint64 affected_pfactor=affected_fab->get_desc()->get_product(affected_ware->get_typ())->get_factor();
+								const sint32 affected_prod=affected_fab->get_monthly_production(affected_pfactor);
+								if(affected_prod - affected_ware->get_total_contracts() < this_addition){
+									this_addition = affected_prod - affected_ware->get_total_contracts();
+								}else if(affected_ware->get_total_contracts() + this_addition < 0){
+									this_addition=affected_ware->get_total_contracts();
+								}else if(this_addition>0){
+									untapped_sources += affected_prod - affected_ware->get_total_contracts() - this_addition;
 								}
+
+								affected_ware->add_contract(k,this_addition);
+								affected_ware->add_total_contracts(this_addition);
 							}
 						}
 					}
 				}
 
 				input[i].add_total_contracts(this_addition);
+			}
+			monthly_cont = input[i].get_total_contracts();
+			if(monthly_prod > monthly_cont && untapped_sources){
+				//Still too little, try to fill more agressively
+				for(uint32 j = 0; j < input[i].link_count(); j++){
+					sint32 contract_diff=monthly_prod - input[i].get_total_contracts();
+					if(contract_diff==0){
+						break;
+					}
+					sint32 this_addition=contract_diff;
+					if(fabrik_t* affected_fab = get_fab(input[i].link_from_index(j))){
+						if(auto affected_ware = affected_fab->get_output(input[i].get_typ())){
+							for(uint32 k = 0; k < affected_ware->link_count(); k++){
+								if(affected_ware->link_from_index(k) == get_pos().get_2d()){
+									//check for maximum output
+									const sint64 affected_pfactor=affected_fab->get_desc()->get_product(affected_ware->get_typ())->get_factor();
+									const sint32 affected_prod=affected_fab->get_monthly_production(affected_pfactor);
+									if(affected_prod - affected_ware->get_total_contracts() < this_addition){
+										this_addition = affected_prod - affected_ware->get_total_contracts();
+									}
+
+									affected_ware->add_contract(k,this_addition);
+									affected_ware->add_total_contracts(this_addition);
+								}
+							}
+						}
+					}
+
+					input[i].add_total_contracts(this_addition);
+				}
 			}
 		}
 	}
@@ -3911,7 +3925,8 @@ void fabrik_t::calc_max_intransit_percentages()
 			sint64 max_transit;
 			max_transit = base_max_intransit_percentage; //percentage
 			max_transit *= lead_time; //tenths of a minute
-			max_transit *= input[index].get_total_contracts(); //goods * precision / month
+			sint64 pfactor = desc->get_supplier(index)->get_consumption();
+			max_transit *= get_monthly_production(pfactor); //goods * precision / month
 			max_transit /= welt->ticks_to_tenths_of_minutes(welt->ticks_per_world_month);
 			max_transit /= 100;
 			input[index].max_transit=max(1,max_transit); //goods * precision
