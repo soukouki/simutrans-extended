@@ -266,7 +266,7 @@ void replace_frame_t::set_vehicles(bool init)
 			current_convoi_pics.append(img_data);
 			// set color bar
 			PIXVAL base_col = (!veh_type->is_future(month_now) && !veh_type->is_retired(month_now)) ? COL_SAFETY :
-				(veh_type->is_obsolete(month_now)) ? COL_OBSOLETE : COL_OUT_OF_PRODUCTION;
+				(veh_type->is_obsolete(month_now)) ? SYSCOL_OBSOLETE : SYSCOL_OUT_OF_PRODUCTION;
 
 			// change green into blue for retired vehicles
 			if (i!=0) {
