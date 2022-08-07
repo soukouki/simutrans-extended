@@ -4893,9 +4893,9 @@ Settings
 remove channels
 Remove waterways
 replace all in line
-Replace all in line
+Replace all of this type in line
 replace all
-Replace all
+Replace all of this type
 Abspanntransformator
 Downstream substation
 Aufspanntransformator
@@ -6466,3 +6466,13 @@ cannot upgrade
 Cannot upgrade
 Only this convoy
 Only this convoy
+(Max. comfortable journey time: 
+Max. comfortable journey time: 
+switch_spec_display_mode
+Show 
+basic_spec
+Specifications
+secondary_spec
+Livery schemes
+Do not add vehicles over maximum length!
+Maximum length reached
