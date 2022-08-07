@@ -234,6 +234,7 @@ public:
 		bool operator ==(iterator const& o) const {return ware_iterator==o.ware_iterator && koord_iterator==o.koord_iterator;}
 		bool operator !=(iterator const& o) const {return ware_iterator!=o.ware_iterator || koord_iterator!=o.koord_iterator;}
 
+		ware_production_t& get_ware() {return *ware_iterator;}
 
 	private:
 		array_tpl<ware_production_t>::iterator ware_iterator;
@@ -1006,8 +1007,6 @@ public:
 
 	// Average journey time to delivery goods of this type
 	uint32 get_lead_time (const goods_desc_t* wtype);
-	// Time to consume the full input store of these goods at full capacity
-	uint32 get_time_to_consume_stock(uint32 index);
 
 	int get_passenger_level_jobs() const;
 	int get_passenger_level_visitors() const;
