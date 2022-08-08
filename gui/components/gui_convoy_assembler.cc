@@ -888,6 +888,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 						new_component<gui_image_t>(skinverwaltung_t::search->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(translator::translate("Filter:"));
 					}
 					name_filter_input.set_text(name_filter_value, 32);
+					name_filter_input.set_search_box(true);
 					add_component(&name_filter_input);
 					name_filter_input.add_listener(this);
 					new_component<gui_margin_t>(D_H_SPACE);
