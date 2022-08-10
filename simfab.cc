@@ -2162,12 +2162,6 @@ void fabrik_t::remove_contracts(){
 
 void fabrik_t::step(uint32 delta_t)
 {
-	if(welt->get_settings().using_fab_contracts()){
-		//TODO
-		return;
-	}
-
-
 	if(!has_calculated_intransit_percentages)
 	{
 		// Can only do it here (once after loading) as paths
@@ -2176,6 +2170,11 @@ void fabrik_t::step(uint32 delta_t)
 	}
 
 	if(  delta_t==0  ) {
+		return;
+	}
+
+	if(welt->get_settings().using_fab_contracts()){
+		step_contracts(delta_t);
 		return;
 	}
 
@@ -2398,39 +2397,186 @@ void fabrik_t::step(uint32 delta_t)
 
 		recalc_factory_status();
 
-		// rescale delta_amount here: all products should be produced at least once
-		// (if consumer only: all supplements should be consumed once)
-		const uint32 min_change = output.empty() ? input.get_count() : output.get_count();
+		rescale_delta();
+	}
 
-		if(  (delta_amount>>fabrik_t::precision_bits)>min_change  ) {
+	advance_slot(delta_t);
+}
 
-			// we produced some real quantity => smoke
-			smoke();
 
-			// chance to expand every 256 rounds of activities, after which activity count will return to 0 (overflow behaviour)
-			if(  (++activity_count)==0  ) {
-				if(  desc->get_field_group()  ) {
-					if(  fields.get_count()<desc->get_field_group()->get_max_fields()  ) {
-						// spawn new field with given probability
-						add_random_field(desc->get_field_group()->get_probability());
+void fabrik_t::step_contracts(uint32 delta_t){
+	// produce nothing/consumes nothing ...
+	if(  input.empty()  &&  output.empty()  ) {
+		// power station? => produce power
+		if(  desc->is_electricity_producer()  ) {
+			currently_producing = true;
+			power = (uint32)( ((sint64)scaled_electric_demand * (sint64)(DEFAULT_PRODUCTION_FACTOR + prodfactor_pax + prodfactor_mail)) >> DEFAULT_PRODUCTION_FACTOR_BITS );
+		}
+
+		// produced => trigger smoke
+		delta_amount = 1 << fabrik_t::precision_bits;
+	}else{
+		// not a producer => then consume electricity ...
+		if(  !desc->is_electricity_producer()  &&  scaled_electric_demand>0  ) {
+			// TODO: Consider linking this to actual production only
+			prodfactor_electric = (sint32)( ( (sint64)(desc->get_electric_boost()) * (sint64)power + (sint64)(scaled_electric_demand >> 1) ) / (sint64)scaled_electric_demand );
+
+		}
+
+		uint64 monthly_production=get_monthly_production(); //kilos / month
+		if(is_staff_shortage()){
+			monthly_production = monthly_production * building->get_staffing_level_percentage() / 100;
+		}
+		const uint64 kilo_per_quarter=DEFAULT_PRODUCTION_FACTOR;
+		uint32 step_production_max=(monthly_production * (uint64)delta_t + delta_amount_remainder) / (welt->ticks_per_world_month * kilo_per_quarter); //quarters this step;
+		delta_amount_remainder=(monthly_production * (uint64)delta_t + delta_amount_remainder) % (welt->ticks_per_world_month * kilo_per_quarter);
+
+		// needed for electricity
+		currently_producing = false;
+		power_demand = 0;
+
+		//consume and/or produce stock based on industry type
+		if(output.empty() && (desc->is_electricity_producer() || desc->get_building()->get_population_and_visitor_demand_capacity() == 0)){
+			//power plant or utility
+			if (desc->is_electricity_producer()) {
+				// power station => start with no production
+				power = 0;
+			}
+
+			if(step_production_max){
+				//consume each good type
+				for(uint32 i = 0; i < input.get_count(); i++){
+					uint32 this_consumption;
+					uint32 step_production;
+					uint32 pfactor=desc->get_supplier(i)->get_consumption();
+					if((uint32)input[i].menge >= step_production_max * pfactor){
+						step_production=step_production_max;
+						currently_producing=true;
+					}else{
+						step_production=input[i].menge / pfactor;
 					}
+					this_consumption=step_production * pfactor;
+
+					//produce power
+					if (desc->is_electricity_producer())
+					{
+						// power station => produce power
+						power += (uint32)(((sint64)scaled_electric_demand * (sint64)(DEFAULT_PRODUCTION_FACTOR + prodfactor_pax + prodfactor_mail)));
+					}
+
+					input[i].menge-=this_consumption;
+					input[i].book_stat(this_consumption << DEFAULT_PRODUCTION_FACTOR_BITS,FAB_GOODS_CONSUMED);
+					delta_amount+=step_production;
 				}
-				else {
-					if(  times_expanded<desc->get_expand_times()  ) {
-						if(  simrand(10000, "fabrik_t::step (expand 1)")<desc->get_expand_probability()  ) {
-							set_base_production( prodbase + desc->get_expand_minumum() + simrand( desc->get_expand_range(), "fabrik_t::step (expand 2)" ) );
-							++times_expanded;
-						}
-					}
+			}
+		}else if(output.empty()){
+			//consumer only, consumption in received goods code
+			//check if operative though
+			for(uint32 i = 0; i < input.get_count(); i++){
+				if((uint32)input[i].menge >= step_production_max * desc->get_supplier(i)->get_consumption()){
+					currently_producing=true;
+					break;
+				}
+			}
+		}else{
+			//producer or manufacturer
+
+			//reduce max_production_step to corespond with input
+			for(uint32 i = 0; i < input.get_count(); i++){
+				const uint32 pfactor=desc->get_supplier(i)->get_consumption();
+				const uint32 step_production=input[i].menge / pfactor;
+				if(step_production < step_production_max){
+					step_production_max=step_production;
 				}
 			}
 
-			INT_CHECK("simfab 558");
-			// reset for next cycle
-			delta_amount = 0;
+			uint32 step_consumption=0;
+			//produce good(s)
+			for(uint32 i = 0; i < output.get_count(); i++){
+				const uint32 pfactor=desc->get_product(i)->get_factor();
+				uint32 step_production=(output[i].max - output[i].menge) / pfactor;
+				if(step_production > step_production_max){
+					step_production = step_production_max;
+				}
+				if(step_production>step_consumption){
+					step_consumption=step_production;
+				}
+				delta_amount+=step_production;
+				uint32 this_production=step_production * pfactor;
+				output[i].book_stat(this_production, FAB_GOODS_PRODUCED);
+				output[i].menge+=this_production;
+				// if less than 3/4 filled we neary always consume power
+				currently_producing |= (output[i].menge * 4 < output[i].max * 3);
+			}
+			if(step_consumption){
+				for(uint32 i = 0; i < input.get_count(); i++){
+					const uint32 pfactor=desc->get_supplier(i)->get_consumption();
+					uint32 this_consumption=step_consumption * pfactor;
+					input[i].menge-=this_consumption;
+					input[i].book_stat(this_consumption,FAB_GOODS_CONSUMED);
+				}
+			}
+		}
+		if(  currently_producing || desc->get_product_count() == 0  ) {
+			// Pure consumers (i.e., those that do not produce anything) should require full power at all times
+			// requires full power even if runs out of raw material next cycle
+			power_demand = scaled_electric_demand;
 		}
 	}
 
+	book_weighted_sums();
+
+	// not a power station => then consume all electricity ...
+	if(  !desc->is_electricity_producer()  ) {
+		power = 0;
+	}
+
+	delta_t_sum += delta_t;
+	if(delta_t_sum > PRODUCTION_DELTA_T){
+		delta_t_sum %= PRODUCTION_DELTA_T;
+		distribute_contracts(delta_t);
+		recalc_factory_status();
+		rescale_delta();
+	}
+
+	advance_slot(delta_t);
+}
+
+void fabrik_t::rescale_delta(){
+	// rescale delta_amount here: all products should be produced at least once
+	// (if consumer only: all supplements should be consumed once)
+	const uint32 min_change = output.empty() ? input.get_count() : output.get_count();
+
+	if(  (delta_amount>>fabrik_t::precision_bits)>min_change  ) {
+
+		// we produced some real quantity => smoke
+		smoke();
+
+		// chance to expand every 256 rounds of activities, after which activity count will return to 0 (overflow behaviour)
+		if(  (++activity_count)==0  ) {
+			if(  desc->get_field_group()  ) {
+				if(  fields.get_count()<desc->get_field_group()->get_max_fields()  ) {
+					// spawn new field with given probability
+					add_random_field(desc->get_field_group()->get_probability());
+				}
+			}
+			else {
+				if(  times_expanded<desc->get_expand_times()  ) {
+					if(  simrand(10000, "fabrik_t::step (expand 1)")<desc->get_expand_probability()  ) {
+						set_base_production( prodbase + desc->get_expand_minumum() + simrand( desc->get_expand_range(), "fabrik_t::step (expand 2)" ) );
+						++times_expanded;
+					}
+				}
+			}
+		}
+
+		INT_CHECK("simfab 558");
+		// reset for next cycle
+		delta_amount = 0;
+	}
+}
+
+void fabrik_t::advance_slot(uint32 delta_t){
 	/// advance arrival slot at calculated interval and recalculate boost where necessary
 	delta_slot += delta_t;
 	const sint32 periods = welt->get_settings().get_factory_arrival_periods();
@@ -2448,6 +2594,9 @@ void fabrik_t::step(uint32 delta_t)
 	}
 }
 
+void fabrik_t::distribute_contracts(uint32 delta_t){
+
+}
 
 class distribute_ware_t
 {

@@ -915,6 +915,12 @@ public:
 	bool out_of_stock_selective();
 
 	void step(uint32 delta_t);                  // factory muss auch arbeiten ("factory must also work")
+	void step_contracts(uint32 delta_t);
+
+	void distribute_contracts(uint32 delta_t);
+
+	void rescale_delta();
+	void advance_slot(uint32 delta_t);
 
 	void new_month();
 
@@ -1021,7 +1027,8 @@ public:
 	// returns the current productivity including the effect of staff shortage
 	sint32 get_actual_productivity() const { return status == inactive ? 0 : is_staff_shortage() ? get_current_productivity() * get_staffing_level_percentage() / 100 : get_current_productivity(); }
 
-	sint32 get_monthly_production(const sint32 pfactor) const {
+	//TODO fix rounding
+	sint32 get_monthly_production(const sint32 pfactor=256) const {
 		return (uint32)(get_current_production()*pfactor << (fabrik_t::precision_bits - DEFAULT_PRODUCTION_FACTOR_BITS));
 	}
 

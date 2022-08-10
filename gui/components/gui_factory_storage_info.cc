@@ -62,9 +62,9 @@ void gui_factory_storage_info_t::draw(scr_coord offset)
 				const bool is_available = world()->get_goods_list().is_contained(goods.get_typ());
 
 				const sint64 pfactor = fab->get_desc()->get_supplier(i) ? (sint64)fab->get_desc()->get_supplier(i)->get_consumption() : 1ll;
-				const sint64 max_transit = (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max_transit * pfactor) >> (fabrik_t::precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
-				const uint32 stock_quantity = (uint32)goods.get_storage();
-				const uint32 storage_capacity = (uint32)goods.get_capacity(pfactor);
+				const sint64 max_transit = welt->get_settings().using_fab_contracts() ? goods.max_transit : (uint32)((FAB_DISPLAY_UNIT_HALF + (sint64)goods.max_transit * pfactor) >> (fabrik_t::precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS));
+				const uint32 stock_quantity = welt->get_settings().using_fab_contracts() ? goods.menge : (uint32)goods.get_storage();
+				const uint32 storage_capacity = welt->get_settings().using_fab_contracts() ? goods.max : (uint32)goods.get_capacity(pfactor);
 				const PIXVAL goods_color = goods.get_typ()->get_color();
 
 				left = 2;
@@ -165,8 +165,8 @@ void gui_factory_storage_info_t::draw(scr_coord offset)
 			int i = 0;
 			FORX(array_tpl<ware_production_t>, const& goods, fab->get_output(), i++) {
 				const sint64 pfactor = (sint64)fab->get_desc()->get_product(i)->get_factor();
-				const uint32 stock_quantity   = (uint32)goods.get_storage();
-				const uint32 storage_capacity = (uint32)goods.get_capacity(pfactor);
+				const uint32 stock_quantity   = welt->get_settings().using_fab_contracts() ? goods.menge : (uint32)goods.get_storage();
+				const uint32 storage_capacity = welt->get_settings().using_fab_contracts() ? goods.max : (uint32)goods.get_capacity(pfactor);
 				const PIXVAL goods_color  = goods.get_typ()->get_color();
 				left = 2;
 				yoff+=2; // box position adjistment
