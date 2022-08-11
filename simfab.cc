@@ -2438,12 +2438,13 @@ void fabrik_t::step_contracts(uint32 delta_t){
 		//consume and/or produce stock based on industry type
 		if(output.empty() && (desc->is_electricity_producer() || desc->get_building()->get_population_and_visitor_demand_capacity() == 0)){
 			//power plant or utility
-			if (desc->is_electricity_producer()) {
-				// power station => start with no production
-				power = 0;
-			}
 
 			if(step_production_max){
+				if (desc->is_electricity_producer()) {
+					// power station => start with no production
+					power = 0;
+				}
+
 				//consume each good type
 				for(uint32 i = 0; i < input.get_count(); i++){
 					uint32 this_consumption;
@@ -2461,7 +2462,7 @@ void fabrik_t::step_contracts(uint32 delta_t){
 					if (desc->is_electricity_producer())
 					{
 						// power station => produce power
-						power += (uint32)(((sint64)scaled_electric_demand * (sint64)(DEFAULT_PRODUCTION_FACTOR + prodfactor_pax + prodfactor_mail)));
+						power += (uint32)(((sint64)scaled_electric_demand * (sint64)(DEFAULT_PRODUCTION_FACTOR + prodfactor_pax + prodfactor_mail))) * step_production;
 					}
 
 					input[i].menge-=this_consumption;
