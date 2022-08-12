@@ -2532,10 +2532,11 @@ void fabrik_t::step_contracts(uint32 delta_t){
 		power = 0;
 	}
 
+	distribute_contracts(delta_t);
+
 	delta_t_sum += delta_t;
 	if(delta_t_sum > PRODUCTION_DELTA_T){
 		delta_t_sum %= PRODUCTION_DELTA_T;
-		distribute_contracts(delta_t);
 		recalc_factory_status();
 		rescale_delta();
 	}
@@ -2596,7 +2597,76 @@ void fabrik_t::advance_slot(uint32 delta_t){
 }
 
 void fabrik_t::distribute_contracts(uint32 delta_t){
+	uint64 current_ticks=welt->get_ticks();
+	uint64 last_ticks=welt->get_ticks()-delta_t;
 
+	for(uint32 j = 0; j < output.get_count(); j++){
+		for(uint32 i = 0; i < output[j].link_count(); i++){
+			uint64 monthly_contract=output[j].get_contract(i);
+			uint64 current_tonnes=current_ticks * monthly_contract / (welt->ticks_per_world_month << fabrik_t::precision_bits);
+			current_tonnes-=last_ticks * monthly_contract / (welt->ticks_per_world_month << fabrik_t::precision_bits);
+			if(current_tonnes && output[j].menge >= (sint32)(current_tonnes << fabrik_t::precision_bits)){
+				koord consumer_pos=output[j].link_from_index(i);
+				if (shortest_distance(consumer_pos, pos.get_2d()) <= welt->get_settings().get_station_coverage_factories()
+						&& get_fab(consumer_pos)
+						&& get_desc()->get_placement() != factory_desc_t::Water)
+				{
+					//walk toods to destination
+					fabrik_t* consumer=get_fab(consumer_pos);
+					if(ware_production_t* input_ware=consumer->get_input(output[j].get_typ())){
+						if(input_ware->menge > input_ware->max){
+							//destination full
+							continue;
+						}
+						ware_t ware(output[j].get_typ());
+						ware.menge=current_tonnes;
+						ware.set_zielpos(consumer_pos);
+
+						world()->add_to_waiting_list(ware, get_pos().get_2d());
+						fabrik_t::update_transit( ware, true );
+						// add as active destination
+						set_consumer_active_at(ware.get_zielpos());
+
+						output[j].menge-=ware.menge << fabrik_t::precision_bits;
+						output[j].book_stat(ware.menge, FAB_GOODS_DELIVERED);
+					}
+				}else{
+					//send to station
+
+					//find station with most free space that has path to destination
+					sint32 max_freespace_ratio=0;
+					ware_t best_ware;
+					halthandle_t best_halt;
+					for(auto nearby_halt : nearby_freight_halts){
+						ware_t ware(output[j].get_typ(),nearby_halt.halt);
+						ware.menge=current_tonnes;
+						ware.set_zielpos(output[j].link_from_index(i));
+
+						if(nearby_halt.halt->find_route(ware)){
+							const sint32 halt_capacity = nearby_halt.halt->get_capacity(2);
+							const sint32 halt_left = halt_capacity - (sint32)nearby_halt.halt->get_ware_summe(ware.get_desc());
+							sint32 halt_freespace_ratio = halt_capacity ? (halt_left << fabrik_t::precision_bits) / halt_capacity : 0;
+							if(halt_freespace_ratio > max_freespace_ratio){
+								max_freespace_ratio=halt_freespace_ratio;
+								best_ware=ware;
+								best_halt=nearby_halt.halt;
+							}
+						}
+					}
+
+					//if halt found with free space, send the goods
+					if(max_freespace_ratio>0){
+						best_halt->starte_mit_route(best_ware, get_pos().get_2d());
+						best_halt->recalc_status();
+						fabrik_t::update_transit( best_ware, true );
+						set_consumer_active_at(best_ware.get_zielpos());
+						output[j].menge-=best_ware.menge << fabrik_t::precision_bits;
+						output[j].book_stat(best_ware.menge, FAB_GOODS_DELIVERED);
+					}
+				}
+			}
+		}
+	}
 }
 
 class distribute_ware_t
