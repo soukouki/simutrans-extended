@@ -1082,6 +1082,11 @@ int factory_builder_t::build_chain_link(const fabrik_t* origin_fab, const factor
  */
 int factory_builder_t::increase_industry_density( bool tell_me, bool do_not_add_beyond_target_density, bool power_stations_only, uint32 force_consumer )
 {
+	if(welt->get_settings().using_fab_contracts()){
+		//TODO
+		return 0;
+	}
+
 	int nr = 0;
 
 	// TODO: This is a somewhat hackish mechanism for ensuring that there are sufficient consumer industries.
