@@ -307,10 +307,10 @@ void fabrik_t::book_weighted_sums()
 {
 	// storage level of input/output stores
 	for (uint32 in = 0; in < input.get_count(); in++) {
-		input[in].book_weighted_sum_storage(welt->get_settings().using_fab_contracts() ? 1 : desc->get_supplier(in)->get_consumption());
+		input[in].book_weighted_sum_storage(welt->get_settings().using_fab_contracts() ? (1 << fabrik_t::precision_bits) : desc->get_supplier(in)->get_consumption());
 	}
 	for (uint32 out = 0; out < output.get_count(); out++) {
-		output[out].book_weighted_sum_storage(welt->get_settings().using_fab_contracts() ? 1 : desc->get_product(out)->get_factor());
+		output[out].book_weighted_sum_storage(welt->get_settings().using_fab_contracts() ? (1 << fabrik_t::precision_bits) : desc->get_product(out)->get_factor());
 	}
 
 	// production rate
@@ -1876,8 +1876,20 @@ sint32 fabrik_t::liefere_an(const goods_desc_t *typ, sint32 menge)
 	else {
 		// case : freight
 		if(welt->get_settings().using_fab_contracts()){
-			//TODO
-			return menge;
+			if(ware_production_t *ware = get_input(typ)){
+				ware->menge+=menge<<fabrik_t::precision_bits;
+				ware->book_stat_no_negative(-menge, FAB_GOODS_TRANSIT);
+
+				//do not overflow
+				if(ware->menge > (FAB_MAX_INPUT << fabrik_t::precision_bits)){
+					menge-=FAB_MAX_INPUT - (ware->menge >> fabrik_t::precision_bits);
+					ware->menge = (FAB_MAX_INPUT << fabrik_t::precision_bits);
+				}
+
+				ware->book_stat(menge, FAB_GOODS_RECEIVED);
+				return menge;
+			}
+			return -1;
 		}
 
 		for (uint32 in = 0; in < input.get_count(); in++) {
