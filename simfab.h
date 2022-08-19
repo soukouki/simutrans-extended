@@ -180,14 +180,25 @@ public:
 	void add_contract(uint32 idx, sint32 diff){
 		assert(using_contracts);
 		link_aux[idx]+=diff;
-	}void sub_contract(uint32 idx, sint32 diff){
+		assert(link_aux[idx]>=0);
+	}
+	void sub_contract(uint32 idx, sint32 diff){
 		assert(using_contracts);
 		link_aux[idx]-=diff;
+		assert(link_aux[idx]>=0);
 	}
 
+	static void add_contracts(sint32 additon, ware_production_t& ware_in, ware_production_t& ware_out, uint32 output_index, sint32 max_output);
+
 	void reset_total_contracts(){total_contracts=0;}
-	void add_total_contracts(sint32 diff){total_contracts+=diff;}
-	void sub_total_contracts(sint32 diff){total_contracts-=diff;}
+	void add_total_contracts(sint32 diff){
+		total_contracts+=diff;
+		assert(total_contracts>=0);
+	}
+	void sub_total_contracts(sint32 diff){
+		total_contracts-=diff;
+		assert(total_contracts>=0);
+	}
 
 	sint32 get_total_contracts() const {return total_contracts;}
 

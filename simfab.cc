@@ -191,6 +191,41 @@ void ware_production_t::book_weighted_sum_storage(uint32 factor)
 	set_stat(amount, FAB_GOODS_STORAGE);
 }
 
+void ware_production_t::add_contracts(sint32 add, ware_production_t &ware_in, ware_production_t &ware_out, uint32 index, sint32 max_output){
+	const sint32 min_cont=256;
+
+	sint32 cont = ware_out.get_contract(index);
+	sint32 total_in = ware_in.get_total_contracts();
+	sint32 total_out = ware_out.get_total_contracts();
+
+	assert(cont <= total_in);
+	assert(cont <= total_out);
+
+	//avoid adding contracts beyond current production
+	if(add>0 && total_out + add > max_output){
+		add = max_output - total_out;
+	}
+
+	//total contracts must remain above zero
+	if(add<-total_in){
+		add=-total_in;
+	}
+	if(add<-total_out){
+		add=-total_out;
+	}
+
+	//contract must be zero or greater than min contract
+	if(cont+add < min_cont/2){
+		add = -cont;
+	}else if(cont + add < min_cont){
+		add = min_cont - cont;
+	}
+
+	//adjust the contract documents
+	ware_in.add_total_contracts(add);
+	ware_out.add_contract(index,add);
+	ware_out.add_total_contracts(add);
+}
 
 void fabrik_t::arrival_statistics_t::init()
 {
@@ -2654,7 +2689,7 @@ void fabrik_t::distribute_contracts(uint32 delta_t){
 						ware.menge=current_tonnes;
 						ware.set_zielpos(output[j].link_from_index(i));
 
-						if(nearby_halt.halt->find_route(ware)){
+						if(nearby_halt.halt->find_route(ware) != UINT32_MAX_VALUE){
 							const sint32 halt_capacity = nearby_halt.halt->get_capacity(2);
 							const sint32 halt_left = halt_capacity - (sint32)nearby_halt.halt->get_ware_summe(ware.get_desc());
 							sint32 halt_freespace_ratio = halt_capacity ? (halt_left << fabrik_t::precision_bits) / halt_capacity : 0;
@@ -3366,11 +3401,9 @@ void fabrik_t::negotiate_contracts(){
 				}
 				if(fabrik_t* affected_fab = get_fab(output[i].link_from_index(j))){
 					if(auto affected_ware = affected_fab->get_input(output[i].get_typ())){
-							affected_ware->sub_total_contracts(this_removal);
+						ware_production_t::add_contracts(-this_removal,*affected_ware,output[i],j,monthly_prod);
 					}
 				}
-				output[i].sub_total_contracts(this_removal);
-				output[i].sub_contract(j,this_removal);
 			}
 		}
 	}
@@ -3391,7 +3424,7 @@ void fabrik_t::negotiate_contracts(){
 				if(contract_diff==0){
 					break;
 				}
-				sint32 average_addition=max((contract_diff + (j+1)/2) / (j+1),1);
+				sint32 average_addition=(contract_diff + ((sint32)j+1)/2) / ((sint32)j+1);
 				sint32 this_addition=average_addition;
 				//verify that contract exists in first place and add to or reduce from it
 				if(fabrik_t* affected_fab = get_fab(input[i].link_from_index(j))){
@@ -3401,29 +3434,20 @@ void fabrik_t::negotiate_contracts(){
 								//check for maximum output
 								const sint64 affected_pfactor=affected_fab->get_desc()->get_product(affected_ware->get_typ())->get_factor();
 								const sint32 affected_prod=affected_fab->get_monthly_production(affected_pfactor);
-								if(affected_prod - affected_ware->get_total_contracts() < this_addition){
-									this_addition = affected_prod - affected_ware->get_total_contracts();
-								}else if(affected_ware->get_total_contracts() + this_addition < 0){
-									this_addition=affected_ware->get_total_contracts();
-								}else if(this_addition>0){
-									untapped_sources += affected_prod - affected_ware->get_total_contracts() - this_addition;
-								}
-
-								affected_ware->add_contract(k,this_addition);
-								affected_ware->add_total_contracts(this_addition);
+								ware_production_t::add_contracts(this_addition,input[i],*affected_ware,k,affected_prod);
+								untapped_sources+=affected_prod - affected_ware->get_total_contracts();
+								break;
 							}
 						}
 					}
 				}
-
-				input[i].add_total_contracts(this_addition);
 			}
 			monthly_cont = input[i].get_total_contracts();
 			if(monthly_prod > monthly_cont && untapped_sources){
 				//Still too little, try to fill more agressively
 				for(uint32 j = 0; j < input[i].link_count(); j++){
 					sint32 contract_diff=monthly_prod - input[i].get_total_contracts();
-					if(contract_diff==0){
+					if(contract_diff<=0){
 						break;
 					}
 					sint32 this_addition=contract_diff;
@@ -3434,18 +3458,12 @@ void fabrik_t::negotiate_contracts(){
 									//check for maximum output
 									const sint64 affected_pfactor=affected_fab->get_desc()->get_product(affected_ware->get_typ())->get_factor();
 									const sint32 affected_prod=affected_fab->get_monthly_production(affected_pfactor);
-									if(affected_prod - affected_ware->get_total_contracts() < this_addition){
-										this_addition = affected_prod - affected_ware->get_total_contracts();
-									}
-
-									affected_ware->add_contract(k,this_addition);
-									affected_ware->add_total_contracts(this_addition);
+									ware_production_t::add_contracts(this_addition,input[i],*affected_ware,k,affected_prod);
+									break;
 								}
 							}
 						}
 					}
-
-					input[i].add_total_contracts(this_addition);
 				}
 			}
 		}
