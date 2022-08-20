@@ -3388,11 +3388,12 @@ void fabrik_t::negotiate_contracts(){
 		const sint64 pfactor = (sint64)get_desc()->get_product(i)->get_factor();
 		const sint32 monthly_prod = get_monthly_production(pfactor);
 		const sint32 monthly_cont = output[i].get_total_contracts();
-		if(monthly_prod < monthly_cont){
+		//check for too much or far too few output contracts
+		if(monthly_prod < monthly_cont || monthly_prod > monthly_cont * 8){
 			//reduce contracts starting with furthest factory
 			for(uint32 j = output[i].link_count()-1; j < output[i].link_count(); j--){
 				sint32 contract_diff=output[i].get_total_contracts() - monthly_prod;
-				sint32 average_removal=(j+1 + contract_diff) / (j+1);
+				sint32 average_removal=(((sint32)j+1)/2 + contract_diff) / ((sint32)j+1);
 				sint32 this_removal;
 				if(output[i].get_contract(j) > average_removal){
 					this_removal=average_removal;
@@ -3401,19 +3402,43 @@ void fabrik_t::negotiate_contracts(){
 				}
 				if(fabrik_t* affected_fab = get_fab(output[i].link_from_index(j))){
 					if(auto affected_ware = affected_fab->get_input(output[i].get_typ())){
+						const sint64 affected_pfactor=affected_fab->get_desc()->get_supplier(affected_ware->get_typ())->get_consumption();
+						const sint32 affected_prod=affected_fab->get_monthly_production(affected_pfactor);
+						const sint32 affected_cont=affected_ware->get_total_contracts();
+						if(affected_prod - this_removal > affected_cont){
+							this_removal = affected_prod - affected_cont;
+						}
 						ware_production_t::add_contracts(-this_removal,*affected_ware,output[i],j,monthly_prod);
 					}
 				}
 			}
 		}
 	}
-
+	//for manufacturers determine determine factor of used output for input to be adjusted acordingly
+	sint32 manufacturing_factor=0;
+	if(input.get_count() && output.get_count()){
+		for(uint32 i = 0; i < output.get_count(); i++){
+			const sint64 pfactor = (sint64)get_desc()->get_product(i)->get_factor();
+			sint32 monthly_prod = get_monthly_production(pfactor);
+			sint32 this_factor = (DEFAULT_PRODUCTION_FACTOR * output[i].get_total_contracts()) / monthly_prod;
+			if(this_factor>manufacturing_factor){
+				manufacturing_factor=this_factor;
+			}
+		}
+	}
 	//check input to increase or decrease contracts as needed
 	for(uint32 i = 0; i < input.get_count(); i++){
 		const sint64 pfactor = (sint64)get_desc()->get_supplier(i)->get_consumption();
 		sint32 monthly_prod = get_monthly_production(pfactor);
 		monthly_prod = max(adjust_consumption_by_passenger_level(monthly_prod),1 << fabrik_t::precision_bits); //scale consumption by customers
-		//TODO scale down used monthly production figure when intransit levels are too high
+		//manufacturers only need enough input to supply for their output
+		if(manufacturing_factor && manufacturing_factor<DEFAULT_PRODUCTION_FACTOR){
+			monthly_prod=(monthly_prod * manufacturing_factor) / DEFAULT_PRODUCTION_FACTOR;
+		}
+		//scale down used monthly production figure when intransit levels are too high
+		if(input[i].get_in_transit() > input[i].max_transit){
+			monthly_prod=(monthly_prod * input[i].max_transit) / input[i].get_in_transit();
+		}
 		sint32 monthly_cont = input[i].get_total_contracts();
 		if(monthly_prod * 10 < monthly_cont * 11 || monthly_prod > monthly_cont){
 			//too little input
