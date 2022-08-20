@@ -3441,8 +3441,34 @@ void fabrik_t::negotiate_contracts(){
 		}
 		sint32 monthly_cont = input[i].get_total_contracts();
 		if(monthly_prod * 10 < monthly_cont * 11 || monthly_prod > monthly_cont){
-			//too little input
-			//add or remove some contracts starting with farthest
+			//too little or too much input
+			//start by adding to active staffed supliers or removing from unstaffed or inactive supliers
+			for(uint32 j = input[i].link_count()-1; j < input[i].link_count(); j--){
+				sint32 contract_diff=monthly_prod - input[i].get_total_contracts();
+				if(contract_diff==0){
+					break;
+				}
+				sint32 average_addition=(contract_diff + ((sint32)j+1)/2) / ((sint32)j+1);
+				sint32 this_addition=average_addition;
+				//verify that contract exists in first place and add to or reduce from it
+				if(fabrik_t* affected_fab = get_fab(input[i].link_from_index(j))){
+					if((this_addition>0 ? 1 : 0) ^ ((affected_fab->get_status()==fabrik_t::inactive || affected_fab->is_staff_shortage()) ? 1 : 0)){
+						if(auto affected_ware = affected_fab->get_output(input[i].get_typ())){
+							for(uint32 k = 0; k < affected_ware->link_count(); k++){
+								if(affected_ware->link_from_index(k) == get_pos().get_2d()){
+									//check for maximum output
+									const sint64 affected_pfactor=affected_fab->get_desc()->get_product(affected_ware->get_typ())->get_factor();
+									const sint32 affected_prod=affected_fab->get_monthly_production(affected_pfactor);
+									ware_production_t::add_contracts(this_addition,input[i],*affected_ware,k,affected_prod);
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+			monthly_cont = input[i].get_total_contracts();
+			//then add or remove from all linked suppliers
 			sint32 untapped_sources=0;
 			for(uint32 j = input[i].link_count()-1; j < input[i].link_count(); j--){
 				sint32 contract_diff=monthly_prod - input[i].get_total_contracts();
@@ -3490,6 +3516,11 @@ void fabrik_t::negotiate_contracts(){
 						}
 					}
 				}
+			}
+			monthly_cont = input[i].get_total_contracts();
+			if(monthly_prod > monthly_cont){
+				//TODO still too little, but all linked supliers exausted
+				//Call functions to try to find another suplier(s) to link to
 			}
 		}
 	}
