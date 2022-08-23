@@ -655,17 +655,21 @@ void fabrik_t::add_consumer(koord ziel, const goods_desc_t *desc, const sint64 c
 {
 	for( auto& ware : get_output()){
 		if(ware.get_typ()==desc){
-			ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()),contract);
 			if(fabrik_t *fab = get_fab( ziel )){
-				fab->add_supplier(get_pos().get_2d(),desc);
+				if(auto dest_ware = fab->get_input(ware.get_typ())){
+					ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()),contract);
+					ware.add_total_contracts(contract);
+					dest_ware->add_total_contracts(contract);
+					fab->add_supplier(get_pos().get_2d(),desc);
+				}
 			}
 		}else if(!desc){
 			if(fabrik_t *fab = get_fab( ziel )){
-				for(auto &dest_ware : fab->get_input()){
-					if(dest_ware.get_typ() == ware.get_typ()){
-						ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()),contract);
-						fab->add_supplier(get_pos().get_2d(),ware.get_typ());
-					}
+				if(auto dest_ware = fab->get_input(ware.get_typ())){
+					ware.link_add(ziel, RelativeDistanceOrdering(pos.get_2d()),contract);
+					ware.add_total_contracts(contract);
+					dest_ware->add_total_contracts(contract);
+					fab->add_supplier(get_pos().get_2d(),ware.get_typ());
 				}
 			}
 		}
@@ -736,12 +740,26 @@ bool fabrik_t::disconnect_supplier(koord supplier_pos) //Returns true if must be
 		remove_supplier(supplier_pos);
 	}
 
+	//try to connect with a supplier capable of supplying the goods
+	if(welt->get_settings().using_fab_contracts()){
+		for(uint32 i = 0; i < input.get_count(); i++){
+			auto &ware=input[i];
+			if(!ware.link_count()){
+				factory_builder_t::build_chain_link(this,this->get_desc(),i,welt->get_public_player(),true);
+			}
+		}
+	}
+
 	vector_tpl<const goods_desc_t*> unfulfilled_requirements;
 	// Check to ensure that all supply types are still connected
 
-	for(auto &ware : input){
+	for(uint32 i = 0; i < input.get_count(); i++){
+		auto &ware=input[i];
 		if(!ware.link_count()){
 			unfulfilled_requirements.append(ware.get_typ());
+			if(welt->get_settings().using_fab_contracts()){
+
+			}
 		}
 	}
 
@@ -3405,8 +3423,8 @@ void fabrik_t::negotiate_contracts(){
 						const sint64 affected_pfactor=affected_fab->get_desc()->get_supplier(affected_ware->get_typ())->get_consumption();
 						const sint32 affected_prod=affected_fab->get_monthly_production(affected_pfactor);
 						const sint32 affected_cont=affected_ware->get_total_contracts();
-						if(affected_prod - this_removal > affected_cont){
-							this_removal = affected_prod - affected_cont;
+						if(affected_cont - this_removal > affected_prod){
+							this_removal = affected_cont - affected_prod;
 						}
 						ware_production_t::add_contracts(-this_removal,*affected_ware,output[i],j,monthly_prod);
 					}
@@ -3519,8 +3537,9 @@ void fabrik_t::negotiate_contracts(){
 			}
 			monthly_cont = input[i].get_total_contracts();
 			if(monthly_prod > monthly_cont){
-				//TODO still too little, but all linked supliers exausted
+				//still too little, but all linked supliers exausted
 				//Call functions to try to find another suplier(s) to link to
+				factory_builder_t::build_chain_link(this,this->get_desc(),i,welt->get_public_player(),true);
 			}
 		}
 	}

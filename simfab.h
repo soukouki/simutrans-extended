@@ -1009,6 +1009,15 @@ public:
 		return NULL;
 	}
 
+	const ware_production_t* get_input(const goods_desc_t* ware) const{
+		for(uint32 i = 0; i < input.get_count(); i++){
+			if(input[i].get_typ()==ware){
+				return &(input[i]);
+			}
+		}
+		return NULL;
+	}
+
 	ware_production_t* get_output(const goods_desc_t* ware){
 		for(uint32 i = 0; i < output.get_count(); i++){
 			if(output[i].get_typ()==ware){

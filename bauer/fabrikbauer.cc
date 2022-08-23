@@ -894,18 +894,22 @@ int factory_builder_t::build_chain_link(const fabrik_t* origin_fab, const factor
 				const factory_desc_t* const fab_desc = fab->get_desc();
 				for (uint product_num = 0; product_num < fab_desc->get_product_count(); product_num++) {
 					const factory_product_desc_t *const product_desc = fab_desc->get_product(product_num);
-					if (product_desc->get_output_type() == ware && fab->get_consumers().get_count() < 10) { // does not make sense to split into more ...
+					if (product_desc->get_output_type() == ware && (fab->get_consumers().get_count() < 10 || welt->get_settings().using_fab_contracts())) { // does not make sense to split into more ...
 						sint32 production_left = fab->get_base_production() * product_desc->get_factor();
 
 						// decrease remaining production by supplier demand
-						for(auto const & consumer_pos : fab->get_consumers()) {
-							if (production_left <= 0) break;
-							fabrik_t* const consumer = fabrik_t::get_fab(consumer_pos);
-							for(int supplier_num=0; supplier_num < consumer->get_desc()->get_supplier_count(); supplier_num++) {
-								const factory_supplier_desc_t *this_supplier = consumer->get_desc()->get_supplier(supplier_num);
-								if(this_supplier->get_input_type() == ware) {
-									production_left -= consumer->get_base_production() * this_supplier->get_consumption();
-									break;
+						if(welt->get_settings().using_fab_contracts()){
+							production_left-=fab->get_output(ware)->get_total_contracts();
+						}else{
+							for(auto const & consumer_pos : fab->get_consumers()) {
+								if (production_left <= 0) break;
+								fabrik_t* const consumer = fabrik_t::get_fab(consumer_pos);
+								for(int supplier_num=0; supplier_num < consumer->get_desc()->get_supplier_count(); supplier_num++) {
+									const factory_supplier_desc_t *this_supplier = consumer->get_desc()->get_supplier(supplier_num);
+									if(this_supplier->get_input_type() == ware) {
+										production_left -= consumer->get_base_production() * this_supplier->get_consumption();
+										break;
+									}
 								}
 							}
 						}
@@ -915,7 +919,7 @@ int factory_builder_t::build_chain_link(const fabrik_t* origin_fab, const factor
 
 							if(production_left>0) {
 								consumption -= production_left;
-								fab->add_consumer(origin_fab->get_pos().get_2d());
+								fab->add_consumer(origin_fab->get_pos().get_2d(),ware,production_left);
 								DBG_MESSAGE("factory_builder_t::build_link", "supplier %s can supply approx %i of %s to us", fab_desc->get_name(), production_left, ware->get_name());
 							}
 							else {
