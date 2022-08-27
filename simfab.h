@@ -376,6 +376,8 @@ public:
 			}
 			i-= ware.link_count();
 		}
+
+		return koord::invalid;
 	}
 
 	uint32 index_of(koord k) const {
