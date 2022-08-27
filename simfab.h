@@ -115,7 +115,7 @@ public:
 
 	// functions for manipulating goods statistics
 	void roll_stats(uint32 factor);
-	void rdwr(loadsave_t *file);
+	void rdwr(loadsave_t *file, uint8 sub_version=0);
 	const sint64* get_stats() const { return *statistics; }
 	void book_stat(sint64 value, int stat_type) { assert(stat_type<MAX_FAB_GOODS_STAT); statistics[0][stat_type] += value; }
 	void book_stat_no_negative(sint64 value, int stat_type) { assert(stat_type < MAX_FAB_GOODS_STAT); statistics[0][stat_type] += (std::max(value, -statistics[0][stat_type])); }
@@ -172,6 +172,10 @@ public:
 		using_contracts=false;
 	}
 
+	bool get_using_contracts(){
+		return using_contracts;
+	}
+
 	sint32 get_contract(uint32 idx){ return using_contracts ? link_aux[idx] : 0;}
 	void set_contract(uint32 idx, sint32 contract){
 		assert(using_contracts);
@@ -217,7 +221,7 @@ public:
 			}
 		}
 		links.insert_at(high,pos);
-		if(using_contracts){
+		if(using_contracts && aux!=0xFFFFFFFF){
 			link_aux.insert_at(high,aux);
 		}
 	}
