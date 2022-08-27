@@ -7829,6 +7829,10 @@ const char *tool_build_depot_t::work( player_t *player, koord3d pos )
  */
 bool tool_build_house_t::init( player_t * )
 {
+	if (default_param && strlen(default_param) < 4) {
+		return false;
+	}
+
 	if (is_local_execution() && !strempty(default_param)) {
 		const char *c = default_param+3;
 		const building_tile_desc_t *tile = hausbauer_t::find_tile(c,0);
