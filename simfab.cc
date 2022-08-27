@@ -4295,14 +4295,15 @@ void fabrik_t::calc_max_intransit_percentages()
 
 		const factory_supplier_desc_t* flb = desc->get_supplier(index);
 		const uint32 vb = flb ? flb->get_consumption() : 0;
+
 		const sint32 base_production = get_current_production();
-		uint64 consumed_per_month = max((uint64)base_production * (uint64)vb, 256);
+		uint64 consumed_per_month = max((uint64)base_production, 1);
 
 		consumed_per_month = adjust_consumption_by_passenger_level(consumed_per_month);
 		uint64 max_transit = max(consumed_per_month,256);
 		max_transit *= base_max_intransit_percentage;
 		max_transit *= lead_time;
-		max_transit *= 16384;
+		max_transit *= 16384*256;
 		max_transit /= 3 * (uint64)welt->get_settings().meters_per_tile * welt->ticks_per_world_month;
 		input[index].max_transit = max_transit;
 		index ++;
