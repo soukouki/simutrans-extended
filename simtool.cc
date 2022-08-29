@@ -4435,6 +4435,7 @@ const char *tool_wayremover_t::do_work( player_t *player, const koord3d &start, 
 							gr = gr_new;
 						}
 
+						weg = gr->get_weg(wt);
 						if(weg)
 						{
 							weg->count_sign();
