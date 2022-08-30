@@ -3312,6 +3312,10 @@ void fabrik_t::new_month()
 						}
 						if(!keep_ware){
 							for(uint32 i = ware.link_count()-1; i < ware.link_count(); i--){
+								fabrik_t* affected_fab = get_fab(ware.link_from_index(i));
+								if(affected_fab){
+									affected_fab->disconnect_consumer(get_pos().get_2d());
+								}
 								must_close = disconnect_supplier(ware.link_from_index(i));
 								disconnect_supplier_checked=true;
 							}
@@ -3370,6 +3374,9 @@ void fabrik_t::new_month()
 							}
 							if(!keep_ware){
 								for(uint32 i = ware.link_count()-1; i < ware.link_count(); i--){
+									if(fabrik_t* affected_fab = get_fab(ware.link_from_index(i))){
+										affected_fab->disconnect_supplier(get_pos().get_2d(),this);
+									}
 									must_close = disconnect_consumer(ware.link_from_index(i));
 									disconnect_supplier_checked=true;
 								}
