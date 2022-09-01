@@ -983,7 +983,7 @@ route_t::route_result_t route_t::intern_calc_route(karte_t *welt, const koord3d 
 					check_axle_load:
 						bridge_tile_count = 0;
 						const uint32 way_max_axle_load = w->get_max_axle_load();
-						max_axle_load = min(max_axle_load, way_max_axle_load);
+						max_axle_load = std::min(max_axle_load, way_max_axle_load);
 						if (axle_load > way_max_axle_load)
 						{
 							switch (enforce_weight_limits)
