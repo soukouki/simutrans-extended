@@ -2925,12 +2925,12 @@ uint32 vehicle_t::calc_sale_value() const
 	// after 20 years, it has only half value
 	// Multiply by .997**number of months
 	// Make sure to use OUR version of pow().
-	float32e8_t age_in_months = welt->get_current_month() - get_purchase_time();
+	const float32e8_t age_in_months = welt->get_current_month() - get_purchase_time();
 	static const float32e8_t base_of_exponent(997, 1000);
 	value *= pow(base_of_exponent, age_in_months);
 
 	// Convert back to integer
-	return (uint32) value;
+	return value.to_sint32();
 }
 
 void

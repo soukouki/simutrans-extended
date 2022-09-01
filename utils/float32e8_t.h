@@ -323,7 +323,7 @@ public:
 	sint32 to_sint32() const;
 	//const string to_string() const;
 
-	inline operator sint32 () const { return to_sint32(); }
+	explicit inline operator sint32 () const { return to_sint32(); }
 };
 
 std::ostream &operator << (std::ostream &out, const float32e8_t &x);

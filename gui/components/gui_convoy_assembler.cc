@@ -1773,8 +1773,8 @@ void gui_convoy_assembler_t::update_convoi()
 		lb_convoi_brake_force.buf().printf("%4.2f kN", convoy.get_braking_force().to_double() / 1000.0);
 		lb_convoi_brake_force.update();
 
-		const sint32 brake_distance_min = convoy.calc_min_braking_distance(weight_summary_t(min_weight, friction), kmh2ms * max_speed);
-		const sint32 brake_distance_max = convoy.calc_min_braking_distance(weight_summary_t(max_weight, friction), kmh2ms * max_speed);
+		const sint32 brake_distance_min = convoy.calc_min_braking_distance(weight_summary_t(min_weight, friction), kmh2ms * max_speed).to_sint32();
+		const sint32 brake_distance_max = convoy.calc_min_braking_distance(weight_summary_t(max_weight, friction), kmh2ms * max_speed).to_sint32();
 		lb_convoi_brake_distance.buf().printf(
 			brake_distance_min == brake_distance_max ? translator::translate("brakes from max. speed in %i m") : translator::translate("brakes from max. speed in %i - %i m"),
 			brake_distance_min, brake_distance_max);
