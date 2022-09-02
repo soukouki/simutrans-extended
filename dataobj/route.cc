@@ -242,10 +242,10 @@ bool route_t::find_route(karte_t *welt, const koord3d start, test_driver_t *tdri
 	const grund_t* gr = NULL;
 	sint32 bridge_tile_count = 0;
 
-	fabrik_t* destination_industry;
-	const gebaeude_t* destination_attraction;
-	const stadt_t* destination_city;
-	const stadt_t* current_city;
+	fabrik_t* destination_industry = NULL;
+	const gebaeude_t* destination_attraction = NULL;
+	const stadt_t* destination_city = NULL;
+	const stadt_t* current_city = NULL;
 	stadt_t* origin_city = NULL;
 	bool reached_target = false;
 
