@@ -756,6 +756,8 @@ bool roadsign_t::check_one_tran_staff_reservation(koord3d pos) const
 	return false;
 }
 
+
+#ifdef MULTI_THREAD
 void roadsign_t::display_overlay(int xpos, int ypos) const
 {
 	if (strasse_t::show_masked_ribi) {
@@ -858,6 +860,8 @@ void roadsign_t::display_overlay(int xpos, int ypos) const
 		}
 	}
 }
+#endif // MULTI_THREAD
+
 
 void roadsign_t::rdwr(loadsave_t *file)
 {
