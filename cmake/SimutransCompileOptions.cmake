@@ -135,6 +135,7 @@ else (MSVC) # Assume GCC/Clang
 		-Walloca
 		-Wduplicated-cond
 		-Werror=unused-comparison
+		-Werror=return-type
 	)
 
 	SIMUTRANS_CHECK_CXX_COMPILER_FLAGS(SIMUTRANS_COMMON_COMPILE_OPTIONS

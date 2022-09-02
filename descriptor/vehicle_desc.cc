@@ -502,6 +502,8 @@ const char* vehicle_desc_t::get_accommodation_name(uint8 a_class) const
 			count++;
 		}
 	}
+
+	return NULL;
 }
 
 // The old pak doesn't have a basic constraint, so add a value referring to the constraint.
