@@ -26,7 +26,6 @@ void accommodation_summary_t::add_vehicle(vehicle_t *veh)
 	const uint8 number_of_classes = goods_manager_t::get_classes_catg_index(catg_index);
 
 	if ((veh->get_desc()->get_total_capacity()+veh->get_desc()->get_overcrowded_capacity())>0) {
-		bool already_show_catg_symbol = false;
 		for (uint8 ac=0; ac<number_of_classes; ac++) {
 			if (!veh->get_accommodation_capacity(ac)) continue;
 
@@ -73,7 +72,6 @@ void accommodation_summary_t::add_vehicle_desc(const vehicle_desc_t *veh_type)
 	const uint8 number_of_classes = goods_manager_t::get_classes_catg_index(catg_index);
 
 		if ((veh_type->get_total_capacity()+veh_type->get_overcrowded_capacity())>0) {
-		bool already_show_catg_symbol = false;
 		for (uint8 ac=0; ac<number_of_classes; ac++) {
 			if (!veh_type->get_capacity(ac)) continue;
 

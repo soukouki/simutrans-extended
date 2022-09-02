@@ -136,6 +136,7 @@ else (MSVC) # Assume GCC/Clang
 		-Wduplicated-cond
 		-Werror=unused-comparison
 		-Werror=return-type
+		-Werror=unused-private-field
 	)
 
 	SIMUTRANS_CHECK_CXX_COMPILER_FLAGS(SIMUTRANS_COMMON_COMPILE_OPTIONS

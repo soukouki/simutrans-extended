@@ -2137,8 +2137,9 @@ void gui_convoy_assembler_t::image_from_storage_list(gui_image_list_t::image_dat
 				{
 					uint8 count;
 					uint32 n = 0;
-					for (auto vehicle : vehicles)
+					for (const vehicle_desc_t *vehicle : vehicles)
 					{
+						(void)vehicle;
 						count = vehicles[n]->get_upgrades_count();
 						for(int i = 0; i < count; i++)
 						{
@@ -2718,7 +2719,6 @@ gui_vehicle_bar_legends_t::gui_vehicle_bar_legends_t()
 
 	add_table(6,0)->set_spacing( scr_size(D_H_SPACE,1) );
 	{
-		const scr_size color_box_size=scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT);
 		new_component<gui_margin_t>(D_MARGIN_LEFT);
 		new_component<gui_vehicle_bar_t>(COL_SAFETY, scr_size(VEHICLE_BAR_HEIGHT*2-2, VEHICLE_BAR_HEIGHT))->set_flags(vehicle_desc_t::unknown_constraint, vehicle_desc_t::unknown_constraint, 2/*has_power*/);
 		new_component<gui_label_t>(bar_color_helptexts[0], SYSCOL_TEXT_WEAK);
