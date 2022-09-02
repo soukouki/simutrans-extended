@@ -836,7 +836,8 @@ DBG_MESSAGE("tool_remover()",  "took out powerline");
 	uint8 num_obj = gr->obj_count();
 	if(num_obj>0) {
 		msg = gr->kann_alle_obj_entfernen(player);
-		if(return_ok = ((msg==NULL  &&  !(gr->get_typ()==grund_t::brueckenboden  ||  gr->get_typ()==grund_t::tunnelboden)))){
+		return_ok = msg==NULL  &&  !(gr->get_typ()==grund_t::brueckenboden  ||  gr->get_typ()==grund_t::tunnelboden);
+		if(return_ok) {
 			return_ok = gr->obj_loesche_alle(player);
 		}
 		DBG_MESSAGE("tool_remover()",  "removing everything from %d,%d,%d",gr->get_pos().x, gr->get_pos().y, gr->get_pos().z);
@@ -1150,7 +1151,7 @@ const char * tool_flatten_path_t::tile_work(player_t *player, const koord3d &pos
 	return NULL;
 }
 
-void tool_flatten_path_t::tile_mark(player_t *player, const koord3d &pos, const koord3d &start){
+void tool_flatten_path_t::tile_mark(player_t */*player*/, const koord3d &pos, const koord3d &/*start*/){
 	if(grund_t *gr = welt->lookup_kartenboden( pos.get_2d() )){
 		zeiger_t *marker = new zeiger_t(gr->get_pos(), NULL);
 		uint8 ground_slope=gr->get_grund_hang();
@@ -4094,7 +4095,7 @@ bool tool_build_tunnel_t::vent_checker_t::check_next_tile(const grund_t *gr) con
 	return true;
 }
 
-int tool_build_tunnel_t::vent_checker_t::get_cost(const grund_t *gr, const sint32, koord from_pos){
+int tool_build_tunnel_t::vent_checker_t::get_cost(const grund_t */*gr*/, const sint32, koord /*from_pos*/){
 	return welt->get_settings().get_meters_per_tile();
 }
 
