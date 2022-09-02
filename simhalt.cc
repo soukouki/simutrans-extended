@@ -662,6 +662,7 @@ haltestelle_t::~haltestelle_t()
 			{
 				reset_connexions(i, j);
 			}
+
 			path_explorer_t::refresh_category(i);
 		}
 	}
@@ -2013,12 +2014,6 @@ void haltestelle_t::refresh_routing(const schedule_t *const sched, const minivec
 	if(sched && player)
 	{
 		const uint8 catg_count = categories.get_count();
-#ifdef MULTI_THREAD
-		if (!welt->is_destroying())
-		{
-			world()->await_path_explorer();
-		}
-#endif
 
 		for (uint8 i = 0; i < catg_count; i++)
 		{
@@ -6233,10 +6228,8 @@ void haltestelle_t::check_nearby_halts()
 			}
 		}
 	}
+
 	// Must refresh here, but only passengers can walk, so only refresh passengers.
-#ifdef MULTI_THREAD
-	world()->await_path_explorer();
-#endif
 	path_explorer_t::refresh_category(0);
 }
 
