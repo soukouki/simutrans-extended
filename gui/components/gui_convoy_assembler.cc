@@ -683,8 +683,8 @@ void gui_vehicles_capacity_info_t::draw(scr_coord offset)
 gui_convoy_assembler_t::gui_convoy_assembler_t(depot_frame_t *frame) :
 	convoi(&convoi_pics),
 	scrollx_convoi(&cont_convoi, true, false),
-	capacity_info(linehandle_t(), convoihandle_t(), false),
 	scrolly_convoi_capacity(&cont_convoi_capacity, false, true),
+	capacity_info(linehandle_t(), convoihandle_t(), false),
 	pas(&pas_vec),
 	pas2(&pas2_vec),
 	electrics(&electrics_vec),
@@ -703,8 +703,8 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(depot_frame_t *frame) :
 gui_convoy_assembler_t::gui_convoy_assembler_t(replace_frame_t *frame) :
 	convoi(&convoi_pics),
 	scrollx_convoi(&cont_convoi, true, false),
-	capacity_info(linehandle_t(), convoihandle_t(), false),
 	scrolly_convoi_capacity(&cont_convoi_capacity, false, true),
+	capacity_info(linehandle_t(), convoihandle_t(), false),
 	pas(&pas_vec),
 	pas2(&pas2_vec),
 	electrics(&electrics_vec),
