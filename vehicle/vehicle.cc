@@ -2477,8 +2477,8 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 		saved_number_of_classes = 1;
 	}
 
-	sint32 total_fracht_count = 0;
-	sint32* fracht_count = new sint32[saved_number_of_classes];
+	uint32 total_fracht_count = 0;
+	uint32* fracht_count = new uint32[saved_number_of_classes];
 	bool create_dummy_ware = false;
 
 	if (file->is_saving())
@@ -2494,7 +2494,7 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 		if (total_fracht_count == 0 && (desc->get_freight_type() != goods_manager_t::none) && desc->get_total_capacity() > 0)
 		{
 			total_fracht_count = 1;
-			fracht_count[0] = 1;
+			fracht_count[0] = 1u;
 			create_dummy_ware = true;
 		}
 	}
