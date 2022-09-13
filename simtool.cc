@@ -2275,7 +2275,7 @@ const char *tool_change_city_size_t::work( player_t *, koord3d pos )
 const char *tool_set_climate_t::get_tooltip(player_t const*) const
 {
 	char temp[1024];
-	sprintf( temp, translator::translate( "Set tile climate %s" ), translator::translate( ground_desc_t::get_climate_name_from_bit((climate)atoi(default_param)) ) );
+	sprintf( temp, translator::translate( "Set tile climate" ), translator::translate( ground_desc_t::get_climate_name_from_bit((climate)atoi(default_param)) ) );
 	return tooltip_with_price( temp,  welt->get_settings().cst_alter_climate );
 }
 
@@ -2629,6 +2629,26 @@ char const* tool_plant_tree_t::move(player_t* const player, uint16 const b, koor
 	else {
 		return work( player, pos );
 	}
+}
+
+
+bool tool_plant_tree_t::init(player_t*)
+{
+	if (!tree_builder_t::has_trees()) {
+		return false;
+	}
+	else if (default_param == NULL || default_param[0] == 0) {
+		return true;
+	}
+
+	char ignore_cl,random_age,dummy;
+	if (std::sscanf(default_param, "%c%c,%c", &ignore_cl, &random_age, &dummy) != 3) {
+		return false;
+	}
+
+	return
+		(ignore_cl == '0' || ignore_cl == '1') &&
+		(random_age == '0' || random_age == '1');
 }
 
 
