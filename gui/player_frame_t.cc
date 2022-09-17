@@ -174,7 +174,7 @@ ki_kontroll_t::ki_kontroll_t() :
 		ai_income[i]->align_to(&player_select[i]);
 		add_component( ai_income[i] );
 
-		player_change_to[i].align_to( &player_lock[i] );
+		player_change_to[i].set_pos( scr_coord(D_MARGIN_LEFT, cursor.y+ D_GET_CENTER_ALIGN_OFFSET(player_change_to[i].get_size().h, player_get_finances[i].get_size().h)) );
 		if(  i >= 2  ) {
 			player_active[i-2].align_to( &player_lock[i] );
 		}
@@ -428,7 +428,7 @@ void ki_kontroll_t::update_data()
 		}
 		cursor.x += D_CHECKBOX_WIDTH + D_H_SPACE;
 
-		player_change_to[i].set_pos( cursor );
+		player_change_to[i].set_pos(scr_coord(D_MARGIN_LEFT, cursor.y + D_GET_CENTER_ALIGN_OFFSET(player_change_to[i].get_size().h, player_get_finances[i].get_size().h)));
 		cursor.x += D_ARROW_RIGHT_WIDTH + D_H_SPACE;
 
 		player_get_finances[i].set_pos(cursor);
@@ -449,7 +449,6 @@ void ki_kontroll_t::update_data()
 
 		ai_income[i]->set_pos(cursor);
 		ai_income[i]->align_to(&player_select[i]);
-		player_change_to[i].align_to(&player_lock[i]);
 		if (i >= 2) {
 			player_active[i - 2].align_to(&player_lock[i]);
 		}
