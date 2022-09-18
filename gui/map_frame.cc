@@ -34,7 +34,6 @@ bool  map_frame_t::legend_visible=false;
 bool  map_frame_t::network_option_visible = false;
 bool  map_frame_t::scale_visible=false;
 bool  map_frame_t::zoomed = true;
-bool  map_frame_t::is_cursor_hidden=false;
 
 // we track our position onscreen
 scr_coord map_frame_t::screenpos;
