@@ -27,7 +27,7 @@ struct connection_line_t
 {
 	PIXVAL color;
 	bool is_own;    // flag for line style
-	bool is_convoy; // false means line. flag for line width 
+	bool is_convoy; // false means line. flag for line width
 };
 
 class gui_connection_lines_t : public gui_component_t
