@@ -421,8 +421,11 @@ private:
 
 	uint8 max_rerouting_interval_months;
 
+public:
+
 	uint16 meters_per_tile;
 
+private:
 	uint32 base_meters_per_tile;
 	uint32 base_bits_per_month;
 	uint32 job_replenishment_per_hundredths_of_months;
@@ -430,7 +433,6 @@ private:
 	// We need it often(every vehicle_base_t::do_drive call), so we cache it.
 	uint32 steps_per_km;
 
-private:
 	// The public version of these is exposed via tables below --neroden
 	uint8 tolerable_comfort_short;
 	uint8 tolerable_comfort_median_short;
