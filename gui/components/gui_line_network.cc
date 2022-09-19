@@ -125,9 +125,7 @@ void gui_transfer_line_t::init_table()
 		new_component<gui_line_label_t>(line);
 	}
 
-	image_id bt_icon = skinverwaltung_t::network ? skinverwaltung_t::network->get_image_id(0) :
-		skinverwaltung_t::minimap ? skinverwaltung_t::minimap->get_image_id(0) :
-		skinverwaltung_t::open_window ? skinverwaltung_t::open_window->get_image_id(0) :
+	image_id bt_icon = skinverwaltung_t::open_window ? skinverwaltung_t::open_window->get_image_id(0) :
 		IMG_EMPTY;
 	if (bt_icon != IMG_EMPTY) {
 		bt_access_minimap.init(button_t::imagebox, NULL);
