@@ -45,6 +45,9 @@ void gui_times_history_t::init()
 		mirrored = schedule->is_mirrored();
 		build_table();
 	}
+	else {
+		remove_all();
+	}
 }
 
 void gui_times_history_t::construct_data(slist_tpl<uint8> *schedule_indices, slist_tpl<departure_point_t *> *time_keys) {
@@ -415,7 +418,10 @@ void gui_times_history_t::build_table()
 
 void gui_times_history_t::draw(scr_coord offset)
 {
-	if (convoy.is_bound()){
+	if (schedule==NULL) {
+		init();
+	}
+	else if (convoy.is_bound()){
 		if (!convoy->get_schedule()->matches(world(), schedule)) {
 			init();
 		}
