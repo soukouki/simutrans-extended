@@ -816,12 +816,12 @@ bool network_receive_data( SOCKET sender, void *dest, const uint16 len, uint16 &
 		}
 
 		// now receive
-		int res = recv( sender, ptr+received, len-received, 0 );
+		const int res = recv( sender, ptr+received, len-received, 0 );
 
 		if (res == -1) {
-			int err = GET_LAST_ERROR();
+			const int err = GET_LAST_ERROR();
 			if (err != EWOULDBLOCK) {
-				dbg->warning("network_receive_data", "error %d while receiving from [%d]", err, sender);
+				dbg->warning("network_receive_data", "Could not receive from [%d]: \"%s\"", sender, strerror(err));
 				return false;
 			}
 
