@@ -606,7 +606,7 @@ scr_size gui_flowtext_t::get_preferred_size()
 
 scr_coord_val gui_flowtext_t::get_required_text_width()
 {
-	return flowtext->get_required_text_width()+D_MARGINS_X+D_V_SPACE;
+	return flowtext->get_required_text_width()+D_MARGINS_X;
 }
 
 

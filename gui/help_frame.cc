@@ -546,10 +546,9 @@ void help_frame_t::resize(const scr_coord delta)
 
 	scr_coord_val generalwidth = 0;
 	if(  generaltext.is_visible()  ) {
-		generalwidth = generaltext.get_required_text_width() + D_SCROLLBAR_WIDTH;
+		generalwidth = generaltext.get_required_text_width() + D_SCROLLBAR_WIDTH + D_H_SPACE;
 		generaltext.set_size( scr_size( generalwidth, get_client_windowsize().h  - D_MARGIN_BOTTOM) );
 
-		generalwidth += D_H_SPACE;
 		helptext.set_pos( generaltext.get_pos() + scr_size( generalwidth, 0 ) );
 	}
 
