@@ -871,7 +871,6 @@ color_gui_t::color_gui_t() :
 	for (uint8 i = 0; i < 8; i++) {
 		gui_settings.info_window_toggler[i].add_listener(this);
 	}
-	gui_settings.toolbar_pos.add_listener( this );
 	gui_settings.fullscreen.add_listener( this );
 	gui_settings.borderless.add_listener( this );
 	gui_settings.reselect_closes_tool.add_listener(this);
