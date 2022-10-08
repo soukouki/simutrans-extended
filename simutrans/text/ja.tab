@@ -625,6 +625,8 @@ Bonusspeed: %i km/h
 可能な最大速度：%i km/h
 Boost (%)
 増産率 (%)
+Borderless (disabled on fullscreen)
+全画面表示 (ソフトウェアモード)
 bridge is too high for its type!
 この型の橋梁で架橋できる\n橋脚の高さ制限を超えています。
 Bruecke
@@ -1029,6 +1031,8 @@ fuel_cell
 燃料電池
 Full load
 積むまで待機(％):
+Fullscreen (changed after restart)
+全画面表示 (ハードウェアモード、変更は再起動が必要)
 Fundament
 土地
 Fussgaenger
