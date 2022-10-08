@@ -173,10 +173,6 @@ bool dr_set_screen_scale(sint16 scale_percent)
 			y_scale = (y_scale * current_y) / MIN_SCALE_HEIGHT;
 			DBG_MESSAGE("new scaling", "x=%i, y=%i", x_scale, y_scale);
 		}
-
-		return x_scale==SCALE_NEUTRAL_X  &&  y_scale==SCALE_NEUTRAL_Y;
-	}
-	else
 #else
 #pragma message "SDL version must be at least 2.0.4 to support autoscaling."
 		// 1.5 scale up by default
