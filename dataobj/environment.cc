@@ -10,6 +10,7 @@
 #include "../simversion.h"
 #include "../simconst.h"
 #include "../simtypes.h"
+#include "../sys/simsys.h"
 #include "../simmesg.h"
 #include "../display/simgraph.h"
 
