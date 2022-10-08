@@ -134,6 +134,10 @@ gui_settings_t::gui_settings_t()
 	}
 	end_table();
 
+	reselect_closes_tool.init( button_t::square_state, "Reselect closes tools" );
+	reselect_closes_tool.pressed = env_t::reselect_closes_tool;
+	add_component( &reselect_closes_tool, 2 );
+
 	fullscreen.init( button_t::square_state, "Fullscreen (changed after restart)" );
 	fullscreen.pressed = ( dr_get_fullscreen() == FULLSCREEN );
 	add_component( &fullscreen, 2 );
@@ -142,10 +146,6 @@ gui_settings_t::gui_settings_t()
 	borderless.enable ( dr_get_fullscreen() != FULLSCREEN );
 	borderless.pressed = ( dr_get_fullscreen() == BORDERLESS );
 	add_component( &borderless, 2 );
-
-	reselect_closes_tool.init( button_t::square_state, "Reselect closes tools" );
-	reselect_closes_tool.pressed = env_t::reselect_closes_tool;
-	add_component( &reselect_closes_tool, 2 );
 
 	new_component<gui_divider_t>();
 
