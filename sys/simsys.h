@@ -215,7 +215,7 @@ void dr_notify_input_pos(int x, int y);
 ///  returns current two byte languange ID
 const char* dr_get_locale();
 
-/** 
+/**
  * @return
  *  0: if windowed
  *  1: if fullscreen
@@ -223,7 +223,7 @@ const char* dr_get_locale();
  */
 sint16 dr_get_fullscreen();
 
-/** 
+/**
  * Toggle between borderless and windowed mode
  * @return the fullscreen state after the toggle
  */
