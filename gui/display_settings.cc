@@ -111,12 +111,12 @@ gui_settings_t::gui_settings_t()
 		buttons[ IDBTN_CHANGE_FONT ].set_image_position_right(true);
 	}
 	add_component( buttons + IDBTN_CHANGE_FONT );
-	
+
 	// screen scale number input
 	add_table(3,1)->set_spacing(scr_size(0,0));
 	{
 		new_component<gui_label_t>("Screen scale: ");
-		
+
 		add_table(2,0);
 		{
 			screen_scale_numinp.init(dr_get_screen_scale(), 25, 400, 25, false);
@@ -128,7 +128,7 @@ gui_settings_t::gui_settings_t()
 			add_component(&screen_scale_auto);
 		}
 		end_table();
-		
+
 		new_component<gui_fill_t>();
 	}
 	end_table();
