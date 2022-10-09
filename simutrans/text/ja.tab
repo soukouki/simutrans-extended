@@ -1837,6 +1837,10 @@ Shows consumer/suppliers for factories
 産業施設のクリック[shift+クリック]で、需要先[供給元]を表示します
 Shows the currently selected schedule
 編集中の路線経路を表示します
+Shows option buttons about networks.
+路線図表示オプションを開閉します
+Show networks
+路線図表示
 Shrink city
 都市の人口を減らす
 shuffle midis
@@ -4165,6 +4169,8 @@ Municipal way
 市道
 Private way
 私道
+Road routes from here:
+ルート一覧
 %u cities
 都市へのルート(%u)：
 %u buildings
