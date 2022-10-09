@@ -643,15 +643,16 @@ void translator::load_files_from_folder(const char *folder_name, const char *wha
 	//read now the basic language infos
 	FOR(searchfolder_t, const& filename, folder) {
 		lang_info* lang = NULL;
-		const char* langcode = strrchr(filename,'.');
 
-		if(  langcode  &&  (langcode-filename)>2  ) {
+		const char* filestr = strrchr(filename, '/');
+		if (filestr[3]=='.') {
+			lang = get_lang_by_iso(filestr+1);
+		}
+
+		const char* langcode = strrchr(filename,'.');
+		if(  lang==NULL  &&  langcode  &&  (langcode-filename)>2  ) {
 			// try before the point
 			lang = get_lang_by_iso(langcode-2);
-			if (lang == NULL) {
-				// try instead the start of the string
-				lang = get_lang_by_iso(filename);
-			}
 		}
 
 		if (lang != NULL) {
