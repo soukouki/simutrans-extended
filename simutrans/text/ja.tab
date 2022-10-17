@@ -1219,8 +1219,6 @@ Jump to
 指定座標へ移動
 June
 6月
-Kein Besitzer\n
-\n
 keine
 無し
 Keine Einzelfahrzeuge im Depot
@@ -4389,6 +4387,8 @@ The number of passengers who have left because of overcrowding or excess waiting
 混雑や駅での待ち時間のため旅行を取り止めた旅客の人数を表します。
 Arbeiter aus:
 労働者居住地:
+Kein Besitzer\n
+\n
 No Route
 経路無し
 Usage/Output
