@@ -734,10 +734,6 @@ bool way_info_t::is_weltpos()
 	return ( welt->get_viewport()->is_on_center( gr->get_pos() ) );
 }
 
-void  way_info_t::init()
-{
-}
-
 void  way_info_t::init_tabs()
 {
 	tabs.clear();
