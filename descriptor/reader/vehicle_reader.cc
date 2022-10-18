@@ -721,7 +721,7 @@ obj_desc_t *vehicle_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 		}
 	}
 
-	if (version < 11 || (version == 11 && extended && extended_version < 7)) {
+	if (!extended || version < 11 || (version == 11 && extended && extended_version < 7)) {
 		desc->accommodation_classes = 0;
 	}
 
