@@ -269,8 +269,30 @@ obj_desc_t * building_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 
 	old_btyp::typ btyp = old_btyp::unknown;
 
-	if (version == 8 || version == 9)
-	{
+	if(version == 10) {
+		// preservation date added
+		btyp = (old_btyp::typ)decode_uint8(p);
+		desc->type = (building_desc_t::btype)decode_uint8(p);
+		desc->level = decode_uint16(p);
+		desc->extra_data = decode_uint32(p);
+		desc->size.x = decode_uint16(p);
+		desc->size.y = decode_uint16(p);
+		desc->layouts = decode_uint8(p);
+		desc->allowed_climates = (climate_bits)(decode_uint16(p) & ALL_CLIMATES);
+		desc->enables = decode_uint8(p);
+		desc->flags = (building_desc_t::flag_t)decode_uint8(p);
+		desc->distribution_weight = decode_uint8(p);
+		desc->intro_date = decode_uint16(p);
+		desc->retire_date = decode_uint16(p);
+		desc->animation_time = decode_uint16(p);
+		desc->capacity = decode_uint16(p);
+		desc->maintenance = decode_sint32(p);
+		desc->price = decode_sint32(p);
+		desc->allow_underground = decode_uint8(p);
+		uint16 dummy = decode_uint16(p);
+		//desc->preservation_year_month = decode_uint16(p);
+	}
+	else if(version == 8  ||  version == 9) {
 		// Versioned node, version 8
 		// station price, maintenance and capacity added
 		btyp = (old_btyp::typ)decode_uint8(p);
