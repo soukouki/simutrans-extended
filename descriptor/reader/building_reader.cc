@@ -702,8 +702,11 @@ obj_desc_t * building_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 
 	DBG_DEBUG("building_reader_t::read_node()",
 		"version=%d"
-		" gtyp=%d"
+		" btyp=%d"
 		" type=%d"
+		" price=%d,"
+		" maintenance=%d,"
+		" capacity=%d,"
 		" level=%d"
 		" extra_data=%d"
 		" size.x=%d"
