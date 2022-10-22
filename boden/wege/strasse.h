@@ -70,7 +70,7 @@ public:
 
 	image_id get_front_image() const OVERRIDE
 	{
-		if (show_masked_ribi && overtaking_mode <= oneway_mode) {
+		if (skinverwaltung_t::ribi_arrow && show_masked_ribi && overtaking_mode <= oneway_mode) {
 			return skinverwaltung_t::ribi_arrow->get_image_id(get_ribi());
 		}
 		else {
