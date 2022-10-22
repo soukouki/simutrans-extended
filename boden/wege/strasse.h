@@ -78,6 +78,8 @@ public:
 		}
 	}
 
+	void display_overlay(int xpos, int ypos) const OVERRIDE;
+
 	FLAGGED_PIXVAL get_outline_colour() const OVERRIDE
 	{
 		uint8 restriction_colour;
