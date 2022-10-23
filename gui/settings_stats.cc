@@ -828,7 +828,7 @@ void settings_economy_stats_t::init(settings_t const* const sets)
 	INIT_NUM( "ai_construction_speed", sets->get_default_ai_construction_speed(), 0, 1000000000, 1000, false );
 	SEPERATOR
 
-	INIT_NUM( "just_in_time", sets->get_just_in_time(), 0, 255, gui_numberinput_t::PLAIN, false );
+	INIT_NUM( "just_in_time", sets->get_just_in_time(), 0, 5, gui_numberinput_t::PLAIN, false );
 	INIT_NUM( "maximum_intransit_percentage", sets->get_factory_maximum_intransit_percentage(), 0, 32767, gui_numberinput_t::AUTOLINEAR, false );
 	INIT_BOOL( "crossconnect_factories", sets->is_crossconnect_factories() );
 	INIT_NUM( "crossconnect_factories_percentage", sets->get_crossconnect_factor(), 0, 100, gui_numberinput_t::AUTOLINEAR, false );
