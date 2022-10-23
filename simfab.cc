@@ -3124,7 +3124,8 @@ void fabrik_t::new_month()
 	set_stat( power, FAB_POWER );
 
 	if(welt->get_settings().using_fab_contracts()){
-		//check if industry has been idle too long
+		// Check whether this industry has been idle too long
+		// TODO: This may need substantial reworking when the new town growth/industry code ends up being added.
 		if(get_stat(1,FAB_PRODUCTION)==0){
 			months_unproductive++;
 		}else{
