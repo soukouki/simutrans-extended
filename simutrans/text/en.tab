@@ -6478,3 +6478,7 @@ Do not add vehicles over maximum length!
 Maximum length reached
 line_network
 Network diagram
+Unproductive: %d Mo.
+Unproductive: %d Mo.
+Contractless: %d Mo.
+Missing contracts: %d Mo.
