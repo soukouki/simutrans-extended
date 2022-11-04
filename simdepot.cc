@@ -473,7 +473,6 @@ convoihandle_t depot_t::copy_convoi(convoihandle_t old_cnv, bool local_execution
 							}
 						}
 					}
-					//old_cnv->get_vehicle(i)->get_current_livery();
 					new_vehicle = vehicle_builder_t::build(get_pos(), get_owner(), NULL, info, false, vehicle_livery_index);
 				}
 
