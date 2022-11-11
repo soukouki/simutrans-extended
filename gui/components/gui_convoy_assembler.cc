@@ -2268,6 +2268,16 @@ void gui_convoy_assembler_t::set_vehicles(convoihandle_t cnv)
 			vehicles.append(cnv->get_vehicle(i)->get_desc());
 		}
 		capacity_info.set_convoy(cnv);
+
+		// check convoy livery
+		const uint16 convoy_livery_idx = cnv->get_livery_scheme_index();
+		if (convoy_livery_idx!=UINT16_MAX  &&  convoy_livery_idx!=livery_scheme_index && livery_scheme_indices.is_contained(convoy_livery_idx)) {
+			if (const uint32 sel = livery_scheme_indices.index_of(convoy_livery_idx)!= 0xFFFFFFFFu) {
+				livery_scheme_index = convoy_livery_idx;
+				livery_selector.set_selection(sel);
+				update_livery();
+			}
+		}
 	}
 	else {
 		capacity_info.set_convoy(convoihandle_t());
