@@ -2270,14 +2270,7 @@ void gui_convoy_assembler_t::set_vehicles(convoihandle_t cnv)
 		capacity_info.set_convoy(cnv);
 
 		// check convoy livery
-		const uint16 convoy_livery_idx = cnv->get_livery_scheme_index();
-		if (convoy_livery_idx!=UINT16_MAX  &&  convoy_livery_idx!=livery_scheme_index && livery_scheme_indices.is_contained(convoy_livery_idx)) {
-			if (const uint32 sel = livery_scheme_indices.index_of(convoy_livery_idx)!= 0xFFFFFFFFu) {
-				livery_scheme_index = convoy_livery_idx;
-				livery_selector.set_selection(sel);
-				update_livery();
-			}
-		}
+		check_livery_scheme_index(cnv->get_livery_scheme_index());
 	}
 	else {
 		capacity_info.set_convoy(convoihandle_t());
@@ -2659,7 +2652,33 @@ void gui_convoy_assembler_t::set_electrified( bool ele )
 		way_electrified = ele;
 		build_vehicle_lists();
 	}
-};
+}
+
+
+void gui_convoy_assembler_t::check_livery_scheme_index(uint16 test_index)
+{
+	bool found = false;
+	if (test_index != UINT16_MAX && test_index != livery_scheme_index && livery_scheme_indices.is_contained(test_index)) {
+		const uint32 sel = livery_scheme_indices.index_of(test_index);
+		if( sel!=0xFFFFFFFFu ) {
+			livery_scheme_index = test_index;
+			livery_selector.set_selection(sel);
+			update_livery();
+			found = true;
+		}
+	}
+	if (!found && depot_frame) {
+		const uint32 fav_index = depot_frame->get_depot()->get_owner()->get_favorite_livery_scheme_index((uint8)simline_t::waytype_to_linetype(way_type));
+		if (livery_scheme_index!=fav_index) {
+			const uint32 sel = livery_scheme_indices.index_of(fav_index);
+			if( sel!=0xFFFFFFFFu ) {
+				livery_scheme_index = fav_index;
+				livery_selector.set_selection(sel);
+				update_livery();
+			}
+		}
+	}
+}
 
 
 //#define VEHICLE_BAR_COLORS 9

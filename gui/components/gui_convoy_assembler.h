@@ -300,6 +300,9 @@ public:
 
 	void set_electrified(bool ele);
 
+	// update selectors and lists if available
+	void check_livery_scheme_index(uint16 test_index);
+
 	uint16 get_livery_scheme_index() { return livery_scheme_index; }
 
 	// for save and reload
