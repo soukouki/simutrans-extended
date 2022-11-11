@@ -1079,7 +1079,7 @@ void minimap_t::calc_map_pixel(const koord k)
 					}
 				}
 				else if(  player_showed_on_map!=-1  ) {
-					if(  way->get_owner_nr()!=PUBLIC_PLAYER_NR  &&  way->get_owner_nr()!=PLAYER_UNOWNED  &&  !way->get_owner()->allows_access_to( player_showed_on_map )  ) {
+					if(  way->get_owner_nr()!=PUBLIC_PLAYER_NR  &&  way->get_owner_nr()!=PLAYER_UNOWNED  &&  !way->get_owner()->allows_access_to( world->get_active_player_nr() )  ) {
 						break;
 					}
 				}
@@ -1117,7 +1117,7 @@ void minimap_t::calc_map_pixel(const koord k)
 						}
 					}
 					else if(  player_showed_on_map!=-1  ) {
-						if(  way->get_owner_nr()!=PUBLIC_PLAYER_NR  &&  way->get_owner_nr()!=PLAYER_UNOWNED  &&  !way->get_owner()->allows_access_to( player_showed_on_map )  ) {
+						if(  way->get_owner_nr()!=PUBLIC_PLAYER_NR  &&  way->get_owner_nr()!=PLAYER_UNOWNED  &&  !way->get_owner()->allows_access_to( world->get_active_player_nr() )  ) {
 							break;
 						}
 					}
@@ -1906,6 +1906,14 @@ void minimap_t::draw(scr_coord pos)
 
 		if(  !station.is_bound()  ) {
 			// maybe deleted in the meanwhile
+			continue;
+		}
+
+		// owner filter
+		if (  player_showed_on_map==world->get_active_player_nr()  &&  !station->get_owner()->allows_access_to( world->get_active_player_nr() )  )  {
+			continue;
+		}
+		else if (  player_showed_on_map!=-1 &&  player_showed_on_map!=station->get_owner()->get_player_nr() ) {
 			continue;
 		}
 
