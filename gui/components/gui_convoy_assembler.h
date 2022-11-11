@@ -114,11 +114,12 @@ public:
 	static bool sort_reverse;
 
 	uint8 veh_action = va_append;
-	static uint16 livery_scheme_index;
 
 private:
 	waytype_t way_type;
 	bool way_electrified;
+
+	uint16 livery_scheme_index=UINT16_MAX;
 
 	// The selected convoy so far...
 	vector_tpl<const vehicle_desc_t *> vehicles;
@@ -299,7 +300,7 @@ public:
 
 	void set_electrified(bool ele);
 
-	static uint16 get_livery_scheme_index() { return livery_scheme_index; }
+	uint16 get_livery_scheme_index() { return livery_scheme_index; }
 
 	// for save and reload
 	int get_current_tab_index() const { return tabs.get_active_tab_index(); }

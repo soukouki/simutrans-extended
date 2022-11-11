@@ -603,7 +603,7 @@ bool depot_frame_t::action_triggered( gui_action_creator_t *comp, value_t p)
 				}
 				else if(  !welt->use_timeline()  ||  welt->get_settings().get_allow_buying_obsolete_vehicles()  ||  depot->check_obsolete_inventory( cnv )  )
 				{
-					depot->call_depot_tool('c', cnv, NULL, gui_convoy_assembler_t::get_livery_scheme_index());
+					depot->call_depot_tool('c', cnv, NULL, cnv->get_livery_scheme_index());
 					update_data();
 				}
 				else

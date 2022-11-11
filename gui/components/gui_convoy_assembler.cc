@@ -50,8 +50,6 @@ bool gui_convoy_assembler_t::show_all = false;
 bool gui_convoy_assembler_t::show_outdated_vehicles = false;
 bool gui_convoy_assembler_t::show_obsolete_vehicles = false;
 
-uint16 gui_convoy_assembler_t::livery_scheme_index = 0;
-
 int gui_convoy_assembler_t::selected_filter = VEHICLE_FILTER_RELEVANT;
 char gui_convoy_assembler_t::name_filter_value[64] = "";
 
@@ -507,7 +505,7 @@ void gui_vehicle_spec_t::update(uint8 action, uint32 resale_value, uint16 curren
 
 void gui_vehicle_spec_t::build_secondary_view(uint16 current_livery)
 {
-	const uint16 selected_livery = current_livery == 65535 ? gui_convoy_assembler_t::livery_scheme_index : current_livery;
+	const uint16 selected_livery = current_livery;
 	const uint16 month_now = world()->get_timeline_year_month();
 
 	add_table(5,1)->set_alignment(ALIGN_TOP);
@@ -728,6 +726,7 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 	new_vehicle_length = 0;
 	old_veh_type = NULL;
 	tile_occupancy.set_new_veh_length(new_vehicle_length);
+	livery_scheme_index = world()->get_player(player_nr)->get_favorite_livery_scheme_index((uint8)simline_t::waytype_to_linetype(way_type));
 	if (depot_frame || replace_frame) {
 		// assemble the UI table basic structure here
 		set_table_layout(1,0);
@@ -1549,7 +1548,7 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 		FORX(vector_tpl<uint16>, const& i, livery_scheme_indices, ++j) {
 			livery_scheme_t* scheme = schemes->get_element(i);
 			livery_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(scheme->get_name()), SYSCOL_TEXT);
-			if (j==livery_scheme_index) {
+			if (i==livery_scheme_index) {
 				livery_selector.set_selection(j);
 			}
 		}
@@ -2357,7 +2356,7 @@ void gui_convoy_assembler_t::update_vehicle_info_text(scr_coord pos)
 	const vehicle_desc_t *veh_type = NULL;
 	bool new_vehicle_length_sb_force_zero = false;
 	sint16 convoi_number = -1;
-	uint16 selected_livery_index=65535;
+	uint16 selected_livery_index= livery_scheme_index;
 	uint32 resale_value = UINT32_MAX_VALUE;
 	scr_coord relpos = scr_coord( 0, ((gui_scrollpane_t *)tabs.get_aktives_tab())->get_scroll_y() );
 	int sel_index = lst->index_at(pos + tabs.get_pos() - relpos, x, y - tabs.get_required_size().h);
