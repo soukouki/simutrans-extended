@@ -230,7 +230,7 @@ map_frame_t::map_frame_t() :
 	set_table_layout(1,0);
 
 	// first row of controls
-	zoom_row = add_table(7,0);
+	zoom_row = add_table(8,1);
 	{
 		// zoom levels label
 		new_component<gui_label_t>("map zoom");
@@ -259,6 +259,12 @@ map_frame_t::map_frame_t() :
 		b_rotate45.add_listener(this);
 		b_rotate45.pressed = karte->is_isometric();
 		add_component(&b_rotate45);
+
+		b_overlay_networks.init(button_t::square_state, "Networks");
+		b_overlay_networks.set_tooltip("Overlay schedules/network");
+		b_overlay_networks.add_listener(this);
+		b_overlay_networks.pressed = (env_t::default_mapmode & minimap_t::MAP_LINES)!=0;
+		add_component( &b_overlay_networks );
 
 		// show contour
 		b_show_contour.init(button_t::square_state, "Show contour");
@@ -317,13 +323,8 @@ map_frame_t::map_frame_t() :
 	network_filter_container.set_visible(false);
 	add_component(&network_filter_container);
 
-	network_filter_container.set_table_layout(5,1);
-	// insert selections: show networks, in filter container
-	b_overlay_networks.init(button_t::square_state, "Networks");
-	b_overlay_networks.set_tooltip("Overlay schedules/network");
-	b_overlay_networks.add_listener(this);
-	b_overlay_networks.pressed = (env_t::default_mapmode & minimap_t::MAP_LINES)!=0;
-	network_filter_container.add_component( &b_overlay_networks );
+	network_filter_container.set_table_layout(4,1);
+	// insert selections: in filter container
 
 	// player combo for network overlay
 	viewed_player_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All"), SYSCOL_TEXT);
