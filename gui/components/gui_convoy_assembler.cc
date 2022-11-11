@@ -505,7 +505,6 @@ void gui_vehicle_spec_t::update(uint8 action, uint32 resale_value, uint16 curren
 
 void gui_vehicle_spec_t::build_secondary_view(uint16 current_livery)
 {
-	const uint16 selected_livery = current_livery;
 	const uint16 month_now = world()->get_timeline_year_month();
 
 	add_table(5,1)->set_alignment(ALIGN_TOP);
@@ -551,7 +550,7 @@ void gui_vehicle_spec_t::build_secondary_view(uint16 current_livery)
 								new_component<gui_image_t>(veh_type->get_image_id(ribi_t::dir_southwest, goods_manager_t::none, livery), 1, 0, true);
 							}
 							// UI TODO: draw underline for selected
-							new_component<gui_label_t>(scheme->get_name(), (i == selected_livery) ? SYSCOL_LIVERY_SCHEME : SYSCOL_TEXT);
+							new_component<gui_label_t>(scheme->get_name(), (i == current_livery) ? SYSCOL_LIVERY_SCHEME : SYSCOL_TEXT);
 						}
 					}
 					if( available_liveries ) {
