@@ -297,7 +297,7 @@ settings_t::settings_t() :
 	waytype_color[0] = 44373;
 	waytype_color[waytype_t(road_wt)]  = 39455;
 	waytype_color[waytype_t(track_wt)] = 64448;
-	waytype_color[waytype_t(water_wt)] = 536; // water
+	waytype_color[waytype_t(water_wt)] = 536;
 	waytype_color[4] = 0;
 	waytype_color[waytype_t(monorail_wt)] = 45316;
 	waytype_color[waytype_t(maglev_wt)]   = 61916;
