@@ -900,7 +900,7 @@ void gui_convoy_cargo_info_t::update()
 
 	set_table_layout(1,0);
 	set_alignment(ALIGN_LEFT | ALIGN_TOP);
-	
+
 	if( !info_depth_from  &&  !info_depth_to  ) {
 		// simple
 		new_component<gui_convoy_loading_info_t>(linehandle_t(), cnv, true);
