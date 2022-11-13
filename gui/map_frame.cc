@@ -176,8 +176,8 @@ map_button_t button_init[MAP_MAX_BUTTONS] = {
 	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "by_waiting_passengers", "Show how many people/much is waiting at halts", minimap_t::MAP_PAX_WAITING },
 	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "by_waiting_mails", "Show how many mails are waiting at halts", minimap_t::MAP_MAIL_WAITING },
 	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "by_waiting_goods", "Show how many goods are waiting at halts", minimap_t::MAP_GOODS_WAITING },
-	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Service", "Show how many convoi reach a station", minimap_t::MAP_SERVICE },
 	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Origin", "Show initial passenger departure", minimap_t::MAP_ORIGIN },
+	{ COL_LIGHT_PURPLE, COL_DARK_PURPLE, "Service", "Show how many convoi reach a station", minimap_t::MAP_SERVICE },
 	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "map_btn_freight", "Show transported freight/freight network", minimap_t::MAP_FREIGHT },
 	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "Traffic", "Show usage of network", minimap_t::MAP_TRAFFIC },
 	{ COL_LIGHT_ORANGE, COL_DARK_ORANGE, "Wear", "Show the condition of ways", minimap_t::MAP_CONDITION },
@@ -412,6 +412,7 @@ map_frame_t::map_frame_t() :
 	filter_buttons[9].set_image(skinverwaltung_t::passengers->get_image_id(0));
 	filter_buttons[10].set_image(skinverwaltung_t::mail->get_image_id(0));
 	filter_buttons[11].set_image(skinverwaltung_t::goods->get_image_id(0));
+	filter_buttons[12].set_image(skinverwaltung_t::passengers->get_image_id(0));
 	filter_container.end_table();
 	update_buttons();
 
