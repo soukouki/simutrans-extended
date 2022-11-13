@@ -1846,15 +1846,13 @@ void minimap_t::draw(scr_coord pos)
 	halthandle_t display_station;
 	// only fill cache if needed
 	if(  mode & MAP_MODE_HALT_FLAGS  &&  stop_cache.empty()  ) {
-		if(  mode & MAP_ORIGIN  ) {
-			FOR( const vector_tpl<halthandle_t>, halt, haltestelle_t::get_alle_haltestellen() ) {
-				if(  halt->get_pax_enabled()  ||  halt->get_mail_enabled()  ) {
+		for( auto halt : haltestelle_t::get_alle_haltestellen() ) {
+			if(  mode & MAP_ORIGIN  ) {
+				if(  halt->get_pax_enabled()  ) {
 					stop_cache.append( halt );
 				}
 			}
-		}
-		else if(  mode&MAP_TRANSFER  ||  mode&MAP_MAIL_HANDLING_VOLUME  ||  mode&MAP_GOODS_HANDLING_VOLUME    ) {
-			FOR( const vector_tpl<halthandle_t>, halt, haltestelle_t::get_alle_haltestellen() ) {
+			else if(  mode&MAP_TRANSFER  ||  mode&MAP_MAIL_HANDLING_VOLUME  ||  mode&MAP_GOODS_HANDLING_VOLUME    ) {
 				if(  mode & MAP_TRANSFER  ){
 					if( !halt->get_pax_enabled() ) {
 						continue;
@@ -1885,9 +1883,7 @@ void minimap_t::draw(scr_coord pos)
 					}
 				}
 			}
-		}
-		else if(  mode&MAP_PAX_WAITING  ||  mode&MAP_MAIL_WAITING  ||  mode&MAP_GOODS_WAITING  ||  mode&MAP_SERVICE  ) {
-			FOR( const vector_tpl<halthandle_t>, halt, haltestelle_t::get_alle_haltestellen() ) {
+			else if(  mode&MAP_PAX_WAITING  ||  mode&MAP_MAIL_WAITING  ||  mode&MAP_GOODS_WAITING  ||  mode&MAP_SERVICE  ) {
 				if(  mode&MAP_PAX_WAITING && !halt->get_pax_enabled()  ) {
 					continue;
 				}
@@ -1965,7 +1961,7 @@ void minimap_t::draw(scr_coord pos)
 			radius = number_to_radius( waiting_goods*3 );
 		}
 		else if( mode & MAP_ORIGIN  ) {
-			if(  !station->get_pax_enabled()  &&  !station->get_mail_enabled()  ) {
+			if(  !station->get_pax_enabled()  ) {
 				continue;
 			}
 			const sint32 pax_origin = (sint32)(station->get_finance_history( 1, HALT_HAPPY ) + station->get_finance_history( 1, HALT_UNHAPPY ) + station->get_finance_history(1, HALT_TOO_WAITING) + station->get_finance_history(1, HALT_NOROUTE) + station->get_finance_history( 1, HALT_TOO_SLOW ));
