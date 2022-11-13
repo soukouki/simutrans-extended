@@ -1752,6 +1752,7 @@ void minimap_t::draw(scr_coord pos)
 	koord last_start(0,0), last_end(0,0);
 	bool diagonal = false;
 	if(  showing_schedule  ) {
+		const int transparency = ( mode & (MAP_MODE_WAY_FLAGS|MAP_MODE_BUILDING_FLAGS|MAP_OWNER) ) ? 50:75;
 		// lighten background
 		if(  isometric  ) {
 			// isometric => lighten in three parts
@@ -1764,24 +1765,24 @@ void minimap_t::draw(scr_coord pos)
 			// top and bottom part
 			const int toplines = min( p4.y, p2.y );
 			for( scr_coord_val y = 0;  y < toplines;  y++  ) {
-				display_blend_wh_rgb( pos.x+p1.x-2*y, pos.y+y, 4*y+4, 1, color_idx_to_rgb(COL_WHITE), 75 );
-				display_blend_wh_rgb( pos.x+p3.x-2*y, pos.y+p3.y-y-1, 4*y+4, 1, color_idx_to_rgb(COL_WHITE), 75 );
+				display_blend_wh_rgb( pos.x+p1.x-2*y, pos.y+y, 4*y+4, 1, color_idx_to_rgb(COL_WHITE), transparency );
+				display_blend_wh_rgb( pos.x+p3.x-2*y, pos.y+p3.y-y-1, 4*y+4, 1, color_idx_to_rgb(COL_WHITE), transparency );
 			}
 			// center area
 			if(  p1.x < p3.x  ) {
 				for( scr_coord_val y = toplines;  y < p3.y-toplines;  y++  ) {
-					display_blend_wh_rgb( pos.x+(y-toplines)*2, pos.y+y, 4*toplines+4, 1, color_idx_to_rgb(COL_WHITE), 75 );
+					display_blend_wh_rgb( pos.x+(y-toplines)*2, pos.y+y, 4*toplines+4, 1, color_idx_to_rgb(COL_WHITE), transparency );
 				}
 			}
 			else {
 				for( scr_coord_val y = toplines;  y < p3.y-toplines;  y++  ) {
-					display_blend_wh_rgb( pos.x+(y-toplines)*2, pos.y+p3.y-y-1, 4*toplines+4, 1, color_idx_to_rgb(COL_WHITE), 75 );
+					display_blend_wh_rgb( pos.x+(y-toplines)*2, pos.y+p3.y-y-1, 4*toplines+4, 1, color_idx_to_rgb(COL_WHITE), transparency );
 				}
 			}
 		}
 		else {
 			// easier with rectangular maps ...
-			display_blend_wh_rgb( cur_off.x+pos.x, cur_off.y+pos.y, map_data->get_width(), map_data->get_height(), color_idx_to_rgb(COL_WHITE), 75 );
+			display_blend_wh_rgb( cur_off.x+pos.x, cur_off.y+pos.y, map_data->get_width(), map_data->get_height(), color_idx_to_rgb(COL_WHITE), transparency );
 		}
 
 		scr_coord k1,k2;
