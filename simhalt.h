@@ -950,6 +950,11 @@ public:
 
 	bool has_available_network(const player_t* player, uint8 catg_index=goods_manager_t::INDEX_NONE) const;
 
+	// Check if passed waytype's service is active
+	// This is not affected by dummy bus stops intended to increase capacity,
+	// so it's a more accurate judgment than checking facilities.
+	bool has_waytype_service(waytype_t wt) const;
+
 	bool has_no_control_tower() const;
 
 	/**

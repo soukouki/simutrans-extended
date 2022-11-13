@@ -1926,6 +1926,13 @@ void minimap_t::draw(scr_coord pos)
 					continue;
 				}
 			}
+
+			// station service type filter
+			if(  transport_type_showed_on_map != simline_t::line  ) {
+				if(  !station->has_waytype_service( simline_t::linetype_to_waytype((simline_t::linetype)transport_type_showed_on_map) )  ) {
+					continue;
+				}
+			}
 		}
 
 		int radius = 0;
