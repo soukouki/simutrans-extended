@@ -711,6 +711,7 @@ public:
 	* True if we accept/deliver this kind of good
 	*/
 	bool gibt_ab(const goods_desc_t *warentyp) const { return cargo[warentyp->get_catg_index()] != NULL; }
+	bool accepts_goods_catg(uint8 goods_catg) const  { return cargo[goods_catg] != NULL; }
 
 	/**
 	 * retrieves a ware packet for any destination in the list

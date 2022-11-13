@@ -1906,12 +1906,26 @@ void minimap_t::draw(scr_coord pos)
 			continue;
 		}
 
-		// owner filter
-		if (  player_showed_on_map==world->get_active_player_nr()  &&  !station->get_owner()->allows_access_to( world->get_active_player_nr() )  )  {
-			continue;
-		}
-		else if (  player_showed_on_map!=-1 &&  player_showed_on_map!=station->get_owner()->get_player_nr() ) {
-			continue;
+		// These filters are effective only when network mode is off
+		if( (mode&MAP_LINES)==0 ) {
+			// freight type filter
+			if(  mode&MAP_SERVICE  &&  freight_type_group_index_showed_on_map) {
+				// stop accepts freight or not
+				if (freight_type_group_index_showed_on_map == goods_manager_t::none) {
+					if (!station->get_ware_enabled()) continue;
+				}
+				else {
+					if (!station->accepts_goods_catg(freight_type_group_index_showed_on_map->get_catg_index())) continue;
+				}
+			}
+
+			// player filter, include mutual use
+			if( player_showed_on_map!=-1 ) {
+				const player_t *selected_player = world->get_player(player_showed_on_map);
+				if( (selected_player!=station->get_owner()) && !station->has_available_network(selected_player) ) {
+					continue;
+				}
+			}
 		}
 
 		int radius = 0;
