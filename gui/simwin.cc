@@ -907,6 +907,17 @@ int create_win(scr_coord_val x, scr_coord_val y, gui_frame_t* const gui, wintype
 	}
 }
 
+static void save_win_position(const simwin_t &win)
+{
+	if(  win.magic_number < magic_max  ) {
+		if(  scr_coord *k = old_win_pos.access(win.magic_number)  ) {
+			*k = win.pos;
+		}
+		else {
+			old_win_pos.put( win.magic_number, win.pos );
+		}
+	}
+}
 
 /* sometimes a window cannot destroyed while it is still handled;
  * in those cases it will added to kill list and it is only destructed
@@ -916,6 +927,7 @@ static void process_kill_list()
 {
 	FOR(vector_tpl<simwin_t>, & i, kill_list) {
 		if (inside_event_handling != i.gui) {
+			save_win_position(i);
 			destroy_framed_win(&i);
 			wins.remove(i);
 		}
@@ -1013,15 +1025,7 @@ bool destroy_win(const gui_frame_t *gui, bool destroy_locked)
 			else {
 				simwin_t win = wins[i];
 				wins.remove_at(i);
-				if(  win.magic_number < magic_max  ) {
-					// save last pos
-					if(  scr_coord *k = old_win_pos.access(win.magic_number)  ) {
-						*k = win.pos;
-					}
-					else {
-						old_win_pos.put( win.magic_number, win.pos );
-					}
-				}
+				save_win_position(win);
 				destroy_framed_win(&win);
 			}
 			return true;
@@ -1035,6 +1039,7 @@ void destroy_all_win(bool destroy_sticky)
 {
 	for(  sint32 curWin = 0;  curWin < (sint32)wins.get_count();  curWin++  ) {
 		if(  destroy_sticky  ||  (!wins[curWin].sticky  &&  !wins[curWin].locked)  ) {
+			save_win_position(wins[curWin]);
 			if(  inside_event_handling == wins[curWin].gui  ) {
 				// only add this, if not already added
 				kill_list.append_unique(wins[curWin]);
