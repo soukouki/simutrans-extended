@@ -406,6 +406,7 @@ SOURCES += gui/components/gui_tab_panel.cc
 SOURCES += gui/components/gui_textarea.cc
 SOURCES += gui/components/gui_textinput.cc
 SOURCES += gui/components/gui_vehicle_capacitybar.cc
+SOURCES += gui/components/gui_vehicle_cargoinfo.cc
 SOURCES += gui/components/gui_waytype_image_box.cc
 SOURCES += gui/components/gui_waytype_tab_panel.cc
 SOURCES += gui/components/gui_world_view_t.cc
