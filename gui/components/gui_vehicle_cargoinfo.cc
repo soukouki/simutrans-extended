@@ -24,10 +24,11 @@
 
 #define HALT_WAITING_BAR_MAX_WIDTH 80
 
+bool gui_cargo_info_t::sort_reverse = false;
 
 static int compare_amount(const ware_t &a, const ware_t &b) {
 	int comp = b.menge - a.menge;
-	return comp;
+	return gui_cargo_info_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_index(const ware_t &a, const ware_t &b) {
@@ -38,7 +39,7 @@ static int compare_index(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return comp;
+	return gui_cargo_info_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_via(const ware_t &a, const ware_t &b) {
@@ -49,7 +50,7 @@ static int compare_via(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return comp;
+	return gui_cargo_info_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_last_transfer(const ware_t &a, const ware_t &b) {
@@ -57,7 +58,7 @@ static int compare_last_transfer(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return comp;
+	return gui_cargo_info_t::sort_reverse ? -comp : comp;
 }
 
 
