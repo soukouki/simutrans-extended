@@ -6482,3 +6482,31 @@ Unproductive: %d Mo.
 Unproductive: %d Mo.
 Contractless: %d Mo.
 Missing contracts: %d Mo.
+info_depth_from:
+Detail (origin)
+info_depth_to:
+Detail (destination)
+separate_by_fare_class
+Divide by accommodation class
+divide_by_wealth_class
+Divide by wealth and type
+Destination halt
+Destination stop
+Loaded stop
+Loaded stop
+Origin stop
+Origin stop
+Boarding from:
+Boarded from:
+Loaded at:
+Loaded at:
+Origin:
+Origin:
+origin
+origin
+Shipped from:
+Shipped from:
+Separate cargo information display by fare class of this convoy.
+Divide the payload information display into categories by accommodation class
+Cargoes are divided and displayed according to the wealth class.
+Divide the payload information display into categories by wealth (passengers) or priority (mail), and also passengers' trip types
