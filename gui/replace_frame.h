@@ -35,8 +35,14 @@ private:
 
 	cbuffer_t title_buf;
 
-	bool replace_line;	// True if all convoys like this in its line are to be replaced
-	bool replace_all;	// True if all convoys like this are to be replaced
+	enum replace_mode_t {
+		only_this_convoy = 0,
+		same_convoy,
+		same_convoy_and_same_line,
+		same_line,
+	};
+	replace_mode_t replace_mode;
+
 	bool depot;		// True if convoy is to be sent to depot only
 	replace_data_t *rpl;
 	enum {state_replace=0, state_sell, state_skip, n_states};

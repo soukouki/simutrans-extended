@@ -42,7 +42,7 @@ static bool _is_electrified(const karte_t* welt, const convoihandle_t& cnv)
 
 replace_frame_t::replace_frame_t(convoihandle_t cnv) :
 	gui_frame_t("", NULL),
-	replace_line(false), replace_all(false), depot(false),
+	replace_mode(only_this_convoy), depot(false),
 	state(state_replace), replaced_so_far(0),
 	current_convoi(&current_convoi_pics),
 	scrollx_convoi(&current_convoi, true, false),
@@ -154,13 +154,16 @@ void replace_frame_t::init_table()
 
 				new_component<gui_margin_t>(D_H_SPACE);
 
+				// "replace all" and "replace all in line" are confusing, but are left for backward compatibility of the translation files.
 				cb_replace_target.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("Only this convoy"), SYSCOL_TEXT);
 				cb_replace_target.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("replace all"), SYSCOL_TEXT);
 				if( line.is_bound() ) {
 					cb_replace_target.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("replace all in line"), SYSCOL_TEXT);
+					cb_replace_target.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("replace whole convoys in line"), SYSCOL_TEXT);
 				}
 				cb_replace_target.add_listener(this);
-				cb_replace_target.set_selection( replace_all + replace_line*2 );
+
+				cb_replace_target.set_selection(replace_mode);
 				add_component(&cb_replace_target);
 			}
 			end_table();
@@ -335,48 +338,70 @@ void replace_frame_t::update_data()
 	n[2] = 0;
 	money = 0;
 	sint64 base_total_cost = calc_total_cost();
-	if (replace_line || replace_all) {
+	if (replace_mode != only_this_convoy) {
 		start_replacing();
 	} else {
 		money -= base_total_cost;
 	}
-	if (replace_line) {
-		linehandle_t line=cnv.is_bound()?cnv->get_line():linehandle_t();
-		if (line.is_bound()) {
-			for (uint32 i=0; i<line->count_convoys(); i++)
-			{
-				convoihandle_t cnv_aux=line->get_convoy(i);
-				if (cnv->has_same_vehicles(cnv_aux))
-				{
-					uint8 present_state=get_present_state();
-					if (present_state==(uint8)(-1))
-					{
-						continue;
-					}
-
-					money -= base_total_cost;
-					n[present_state]++;
-				}
-			}
-		}
-	} else if (replace_all) {
-		for (uint32 i=0; i<welt->convoys().get_count(); i++) {
-			convoihandle_t cnv_aux=welt->convoys()[i];
-			if (cnv_aux.is_bound() && cnv_aux->get_owner()==cnv->get_owner() && cnv->has_same_vehicles(cnv_aux))
-			{
-				uint8 present_state=get_present_state();
-				if (present_state==(uint8)(-1))
-				{
-					continue;
-				}
-
-				money -= base_total_cost;
-				n[present_state]++;
-			}
-		}
+	
+	switch (replace_mode)
+	{
+	case only_this_convoy:
+	{
+		// none
+		break;
 	}
+	case same_convoy: {
+		for (uint32 i=0; i<welt->convoys().get_count(); i++)
+		{
+			convoihandle_t cnv_aux=welt->convoys()[i];
+			if (!cnv.is_bound() || cnv_aux->get_owner() != cnv->get_owner() || !cnv->has_same_vehicles(cnv_aux)) continue;
+
+			uint8 present_state=get_present_state();
+			if (present_state==(uint8)(-1)) continue;
+
+			money -= base_total_cost;
+			n[present_state]++;
+		}
+		break;
+	}
+	case same_convoy_and_same_line:
+	{
+		linehandle_t line=cnv.is_bound()?cnv->get_line():linehandle_t();
+		if (!line.is_bound()) break;
+
+		for (uint32 i=0; i<line->count_convoys(); i++)
+		{
+			convoihandle_t cnv_aux=line->get_convoy(i);
+			if (!cnv->has_same_vehicles(cnv_aux)) continue;
+
+			uint8 present_state=get_present_state();
+			if (present_state==(uint8)(-1)) continue;
+
+			money -= base_total_cost;
+			n[present_state]++;
+		}
+		break;
+	}
+	case same_line:
+	{
+		linehandle_t line=cnv.is_bound()?cnv->get_line():linehandle_t();
+		if (!line.is_bound()) break;
+
+		for (uint32 i=0; i<line->count_convoys(); i++)
+		{
+			uint8 present_state=get_present_state();
+			if (present_state==(uint8)(-1)) continue;
+
+			money -= base_total_cost;
+			n[present_state]++;
+		}
+		break;
+	}
+	}
+
 	for (uint8 i = 0; i < n_states; ++i) {
-		if (replace_all || replace_line) {
+		if (replace_mode != only_this_convoy) {
 			numinp[i].enable();
 			lb_inp[i].set_color(SYSCOL_TEXT);
 			lb_text[i].buf().append(n[i],0);
@@ -494,8 +519,7 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 	}
 
 	if( comp==&cb_replace_target ) {
-		replace_all = (cb_replace_target.get_selection() == 1);
-		replace_line = (cb_replace_target.get_selection() == 2);
+		replace_mode = (replace_mode_t)cb_replace_target.get_selection();
 		update_data();
 	}
 	else if (comp == &bt_retain_in_depot)
@@ -528,64 +552,70 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 		set_vehicles();
 	}
 
-	else if(comp == &bt_autostart || comp == &bt_depot || comp == &bt_mark)
+	else if (comp == &bt_autostart || comp == &bt_depot || comp == &bt_mark)
 	{
 		depot=(comp==&bt_depot);
 		rpl->set_autostart((comp==&bt_autostart));
 
 		start_replacing();
-		if (!replace_line && !replace_all)
+
+		switch (replace_mode)
+		{
+		case only_this_convoy:
 		{
 			replace_convoy(cnv, comp == &bt_mark);
+			break;
 		}
-		else if (replace_line)
-		{
-			linehandle_t line = cnv.is_bound() ? cnv->get_line() : linehandle_t();
-			if (line.is_bound())
-			{
-				bool first_success = false;
-				for (uint32 i = 0; i < line->count_convoys(); i++)
-				{
-					convoihandle_t cnv_aux = line->get_convoy(i);
-					if (cnv->has_same_vehicles(cnv_aux))
-					{
-						first_success = replace_convoy(cnv_aux, comp == &bt_mark);
-						if(copy == false)
-						{
-							master_convoy = cnv_aux;
-						}
-						if(first_success)
-						{
-							copy = true;
-						}
-					}
-				}
-			}
-			else
-			{
-				replace_convoy(cnv, comp == &bt_mark);
-			}
-		}
-		else if (replace_all)
+		case same_convoy:
 		{
 			bool first_success = false;
 			for (uint32 i=0; i<welt->convoys().get_count(); i++)
 			{
-				convoihandle_t cnv_aux=welt->convoys()[i];
-				if (cnv_aux.is_bound() && cnv_aux->get_owner()==cnv->get_owner() && cnv->has_same_vehicles(cnv_aux))
-				{
-					first_success = replace_convoy(cnv_aux, comp == &bt_mark);
-					if(copy == false)
-					{
-						master_convoy = cnv_aux;
-					}
-					if(first_success)
-					{
-						copy = true;
-					}
-				}
+				convoihandle_t cnv_aux = welt->convoys()[i];
+				if (!cnv_aux.is_bound() || cnv_aux->get_owner() != cnv->get_owner() || !cnv->has_same_vehicles(cnv_aux)) continue;
+
+				first_success = replace_convoy(cnv_aux, comp == &bt_mark);
+				if (!copy) master_convoy = cnv_aux;
+				if (first_success) copy = true;
 			}
+			break;
 		}
+		case same_convoy_and_same_line:
+		{
+			linehandle_t line = cnv.is_bound() ? cnv->get_line() : linehandle_t();
+			if (!line.is_bound()) break;
+
+			bool first_success = false;
+			for (uint32 i = 0; i<line->count_convoys(); i++)
+			{
+				convoihandle_t cnv_aux = line->get_convoy(i);
+				if (!cnv->has_same_vehicles(cnv_aux)) continue;
+
+				first_success = replace_convoy(cnv_aux, comp == &bt_mark);
+				if (!copy) master_convoy = cnv_aux;
+				if (first_success) copy = true;
+			}
+			break;
+		}
+		case same_line:
+		{
+			linehandle_t line = cnv.is_bound() ? cnv->get_line() : linehandle_t();
+			if (!line.is_bound()) break;
+
+			bool first_success = false;
+			for (uint32 i = 0; i<line->count_convoys(); i++)
+			{
+				convoihandle_t cnv_aux = line->get_convoy(i);
+				if (!cnv_aux.is_bound() || cnv_aux->get_owner() != cnv->get_owner()) continue;
+
+				first_success = replace_convoy(cnv_aux, comp == &bt_mark);
+				if (!copy) master_convoy = cnv_aux;
+				if (first_success) copy = true;
+			}
+			break;
+		}
+		}
+
 //#ifndef DEBUG
 		//// FIXME: Oddly, this line causes crashes in 10.13 and over when
 		//// the replace window is closed automatically with "full replace".
@@ -603,7 +633,7 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 		return true;
 	}
 
-	if (replace_all || replace_line) {
+	if (replace_mode != only_this_convoy) {
 		for (uint8 i = 0; i < n_states; ++i) {
 			if( comp==&numinp[i] ) {
 				update_data();
@@ -761,8 +791,7 @@ void replace_frame_t::rdwr(loadsave_t *file)
 		bt_allow_using_existing_vehicles.pressed = use_existing_vehicles;
 
 		cb_replace_target.set_selection(selectet_target);
-		replace_all  = (selectet_target == 1);
-		replace_line = (selectet_target == 2);
+		replace_mode = (replace_mode_t)selectet_target;
 		for (uint8 i = 0; i < n_states; ++i) {
 			numinp[i].set_value(num_temp[i]);
 		}
