@@ -91,7 +91,7 @@ private:
 	inline void start_replacing() {state=state_replace; replaced_so_far=0;}
 	uint8 get_present_state();
 
-	sint64 calc_total_cost();
+	sint64 calc_total_cost(convoihandle_t current_cnv);
 
 	void init();
 	void init_table();

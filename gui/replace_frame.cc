@@ -332,7 +332,7 @@ void replace_frame_t::update_data()
 	n[1] = 0;
 	n[2] = 0;
 	money = 0;
-	sint64 base_total_cost = calc_total_cost();
+	sint64 base_total_cost = calc_total_cost(cnv);
 	if (replace_mode != only_this_convoy) {
 		start_replacing();
 	} else {
@@ -388,7 +388,7 @@ void replace_frame_t::update_data()
 			uint8 present_state=get_present_state();
 			if (present_state==(uint8)(-1)) continue;
 
-			money -= base_total_cost;
+			money -= calc_total_cost(line->get_convoy(i));
 			n[present_state]++;
 		}
 		break;
@@ -409,7 +409,7 @@ void replace_frame_t::update_data()
 		lb_text[i].update();
 	}
 
-	if (replace_mode != same_convoy) {
+	if (replace_mode != same_line) {
 		lb_vehicle_count.buf().printf("%s %u", translator::translate("Fahrzeuge:"), cnv->get_vehicle_count());
 		lb_vehicle_count.set_color(SYSCOL_TEXT);
 		lb_vehicle_count.update();
@@ -670,14 +670,14 @@ void replace_frame_t::draw(scr_coord pos, scr_size size)
 	gui_frame_t::draw(pos, size);
 }
 
-sint64 replace_frame_t::calc_total_cost()
+sint64 replace_frame_t::calc_total_cost(convoihandle_t current_cnv)
 {
 	sint64 total_cost = 0;
 	vector_tpl<const vehicle_t*> current_vehicles;
 	vector_tpl<uint16> keep_vehicles;
-	for(uint8 i = 0; i < cnv->get_vehicle_count(); i ++)
+	for(uint8 i = 0; i < current_cnv->get_vehicle_count(); i ++)
 	{
-		current_vehicles.append(cnv->get_vehicle(i));
+		current_vehicles.append(current_cnv->get_vehicle(i));
 	}
 
 	for(auto vehicle : *convoy_assembler.get_vehicles())
