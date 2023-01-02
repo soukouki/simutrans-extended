@@ -297,13 +297,8 @@ void replace_frame_t::set_vehicles(bool init)
 		{
 			add_table(3,1);
 			{
-				gui_label_buf_t *lb = new_component<gui_label_buf_t>();
-				lb->buf().printf("%s %u", translator::translate("Fahrzeuge:"), vehicle_count);
-				lb->update();
-
-				lb = new_component<gui_label_buf_t>();
-				lb->buf().printf("%s %i", translator::translate("Station tiles:"), cnv->get_tile_length());
-				lb->update();
+				add_component(&lb_vehicle_count);
+				add_component(&lb_station_tiles);
 
 				gui_tile_occupancybar_t *tile_bar = new_component<gui_tile_occupancybar_t>();
 				tile_bar->set_base_convoy_length(cnv->get_length(), veh_tmp_list[vehicle_count-1]->get_desc()->get_length());
@@ -412,6 +407,19 @@ void replace_frame_t::update_data()
 			lb_inp[i].set_color(SYSCOL_BUTTON_TEXT_DISABLED);
 		}
 		lb_text[i].update();
+	}
+
+	if (replace_mode != same_convoy) {
+		lb_vehicle_count.buf().printf("%s %u", translator::translate("Fahrzeuge:"), cnv->get_vehicle_count());
+		lb_vehicle_count.set_color(SYSCOL_TEXT);
+		lb_vehicle_count.update();
+
+		lb_station_tiles.buf().printf("%s %u", translator::translate("Station tiles:"), cnv->get_tile_length());
+		lb_station_tiles.set_color(SYSCOL_TEXT);
+		lb_station_tiles.update();
+	} else {
+		lb_vehicle_count.set_color(SYSCOL_BUTTON_TEXT_DISABLED);
+		lb_station_tiles.set_color(SYSCOL_BUTTON_TEXT_DISABLED);
 	}
 
 	if (convoy_assembler.get_vehicles()->get_count()>0) {
