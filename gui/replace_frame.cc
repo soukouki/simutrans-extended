@@ -338,7 +338,7 @@ void replace_frame_t::update_data()
 	} else {
 		money -= base_total_cost;
 	}
-	
+
 	switch (replace_mode)
 	{
 	case only_this_convoy:
