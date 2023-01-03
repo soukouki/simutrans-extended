@@ -988,20 +988,6 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 
 void gui_convoy_assembler_t::update_tabs()
 {
-	waytype_t wt;
-	if(depot_frame)
-	{
-		wt = depot_frame->get_depot()->get_wegtyp();
-	}
-	else if(replace_frame)
-	{
-		wt = replace_frame->get_convoy()->get_vehicle(0)->get_waytype();
-	}
-	else
-	{
-		wt = road_wt;
-	}
-
 	gui_component_t *old_tab = tabs.get_aktives_tab();
 	tabs.clear();
 
@@ -1009,11 +995,11 @@ void gui_convoy_assembler_t::update_tabs()
 
 	// add only if there are any
 	if(  !pas_vec.empty()  ) {
-		tabs.add_tab(&scrolly_pas, translator::translate( get_passenger_name(wt) ) );
+		tabs.add_tab(&scrolly_pas, translator::translate( get_passenger_name(way_type) ) );
 		one = true;
 	}
 	if(  !pas2_vec.empty()  ) {
-		tabs.add_tab(&scrolly_pas2, translator::translate( get_passenger2_name(wt) ) );
+		tabs.add_tab(&scrolly_pas2, translator::translate( get_passenger2_name(way_type) ) );
 		one = true;
 	}
 
@@ -1021,25 +1007,25 @@ void gui_convoy_assembler_t::update_tabs()
 	const uint16 shifter = 1 << vehicle_desc_t::electric;
 	const bool correct_traction_type = (veh_action==va_sell) || !depot_frame || (shifter & depot_frame->get_depot()->get_tile()->get_desc()->get_enabled());
 	if(  !electrics_vec.empty() && correct_traction_type  ) {
-		tabs.add_tab(&scrolly_electrics, translator::translate( get_electrics_name(wt) ) );
+		tabs.add_tab(&scrolly_electrics, translator::translate( get_electrics_name(way_type) ) );
 		one = true;
 	}
 
 	// add, if waggons are there ...
 	if(  !locos_vec.empty() || !waggons_vec.empty()  ) {
-		tabs.add_tab(&scrolly_locos, translator::translate( get_zieher_name(wt) ) );
+		tabs.add_tab(&scrolly_locos, translator::translate( get_zieher_name(way_type) ) );
 		one = true;
 	}
 
 	// only add, if there are waggons
 	if(  !waggons_vec.empty()  ) {
-		tabs.add_tab(&scrolly_waggons, translator::translate( get_haenger_name(wt) ) );
+		tabs.add_tab(&scrolly_waggons, translator::translate( get_haenger_name(way_type) ) );
 		one = true;
 	}
 
 	if(  !one  ) {
 		// add passenger as default
-		tabs.add_tab(&scrolly_pas, translator::translate( get_passenger_name(wt) ) );
+		tabs.add_tab(&scrolly_pas, translator::translate( get_passenger_name(way_type) ) );
  	}
 
 	// Look, if there is our old tab present again (otherwise it will be 0 by tabs.clear()).
@@ -1063,7 +1049,6 @@ void gui_convoy_assembler_t::update_tabs()
 		selected_filter = VEHICLE_FILTER_RELEVANT;
 	}
 	vehicle_filter.set_selection(selected_filter);
-	vehicle_filter.set_highlight_color(depot_frame ? depot_frame->get_depot()->get_owner()->get_player_color1()+1 : replace_frame ? replace_frame->get_convoy()->get_owner()->get_player_color1()+1 : COL_BLACK);
 }
 
 // free memory: all the image_data_t
