@@ -7036,7 +7036,7 @@ DBG_MESSAGE("convoi_t::go_to_depot()","convoi state %i => cannot change schedule
 		}
 	}
 
-	if(((aircraft && !aircraft->is_on_ground()) || use_home_depot) && home_depot_valid)
+	if(aircraft && (!aircraft->is_on_ground() || use_home_depot) && home_depot_valid)
 	{
 		// Flying aircraft cannot find a route using the normal means: send to their home depot instead.
 		aircraft->calc_route(get_pos(), home_depot, speed_to_kmh(get_min_top_speed()), has_tall_vehicles(), &route);
