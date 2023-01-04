@@ -3114,15 +3114,15 @@ remove interm. signals
 renewal_costs
 更新費
 Replace
-交換
+編成の置換
 replace all
 同一構成の編成全て
 Replace all convoys like this
 所有する同じ構成の編成すべてを対象にします。
 Replace all convoys like this belonging to this line
-同一路線内の、同じ構成の編成すべてを対象にします。
+同一路線内の、同じ車両構成の編成すべてを対象にします。
 replace all in line
-所属路線の同一構成の編成
+所属路線の同一車両構成の編成
 Replace but stay
 交換後待機
 Replace cycle:
