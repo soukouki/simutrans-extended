@@ -891,7 +891,7 @@ void replace_frame_t::rdwr(loadsave_t *file)
 		update_data();
 	}
 
-	// convoy vanished 
+	// convoy vanished
 	if (!cnv.is_bound() && !target_line.is_bound()) {
 		if(!cnv.is_bound())         dbg->error("replace_frame_t::rdwr()", "Could not restore replace window of convoy(%d)", cnv.get_id());
 		if(!target_line.is_bound()) dbg->error("replace_frame_t::rdwr()", "Could not restore replace window of line(%d)",   target_line.get_id());
