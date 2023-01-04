@@ -3129,6 +3129,8 @@ Replace cycle:
 交換比率:
 replace other signals
 他の信号を置換
+replace_line_convoys
+編成の一括置き換え
 Replacing
 交換中
 Replacing\nvehicles of\n%-20s\ncompleted
@@ -3653,6 +3655,10 @@ helptxt_intermediate
 中間車両
 hlptxt_vh_normal_state
 選択可能/正常（現役車両）
+helptxt_replace_all_convoys_of_this_line
+この路線に所属する編成を指定した構成に置き換えます。
+multiline_helptext_replace_all_line_convoys
+路線に所属している全ての編成を\n設定した構成で置き換えます。
 need to connect vehicle
 車両の追加が必要
 out of production

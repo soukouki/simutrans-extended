@@ -103,7 +103,7 @@ void replace_frame_t::init()
 void replace_frame_t::set_title()
 {
 	if( target_line.is_bound() ){
-		title_buf.printf("%s > %s", translator::translate("replace_line"), target_line->get_name());
+		title_buf.printf("%s > %s", translator::translate("replace_line_convoys"), target_line->get_name());
 	}
 	else if( cnv.is_bound() ){
 		title_buf.printf("%s > %s", translator::translate("Replace"), cnv->get_name());
