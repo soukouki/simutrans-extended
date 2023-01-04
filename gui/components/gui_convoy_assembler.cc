@@ -1478,13 +1478,15 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 							{
 								append = false;
 								convoihandle_t cnv = replace_frame->get_convoy();
-								const uint8 count = cnv->get_vehicle_count();
-								for(uint8 i = 0; i < count; i++)
-								{
-									if(cnv->get_vehicle(i)->get_desc() == info)
+								if( cnv.is_bound() ) {
+									const uint8 count = cnv->get_vehicle_count();
+									for(uint8 i = 0; i < count; i++)
 									{
-										append = true;
-										break;
+										if(cnv->get_vehicle(i)->get_desc() == info)
+										{
+											append = true;
+											break;
+										}
 									}
 								}
 							}
@@ -1582,13 +1584,15 @@ void gui_convoy_assembler_t::update_convoi()
 				bool vehicle_available = false;
 				image_id image;
 				convoihandle_t cnv = replace_frame->get_convoy();
-				for(uint8 n = 0; n < cnv->get_vehicle_count(); n++)
-				{
-					if(cnv->get_vehicle(n)->get_desc() == info)
+				if( cnv.is_bound() ) {
+					for(uint8 n = 0; n < cnv->get_vehicle_count(); n++)
 					{
-						vehicle_available = true;
-						image = info->get_base_image(cnv->get_vehicle(n)->get_current_livery());
-						break;
+						if(cnv->get_vehicle(n)->get_desc() == info)
+						{
+							vehicle_available = true;
+							image = info->get_base_image(cnv->get_vehicle(n)->get_current_livery());
+							break;
+						}
 					}
 				}
 				if( !vehicle_available ) {
@@ -2311,7 +2315,7 @@ void gui_convoy_assembler_t::draw(scr_coord offset)
 
 	update_vehicle_info_text(pos+offset);
 
-	const uint8 player_nr = depot_frame ? depot_frame->get_depot()->get_owner_nr() : replace_frame->get_convoy()->get_owner()->get_player_nr();
+	const uint8 player_nr = depot_frame ? depot_frame->get_depot()->get_owner_nr() : replace_frame->get_player_nr();
 	// show/hide [CONVOI]
 	lb_makeup.set_visible(!vehicles.get_count() && (world()->get_active_player_nr()==player_nr));
 	cont_convoi_spec.set_visible(vehicles.get_count());

@@ -16,6 +16,7 @@
 #include "components/gui_convoy_assembler.h"
 #include "components/gui_label.h"
 #include "components/gui_numberinput.h"
+#include "components/gui_textarea.h"
 
 #include "../dataobj/replace_data.h"
 
@@ -33,13 +34,16 @@ private:
 	 */
 	convoihandle_t cnv;
 
+	// UI acts as "line replace dialog" if valid line is assigned
+	linehandle_t target_line;
+
 	cbuffer_t title_buf;
 
 	enum replace_mode_t {
 		only_this_convoy = 0,
-		same_convoy,
-		same_convoy_and_same_line,
-		same_line,
+		same_consist_for_player,
+		same_consist_for_this_line,
+		all_convoys_of_this_line
 	};
 	replace_mode_t replace_mode;
 
@@ -86,6 +90,9 @@ private:
 	gui_label_buf_t lb_vehicle_count;
 	gui_label_buf_t lb_station_tiles;
 
+	cbuffer_t buf_line_help;
+	gui_textarea_t txt_line_replacing;
+
 	// Some helper functions
 	bool replace_convoy(convoihandle_t cnv, bool mark);
 	inline void start_replacing() {state=state_replace; replaced_so_far=0;}
@@ -101,6 +108,7 @@ private:
 
 public:
 	replace_frame_t(convoihandle_t cnv = convoihandle_t());
+	replace_frame_t(linehandle_t line);
 
 	// This is also called when the convoy name is changed.
 	void set_title();
@@ -129,10 +137,13 @@ public:
 
 	const convoihandle_t get_convoy() const { return cnv; }
 
+	uint8 get_player_nr() const;
+
 	virtual ~replace_frame_t();
 
 	// for reload from the save
 	void set_convoy(convoihandle_t cnv) { this->cnv=cnv; init(); }
+	void set_line(linehandle_t line) { target_line = line; cnv=convoihandle_t(); init(); }
 	uint32 get_rdwr_id() OVERRIDE;
 
 	void rdwr(loadsave_t *) OVERRIDE;
