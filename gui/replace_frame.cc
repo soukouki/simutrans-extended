@@ -631,6 +631,13 @@ bool replace_frame_t::action_triggered( gui_action_creator_t *comp,value_t /*p*/
 
 	else if (comp == &bt_autostart || comp == &bt_depot || comp == &bt_mark)
 	{
+		if( (replace_mode==same_consist_for_player || replace_mode==same_consist_for_this_line) ) {
+			// check replace cycle input value
+			if( !numinp[state_replace].get_value()  &&  !numinp[state_sell].get_value() ){
+				create_win(new news_img("error_text_invalid_replace_cycle"), w_time_delete, magic_none);
+				return false;
+			}
+		}
 		depot=(comp==&bt_depot);
 		rpl->set_autostart((comp==&bt_autostart));
 
