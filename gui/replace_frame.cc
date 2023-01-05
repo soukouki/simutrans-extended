@@ -237,9 +237,10 @@ void replace_frame_t::init_table()
 			new_component_span<gui_label_t>("Replace cycle:",3);
 			// | label | input | number(text) |
 			for( uint8 i=0; i<n_states; ++i ) {
+				numinp[i].set_value(i==0 ? 1:0); // init value first
+				if( target_line.is_bound() && i>0 ) continue;
 				lb_inp[i].init(rpl_label_texts[i]);
 				add_component(&lb_inp[i]);
-				numinp[i].set_value(i==0 ? 1:0);
 				numinp[i].set_increment_mode(1);
 				numinp[i].set_limits(0, 999);
 				numinp[i].add_listener(this);
