@@ -293,9 +293,17 @@ settings_t::settings_t() :
 	// default: joined capacities
 	separate_halt_capacities = false;
 
-	for (uint8 i = 0; i < 10; i++) {
-		waytype_color[i] = 0;
-	}
+	// waytype color setting
+	waytype_color[0] = 44373;
+	waytype_color[waytype_t(road_wt)]  = 39455;
+	waytype_color[waytype_t(track_wt)] = 64448;
+	waytype_color[waytype_t(water_wt)] = 536;
+	waytype_color[4] = 0;
+	waytype_color[waytype_t(monorail_wt)] = 45316;
+	waytype_color[waytype_t(maglev_wt)]   = 61916;
+	waytype_color[waytype_t(tram_wt)]     = 15911;
+	waytype_color[waytype_t(narrowgauge_wt)] = 37702;
+	waytype_color[9] = 13919; // air
 
 	// Cornering settings
 	// @author: jamespetts
@@ -989,7 +997,9 @@ void settings_t::rdwr(loadsave_t *file)
 		if(file->is_version_atleast(102, 2)) {
 			bool dummy = false;
 			file->rdwr_bool(dummy);
-			file->rdwr_bool( with_private_paks );
+			if (file->is_version_less(123, 2) || file->is_version_ex_less(14, 59)) {
+				file->rdwr_bool( with_private_paks );
+			}
 		}
 		if(file->is_version_atleast(102, 3)) {
 			// network stuff

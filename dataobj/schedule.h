@@ -233,6 +233,9 @@ public:
 	 */
 	bool is_contained(koord3d pos);
 
+	// for GUI: To get the station number of the destination of the cargo
+	uint8 get_entry_index(halthandle_t halt, player_t *player, bool reverse) const;
+
 	image_id get_schedule_type_symbol() const
 	{
 		switch (get_type())
