@@ -57,20 +57,17 @@ trafficlight_info_t::trafficlight_info_t(roadsign_t* s) :
 
 		new_component<gui_margin_t>(LINESPACE);
 
-		gui_aligned_container_t *offset_table = add_table(1,4);
+		gui_aligned_container_t *offset_table = add_table(1,3);
 		{
 			offset_table->set_table_frame(true, true);
 			new_component<gui_table_header_t>("shift", SYSCOL_TH_BACKGROUND_LEFT);
-
-			new_component<gui_margin_t>(1,(LINESPACE>>1)-D_V_SPACE);
-
 			offset.set_limits( 0, 255 );
 			offset.set_value( s->get_ticks_offset() );
 			offset.wrap_mode( false );
 			offset.add_listener( this );
 			add_component( &offset );
 
-			new_component<gui_margin_t>(1,LINESPACE>>1);
+			new_component<gui_margin_t>(1,LINESPACE);
 		}
 		end_table();
 	}
