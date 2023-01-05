@@ -418,7 +418,7 @@ void replace_frame_t::update_data()
 
 			for (uint32 i=0; i<line->count_convoys(); i++)
 			{
-				convoihandle_t cnv_aux=target_line->get_convoy(i);
+				convoihandle_t cnv_aux=line->get_convoy(i);
 				if (!cnv->has_same_vehicles(cnv_aux)) continue;
 
 				uint8 present_state=get_present_state();
