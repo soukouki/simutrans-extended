@@ -213,7 +213,7 @@ void weg_t::set_desc(const way_desc_t *b, bool from_saved_game)
 			gr->mark_image_dirty();
 		}
 	}
-	calc_speed_limit(gr, bridge, tunnel); 
+	calc_speed_limit(gr, bridge, tunnel);
 
 	max_axle_load = desc->get_max_axle_load();
 	if(on_pier){
