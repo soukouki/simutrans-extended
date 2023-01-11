@@ -868,7 +868,7 @@ void replace_frame_t::rdwr(loadsave_t *file)
 	}
 
 	// TODO: remove this if statement in ex-15branch
-	if( file->is_version_ex_atleast(14, 59) ) {
+	if( file->is_version_ex_atleast(14, 60) ) {
 		simline_t::rdwr_linehandle_t(file, target_line);
 	}
 
