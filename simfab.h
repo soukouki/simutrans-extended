@@ -644,7 +644,7 @@ private:
 	uint32 total_input, total_transit, total_output;
 	uint8 status;
 
-	uint8 sector;
+	uint8 sector = unknown;
 	void set_sector();
 
 	/// Position of a building of the factory.
@@ -981,11 +981,6 @@ public:
 	 */
 	void info_prod(cbuffer_t& buf) const;
 
-	/**
-	 * infostring on targets/sources
-	 */
-	void info_conn(cbuffer_t& buf) const;
-
 	void rdwr(loadsave_t *file);
 
 	/*
@@ -1129,7 +1124,16 @@ public:
 	uint32 get_scaled_mail_demand() const { return scaled_mail_demand; }
 
 	//bool is_end_consumer() const { return (output.empty() && !desc->is_electricity_producer()); }
-	enum ftype { marine_resource = 0, resource, resource_city, manufacturing, end_consumer, power_plant, unknown };
+	enum ftype {
+		marine_resource = 0,
+		resource,
+		resource_city,
+		manufacturing,
+		end_consumer,
+		power_plant,
+		unknown
+	};
+
 	// @returns industry type
 	uint8 get_sector() const { return sector; }
 	// Determine shortage of staff for each industry type
