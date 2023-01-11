@@ -2012,13 +2012,15 @@ void gui_convoy_assembler_t::update_data()
 				{
 					purple = true;
 					convoihandle_t cnv = replace_frame->get_convoy();
-					const uint8 count = cnv->get_vehicle_count();
-					for(uint8 i = 0; i < count; i++)
-					{
-						if(cnv->get_vehicle(i)->get_desc() == info)
+					if( cnv.is_bound() ) {
+						const uint8 count = cnv->get_vehicle_count();
+						for(uint8 i = 0; i < count; i++)
 						{
-							purple = false;
-							break;
+							if(cnv->get_vehicle(i)->get_desc() == info)
+							{
+								purple = false;
+								break;
+							}
 						}
 					}
 				}
