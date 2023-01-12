@@ -125,7 +125,7 @@ public:
 
 	// for vehicle filter
 	// Returns the traction types bits of depots of this waytype owned by the player
-	uint16 get_traction_types() { return traction_types; };
+	uint16 get_traction_types() const { return traction_types; }
 
 	/**
 	 * Set the window size
