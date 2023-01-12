@@ -143,7 +143,9 @@ void replace_frame_t::init_table()
 		if( line.is_bound() ) {
 			new_component<gui_line_button_t>(line);
 			new_component<gui_line_label_t>(line);
-			add_component(&lb_vehicle_count);
+			if( !cnv.is_bound() ) {
+				add_component(&lb_vehicle_count);
+			}
 		}
 		new_component<gui_fill_t>();
 	}
