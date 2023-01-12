@@ -157,7 +157,22 @@ void replace_frame_t::init_table()
 			new_component<gui_line_button_t>(line);
 			new_component<gui_line_label_t>(line);
 			if( !cnv.is_bound() ) {
-				add_component(&lb_vehicle_count);
+				add_table(3,1);
+				{
+					add_component(&lb_vehicle_count);
+					if (uint16 traction_type_count = line->get_traction_types()) {
+						traction_type_count = (traction_type_count & 0x55555555) + (traction_type_count >> 1 & 0x55555555);
+						traction_type_count = (traction_type_count & 0x33333333) + (traction_type_count >> 2 & 0x33333333);
+						traction_type_count = (traction_type_count & 0x0f0f0f0f) + (traction_type_count >> 4 & 0x0f0f0f0f);
+						traction_type_count = (traction_type_count & 0x00ff00ff) + (traction_type_count >> 8 & 0x00ff00ff);
+						traction_type_count = (traction_type_count & 0x0000ffff) + (traction_type_count >> 16 & 0x0000ffff);
+						if (traction_type_count>1) {
+							new_component<gui_margin_t>(LINEASCENT);
+							new_component<gui_label_with_symbol_t>("line_has_multiple_traction_types", skinverwaltung_t::alerts ? skinverwaltung_t::alerts->get_image_id(2):IMG_EMPTY)->set_tooltip(translator::translate("helptxt_warning_replacing_line_has_multiple_traction_types"));
+						}
+					}
+				}
+				end_table();
 			}
 		}
 		new_component<gui_fill_t>();
