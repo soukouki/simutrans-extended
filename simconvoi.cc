@@ -6854,6 +6854,15 @@ bool convoi_t::has_same_vehicles(convoihandle_t other) const
 	return false;
 }
 
+uint16 convoi_t::get_traction_types() const
+{
+	uint16 traction_types = 0;
+	for (uint8 i = 0; i < vehicle_count; i++) {
+		traction_types |= vehicle[i]->get_desc()->get_traction_type();
+	}
+	return traction_types;
+}
+
 /*
  * Will find a depot for the vehicle "master".
  */
