@@ -3223,21 +3223,28 @@ static void display_img_blend_wc(scr_coord_val h, const scr_coord_val xp, const 
 
 /* from here code for transparent images */
 
-typedef void (*alpha_proc)(PIXVAL *dest, const PIXVAL *src, const PIXVAL *alphamap, const unsigned alpha_flags, const PIXVAL colour, const PIXVAL len);
+static PIXVAL get_alpha_mask(const unsigned alpha_flags)
+{
+	PIXVAL mask = alpha_flags & ALPHA_RED ? 0x7c00 : 0;
+	if (alpha_flags & ALPHA_GREEN) {
+		mask |= 0x03e0;
+	}
+	if (alpha_flags & ALPHA_BLUE) {
+		mask |= 0x001f;
+	}
+	return mask;
+}
 
-// FIXME provide alphamask as parameter
+typedef void (*alpha_proc)(PIXVAL *dest, const PIXVAL *src, const PIXVAL *alphamap, const PIXVAL alpha_mask, const PIXVAL colour, const PIXVAL len);
 
-static void alpha(PIXVAL *dest, const PIXVAL *src, const PIXVAL *alphamap, const unsigned alpha_flags, const PIXVAL , const PIXVAL len)
+static void alpha(PIXVAL *dest, const PIXVAL *src, const PIXVAL *alphamap, const PIXVAL alpha_mask, const PIXVAL , const PIXVAL len)
 {
 	const PIXVAL *const end = dest + len;
 
-	const uint16 rmask = alpha_flags & ALPHA_RED ? 0x7c00 : 0;
-	const uint16 gmask = alpha_flags & ALPHA_GREEN ? 0x03e0 : 0;
-	const uint16 bmask = alpha_flags & ALPHA_BLUE ? 0x001f : 0;
-
 	while(  dest < end  ) {
 		// read mask components - always 15bpp
-		uint16 alpha_value = ((*alphamap) & bmask) + (((*alphamap) & gmask) >> 5) + (((*alphamap) & rmask) >> 10);
+		uint16 masked = *alphamap & alpha_mask;
+		uint16 alpha_value = (masked & 0x1f) + ((masked >> 5) & 0x1f) + ((masked >> 10) & 0x1f);
 
 		if(  alpha_value > 30  ) {
 			// opaque, just copy source
@@ -3256,17 +3263,14 @@ static void alpha(PIXVAL *dest, const PIXVAL *src, const PIXVAL *alphamap, const
 }
 
 
-static void alpha_recode(PIXVAL *dest, const PIXVAL *src, const PIXVAL *alphamap, const unsigned alpha_flags, const PIXVAL , const PIXVAL len)
+static void alpha_recode(PIXVAL *dest, const PIXVAL *src, const PIXVAL *alphamap, const PIXVAL alpha_mask, const PIXVAL , const PIXVAL len)
 {
 	const PIXVAL *const end = dest + len;
 
-	const uint16 rmask = alpha_flags & ALPHA_RED ? 0x7c00 : 0;
-	const uint16 gmask = alpha_flags & ALPHA_GREEN ? 0x03e0 : 0;
-	const uint16 bmask = alpha_flags & ALPHA_BLUE ? 0x001f : 0;
-
 	while(  dest < end  ) {
 		// read mask components - always 15bpp
-		uint16 alpha_value = ((*alphamap) & bmask) + (((*alphamap) & gmask) >> 5) + (((*alphamap) & rmask) >> 10);
+		uint16 masked = *alphamap & alpha_mask;
+		uint16 alpha_value = (masked & 0x1f) + ((masked >> 5) & 0x1f) + ((masked >> 10) & 0x1f);
 
 		if(  alpha_value > 30  ) {
 			// opaque, just copy source
@@ -3285,7 +3289,7 @@ static void alpha_recode(PIXVAL *dest, const PIXVAL *src, const PIXVAL *alphamap
 }
 
 
-static void display_img_alpha_wc(scr_coord_val h, const scr_coord_val xp, const scr_coord_val yp, const PIXVAL *sp, const PIXVAL *alphamap, const uint8 alpha_flags, int colour, alpha_proc p  CLIP_NUM_DEF )
+static void display_img_alpha_wc(scr_coord_val h, const scr_coord_val xp, const scr_coord_val yp, const PIXVAL *sp, const PIXVAL *alphamap, const PIXVAL alpha_mask, int colour, alpha_proc p  CLIP_NUM_DEF )
 {
 	if(  h > 0  ) {
 		PIXVAL *tp = textur + yp * disp_width;
@@ -3309,7 +3313,7 @@ static void display_img_alpha_wc(scr_coord_val h, const scr_coord_val xp, const 
 				if(  xpos + runlen > CR.clip_rect.x  &&  xpos < CR.clip_rect.xx  ) {
 					const int left = (xpos >= CR.clip_rect.x ? 0 : CR.clip_rect.x - xpos);
 					const int len  = (CR.clip_rect.xx - xpos >= runlen ? runlen : CR.clip_rect.xx - xpos);
-					p( tp + xpos + left, sp + left, alphamap + left, alpha_flags, colour, len - left );
+					p( tp + xpos + left, sp + left, alphamap + left, alpha_mask, colour, len - left );
 				}
 
 				sp += runlen;
@@ -3473,14 +3477,7 @@ void display_rezoomed_img_alpha(const image_id n, const image_id alpha_n, const 
 				if(  dirty  ) {
 					mark_rect_dirty_nc( xp, yp, xp + w - 1, yp + h - 1 );
 				}
-				display_img_alpha_wc( h, xp, yp, sp, alphamap, alpha_flags, color, alpha  CLIP_NUM_PAR );
-			}
-			else if(  xp < CR.clip_rect.xx  &&  xp + w > CR.clip_rect.x  ) {
-				display_img_alpha_wc( h, xp, yp, sp, alphamap, alpha_flags, color, alpha  CLIP_NUM_PAR );
-				// since height may be reduced, start marking here
-				if(  dirty  ) {
-					mark_rect_dirty_wc( xp, yp, xp + w - 1, yp + h - 1 );
-				}
+				display_img_alpha_wc( h, xp, yp, sp, alphamap, get_alpha_mask(alpha_flags), color, alpha  CLIP_NUM_PAR );
 			}
 		}
 	}
@@ -3629,7 +3626,7 @@ void display_base_img_alpha(const image_id n, const image_id alpha_n, const unsi
 			if(  dirty  ) {
 				mark_rect_dirty_nc( x, y, x + w - 1, y + h - 1 );
 			}
-			display_img_alpha_wc( h, x, y, sp, alphamap, alpha_flags, color, alpha_recode  CLIP_NUM_PAR );
+			display_img_alpha_wc( h, x, y, sp, alphamap, get_alpha_mask(alpha_flags), color, alpha_recode  CLIP_NUM_PAR );
 		}
 	} // number ok
 }
