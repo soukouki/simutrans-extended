@@ -74,7 +74,7 @@ static const char *cost_type_name[MAX_PLAYER_COST_BUTTON] =
 	"Net Wealth",
 	"Credit Limit",
 	"Solvency Limit",
-	"Margin (%)",
+	"Margin (%%)",
 	"Mail-km",
 	"Freight-km"
 };
