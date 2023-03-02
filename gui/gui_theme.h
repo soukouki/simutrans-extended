@@ -268,6 +268,7 @@ public:
 	static PIXVAL gui_color_empty;                        //@< Color for empty entries
 	static PIXVAL gui_color_chat_window_network_transparency; //@< Color if chat window is transparent in network mode
 //	static PIXVAL gui_color_image_transparency;           //@< Transparency color for some icons/images **NOT USED IN EXTENDED**
+	static PIXVAL gui_color_object_highlight;             //@< Color (Red) to mark objects on the map
 	static PIXVAL gui_color_up_pointing_triangle;         //@< (EX unique) Color to draw an upward triangle indicating an increase in the number
 	static PIXVAL gui_color_down_pointing_triangle;       //@< (EX unique) Color to draw an downward triangle indicating an decrease in the number
 	/// @}
