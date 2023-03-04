@@ -8,6 +8,7 @@
 
 
 #include "../dataobj/translator.h"
+#include "../unicode.h"
 #include "../simcolor.h"
 #include "../dataobj/environment.h"
 #include "components/gui_button_to_chart.h"

@@ -10,7 +10,6 @@
 #include "../simcity.h"
 #include "../player/simplay.h"
 #include "../obj/label.h"
-#include "../utils/simstring.h"
 #include "../utils/cbuffer_t.h"
 
 #include "../dataobj/environment.h"
@@ -125,7 +124,8 @@ const char* labellist_stats_t::get_text() const
 
 
 /**
- * Events are notified to GUI components via this method
+ * Events werden hiermit an die GUI-Komponenten
+ * gemeldet
  */
 bool labellist_stats_t::infowin_event(const event_t * ev)
 {

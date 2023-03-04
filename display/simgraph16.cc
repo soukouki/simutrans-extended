@@ -23,6 +23,7 @@
 #include "../unicode.h"
 #include "../simticker.h"
 #include "../utils/simstring.h"
+#include "../unicode.h"
 #include "../io/raw_image.h"
 
 #include "../gui/simwin.h"

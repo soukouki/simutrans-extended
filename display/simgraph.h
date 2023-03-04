@@ -8,7 +8,6 @@
 
 
 #include "../simcolor.h"
-#include "../unicode.h"
 #include "../simtypes.h"
 #include "clip_num.h"
 #include "simimg.h"

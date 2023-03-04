@@ -12,6 +12,7 @@
 #include "../simworld.h"
 #include "../obj/gebaeude.h"
 #include "../descriptor/building_desc.h"
+#include "../unicode.h"
 
 
 char curiositylist_frame_t::name_filter[256];

@@ -9,6 +9,7 @@
 #include "../dataobj/translator.h"
 #include "../obj/label.h"
 #include "../simworld.h"
+#include "../unicode.h"
 #include "components/gui_image.h"
 
 char labellist_frame_t::name_filter[256];
