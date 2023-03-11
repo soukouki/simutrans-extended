@@ -101,7 +101,8 @@ FLAGGED_PIXVAL gui_frame_t::get_titlecolor() const
 
 
 /**
- * Events are notified to GUI components via this method
+ * Events werden hiermit an die GUI-components
+ * gemeldet
  */
 bool gui_frame_t::infowin_event(const event_t *ev)
 {
@@ -180,7 +181,7 @@ void gui_frame_t::draw(scr_coord pos, scr_size size)
 	}
 	dirty = false;
 
-	PUSH_CLIP_FIT(pos.x+1, pos.y+titlebar_size.h, size.w-2, size.h-titlebar_size.h);
+	PUSH_CLIP_FIT(pos.x+1, pos.y+titlebar_size.h+1, size.w-2, size.h-titlebar_size.h-2);
 	gui_aligned_container_t::draw(pos);
 	POP_CLIP();
 
