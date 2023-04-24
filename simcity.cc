@@ -819,7 +819,7 @@ bool stadt_t::cityrules_init(const std::string &objfilename)
 	char buf[128];
 
 	minimum_city_distance = contents.get_int("minimum_city_distance", 16);
-	edge_avoidance = (uint32)contents.get_int("edge_avoidance", 16);
+	edge_avoidance = (uint32)contents.get_int("edge_avoidance", 8);
 	cluster_factor = (uint32)contents.get_int("cluster_factor", 100);
 	bridge_success_percentage = (uint32)contents.get_int("bridge_success_percentage", 25);
 	renovation_percentage = (uint32)contents.get_int("renovation_percentage", renovation_percentage);
