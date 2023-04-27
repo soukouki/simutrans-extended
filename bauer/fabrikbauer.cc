@@ -675,8 +675,10 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 		return 0;
 	}
 
+	factory_desc_t::site_t site = info->get_placement();
+
 	// no cities at all?
-	if ((info->get_placement() == factory_desc_t::City || info->get_placement() == factory_desc_t::shore_city || info->get_placement() == factory_desc_t::river_city) &&  welt->get_cities().empty()) {
+	if ((site == factory_desc_t::City || site == factory_desc_t::shore_city || site == factory_desc_t::river_city) &&  welt->get_cities().empty()) {
 		return 0;
 	}
 
@@ -691,7 +693,7 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 	}
 
 	// Industries in town needs different place search
-	if (info->get_placement() == factory_desc_t::City || info->get_placement() == factory_desc_t::shore_city || info->get_placement() == factory_desc_t::river_city) {
+	if (site == factory_desc_t::City || site == factory_desc_t::shore_city || site == factory_desc_t::river_city) {
 
 		koord size=info->get_building()->get_size(0);
 
@@ -710,12 +712,12 @@ int factory_builder_t::build_link(koord3d* parent, const factory_desc_t* info, s
 		 */
 		bool is_rotate=info->get_building()->get_all_layouts()>1  &&  size.x!=size.y  &&  info->get_building()->can_rotate();
 		// first try with standard orientation
-		koord k = factory_site_searcher_t(welt, factory_desc_t::City).find_place(city->get_pos(), size.x, size.y, cl, regions_allowed);
+		koord k = factory_site_searcher_t(welt, site).find_place(city->get_pos(), size.x, size.y, cl, regions_allowed);
 
 		// second try: rotated
 		koord k1 = koord::invalid;
 		if (is_rotate  &&  (k == koord::invalid  ||  simrand(256, " factory_builder_t::build_link")<128)) {
-			k1 = factory_site_searcher_t(welt, factory_desc_t::City).find_place(city->get_pos(), size.y, size.x, cl, regions_allowed);
+			k1 = factory_site_searcher_t(welt, site).find_place(city->get_pos(), size.y, size.x, cl, regions_allowed);
 		}
 
                 int streetdir = 0;
