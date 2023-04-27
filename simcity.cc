@@ -341,8 +341,9 @@ static uint32 minimum_city_distance = 16;
 
 /**
  * keep cities this many tiles away from the edge of the map
+ * sint16 because it's always added or subtracted from map koord values
  */
-static uint32 edge_avoidance = 8;
+static sint16 edge_avoidance = 8;
 
 /*
  * minimum ratio of city area to building area to allow expansion
@@ -788,12 +789,12 @@ void stadt_t::set_minimum_city_distance(uint32 s)
 	minimum_city_distance = s;
 }
 
-uint32 stadt_t::get_edge_avoidance()
+sint16 stadt_t::get_edge_avoidance()
 {
 	return edge_avoidance;
 }
 
-void stadt_t::set_edge_avoidance(uint32 s)
+void stadt_t::set_edge_avoidance(sint16 s)
 {
 	edge_avoidance = s;
 }
@@ -819,7 +820,7 @@ bool stadt_t::cityrules_init(const std::string &objfilename)
 	char buf[128];
 
 	minimum_city_distance = contents.get_int("minimum_city_distance", 16);
-	edge_avoidance = (uint32)contents.get_int_clamped("edge_avoidance", 8, 0, 127);
+	edge_avoidance = (sint16)contents.get_int_clamped("edge_avoidance", 8, 0, 127);
 	cluster_factor = (uint32)contents.get_int("cluster_factor", 100);
 	bridge_success_percentage = (uint32)contents.get_int("bridge_success_percentage", 25);
 	renovation_percentage = (uint32)contents.get_int("renovation_percentage", renovation_percentage);
@@ -1049,7 +1050,7 @@ void stadt_t::cityrules_rdwr(loadsave_t *file)
 
 	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 21) || file->get_extended_version() >= 15)
 	{
-		file->rdwr_long(edge_avoidance);
+		file->rdwr_short(edge_avoidance);
 	}
 
 	file->rdwr_short(ind_start_score);

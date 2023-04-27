@@ -8365,7 +8365,7 @@ bool karte_t::square_is_free(koord k, sint16 w, sint16 h, int *last_y, climate_b
 }
 
 
-slist_tpl<koord> *karte_t::find_squares(sint16 w, sint16 h, uint32 edge_avoidance_raw, climate_bits cl, uint16 regions_allowed, sint16 old_x, sint16 old_y) const
+slist_tpl<koord> *karte_t::find_squares(sint16 w, sint16 h, sint16 edge_avoidance, climate_bits cl, uint16 regions_allowed, sint16 old_x, sint16 old_y) const
 {
 	slist_tpl<koord> * list = new slist_tpl<koord>();
 	koord start;
@@ -8378,10 +8378,6 @@ slist_tpl<koord> *karte_t::find_squares(sint16 w, sint16 h, uint32 edge_avoidanc
 	// Note that the parameters old_x and old_y are used only for enlarge_map (otherwise they're 0)
 	//
 	// -- Nathanael Nerode
-
-	// We need to do signed math with this.
-	sint16 edge_avoidance = (sint16) edge_avoidance_raw;
-	// Note that edge_avoidance has been clamped to a correct size when first read from the tabfile.
 
 	// Need to do SIGNED math.
 	// Note: may be larger than map size, this is OK, caught by the for loop condition
