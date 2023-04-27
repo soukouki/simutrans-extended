@@ -137,8 +137,20 @@ public:
 		// Whether we've found a suitable road, shore, or river.
 		// Consider counting the number we find instead.
 		bool road_found = false;
+		if (site != factory_desc_t::City) {
+			// Don't look for the road if we don't care.
+			road_found = true;
+		}
 		bool shore_found = false;
+		if (site != factory_desc_t::shore && site != factory_desc_t::shore_city) {
+			// Don't look for the shore if we don't care.
+			shore_found = true;
+		}
 		bool river_found = false;
+		if (site != factory_desc_t::river && site != factory_desc_t::river_city) {
+			// Don't look for the river if we don't care.
+			river_found = true;
+		}
 		if(  welt->get_settings().get_river_number() <= 0  ) {
 			// On a map with no rivers, don't restrict to spaces near rivers
 			river_found = true;
@@ -206,29 +218,29 @@ public:
 				else if (  -1==x || x==w || -1==y || y==h  ) {
 					// border tile, and not corner (we checked corners first)
 					// check for road, shore, river
-					// short-circuit if we have already found road, shore, river
+					// short-circuit if we have already found road, shore, river, or don't care
 					road_found = road_found || gr->hat_weg(road_wt);
 					shore_found = shore_found || welt->get_climate(k) == water_climate;
-					weg_t* river = gr->get_weg(water_wt);
-					river_found = river_found || (river  &&  river->get_desc()->get_styp()==type_river);
+					if (!river_found) {
+						weg_t* river = gr->get_weg(water_wt);
+						river_found = river_found || (river  &&  river->get_desc()->get_styp()==type_river);
+					}
 				}
 			}
 		}
+		// For a city building we require a pre-existing road,
+		// but for river_city and shore_city we don't, we'll build the road afterwards.
 		switch (site) {
 			case factory_desc_t::City:
 				return road_found;
 				break;
 			case factory_desc_t::shore:
+			case factory_desc_t::shore_city:
 				return shore_found;
 				break;
-			case factory_desc_t::shore_city:
-				return shore_found && road_found;
-				break;
 			case factory_desc_t::river:
-				return river_found;
-				break;
 			case factory_desc_t::river_city:
-				return river_found && road_found;
+				return river_found;
 				break;
 			case factory_desc_t::forest:
 				// Enough trees?
