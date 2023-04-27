@@ -119,10 +119,12 @@ public:
 
 	bool is_area_ok(koord pos, sint16 w, sint16 h, climate_bits cl, uint16 allowed_regions) const OVERRIDE
 	{
-		if(  site != factory_desc_t::Water && !building_placefinder_t::is_area_ok(pos, w, h, cl, allowed_regions)  ) {
+		if (  site != factory_desc_t::Water  ) {
 			// If this is not a water site factory, then
-			// We need a clear space to build, first of all
-			return false;
+			if ( !building_placefinder_t::is_area_ok(pos, w, h, cl, allowed_regions)  ) {
+				// We need a clear space to build, first of all
+				return false;
+			}
 		}
 
 		// Check for runways
@@ -987,7 +989,7 @@ int factory_builder_t::build_chain_link(const fabrik_t* origin_fab, const factor
 
 			INT_CHECK("fabrikbauer 697");
 			const int max_distance_to_consumer = producer_d->get_max_distance_to_consumer() == 0 ? max_factory_spacing_general : producer_d->get_max_distance_to_consumer();
-			koord3d build_pos = find_random_construction_site(origin_fab->get_pos().get_2d(), min(max_distance_to_supplier, min(max_factory_spacing_general, max_distance_to_consumer)), producer_d->get_building()->get_size(rotate), producer_d->get_placement(), producer_d->get_building(), ignore_climates, 20000 );
+			koord3d build_pos = find_random_construction_site(origin_fab->get_pos().get_2d(), min(max_distance_to_supplier, min(max_factory_spacing_general, max_distance_to_consumer)), producer_d->get_building()->get_size(rotate), producer_d->get_placement(), producer_d->get_building(), ignore_climates, 200000 );
 			if(build_pos == koord3d::invalid  ) {
 				// this factory cannot build in the desired vincinity
 				producer.remove( producer_d );
