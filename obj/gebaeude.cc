@@ -1857,6 +1857,71 @@ void gebaeude_t::set_building_tiles()
 	}
 }
 
+
+/**
+ * Return a new minivec_tpl with the 2d coordinates of the neighboring tiles
+ * to this building, but not the corners.
+ *
+ * Caller should delete.
+ *
+ * Heavyweight: currently only used during construction of roads to new factories or attractions.
+ */
+const minivec_tpl<koord>* gebaeude_t::get_rectangular_neighbor_koords() {
+  const koord root_k = get_pos().get_2d();
+	const building_desc_t* bdsc = tile->get_desc();
+	const koord size = bdsc->get_size(tile->get_layout());
+	const sint16 how_many = 2 * (size.x + size.y);
+	minivec_tpl<koord>* result = new minivec_tpl<koord>(how_many);
+	// Top, left to right
+	for (sint16 x = 0; x < size.x; x++) {
+		const koord top_item = root_k + koord(x,-1);
+		result->append(top_item);
+	}
+	// Bottom, left to right
+	for (sint16 x = 0; x < size.x; x++) {
+		const koord bottom_item = root_k + koord(x,size.y);
+		result->append(bottom_item);
+	}
+	// Left, top to bottom
+	for (sint16 y = 0; y < size.y; y++) {
+		const koord left_item = root_k + koord(-1,y);
+		result->append(left_item);
+	}
+	// Right, top to bottom
+	for (sint16 y = 0; y < size.y; y++) {
+		const koord right_item = root_k + koord(size.x,y);
+		result->append(right_item);
+	}
+	return result;
+}
+
+
+/**
+ * Return a new minivec_tpl with the 2d coordinates of the neighboring tiles
+ * which are kitty-corner to this building.
+ *
+ * Caller should delete.
+ *
+ * Heavyweight: currently only used during construction of roads to new factories or attractions.
+ */
+const minivec_tpl<koord>* gebaeude_t::get_diagonal_neighbor_koords() {
+  const koord root_k = get_pos().get_2d();
+	const building_desc_t* bdsc = tile->get_desc();
+	const koord size = bdsc->get_size(tile->get_layout());
+	minivec_tpl<koord>* result = new minivec_tpl<koord>(4);
+
+	const koord top_left = root_k + koord(-1,-1);
+	const koord top_right = root_k + koord(size.x,-1);
+	const koord bottom_left = root_k + koord(-1,size.y);
+	const koord bottom_right = root_k + koord(size.x,size.y);
+	result->append(top_left);
+	result->append(top_right);
+	result->append(bottom_left);
+	result->append(bottom_right);
+	return result;
+}
+
+
 void gebaeude_t::connect_by_road_to_nearest_city()
 {
 	const koord root_k = get_pos().get_2d();
@@ -1864,44 +1929,86 @@ void gebaeude_t::connect_by_road_to_nearest_city()
 	const building_desc_t* bdsc = tile->get_desc();
 	const koord size = bdsc->get_size(tile->get_layout());
 
+// We find a starting place: a road or empty space next to the factory/attraction/other building.
+	koord3d start;
+	bool start_found = false;
 	const grund_t* gr;
-	koord3d test_start;
-  koord3d road_start;
-	bool road_start_found = false;
-	koord3d empty_start;
-	bool empty_start_found = false;
-	// Loop over an area one larger than the building on all sides
-	koord k; // offset from starting pos
-	for (k.y = -1; k.y <= size.y; k.y++) {
-		for (k.x = -1; k.x <= size.x; k.x++) {
-			// Ignore areas inside the building and look only at the edges
-			// Buildings may have holes in the center but don't look there
-			if (-1 == k.y || k.y == size.y || -1 == k.x || k.x == size.x) {
-				// Check all adjacent tiles but only try to build roads of the same height as building
-				test_start = koord3d (root_k + k, get_pos().z);
-				gr = welt->lookup(test_start);
-				if (!gr) {
-					continue;
-				} else if (!road_start_found && gr->get_weg(road_wt)) {
-					// found preexisting road; this is best, so use it
-					road_start = test_start;
-					road_start_found = true;
-					break; // and we're done so exit early
-				} else if (!empty_start_found && !gr->hat_wege() && !gr->get_building() && !gr->is_water()) {
-					// found empty space good enough to start on
-					empty_start = test_start;
-					empty_start_found = true;
-				}
+
+	// These are heavyweight but aren't called very often.  Need to delete the pointers when done.
+	const minivec_tpl<koord>* rectangular_neighbor_koords = get_rectangular_neighbor_koords();
+	const minivec_tpl<koord>* diagonal_neighbor_koords = get_diagonal_neighbor_koords();
+	// First look for a road on a rectangular side
+	if (!start_found) {
+		FOR(const minivec_tpl<koord>, const test_pos, *rectangular_neighbor_koords) {
+			// Only look for roads of the same height as building
+			const koord3d test_pos_3d = koord3d (test_pos, get_pos().z);
+			gr = welt->lookup(test_pos_3d);
+			if (gr != NULL && gr->get_weg(road_wt)) {
+				start_found = true;
+				start = test_pos_3d;
+				break;
+			}
+		}
+	}
+	// Second: look for a road on a diagonal corner
+	if (!start_found) {
+		FOR(const minivec_tpl<koord>, const test_pos, *diagonal_neighbor_koords) {
+			// Only look for roads of the same height as building
+			const koord3d test_pos_3d = koord3d (test_pos, get_pos().z);
+			gr = welt->lookup(test_pos_3d);
+			if (gr != NULL && gr->get_weg(road_wt)) {
+				start_found = true;
+				start = test_pos_3d;
+				break;
+			}
+		}
+	}
+	// Third: look for a blank space on a rectangular side
+	// But to keep it interesting, pick a random one to start with
+	if (!start_found) {
+		const int random_index = simrand(rectangular_neighbor_koords->get_count());
+		const koord & test_pos = (*rectangular_neighbor_koords)[random_index];
+		const koord3d test_pos_3d = koord3d (test_pos, get_pos().z);
+		gr = welt->lookup(test_pos_3d);
+		if (gr != NULL && !gr->hat_wege() && !gr->get_building() && !gr->is_water()) {
+			start_found = true;
+			start = test_pos_3d;
+		}
+	}
+	// One random try failed?  Don't overwork the random number engine:
+	// search systematically through the rectangular neighors.
+	if (!start_found) {
+		FOR(const minivec_tpl<koord>, const test_pos, *rectangular_neighbor_koords) {
+			// Only look for roads of the same height as building
+			const koord3d test_pos_3d = koord3d (test_pos, get_pos().z);
+			gr = welt->lookup(test_pos_3d);
+			if (gr != NULL && !gr->hat_wege() && !gr->get_building() && !gr->is_water()) {
+				start_found = true;
+				start = test_pos_3d;
+				break;
+			}
+		}
+	}
+	// Fourth: try the diagonal neighbors if we absolutely must.
+	if (!start_found) {
+		FOR(const minivec_tpl<koord>, const test_pos, *diagonal_neighbor_koords) {
+			// Only look for roads of the same height as building
+			const koord3d test_pos_3d = koord3d (test_pos, get_pos().z);
+			gr = welt->lookup(test_pos_3d);
+			if (gr != NULL && !gr->hat_wege() && !gr->get_building() && !gr->is_water()) {
+				start_found = true;
+				start = test_pos_3d;
+				break;
 			}
 		}
 	}
 
-	koord3d start;
-	if (road_start_found) {
-		start = road_start;
-	} else if (empty_start_found) {
-		start = empty_start;
-	} else {
+	// Clean up after ourselves, delete our minivec_t<koord> things
+	delete rectangular_neighbor_koords;
+	delete diagonal_neighbor_koords;
+
+	// At this point we should have found a starting point.
+	if (!start_found) {
 		// Nowhere to start from; give up.
 		return;
 	}
