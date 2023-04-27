@@ -184,7 +184,7 @@ public:
 					// we do NOT want to count a corner tile match as a match for road, shore, or river!
 					continue;
 				}
-				else if (  -1==x || x==w || -1==y || y==w  ) {
+				else if (  -1==x || x==w || -1==y || y==h  ) {
 					// border tile, and not corner (we checked corners first)
 					// check for road, shore, river
 					// short-circuit if we have already found road, shore, river
