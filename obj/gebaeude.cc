@@ -1859,42 +1859,71 @@ void gebaeude_t::set_building_tiles()
 
 void gebaeude_t::connect_by_road_to_nearest_city()
 {
-	if (get_stadt())
-	{
-		// Assume that this is already connected to a road if in a city.
+	const koord root_k = get_pos().get_2d();
+
+	const building_desc_t* bdsc = tile->get_desc();
+	const koord size = bdsc->get_size(tile->get_layout());
+
+	const grund_t* gr;
+	koord3d test_start;
+  koord3d road_start;
+	bool road_start_found = false;
+	koord3d empty_start;
+	bool empty_start_found = false;
+	// Loop over an area one larger than the building on all sides
+	koord k; // offset from starting pos
+	for (k.y = -1; k.y <= size.y; k.y++) {
+		for (k.x = -1; k.x <= size.x; k.x++) {
+			// Ignore areas inside the building and look only at the edges
+			// Buildings may have holes in the center but don't look there
+			if (-1 == k.y || k.y == size.y || -1 == k.x || k.x == size.x) {
+				// Check all adjacent tiles but only try to build roads of the same height as building
+				test_start = koord3d (root_k + k, get_pos().z);
+				gr = welt->lookup(test_start);
+				if (!gr) {
+					continue;
+				} else if (!road_start_found && gr->get_weg(road_wt)) {
+					// found preexisting road; this is best, so use it
+					road_start = test_start;
+					road_start_found = true;
+					break; // and we're done so exit early
+				} else if (!empty_start_found && !gr->hat_wege() && !gr->get_building() && !gr->is_water()) {
+					// found empty space good enough to start on
+					empty_start = test_start;
+					empty_start_found = true;
+				}
+			}
+		}
+	}
+
+	koord3d start;
+	if (road_start_found) {
+		start = road_start;
+	} else if (empty_start_found) {
+		start = empty_start;
+	} else {
+		// Nowhere to start from; give up.
 		return;
 	}
-	koord3d start = get_pos();
-	koord k = start.get_2d();
-	grund_t* gr;
-	bool start_found = false;
-	for (uint8 i = 0; i < 8; i++)
-	{
-		// Check for connected roads. Only roads in immediately neighbouring tiles
-		// and only those on the same height will register a connexion.
-		start = koord3d(k + k.neighbours[i], get_pos().z);
-		gr = welt->lookup(start);
-		if (!gr)
-		{
-			continue;
-		}
-		if ((!gr->hat_wege() || gr->get_weg(road_wt)) && !gr->get_building() && !gr->is_water())
-		{
-			start_found = true;
-			break;
-		}
-	}
-	if (!start_found)
-	{
-		return;
-	}
+
+	// Note: we do not assume that an industry/attraction in a city is already connected by road.
+	// This will allow us to find an industry location near a river in a city,
+	// and connect it by road to the townhall road *afterwards*.
 
 	// Next, find the nearest city
 	const uint32 rank_max = welt->get_settings().get_auto_connect_industries_and_attractions_by_road();
 	const uint32 max_road_length = env_t::networkmode ? 8192 : (uint32)env_t::intercity_road_length; // The env_t:: settings are not transmitted with network games so may diverge between client and server.
 	for (uint32 rank = 1; rank <= rank_max; rank++)
 	{
-		const stadt_t* city = welt->find_nearest_city(get_pos().get_2d(), rank);
+		const stadt_t* my_city;
+		const stadt_t* city;
+		if (rank == 1 && (my_city = get_stadt()) ) {
+			// Special-case the case where we're already IN a city
+			city = my_city;
+		} else {
+			// Otherwise find the closest
+			city = welt->find_nearest_city(get_pos().get_2d(), rank);
+		}
 		if (!city)
 		{
 			return;
