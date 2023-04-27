@@ -125,6 +125,13 @@ public:
 			return false;
 		}
 
+		// Check for runways
+		karte_t::runway_info ri = welt->check_nearby_runways(pos);
+		if (ri.pos != koord::invalid)
+		{
+			return false;
+		}
+
 		// Whether we've found a suitable road, shore, or river.
 		// Consider counting the number we find instead.
 		bool road_found = false;
@@ -394,13 +401,6 @@ bool factory_builder_t::check_construction_site(koord pos, koord size, factory_d
 		}
 		return welt->square_is_free(pos, size.x, size.y, NULL, cl, regions_allowed);
 	}
-	// Check for runways
-	karte_t::runway_info ri = welt->check_nearby_runways(pos);
-	if (ri.pos != koord::invalid)
-	{
-		return false;
-	}
-
 	return true;
 }
 
