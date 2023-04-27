@@ -123,18 +123,23 @@ public:
 			// We need a clear space to build, first of all
 			return false;
 		}
+
+		// Whether we've found a suitable road, shore, or river.
+		// Consider counting the number we find instead.
+		bool road_found = false;
+		bool shore_found = false;
+		bool river_found = false;
+		if(  welt->get_settings().get_river_number() <= 0  ) {
+			// On a map with no rivers, don't restrict to spaces near rivers
+			river_found = true;
+		}
+
+		// For forests, count the trees.
 		uint16 mincond = 0;
 		uint16 condmet = 0;
-		switch(site) {
-			case factory_desc_t::forest:
-				mincond = w*h+w+h; // at least w*h+w+h trees, i.e. few tiles with more than one tree
-				break;
-
-			case factory_desc_t::shore:
-			case factory_desc_t::river:
-			case factory_desc_t::City:
-			default:
-				mincond = 1;
+		if (!welt->get_settings().get_no_trees() && site == factory_desc_t::forest) {
+			// check for trees unless the map was generated without trees
+			mincond = w*h+w+h; // at least w*h+w+h trees, i.e. few tiles with more than one tree
 		}
 
 		sint16 edge_avoidance = stadt_t::get_edge_avoidance();
@@ -143,11 +148,6 @@ public:
 		for (sint16 y = -1;  y <= h; y++) {
 			for (sint16 x = -1; x <= w; x++) {
 				koord k(pos + koord(x,y));
-				if ( k.x < edge_avoidance || k.y < edge_avoidance
-							|| k.x >= welt->get_size().x - edge_avoidance || k.y >= welt->get_size().y - edge_avoidance ) {
-					// too close to edge of map
-					return false;
-				}
 				grund_t *gr = welt->lookup_kartenboden(k);
 				if (!gr) {
 					// We want to keep the factory at least 1 away from the edge of the map.
@@ -159,14 +159,19 @@ public:
 				}
 				if(  0 <= x  &&  x < w  &&  0 <= y  &&  y < h  ) {
 					// Inside the target for factory.
+					if ( k.x < edge_avoidance || k.y < edge_avoidance
+								|| k.x >= welt->get_size().x - edge_avoidance || k.y >= welt->get_size().y - edge_avoidance ) {
+						// too close to edge of map
+						return false;
+					}
 					// Don't build under bridges, powerlines, etc.
-					// actual factorz tile: is there something top like elevated monorails?
+					// Is there something top like elevated monorails?
 					if(  gr->get_leitung()!=NULL  ||  welt->lookup(gr->get_pos()+koord3d(0,0,1)  )!=NULL) {
 						// something on top (monorail or power lines)
 						return false;
 					}
-					// check for trees unless the map was generated without trees
-					if(  site==factory_desc_t::forest  &&  !welt->get_settings().get_no_trees()  &&  condmet < mincond  ) {
+					// count the trees on the tiles the factory will be built on top of, for forest factories
+					if(  site==factory_desc_t::forest  &&  condmet < mincond  ) {
 						for(uint8 i=0; i< gr->get_top(); i++) {
 							if (gr->obj_bei(i)->get_typ() == obj_t::baum) {
 								condmet++;
@@ -174,60 +179,47 @@ public:
 						}
 					}
 				}
-				else {
-					// border tile: check for road, shore, river
-					if(  condmet < mincond  &&  (-1==x  ||  x==w)  &&  (-1==y  ||  y==h)  ) {
-						switch (site) {
-							case factory_desc_t::City:
-								condmet += gr->hat_weg(road_wt);
-								break;
-							case factory_desc_t::shore:
-							case factory_desc_t::shore_city:
-								if (welt->get_climate(k) == water_climate)
-								{
-									if (site == factory_desc_t::shore_city)
-									{
-										condmet += gr->hat_weg(road_wt);
-									}
-									else
-									{
-										condmet++;
-									}
-								}
-								break;
-							case factory_desc_t::river:
-							case factory_desc_t::river_city:
-							if(  welt->get_settings().get_river_number() >0  ) {
-								weg_t* river = gr->get_weg(water_wt);
-								if (river  &&  river->get_desc()->get_styp()==type_river)
-								{
-									if (site == factory_desc_t::river_city)
-									{
-										condmet += gr->hat_weg(road_wt);
-									}
-									else
-									{
-										condmet++;
-									}
-									DBG_DEBUG("factory_site_searcher_t::is_area_ok()", "Found river near %s", pos.get_str());
-								}
-								break;
-							}
-							else {
-								// always succeeds on maps without river ...
-								condmet++;
-								break;
-							}
-							default: ;
-						}
-					}
+				else if ( (-1==x  ||  x==w)  &&  (-1==y  ||  y==h)  ) {
+					// corner tile
+					// we do NOT want to count a corner tile match as a match for road, shore, or river!
+					continue;
+				}
+				else if (  -1==x || x==w || -1==y || y==w  ) {
+					// border tile, and not corner (we checked corners first)
+					// check for road, shore, river
+					// short-circuit if we have already found road, shore, river
+					road_found = road_found || gr->hat_weg(road_wt);
+					shore_found = shore_found || welt->get_climate(k) == water_climate;
+					weg_t* river = gr->get_weg(water_wt);
+					river_found = river_found || (river  &&  river->get_desc()->get_styp()==type_river);
 				}
 			}
 		}
-		if(  site==factory_desc_t::forest  &&  condmet>=3  ) {
-			dbg->message("", "found %d at %s", condmet, pos.get_str() );
+		switch (site) {
+			case factory_desc_t::City:
+				return road_found;
+				break;
+			case factory_desc_t::shore:
+				return shore_found;
+				break;
+			case factory_desc_t::shore_city:
+				return shore_found && road_found;
+				break;
+			case factory_desc_t::river:
+				return river_found;
+				break;
+			case factory_desc_t::river_city:
+				return river_found && road_found;
+				break;
+			case factory_desc_t::forest:
+				// Enough trees?
+				return condmet >= mincond;
+				break;
+			default:
+				return true;
+				break;
 		}
-		return condmet >= mincond;
+		return true;
 	}
 };
 
