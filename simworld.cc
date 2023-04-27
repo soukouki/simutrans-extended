@@ -8380,15 +8380,8 @@ slist_tpl<koord> *karte_t::find_squares(sint16 w, sint16 h, uint32 edge_avoidanc
 	// -- Nathanael Nerode
 
 	// We need to do signed math with this.
-	sint16 edge_avoidance = 0;
-	// Note: edge_avoidance_raw is an unsigned int, so don't need to check for negatives
-	if (edge_avoidance_raw > 127) {
-		// Sanity check.  Don't want THAT much edge avoidance. 2^7 - 1 is good enough for anyone.
-		edge_avoidance = 127;
-	} else {
-		// Bounds check passed: will fit into sint16.
-		edge_avoidance = edge_avoidance_raw;
-	}
+	sint16 edge_avoidance = (sint16) edge_avoidance_raw;
+	// Note that edge_avoidance has been clamped to a correct size when first read from the tabfile.
 
 	// Need to do SIGNED math.
 	// Note: may be larger than map size, this is OK, caught by the for loop condition
