@@ -119,7 +119,8 @@ public:
 
 	bool is_area_ok(koord pos, sint16 w, sint16 h, climate_bits cl, uint16 allowed_regions) const OVERRIDE
 	{
-		if(  !building_placefinder_t::is_area_ok(pos, w, h, cl, allowed_regions)  ) {
+		if(  site != factory_desc_t::Water && !building_placefinder_t::is_area_ok(pos, w, h, cl, allowed_regions)  ) {
+			// If this is not a water site factory, then
 			// We need a clear space to build, first of all
 			return false;
 		}
@@ -142,7 +143,15 @@ public:
 			mincond = w*h+w+h; // at least w*h+w+h trees, i.e. few tiles with more than one tree
 		}
 
+		// Keep away from the edge of the map.
 		sint16 edge_avoidance = stadt_t::get_edge_avoidance();
+		if ( pos.x < edge_avoidance || pos.x + w > welt->get_size().x - edge_avoidance) {
+			// Too close to the map edge left or right
+			return false;
+		} else if (pos.y < edge_avoidance || pos.y + h > welt->get_size().y - edge_avoidance) {
+			// Too close to the map edge top or bottom
+			return false;
+		}
 
 		// needs to run one tile wider than the factory on all sides
 		for (sint16 y = -1;  y <= h; y++) {
@@ -158,11 +167,12 @@ public:
 					return false;
 				}
 				if(  0 <= x  &&  x < w  &&  0 <= y  &&  y < h  ) {
-					// Inside the target for factory.
-					if ( k.x < edge_avoidance || k.y < edge_avoidance
-								|| k.x >= welt->get_size().x - edge_avoidance || k.y >= welt->get_size().y - edge_avoidance ) {
-						// too close to edge of map
-						return false;
+					// Inside the target for factory building itself.
+					// For water factories, check for water (no shore in sight!)
+					if(site==factory_desc_t::Water) {
+						if( !gr->is_water()  ||  gr->get_grund_hang()!=slope_t::flat) {
+							return false;
+						}
 					}
 					// Don't build under bridges, powerlines, etc.
 					// Is there something top like elevated monorails?
@@ -215,6 +225,8 @@ public:
 				// Enough trees?
 				return condmet >= mincond;
 				break;
+			case factory_desc_t::Land:
+			case factory_desc_t::Water:
 			default:
 				return true;
 				break;
@@ -372,29 +384,15 @@ void factory_builder_t::find_producer(weighted_vector_tpl<const factory_desc_t *
 
 bool factory_builder_t::check_construction_site(koord pos, koord size, factory_desc_t::site_t site, bool is_factory, climate_bits cl, uint16 regions_allowed)
 {
-	// check for water (no shore in sight!)
-	if(site==factory_desc_t::Water) {
-		for(int y=0;y<size.y;y++) {
-			for(int x=0;x<size.x;x++) {
-				const grund_t *gr=welt->lookup_kartenboden(pos+koord(x,y));
-				if(gr==NULL  ||  !gr->is_water()  ||  gr->get_grund_hang()!=slope_t::flat) {
-					return false;
-				}
-			}
+	if (is_factory) {
+		return factory_site_searcher_t(welt, site).is_area_ok(pos, size.x, size.y, cl, regions_allowed);
+	}	else {
+		// this is an attraction or something odd, not a factory
+		// do not build too close or on an existing factory
+		if( is_factory_at(pos.x, pos.y)  ) {
+			return false;
 		}
-	}
-	else {
-		if (is_factory  &&  site!=factory_desc_t::Land) {
-			return factory_site_searcher_t(welt, site).is_area_ok(pos, size.x, size.y, cl, regions_allowed);
-		}
-		else {
-			// check on land
-			// do not build too close or on an existing factory
-			if( is_factory_at(pos.x, pos.y)  ) {
-				return false;
-			}
-			return welt->square_is_free(pos, size.x, size.y, NULL, cl, regions_allowed);
-		}
+		return welt->square_is_free(pos, size.x, size.y, NULL, cl, regions_allowed);
 	}
 	// Check for runways
 	karte_t::runway_info ri = welt->check_nearby_runways(pos);
