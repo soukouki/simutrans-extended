@@ -137,10 +137,17 @@ public:
 				mincond = 1;
 		}
 
+		sint16 edge_avoidance = stadt_t::get_edge_avoidance();
+
 		// needs to run one tile wider than the factory on all sides
 		for (sint16 y = -1;  y <= h; y++) {
 			for (sint16 x = -1; x <= w; x++) {
 				koord k(pos + koord(x,y));
+				if ( k.x < edge_avoidance || k.y < edge_avoidance
+							|| k.x >= welt->get_size().x - edge_avoidance || k.y >= welt->get_size().y - edge_avoidance ) {
+					// too close to edge of map
+					return false;
+				}
 				grund_t *gr = welt->lookup_kartenboden(k);
 				if (!gr) {
 					// We want to keep the factory at least 1 away from the edge of the map.
