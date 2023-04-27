@@ -393,17 +393,11 @@ void factory_builder_t::find_producer(weighted_vector_tpl<const factory_desc_t *
 
 bool factory_builder_t::check_construction_site(koord pos, koord size, factory_desc_t::site_t site, bool is_factory, climate_bits cl, uint16 regions_allowed)
 {
-	if (is_factory) {
-		return factory_site_searcher_t(welt, site).is_area_ok(pos, size.x, size.y, cl, regions_allowed);
-	}	else {
-		// this is an attraction or something odd, not a factory
-		// do not build too close or on an existing factory
-		if( is_factory_at(pos.x, pos.y)  ) {
-			return false;
-		}
-		return welt->square_is_free(pos, size.x, size.y, NULL, cl, regions_allowed);
-	}
-	return true;
+	// We used to check is_factory here, but the code ended up being identical.
+	// This gets called for factories and for attractions.
+	// Attractions will get called with the "Land" site type from distribute_attractions
+	// (though consider implementing whale-watching, etc.?)
+	return factory_site_searcher_t(welt, site).is_area_ok(pos, size.x, size.y, cl, regions_allowed);
 }
 
 
@@ -991,7 +985,8 @@ int factory_builder_t::build_chain_link(const fabrik_t* origin_fab, const factor
 
 			INT_CHECK("fabrikbauer 697");
 			const int max_distance_to_consumer = producer_d->get_max_distance_to_consumer() == 0 ? max_factory_spacing_general : producer_d->get_max_distance_to_consumer();
-			koord3d build_pos = find_random_construction_site(origin_fab->get_pos().get_2d(), min(max_distance_to_supplier, min(max_factory_spacing_general, max_distance_to_consumer)), producer_d->get_building()->get_size(rotate), producer_d->get_placement(), producer_d->get_building(), ignore_climates, 200000 );
+			const int max_distance = min(max_distance_to_supplier, min(max_factory_spacing_general, max_distance_to_consumer));
+			koord3d build_pos = find_random_construction_site(origin_fab->get_pos().get_2d(), max_distance, producer_d->get_building()->get_size(rotate), producer_d->get_placement(), producer_d->get_building(), ignore_climates, 200000 );
 			if(build_pos == koord3d::invalid  ) {
 				// this factory cannot build in the desired vincinity
 				producer.remove( producer_d );
@@ -1378,7 +1373,8 @@ int factory_builder_t::increase_industry_density( bool tell_me, bool do_not_add_
 						continue;
 					}
 				}
-				const bool in_city = consumer->get_placement() == factory_desc_t::City || consumer->get_placement() == factory_desc_t::shore_city || consumer->get_placement() == factory_desc_t::river_city;
+				const factory_desc_t::site_t site = consumer->get_placement();
+				const bool in_city = site == factory_desc_t::City || site == factory_desc_t::shore_city || site == factory_desc_t::river_city;
 				if (in_city && welt->get_cities().empty())
 				{
 					// we cannot build this factory here
