@@ -17,6 +17,7 @@
 #include "../player/simplay.h"
 
 #include "../boden/grund.h"
+#include "../boden/wege/runway.h" // for avoiding building next to runways
 
 #include "../dataobj/settings.h"
 #include "../dataobj/environment.h"
@@ -127,13 +128,6 @@ public:
 			}
 		}
 
-		// Check for runways
-		karte_t::runway_info ri = welt->check_nearby_runways(pos);
-		if (ri.pos != koord::invalid)
-		{
-			return false;
-		}
-
 		// Whether we've found a suitable road, shore, or river.
 		// Consider counting the number we find instead.
 		bool road_found = false;
@@ -199,6 +193,7 @@ public:
 					// Is there something top like elevated monorails?
 					if(  gr->get_leitung()!=NULL  ||  welt->lookup(gr->get_pos()+koord3d(0,0,1)  )!=NULL) {
 						// something on top (monorail or power lines)
+						// Note: consider loosening this requirement to allow building under very tall elevateds
 						return false;
 					}
 					// count the trees on the tiles the factory will be built on top of, for forest factories
@@ -212,11 +207,23 @@ public:
 				}
 				else if ( (-1==x  ||  x==w)  &&  (-1==y  ||  y==h)  ) {
 					// corner tile
+					// Stay away from the corner of runways (yes, even for water industries):
+					runway_t* rw = (runway_t*)gr->get_weg(air_wt);
+			    if (rw && rw->get_desc()->get_styp() == type_runway && !(rw->get_owner_nr() == PLAYER_UNOWNED && rw->is_degraded() && rw->get_max_speed() == 0)) {
+						// Do not care about degraded, unowned runways, but stay away from the side of others
+						return false;
+					}
 					// we do NOT want to count a corner tile match as a match for road, shore, or river!
 					continue;
 				}
 				else if (  -1==x || x==w || -1==y || y==h  ) {
 					// border tile, and not corner (we checked corners first)
+					// Stay away from the side of runways (yes, even for water industries):
+					runway_t* rw = (runway_t*)gr->get_weg(air_wt);
+			    if (rw && rw->get_desc()->get_styp() == type_runway && !(rw->get_owner_nr() == PLAYER_UNOWNED && rw->is_degraded() && rw->get_max_speed() == 0)) {
+						// Do not care about degraded, unowned runways, but stay away from the side of others
+						return false;
+					}
 					// check for road, shore, river
 					// short-circuit if we have already found road, shore, river, or don't care
 					road_found = road_found || gr->hat_weg(road_wt);
