@@ -1048,7 +1048,7 @@ void stadt_t::cityrules_rdwr(loadsave_t *file)
 		file->rdwr_long(minimum_city_distance);
 	}
 
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 21) || file->get_extended_version() >= 15)
+	if(file->is_version_ex_atleast(14, 61))
 	{
 		file->rdwr_short(edge_avoidance);
 	}
