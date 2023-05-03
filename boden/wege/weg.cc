@@ -1613,6 +1613,10 @@ bool weg_t::private_car_route_map::contains(koord elem) const{
 		bool result= single_koord==elem;
 		return result;
 	}
+	if (route_maps[route_map_elem].get_count() <= idx)
+	{
+		return false;
+	}
 	bool result=route_maps[route_map_elem][idx].contains(elem);
 	return result;
 }
