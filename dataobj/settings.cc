@@ -2394,6 +2394,12 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	factory_maximum_intransit_percentage = contents.get_int_clamped( "maximum_intransit_percentage", factory_maximum_intransit_percentage, 0, 0x7FFF );
 	factory_enforce_demand               = contents.get_int( "factory_enforce_demand",       factory_enforce_demand ) != 0;
 
+	// "Sanity check" overrides to deal with problem settings in individual factory buildings in paks which round down too low.
+	// Minimum storage size for industries should be set at the size of a small vehicle which is expected to
+	// be usable economically during the game.  This is always at least 1, but usually more like 5 or 7.
+	minimum_industry_input_storage_raw  = contents.get_int("minimum_industry_input_storage_raw", 1);
+	minimum_industry_output_storage_raw = contents.get_int("minimum_industry_output_storage_raw", 1);
+
 	//tourist_percentage = contents.get_int_clamped( "tourist_percentage", tourist_percentage, 0, 100 );
 
 	// .. read twice: old and right spelling
