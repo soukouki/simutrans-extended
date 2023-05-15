@@ -4912,6 +4912,11 @@ void haltestelle_t::init_financial_history()
  */
 void haltestelle_t::recalc_status()
 {
+	if (!enables) {
+		// This halt does not handle any goods
+		status_color = COL_INACTIVE;
+		return;
+	}
 	status_color = color_idx_to_rgb( financial_history[0][HALT_CONVOIS_ARRIVED] > 0 ? COL_GREEN : COL_YELLOW );
 
 	// since the status is ordered ...
