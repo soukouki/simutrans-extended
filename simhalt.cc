@@ -3459,7 +3459,9 @@ void haltestelle_t::show_info()
 
 void haltestelle_t::show_detail()
 {
-	create_win(new halt_detail_t(self), w_info, magic_halt_detail + self.get_id());
+	if (enables) {
+		create_win( new halt_detail_t(self), w_info, magic_halt_detail + self.get_id() );
+	}
 }
 
 
