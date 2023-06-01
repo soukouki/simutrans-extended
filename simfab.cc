@@ -584,26 +584,28 @@ void fabrik_t::recalc_storage_capacities()
 			}
 			const sint32 share = (sint32)(((sint64)field_capacities << precision_bits) / (sint64)ware_types);
 			// first, for input goods
+			// This minimum storage capacity (set in the pak's simuconf.tab) allows for loading a whole (small) truck.
+			uint32 min_in = welt->get_settings().get_minimum_industry_input_storage_raw();
 			FOR(array_tpl<ware_production_t>, &g, input) {
 				if(const factory_supplier_desc_t *const input = desc->get_supplier(g.get_typ())){
 					// Inputs are now normalized to factory production.
 					uint32 prod_factor = welt->get_settings().using_fab_contracts() ? 256 : input->get_consumption();
 					g.max = (sint32)(welt->scale_for_distance_only((((sint64)((input->get_capacity() << precision_bits) + share) << DEFAULT_PRODUCTION_FACTOR_BITS) + (sint64)(prod_factor - 1)) / (sint64)prod_factor));
-					if (g.get_capacity(prod_factor) < 7) {
-						// No capacities less than 7 are allowed.  This allows for loading a whole (small) truck.
-						g.max = (sint32)( ( (sint64)7 << precision_bits << DEFAULT_PRODUCTION_FACTOR_BITS) / (sint64)prod_factor );
+					if (g.get_capacity(prod_factor) < min_in) {
+						g.max = (sint32)( ( (sint64)min_in << precision_bits << DEFAULT_PRODUCTION_FACTOR_BITS) / (sint64)prod_factor );
 					}
 				}
 			}
 			// then, for output goods
+			// This minimum storage capacity (set in the pak's simuconf.tab) allows for loading a whole (small) truck.
+			uint32 min_out = welt->get_settings().get_minimum_industry_output_storage_raw();
 			FOR(array_tpl<ware_production_t>, &g, output) {
 				if(const factory_product_desc_t *const output = desc->get_product(g.get_typ())){
 					// Outputs are now normalized to factory production.
 					uint32 prod_factor = welt->get_settings().using_fab_contracts() ? 256 : output->get_factor();
 					g.max = (sint32)(welt->scale_for_distance_only((((sint64)((output->get_capacity() << precision_bits) + share) << DEFAULT_PRODUCTION_FACTOR_BITS) + (sint64)(prod_factor - 1)) / (sint64)prod_factor));
-					if (g.get_capacity(prod_factor) < 7) {
-						// No capacities less than 7 are allowed.  This allows for loading a whole (small) truck.
-						g.max = (sint32)( ( (sint64)7 << precision_bits << DEFAULT_PRODUCTION_FACTOR_BITS) / (sint64)prod_factor );
+					if (g.get_capacity(prod_factor) < min_out) {
+						g.max = (sint32)( ( (sint64)min_out << precision_bits << DEFAULT_PRODUCTION_FACTOR_BITS) / (sint64)prod_factor );
 					}
 				}
 			}
@@ -612,26 +614,28 @@ void fabrik_t::recalc_storage_capacities()
 	else {
 		// without fields -> scaling based on prodbase
 		// first, for input goods
+		// This minimum storage capacity (set in the pak's simuconf.tab) allows for loading a whole (small) truck.
+		uint32 min_in = welt->get_settings().get_minimum_industry_input_storage_raw();
 		FOR(array_tpl<ware_production_t>, &g, input) {
 			if(const factory_supplier_desc_t *const input = desc->get_supplier(g.get_typ())){
 				// Inputs are now normalized to factory production.
 				uint32 prod_factor = welt->get_settings().using_fab_contracts() ? 256 : input->get_consumption();
 				g.max = (sint32)(welt->scale_for_distance_only(((((sint64)input->get_capacity() * (sint64)prodbase) << (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS)) + (sint64)(prod_factor - 1)) / ((sint64)desc->get_productivity() * (sint64)prod_factor)));
-					if (g.get_capacity(prod_factor) < 7) {
-						// No capacities less than 7 are allowed.  This allows for loading a whole (small) truck.
-						g.max = (sint32)( ( (sint64)7 << precision_bits << DEFAULT_PRODUCTION_FACTOR_BITS) / (sint64)prod_factor );
+					if (g.get_capacity(prod_factor) < min_in) {
+						g.max = (sint32)( ( (sint64)min_in << precision_bits << DEFAULT_PRODUCTION_FACTOR_BITS) / (sint64)prod_factor );
 					}
 			}
 		}
 		// then, for output goods
+		// This minimum storage capacity (set in the pak's simuconf.tab) allows for loading a whole (small) truck.
+		uint32 min_out = welt->get_settings().get_minimum_industry_output_storage_raw();
 		FOR(array_tpl<ware_production_t>, &g, output) {
 			if(const factory_product_desc_t *const output = desc->get_product(g.get_typ())){
 				// Outputs are now normalized to factory production.
 				uint32 prod_factor = welt->get_settings().using_fab_contracts() ? 256 : output->get_factor();
 				g.max = (sint32)(welt->scale_for_distance_only(((((sint64)output->get_capacity() * (sint64)prodbase) << (precision_bits + DEFAULT_PRODUCTION_FACTOR_BITS)) + (sint64)(prod_factor - 1)) / ((sint64)desc->get_productivity() * (sint64)prod_factor)));
-					if (g.get_capacity(prod_factor) < 7) {
-						// No capacities less than 7 are allowed.  This allows for loading a whole (small) truck.
-						g.max = (sint32)( ( (sint64)7 << precision_bits << DEFAULT_PRODUCTION_FACTOR_BITS) / (sint64)prod_factor );
+					if (g.get_capacity(prod_factor) < min_out) {
+						g.max = (sint32)( ( (sint64)min_out << precision_bits << DEFAULT_PRODUCTION_FACTOR_BITS) / (sint64)prod_factor );
 					}
 			}
 		}
