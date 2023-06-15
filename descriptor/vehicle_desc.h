@@ -640,6 +640,8 @@ public:
 	uint32 get_upgrade_price() const { return upgrade_price; }
 	bool is_available_only_as_upgrade() const { return available_only_as_upgrade; }
 
+	uint16 get_traction_type() const { return (uint16)(1<<engine_type); }
+
 	uint8 get_adjusted_comfort(uint8 catering_level, uint8 g_class = 0) const
 	{
 		if (g_class >= classes)

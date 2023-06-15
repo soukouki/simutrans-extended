@@ -244,6 +244,12 @@ private:
 	// returns the image_id of the latest available livery of the vehicle
 	image_id get_latest_available_livery_image_id(const vehicle_desc_t *vinfo);
 
+	// helper function for replace dialog since depot dialog is based on convoy but replace dialog is based on vehicles.
+	// Execute the same process as depot dialog, automatically remove the continuous vehicles from vehicles.
+	// Returns the number of vehicles removed in the case of execute = false for the purpose of using in the UI.
+	// Also responsible for processing display changes related to deselect the vehicle.
+	int remove_vehicle_at(uint8 car_nr, bool execute=true);
+
 public:
 	enum {
 		va_append,
@@ -278,12 +284,12 @@ private:
 	// just update vehicle livery image
 	void update_livery();
 
+public:
 	/**
 	 * Create and fill vehicle vectors (for all tabs)
 	 */
 	void build_vehicle_lists();
 
-public:
 	/* Getter/setter methods */
 
 	inline vector_tpl<const vehicle_desc_t *>* get_vehicles() { return &vehicles; }

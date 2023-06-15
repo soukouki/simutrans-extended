@@ -696,7 +696,7 @@ private:
 
 	// 0: not fixed, -1: fixed to traffic lane, 1: fixed to passing lane
 	sint8 lane_affinity;
-	uint32 lane_affinity_end_index;
+	uint32 lane_affinity_end_index = INVALID_INDEX;
 
 	// true, if this vehicle will cross lane and block other vehicles.
 	bool next_cross_lane;
@@ -1050,6 +1050,9 @@ public:
 	 * @return Vehicle at position i
 	 */
 	inline vehicle_t* get_vehicle(uint16 i) const { return vehicle[i]; }
+
+	// Returns bits of traction types that this convoy has
+	uint16 get_traction_types() const;
 
 	// Upgrades a vehicle in the convoy.
 	// @author: jamespetts, February 2010
