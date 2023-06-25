@@ -126,8 +126,9 @@ welt_gui_t::welt_gui_t(settings_t* const sets_par) :
 			add_component(&inp_y_size);
 
 			// Map size label
-			size_label.init();
-			size_label.buf().printf(translator::translate("Size (%d MB):"), 9999);
+			size_label.buf().printf(translator::translate("Size (%d MB):"), 99999);
+			size_label.update();
+			size_label.set_min_width(size_label.get_min_size().w); // Make sure to not make the component size too small when the window is opened with a small map size that is increased afterwards
 			size_label.update();
 			add_component( &size_label, 3 );
 
