@@ -26,12 +26,9 @@ class welt_gui_t  :
 	public  gui_frame_t,
 	private action_listener_t
 {
-private:
 	settings_t* sets;
 
-	/**
-	* Mini Map-Preview
-	*/
+	/// Mini Map-Preview
 	array2d_tpl<PIXVAL> map;
 	scr_size            map_size;
 
@@ -80,9 +77,9 @@ private:
 		quit_game;
 
 	/**
-	* Calculates preview from height map
-	* @param filename name of heightfield file
-	*/
+	 * Calculates preview from height map
+	 * @param filename name of heightfield file
+	 */
 	bool update_from_heightfield(const char *filename);
 
 	void resize_preview();
@@ -93,6 +90,7 @@ private:
 public:
 	welt_gui_t(settings_t*);
 
+public:
 	/**
 	 * Berechnet Preview-Karte neu. Inititialisiert RNG neu!
 	 * public, because also the climate dialog need it
