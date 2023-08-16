@@ -1522,7 +1522,7 @@ grund_t* vehicle_t::hop_check()
 			if ( nextnext_pos == get_pos() ) {
 				dbg->error("vehicle_t::hop_check", "route contains point (%s) twice for %s", nextnext_pos.get_str(), cnv->get_name());
 			}
-			uint8 new_dir = ribi_type(nextnext_pos-pos_next);
+			uint8 new_dir = ribi_type(nextnext_pos - pos_next);
 			if((dir&new_dir)==0) {
 				// new one way sign here?
 				cnv->suche_neue_route();
@@ -1555,13 +1555,14 @@ grund_t* vehicle_t::hop_check()
 		return bd;
 	}
 	else {
-		// this is needed since in convoi_t::vorfahren the flag leading is set to null
+		// this is needed since in convoi_t::vorfahren the flag 'leading' is set to null
 		if(check_for_finish) {
 			return NULL;
 		}
 	}
 	return welt->lookup(pos_next);
 }
+
 
 bool vehicle_t::can_enter_tile(sint32 &restart_speed, uint8 second_check_count)
 {
@@ -1583,6 +1584,7 @@ bool vehicle_t::can_enter_tile(sint32 &restart_speed, uint8 second_check_count)
 		return false;
 	}
 }
+
 
 void vehicle_t::leave_tile()
 {
@@ -1667,7 +1669,7 @@ void vehicle_t::hop(grund_t* gr)
 
 	enter_tile(gr);
 	weg_t *weg = get_weg();
-	if(  weg  )	{
+	if(  weg  ) {
 		//const grund_t *gr_prev = welt->lookup(pos_prev);
 		//const weg_t * weg_prev = gr_prev != NULL ? gr_prev->get_weg(get_waytype()) : NULL;
 
@@ -1951,9 +1953,8 @@ sint16 get_friction_of_waytype(waytype_t waytype)
 }
 
 
-/* calculates the current friction coefficient based on the current track
+/** calculates the current friction coefficient based on the current track
  * flat, slope, (curve)...
- * @author prissi, HJ, Dwachs
  */
 void vehicle_t::calc_drag_coefficient(const grund_t *gr) //,const int h_alt, const int h_neu)
 {
@@ -1981,8 +1982,7 @@ void vehicle_t::calc_drag_coefficient(const grund_t *gr) //,const int h_alt, con
 	// See here for an explanation of the additional resistance
 	// from hills: https://en.wikibooks.org/wiki/Fundamentals_of_Transportation/Grade
 	const slope_t::type hang = gr->get_weg_hang();
-	if(hang != slope_t::flat)
-	{
+	if(  hang != slope_t::flat  ) {
 		// Bernd Gabriel, Nov, 30 2009: at least 1 partial direction must match for uphill (op '&'), but not the
 		// complete direction. The hill might begin in a curve and then '==' accidently accelerates the vehicle.
 		const uint slope_height = is_one_high(hang) ? 1 : 2;
@@ -2047,11 +2047,13 @@ void vehicle_t::make_smoke() const
 {
 	// does it smoke at all?
 	if(  smoke  &&  desc->get_smoke()  ) {
-		// Hajo: only produce smoke when heavily accelerating or steam engine
+		// only produce smoke when heavily accelerating or steam engine
 		if(  (cnv->get_akt_speed() < (sint32)((cnv->get_vehicle_summary().max_sim_speed * 7u) >> 3) && (route_index < cnv->get_route_infos().get_count() - 4)) ||  desc->get_engine_type() == vehicle_desc_t::steam  ) {
 			grund_t* const gr = welt->lookup( get_pos() );
 			if(  gr  ) {
-				wolke_t* const abgas = new wolke_t( get_pos(), get_xoff() + ((dx * (sint16)((uint16)steps * OBJECT_OFFSET_STEPS)) >> 8), get_yoff() + ((dy * (sint16)((uint16)steps * OBJECT_OFFSET_STEPS)) >> 8) + get_hoff(), desc->get_smoke() );
+				wolke_t* const abgas = new wolke_t( get_pos(),
+					get_xoff() + ((dx * (sint16)((uint16)steps * OBJECT_OFFSET_STEPS)) >> VEHICLE_STEPS_PER_TILE_SHIFT),
+					get_yoff() + ((dy * (sint16)((uint16)steps * OBJECT_OFFSET_STEPS)) >> VEHICLE_STEPS_PER_TILE_SHIFT) + get_hoff(), desc->get_smoke() );
 				if(  !gr->obj_add( abgas )  ) {
 					abgas->set_flag( obj_t::not_on_map );
 					delete abgas;
@@ -2430,12 +2432,10 @@ uint8 vehicle_t::get_comfort(uint8 catering_level, uint8 g_class) const
 }
 
 
-
 void vehicle_t::rdwr(loadsave_t *file)
 {
 	// this is only called from objlist => we save nothing ...
-	assert(  file->is_saving()  );
-	(void)file;
+	assert(  file->is_saving()  ); (void)file;
 }
 
 
@@ -2493,6 +2493,7 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 		set_pos(pos);
 	}
 
+
 	sint8 hoff = file->is_saving() ? get_hoff() : 0;
 
 	if(file->is_version_less(86, 6)) {
@@ -2503,7 +2504,7 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 		file->rdwr_long(l);
 		dy = (sint8)l;
 		file->rdwr_long(l);
-		hoff = (sint8)(l*TILE_HEIGHT_STEP / 16);
+		hoff = (sint8)(l*TILE_HEIGHT_STEP/16);
 		file->rdwr_long(speed_limit);
 		file->rdwr_enum(direction);
 		file->rdwr_enum(previous_direction);
@@ -2511,7 +2512,7 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 		file->rdwr_long(l);
 		route_index = (uint16)l;
 		purchase_time = (purchase_time >> welt->ticks_per_world_month_shift) + welt->get_settings().get_starting_year();
-	DBG_MESSAGE("vehicle_t::rdwr_from_convoi()","bought at %i/%i.",(purchase_time%12)+1,purchase_time/12);
+DBG_MESSAGE("vehicle_t::rdwr_from_convoi()","bought at %i/%i.",(purchase_time%12)+1,purchase_time/12);
 	}
 	else {
 		// changed several data types to save runtime memory
@@ -2528,9 +2529,9 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 				steps_next = diagonal_vehicle_steps_per_tile - 1;
 			}
 		}
-		sint16 dummy16 = ((16 * (sint16)hoff) / TILE_HEIGHT_STEP);
+		sint16 dummy16 = ((16*(sint16)hoff)/TILE_HEIGHT_STEP);
 		file->rdwr_short(dummy16);
-		hoff = (sint8)((TILE_HEIGHT_STEP*(sint16)dummy16) / 16);
+		hoff = (sint8)((TILE_HEIGHT_STEP*(sint16)dummy16)/16);
 		file->rdwr_long(speed_limit);
 		file->rdwr_enum(direction);
 		file->rdwr_enum(previous_direction);
@@ -2623,8 +2624,7 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 		}
 	}
 
-	if(file->is_saving())
-	{
+	if(file->is_saving()) {
 		if (create_dummy_ware)
 		{
 			// create dummy freight for savegame compatibility
@@ -2913,8 +2913,8 @@ uint32 vehicle_t::calc_sale_value() const
 	return value.to_sint32();
 }
 
-void
-vehicle_t::show_info()
+
+void vehicle_t::show_info()
 {
 	if(  cnv != NULL  ) {
 		cnv->show_info();
