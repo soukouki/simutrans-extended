@@ -774,8 +774,7 @@ void vehicle_t::rotate90_freight_destinations(const sint16 y_size)
 	// now rotate the freight
 	for (uint8 i = 0; i < number_of_classes; i++)
 	{
-		FOR(slist_tpl<ware_t>, &tmp, fracht[i])
-		{
+		for(ware_t & tmp : fracht[i]) {
 			tmp.rotate90(y_size);
 		}
 	}
@@ -816,8 +815,7 @@ void vehicle_t::set_convoi(convoi_t *c)
 		// just correct freight destinations
 		for (uint8 i = 0; i < number_of_classes; i++)
 		{
-			FOR(slist_tpl<ware_t>, &c, fracht[i])
-			{
+			for(ware_t & c : fracht[i]) {
 				c.finish_rd(welt);
 			}
 		}
@@ -850,12 +848,12 @@ uint16 vehicle_t::unload_cargo(halthandle_t halt, sint64 & revenue_from_unloadin
 					halthandle_t via_halt = tmp.get_zwischenziel();
 
 					// check if destination or transfer is still valid
-					if (!end_halt.is_bound() || !via_halt.is_bound())
-					{
+					if(  !end_halt.is_bound() || !via_halt.is_bound()  ) {
+
 						DBG_MESSAGE("vehicle_t::unload_cargo()", "destination of %d %s is no longer reachable", tmp.menge, translator::translate(tmp.get_name()));
 						total_freight -= tmp.menge;
 						sum_weight -= tmp.menge * tmp.get_desc()->get_weight_per_unit();
-						i = fracht[j].erase(i);
+						i = fracht[j].erase( i );
 					}
 					else if (end_halt == halt || via_halt == halt)
 					{
@@ -1056,8 +1054,7 @@ bool vehicle_t::load_freight_internal(halthandle_t halt, bool overcrowd, bool *s
 
 		*skip_vehicles = true;
 		if (!fracht[0].empty() && desc->get_mixed_load_prohibition()) {
-			FOR(slist_tpl<ware_t>, const& w, fracht[0])
-			{
+			for (ware_t const& w : fracht[0]) {
 				goods_restriction = w.index;
 				break;
 			}
@@ -1084,8 +1081,7 @@ bool vehicle_t::load_freight_internal(halthandle_t halt, bool overcrowd, bool *s
 				freight_this_class = 0;
 				if (!fracht[i].empty())
 				{
-					FOR(slist_tpl<ware_t>, const& w, fracht[i])
-					{
+					for (ware_t const& w : fracht[i]) {
 						freight_this_class += w.menge;
 					}
 				}
@@ -1109,11 +1105,11 @@ bool vehicle_t::load_freight_internal(halthandle_t halt, bool overcrowd, bool *s
 					for (slist_tpl<ware_t>::iterator iter_z = freight_add.begin(); iter_z != freight_add.end(); )
 					{
 						ware_t &ware = *iter_z;
+
 						total_freight += ware.menge;
 
 						// could this be joined with existing freight?
-						FOR(slist_tpl<ware_t>, &tmp, fracht[i])
-						{
+						for(ware_t & tmp : fracht[i] ) {
 							// New system: only merges if origins are alike.
 							// @author: jamespetts
 							if (ware.can_merge_with(tmp))
@@ -1125,19 +1121,16 @@ bool vehicle_t::load_freight_internal(halthandle_t halt, bool overcrowd, bool *s
 						}
 
 						// if != 0 we could not join it to existing => load it
-						if (ware.menge != 0)
-						{
+						if(  ware.menge != 0  )	{
 							++iter_z;
 							// we add list directly
 						}
-						else
-						{
+						else {
 							iter_z = freight_add.erase(iter_z);
 						}
 					}
 
-					if (!freight_add.empty())
-					{
+					if(  !freight_add.empty()  ) {
 						// We now DON'T have to unpick which class was reassigned to i.
 						// i is the accommodation class.
 						fracht[i].append_list(freight_add);
@@ -1176,8 +1169,7 @@ void vehicle_t::fix_class_accommodations()
 			lowest_available_class = i;
 			continue;
 		}
-		FOR(slist_tpl<ware_t>, &tmp, fracht[i])
-		{
+		for (ware_t &tmp : fracht[i]) {
 			load[i] += tmp.menge;
 			if (load[i] > capacity[i])
 			{
@@ -1234,36 +1226,33 @@ void vehicle_t::remove_stale_cargo()
 
 	for (uint8 i = 0; i < number_of_classes; i++)
 	{
-		if (!fracht[i].empty())
-		{
-			FOR(slist_tpl<ware_t>, &tmp, fracht[i])
-			{
-
+		if (!fracht[i].empty()) {
+			for(ware_t & tmp : fracht[i]) {
 				bool found = false;
 
-				if (tmp.get_zwischenziel().is_bound()) {
+				if (  tmp.get_zwischenziel().is_bound()  ) {
 					// the original halt exists, but does we still go there?
-					FOR(minivec_tpl<schedule_entry_t>, const& i, cnv->get_schedule()->entries) {
-						if (haltestelle_t::get_halt(i.pos, cnv->get_owner()) == tmp.get_zwischenziel()) {
+					for(schedule_entry_t const& i : cnv->get_schedule()->entries) {
+						if(  haltestelle_t::get_halt( i.pos, cnv->get_owner()) == tmp.get_zwischenziel()  ) {
 							found = true;
 							break;
 						}
 					}
 				}
-				if (!found) {
+				if(  !found  ) {
 					// the target halt may have been joined or there is a closer one now, thus our original target is no longer valid
 					const sint32 offset = cnv->get_schedule()->get_current_stop();
 					const sint32 max_count = cnv->get_schedule()->entries.get_count();
 					for (sint32 j = 0; j < max_count; j++) {
 						// try to unload on next stop
-						halthandle_t halt = haltestelle_t::get_halt(cnv->get_schedule()->entries[(i + offset) % max_count].pos, cnv->get_owner());
-						if (halt.is_bound()) {
-							if (halt->is_enabled(tmp.get_index())) {
+						halthandle_t halt = haltestelle_t::get_halt( cnv->get_schedule()->entries[ (i+offset)%max_count ].pos, cnv->get_owner() );
+						if(  halt.is_bound()  ) {
+							if(  halt->is_enabled(tmp.get_index())  ) {
 								// ok, lets change here, since goods are accepted here
 								tmp.access_zwischenziel() = halt;
 								if (!tmp.get_ziel().is_bound()) {
 									// set target, to prevent that unload_cargo drops cargo
-									tmp.set_ziel(halt);
+									tmp.set_ziel( halt );
 								}
 								found = true;
 								break;
@@ -1272,22 +1261,21 @@ void vehicle_t::remove_stale_cargo()
 					}
 				}
 
-				if (!found)
-				{
+				if(  !found  ) {
 					kill_queue.append(tmp);
 				}
 				else {
 					// since we need to point at factory (0,0), we recheck this too
 					koord k = tmp.get_zielpos();
-					fabrik_t *fab = fabrik_t::get_fab(k);
-					tmp.set_zielpos(fab ? fab->get_pos().get_2d() : k);
+					fabrik_t *fab = fabrik_t::get_fab( k );
+					tmp.set_zielpos( fab ? fab->get_pos().get_2d() : k );
 
 					total_freight += tmp.menge;
 				}
 			}
 
-			FOR(vector_tpl<ware_t>, const& c, kill_queue) {
-				fabrik_t::update_transit(c, false);
+			for(ware_t const& c : kill_queue) {
+				fabrik_t::update_transit( c, false );
 				fracht[i].remove(c);
 				cnv->invalidate_weight_summary();
 			}
@@ -1312,7 +1300,7 @@ void vehicle_t::play_sound() const
  */
 void vehicle_t::initialise_journey(uint16 start_route_index, bool recalc)
 {
-	route_index = start_route_index + 1;
+	route_index = start_route_index+1;
 	check_for_finish = false;
 	use_calc_height = true;
 
@@ -1464,8 +1452,8 @@ void vehicle_t::set_desc(const vehicle_desc_t* value)
 	{
 		if (!fracht[i].empty())
 		{
-			FOR(slist_tpl<ware_t>, &tmp, fracht[i]) {
-				fabrik_t::update_transit(tmp, false);
+			for (ware_t &tmp : fracht[i]) {
+				fabrik_t::update_transit( tmp, false );
 			}
 			fracht[i].clear();
 		}
@@ -1578,9 +1566,8 @@ grund_t* vehicle_t::hop_check()
 bool vehicle_t::can_enter_tile(sint32 &restart_speed, uint8 second_check_count)
 {
 	cnv->set_checked_tile_this_step(get_pos());
-	grund_t *gr = welt->lookup(pos_next);
-	if (gr)
-	{
+	grund_t *gr = welt->lookup( pos_next );
+	if (  gr  ) {
 		bool ok = can_enter_tile( gr, restart_speed, second_check_count );
 		if (!ok)
 		{
@@ -2090,10 +2077,10 @@ const char *vehicle_t::get_cargo_mass() const
 uint32 vehicle_t::get_cargo_weight() const
 {
 	uint32 weight = 0;
+
 	for (uint8 i = 0; i < number_of_classes; i++)
 	{
-		FOR(slist_tpl<ware_t>, const& c, fracht[i])
-		{
+		for(ware_t const& c : fracht[i]) {
 			weight += c.menge * c.get_desc()->get_weight_per_unit();
 		}
 	}
@@ -2107,8 +2094,7 @@ void vehicle_t::get_cargo_info(cbuffer_t & buf) const
 	for (uint8 i = 0; i < number_of_classes; i++)
 	{
 		vector_tpl<ware_t> this_iteration_vector(fracht->get_count());
-		FOR(slist_tpl<ware_t>, w, fracht[i])
-		{
+		for (ware_t w : fracht[i]) {
 			this_iteration_vector.append(w);
 		}
 		fracht_array.append(this_iteration_vector);
@@ -2145,9 +2131,8 @@ void vehicle_t::discard_cargo()
 {
 	for (uint8 i = 0; i < number_of_classes; i++)
 	{
-		FOR(slist_tpl<ware_t>, w, fracht[i])
-		{
-			fabrik_t::update_transit(w, false);
+		for(ware_t w : fracht[i] ) {
+			fabrik_t::update_transit( w, false );
 		}
 		fracht[i].clear();
 	}
@@ -2295,8 +2280,7 @@ uint16 vehicle_t::get_total_cargo_by_class(uint8 a_class) const
 		return 0;
 	}
 
-	FOR(slist_tpl<ware_t>, const& ware, fracht[a_class])
-	{
+	for (ware_t const& ware : fracht[a_class]) {
 		carried += ware.menge;
 	}
 
@@ -2423,8 +2407,7 @@ uint8 vehicle_t::get_comfort(uint8 catering_level, uint8 g_class) const
 	{
 		if (class_reassignments[i] == g_class)
 		{
-			FOR(slist_tpl<ware_t>, const& ware, fracht[i])
-			{
+			for(ware_t const& ware : fracht[i]) {
 				if(ware.is_passenger())
 				{
 					passenger_count += ware.menge;
@@ -2655,8 +2638,7 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 
 		for (uint8 i = 0; i < saved_number_of_classes; i++)
 		{
-			FOR(slist_tpl<ware_t>, ware, fracht[i])
-			{
+			for (ware_t ware : fracht[i]) {
 				ware.rdwr(file);
 			}
 		}
@@ -2901,8 +2883,7 @@ void vehicle_t::rdwr_from_convoi(loadsave_t *file)
 
 		for (uint8 i = 0; i < number_of_classes; i++)
 		{
-			FOR(slist_tpl<ware_t>, const& c, fracht[i])
-			{
+			for(ware_t const& c : fracht[i]) {
 				total_freight += c.menge;
 			}
 		}
