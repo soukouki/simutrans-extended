@@ -1556,11 +1556,14 @@ sint32 rail_vehicle_t::block_reserver(route_t *route, uint16 start_index, uint16
 			break;
 		}
 
-		if(working_method == moving_block && !directional_only && last_choose_signal_index >= INVALID_INDEX && !is_choosing)
+		if (working_method == moving_block && !directional_only && last_choose_signal_index >= INVALID_INDEX && !is_choosing)
 		{
 			next_signal_index = i;
+		}
 
-			// Do not reserve further than the braking distance in moving block mode.
+		if(working_method == drive_by_sight || (working_method == moving_block && !directional_only && last_choose_signal_index >= INVALID_INDEX && !is_choosing))
+		{
+			// Do not reserve further than the braking distance in moving block or drive by sight mode.
 			if(steps_so_far > brake_steps + (VEHICLE_STEPS_PER_TILE * 2))
 			{
 				break;
