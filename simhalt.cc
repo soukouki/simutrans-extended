@@ -1492,7 +1492,7 @@ void haltestelle_t::new_month()
 					convoihandle_t preferred_convoy = get_preferred_convoy(check_halt, category, g_class);
 					const uint32 airport_min_wait = preferred_convoy.is_bound() && preferred_convoy->front()->get_typ() == obj_t::air_vehicle ? welt->get_settings().get_min_wait_airport() : 0;
 					const uint32 estimated_waiting_time = max(airport_min_wait, service_frequency / 2);
-					
+
 					const uint32 average_waiting_time = get_average_waiting_time(check_halt, category, g_class);
 
 					if (average_waiting_time > max(service_frequency, airport_min_wait))
