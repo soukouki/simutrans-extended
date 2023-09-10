@@ -1388,7 +1388,7 @@ void haltestelle_t::step()
 							// especially in online games, where joining one player's network to another might lead to a large
 							// influx of passengers which one of the networks cannot cope with.
 							const uint16 distance = shortest_distance(get_basis_pos(), tmp.get_origin()->get_basis_pos());
-							
+
 							if(distance > 0) // No point in calculating refund if passengers/goods are discarded from their origin stop.
 							{
 								const uint32 distance_meters = (uint32) distance * welt->get_settings().get_meters_per_tile();
