@@ -1426,7 +1426,10 @@ void haltestelle_t::step()
 						// by 4x to reflect an estimate of how long that they would likely have had to
 						// have waited to get transport.
 						waiting_tenths *= 4;
-						const uint16 airport_wait = account_convoy.is_bound() && account_convoy->front()->get_typ() == obj_t::air_vehicle ? welt->get_settings().get_min_wait_airport() : 0;
+						linehandle_t account_line = get_preferred_line(tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
+						const uint16 airport_wait = (account_convoy.is_bound() && account_convoy->front()->get_typ() == obj_t::air_vehicle) ||
+							(account_line.is_bound() && account_line->get_convoy(0).is_bound() && account_line->get_convoy(0)->front()->get_typ() == obj_t::air_vehicle) ?
+							welt->get_settings().get_min_wait_airport() : 0;
 						add_waiting_time(max(airport_wait, waiting_tenths), tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
 
 						// The goods/passengers leave.  We must record the lower "in transit" count on factories.
@@ -1443,8 +1446,11 @@ void haltestelle_t::step()
 				// artificially low time from being recorded if there is a long service interval.
 				if(waiting_tenths > 2 * get_average_waiting_time(tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class()))
 				{
+					linehandle_t account_line = get_preferred_line(tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
 					convoihandle_t account_convoy = get_preferred_convoy(tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
-					const uint16 airport_wait = account_convoy.is_bound() && account_convoy->front()->get_typ() == obj_t::air_vehicle ? welt->get_settings().get_min_wait_airport() : 0;
+					const uint16 airport_wait = (account_convoy.is_bound() && account_convoy->front()->get_typ() == obj_t::air_vehicle) ||
+						(account_line.is_bound() && account_line->get_convoy(0).is_bound() && account_line->get_convoy(0)->front()->get_typ() == obj_t::air_vehicle) ?
+							welt->get_settings().get_min_wait_airport() : 0;
 					add_waiting_time(max(waiting_tenths, airport_wait), tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
 				}
 			}
@@ -1483,10 +1489,13 @@ void haltestelle_t::new_month()
 					check_halt.set_id(iter.key);
 
 					const uint32 service_frequency = get_service_frequency(check_halt, category); // Note that service frequency is currently class agnostic
-					const uint32 estimated_waiting_time = service_frequency / 2;
+					convoihandle_t preferred_convoy = get_preferred_convoy(check_halt, category, g_class);
+					const uint32 airport_min_wait = preferred_convoy.is_bound() && preferred_convoy->front()->get_typ() == obj_t::air_vehicle ? welt->get_settings().get_min_wait_airport() : 0;
+					const uint32 estimated_waiting_time = max(airport_min_wait, service_frequency / 2);
+					
 					const uint32 average_waiting_time = get_average_waiting_time(check_halt, category, g_class);
 
-					if (average_waiting_time > service_frequency)
+					if (average_waiting_time > max(service_frequency, airport_min_wait))
 					{
 						iter.value.times.clear();
 						iter.value.month = 0;
@@ -1812,7 +1821,18 @@ uint32 haltestelle_t::get_average_waiting_time(halthandle_t halt, uint8 category
 	// half the interval between services, because they do not all arrive
 	// just after the previous service has departed.
 	uint32 service_frequency = get_service_frequency(halt, category);
-	const uint32 estimated_waiting_time = service_frequency / 2;
+	convoihandle_t preferred_convoy = get_preferred_convoy(halt, category, g_class);
+	linehandle_t preferred_line = get_preferred_line(halt, category, g_class);
+	uint32 airport_min_wait = (preferred_convoy.is_bound() && preferred_convoy->front()->get_typ() == obj_t::air_vehicle)
+		|| (preferred_line.is_bound() && preferred_line->get_convoy(0).is_bound() && preferred_line->get_convoy(0)->front()->get_typ() == obj_t::air_vehicle) ?
+			welt->get_settings().get_min_wait_airport() : 0;
+	if (!preferred_convoy.is_bound() && preferred_line.is_bound() && get_station_type() & haltestelle_t::airstop)
+	{
+		// If we do not know the type of line/convoy from an airport, assume that it will be an air departure unless the contrary is demonstrable.
+		// This avoids spuriously low waiting time for air routes.
+		airport_min_wait = welt->get_settings().get_min_wait_airport();
+	}
+	const uint32 estimated_waiting_time = max(airport_min_wait, service_frequency / 2);
 	fixed_list_tpl<uint32, 32> tmp;
 	waiting_time_set set;
 	set.times = tmp;
