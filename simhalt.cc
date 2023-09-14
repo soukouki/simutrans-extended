@@ -1824,7 +1824,7 @@ uint32 haltestelle_t::get_average_waiting_time(halthandle_t halt, uint8 category
 	convoihandle_t preferred_convoy = get_preferred_convoy(halt, category, g_class);
 	linehandle_t preferred_line = get_preferred_line(halt, category, g_class);
 	uint32 airport_min_wait = (preferred_convoy.is_bound() && preferred_convoy->front()->get_typ() == obj_t::air_vehicle)
-		|| (preferred_line.is_bound() && preferred_line->get_convoy(0).is_bound() && preferred_line->get_convoy(0)->front()->get_typ() == obj_t::air_vehicle) ?
+		|| (preferred_line.is_bound() && !preferred_line->get_convoys().empty() && preferred_line->get_convoy(0).is_bound() && preferred_line->get_convoy(0)->front()->get_typ() == obj_t::air_vehicle) ?
 			welt->get_settings().get_min_wait_airport() : 0;
 	if (!preferred_convoy.is_bound() && preferred_line.is_bound() && get_station_type() & haltestelle_t::airstop)
 	{
