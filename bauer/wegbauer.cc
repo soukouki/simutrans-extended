@@ -116,7 +116,7 @@ bool way_builder_t::successfully_loaded()
 	set_default(schiene_t::default_schiene,         track_wt,       type_flat, 80);
 	set_default(monorail_t::default_monorail,       monorail_wt,    type_elevated); // Only elevated?
 	set_default(maglev_t::default_maglev,           maglev_wt,      type_elevated); // Only elevated?
-	set_default(narrowgauge_t::default_narrowgauge, narrowgauge_wt);
+	set_default(narrowgauge_t::default_narrowgauge, narrowgauge_wt,	type_flat, 40);
 	set_default(kanal_t::default_kanal,             water_wt,       type_all); // Also find hidden rivers.
 	set_default(runway_t::default_runway,           air_wt);
 	set_default(way_builder_t::leitung_desc,          powerline_wt);
@@ -427,7 +427,8 @@ void way_builder_t::fill_menu(tool_selector_t *tool_selector, const waytype_t wt
 }
 
 
-/** allow for railroad crossing
+/**
+	allow for railroad crossing and river fords
  */
 bool way_builder_t::check_crossing(const koord zv, const grund_t *bd, waytype_t wtyp0, const player_t *player) const
 {
@@ -487,10 +488,22 @@ bool way_builder_t::check_crossing(const koord zv, const grund_t *bd, waytype_t 
 			return false;
 		}
 
-		if (forbid_crossings && !(w->get_owner() == NULL && w->is_degraded() == true))
+		if (forbid_crossings)
 		{
-			// Do not allow crossings where the forbid crossings flag has been set except where the way to be crossed is unowned and degraded.
-			return false;
+			if (w->get_waytype() == water_wt && crd->get_maxspeed(1) == 0 && w->get_max_speed() == 0)
+			{
+				// This is a ford.  Allow the crossing.
+				// [Intentionally empty code block]
+			}
+			else if (w->get_owner() == NULL && w->is_degraded() == true)
+			{
+				// Unowned AND degraded.  Allow the crossing.
+				// [Intentionally empty code block]
+			}
+			else {
+				// None of the exceptions to the forbid_crossings rule applies; forbid it.
+				return false;
+			}
 		}
 
 		ribi_t::ribi w_ribi = w->get_ribi_unmasked();
