@@ -1576,6 +1576,12 @@ void settings_t::rdwr(loadsave_t *file)
 			}
 		}
 
+		if (file->is_version_ex_atleast(14, 63))
+		{
+			file->rdwr_long(minimum_industry_input_storage_raw);
+			file->rdwr_long(minimum_industry_output_storage_raw);
+		}
+
 		if (  file->is_version_atleast(110, 6) && file->get_extended_version() >= 9  ) {
 			file->rdwr_byte(spacing_shift_mode);
 			file->rdwr_short(spacing_shift_divisor);

@@ -144,7 +144,9 @@ static const char *revision_ex[] =
 	"58",
 	"59",
 	"60",
-	"61"
+	"61",
+	"62",
+	"63"
 };
 
 
@@ -273,6 +275,11 @@ void settings_extended_general_stats_t::init( settings_t *sets )
 	INIT_BOOL("do_not_record_private_car_routes_to_distant_non_consumer_industries ", sets->get_do_not_record_private_car_routes_to_distant_non_consumer_industries());
 	INIT_BOOL("do_not_record_private_car_routes_to_city_buildings", sets->get_do_not_record_private_car_routes_to_city_buildings());
 
+	SEPERATOR;
+
+	INIT_NUM("minimum_industry_input_storage_raw", sets->get_minimum_industry_input_storage_raw(), 0, 999, gui_numberinput_t::PLAIN, false);
+	INIT_NUM("minimum_industry_output_storage_raw", sets->get_minimum_industry_output_storage_raw(), 0, 999, gui_numberinput_t::PLAIN, false);
+
 	INIT_END
 }
 
@@ -384,6 +391,9 @@ void settings_extended_general_stats_t::read(settings_t *sets)
 	READ_NUM_VALUE(sets->private_car_route_to_industry_visitor_demand_threshold);
 	READ_BOOL_VALUE(sets->do_not_record_private_car_routes_to_distant_non_consumer_industries);
 	READ_BOOL_VALUE(sets->do_not_record_private_car_routes_to_city_buildings);
+
+	READ_NUM_VALUE(sets->minimum_industry_input_storage_raw);
+	READ_NUM_VALUE(sets->minimum_industry_output_storage_raw);
 
 	path_explorer_t::set_absolute_limits_external();
 }

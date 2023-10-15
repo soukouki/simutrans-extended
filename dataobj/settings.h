@@ -216,8 +216,8 @@ private:
 
 	// minimum capacities for factories (in case of individual problem .dat files rounding down too low)
 	// necessary to avoid the maximum_intransit_percentage throttling traffic to nothing
-	uint32 minimum_industry_input_storage_raw;
-	uint32 minimum_industry_output_storage_raw;
+	uint32 minimum_industry_input_storage_raw = 1;
+	uint32 minimum_industry_output_storage_raw = 1;
 
 	/* crossconnect all factories (like OTTD and similar games) */
 	bool crossconnect_factories;
