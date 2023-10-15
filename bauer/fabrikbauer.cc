@@ -469,6 +469,7 @@ koord3d factory_builder_t::find_random_construction_site(koord pos, int radius, 
 
 	// These variables are used only for water factories such as fisheries
 	bool water = site == factory_desc_t::Water;
+    bool found_water = false;
 	koord water_start_pos = koord::invalid;
 
 	if(water) {
@@ -478,7 +479,9 @@ koord3d factory_builder_t::find_random_construction_site(koord pos, int radius, 
 		// We want to make sure there is a WATER path from the water factory being built (e.g. fishery)
 		// to its destination factory already existing at pos (e.g. fishing port)
 		// This requires that the already-existing destination factory has a water tile adjacent to it.  So find one.
-		bool found_water = false;
+        //
+        // This works great for fisheries, but not for oil rigs.
+        // To allow oil rigs to work, we don't do the water path check if the destination factory isn't water-adjacent.
 		for(int i = 0; i < 8; i++) {
 			water_start_pos = pos + koord::neighbours[i];
 			const grund_t* water_start_gr = welt->lookup_kartenboden(water_start_pos);
@@ -487,12 +490,6 @@ koord3d factory_builder_t::find_random_construction_site(koord pos, int radius, 
 				found_water = true;
 				break;
 			}
-		}
-		if (!found_water) {
-			// Destination factory isn't next to the water, so it will be impossible to connect by water.  Give up.
-			// This should not happen.
-			dbg->error("factory_builder_t::find_random_construction_site","Failed to find water tile adjacent to fishing port or similar for factory at %s", pos.get_str() );
-			return koord3d::invalid;
 		}
 	}
 
@@ -538,12 +535,12 @@ koord3d factory_builder_t::find_random_construction_site(koord pos, int radius, 
 			if (site != factory_desc_t::Water && site != factory_desc_t::Land) {
 				DBG_MESSAGE("factory_builder_t::find_random_construction_site","Found spot for %d at %s / %d\n", site, k.get_str(), max_iterations);
 			}
-			if (!water) {
+			if (!water || !found_water) {
 				// Success, return
 				return welt->lookup_kartenboden(k)->get_pos();
 			}
-			// Special checks for water factories
-			if(  water ) {
+			// Special checks for water factories connecting to coastal factories
+			if (water && found_water) {
 				// Make sure there is a OCEAN path from the water factory (e.g. fishery) to its destination factory (e.g. fishing port)
 				// Find the 3d location of our proposed water factory tile (remember the 3-tile offset)
 				koord water_end_pos = k + koord(3,3);
