@@ -1449,7 +1449,7 @@ void haltestelle_t::step()
 					linehandle_t account_line = get_preferred_line(tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
 					convoihandle_t account_convoy = get_preferred_convoy(tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
 					const uint16 airport_wait = (account_convoy.is_bound() && account_convoy->front()->get_typ() == obj_t::air_vehicle) ||
-						(account_line.is_bound() && account_line->get_convoy(0).is_bound() && account_line->get_convoy(0)->front()->get_typ() == obj_t::air_vehicle) ?
+						(account_line.is_bound() && account_line->count_convoys() > 0 && account_line->get_convoy(0).is_bound() && account_line->get_convoy(0)->front()->get_typ() == obj_t::air_vehicle) ?
 							welt->get_settings().get_min_wait_airport() : 0;
 					add_waiting_time(max(waiting_tenths, airport_wait), tmp.get_zwischenziel(), tmp.get_desc()->get_catg_index(), tmp.get_class());
 				}
