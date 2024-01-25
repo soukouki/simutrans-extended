@@ -712,7 +712,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 			// Whether the cell component is in buf text format or not?
 			if (i == SPECS_ROLE) {
 				const uint16 month_now = world()->get_timeline_year_month();
-				const PIXVAL veh_bar_color = v_desc->is_obsolete(month_now) ? COL_OBSOLETE : (v_desc->is_future(month_now) || v_desc->is_retired(month_now)) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
+				const PIXVAL veh_bar_color = v_desc->is_obsolete(month_now) ? SYSCOL_OBSOLETE : (v_desc->is_future(month_now) || v_desc->is_retired(month_now)) ? SYSCOL_OUT_OF_PRODUCTION : COL_SAFETY;
 				new_component<gui_vehicle_bar_t>(veh_bar_color, scr_size(D_LABEL_HEIGHT*4, max(GOODS_COLOR_BOX_HEIGHT,LINEASCENT-2)))->set_flags(v_desc->get_basic_constraint_prev(reversed), v_desc->get_basic_constraint_next(reversed), v_desc->get_interactivity());
 			}
 			else if (i == SPECS_SIDEVIEW) {
@@ -736,7 +736,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 						else {
 							lb->buf().append(car_number, 0);
 						}
-						lb->set_color(v_desc->has_available_upgrade(world()->get_current_month()) == 2 ? COL_UPGRADEABLE : SYSCOL_TEXT);
+						lb->set_color(v_desc->has_available_upgrade(world()->get_current_month()) == 2 ? SYSCOL_UPGRADEABLE : SYSCOL_TEXT);
 						break;
 					}
 					default:
@@ -1390,12 +1390,12 @@ void gui_convoy_payload_info_t::update_list()
 				else {
 					lb->buf().append(car_number);
 				}
-				lb->set_color(veh->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK);
+				lb->set_color(veh->get_desc()->has_available_upgrade(month_now) ? SYSCOL_UPGRADEABLE : SYSCOL_TEXT_WEAK);
 				lb->set_fixed_width((D_BUTTON_WIDTH*3)>>3);
 				lb->update();
 
 				// vehicle color bar
-				const PIXVAL veh_bar_color = veh->get_desc()->is_obsolete(month_now) ? COL_OBSOLETE : (veh->get_desc()->is_future(month_now) || veh->get_desc()->is_retired(month_now)) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
+				const PIXVAL veh_bar_color = veh->get_desc()->is_obsolete(month_now) ? SYSCOL_OBSOLETE : (veh->get_desc()->is_future(month_now) || veh->get_desc()->is_retired(month_now)) ? SYSCOL_OUT_OF_PRODUCTION : COL_SAFETY;
 				new_component<gui_vehicle_bar_t>(veh_bar_color, scr_size((D_BUTTON_WIDTH*3>>3)-6, VEHICLE_BAR_HEIGHT))
 					->set_flags(
 						veh->is_reversed() ? veh->get_desc()->get_basic_constraint_next() : veh->get_desc()->get_basic_constraint_prev(),
@@ -1481,7 +1481,7 @@ void gui_convoy_maintenance_info_t::update_list()
 				else {
 					lb->buf().append(car_number);
 				}
-				lb->set_color(veh->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK);
+				lb->set_color(veh->get_desc()->has_available_upgrade(month_now) ? SYSCOL_UPGRADEABLE : SYSCOL_TEXT_WEAK);
 				lb->set_fixed_width((D_BUTTON_WIDTH*3)>>3);
 				lb->update();
 
@@ -1505,14 +1505,14 @@ void gui_convoy_maintenance_info_t::update_list()
 							// current livery belongs to convoy applied livery scheme and active
 							new_component<gui_margin_t>(LINESPACE>>1);
 							// is current livery latest one? no => change text color
-							new_component<gui_label_t>(convoy_scheme->get_name(), strcmp(convoy_scheme->get_latest_available_livery(month_now, veh->get_desc()), veh->get_current_livery()) ? COL_UPGRADEABLE : SYSCOL_TEXT);
+							new_component<gui_label_t>(convoy_scheme->get_name(), strcmp(convoy_scheme->get_latest_available_livery(month_now, veh->get_desc()), veh->get_current_livery()) ? SYSCOL_UPGRADEABLE : SYSCOL_TEXT);
 							new_component<gui_fill_t>();
 						}
 						else if (convoy_scheme->is_contained(veh->get_current_livery())) {
 							// this is old livery
 							new_component<gui_margin_t>(LINESPACE>>1);
 							// TODO: add livery scheme symbol
-							new_component<gui_label_t>(convoy_scheme->get_name(), COL_OBSOLETE);
+							new_component<gui_label_t>(convoy_scheme->get_name(), SYSCOL_OBSOLETE);
 							new_component<gui_fill_t>();
 						}
 						//else { // no livery=>no display }
