@@ -353,7 +353,7 @@ void gui_convoy_spec_table_t::update()
 			// Whether the cell component is in buf text format or not?
 			if (i == SPECS_ROLE) {
 				const uint16 month_now = world()->get_timeline_year_month();
-				const PIXVAL veh_bar_color = veh_type->is_obsolete(month_now) ? COL_OBSOLETE : (veh_type->is_future(month_now) || veh_type->is_retired(month_now)) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
+				const PIXVAL veh_bar_color = veh_type->is_obsolete(month_now) ? SYSCOL_OBSOLETE : (veh_type->is_future(month_now) || veh_type->is_retired(month_now)) ? SYSCOL_OUT_OF_PRODUCTION : COL_SAFETY;
 				new_component<gui_vehicle_bar_t>(veh_bar_color, scr_size(D_LABEL_HEIGHT*4, max(GOODS_COLOR_BOX_HEIGHT,LINEASCENT-2)))->set_flags(veh_type->get_basic_constraint_prev(reversed), veh_type->get_basic_constraint_next(reversed), veh_type->get_interactivity());
 			}
 			else if (i == SPECS_SIDEVIEW) {
@@ -377,7 +377,7 @@ void gui_convoy_spec_table_t::update()
 						else {
 							lb->buf().append(car_number, 0);
 						}
-						lb->set_color(veh_type->has_available_upgrade(world()->get_current_month()) == 2 ? COL_UPGRADEABLE : SYSCOL_TEXT);
+						lb->set_color(veh_type->has_available_upgrade(world()->get_current_month()) == 2 ? SYSCOL_UPGRADEABLE : SYSCOL_TEXT);
 						break;
 					}
 					default:
