@@ -196,20 +196,20 @@ void gui_times_history_t::build_table()
 	tbl->set_spacing(scr_size(0, 0));
 	{
 		// header
-		new_component<gui_table_header_t>("", SYSCOL_TH_BACKGROUND_LEFT, gui_label_t::left)->set_flexible(true, false);
-		gui_table_header_t *th = new_component<gui_table_header_t>("", SYSCOL_TH_BACKGROUND_LEFT, gui_label_t::left);
+		new_component<gui_table_header_t>("", SYSCOL_TH_BACKGROUND_TOP, gui_label_t::left)->set_flexible(true, false);
+		gui_table_header_t *th = new_component<gui_table_header_t>("", SYSCOL_TH_BACKGROUND_TOP, gui_label_t::left);
 		th->set_flexible(true, false);
 		th->set_padding(scr_size(0,2));
 		th->set_fixed_width(D_ENTRY_NO_WIDTH);
 		if (convoy.is_bound()) {
-			th = new_component<gui_table_header_t>("", SYSCOL_TH_BACKGROUND_LEFT, gui_label_t::left);
+			th = new_component<gui_table_header_t>("", SYSCOL_TH_BACKGROUND_TOP, gui_label_t::left);
 			th->set_flexible(true, false);
-			th->set_padding(scr_size(0, 2));
+			th->set_padding(scr_size(2,2));
 			th->set_fixed_width(LINESPACE*0.7);
 		}
-		new_component<gui_table_header_t>("stations", SYSCOL_TH_BACKGROUND_LEFT, gui_label_t::left)->set_flexible(true, false);
-		new_component_span<gui_table_header_t>("latest_3", SYSCOL_TH_BACKGROUND_LEFT, gui_label_t::left, 3)->set_flexible(true, false);
-		new_component_span<gui_table_header_t>("average", SYSCOL_TH_BACKGROUND_LEFT, gui_label_t::left, 2)->set_flexible(true, false);
+		new_component<gui_table_header_t>("stations", SYSCOL_TH_BACKGROUND_TOP, gui_label_t::left)->set_flexible(true, false);
+		new_component_span<gui_table_header_t>("latest_3", SYSCOL_TH_BACKGROUND_TOP, gui_label_t::left, 3)->set_flexible(true, false);
+		new_component_span<gui_table_header_t>("average", SYSCOL_TH_BACKGROUND_TOP, gui_label_t::left, 2)->set_flexible(true, false);
 
 		new_component_span<gui_margin_t>(1, D_V_SPACE<<1, 2);
 
