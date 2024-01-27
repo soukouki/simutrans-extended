@@ -684,7 +684,7 @@ void vehiclelist_frame_t::fill_list()
 				// goods category filter
 				if( ware ) {
 					const goods_desc_t *vware = veh->get_freight_type();
-					if( ( ware->get_catg_index()>0  &&  vware->get_catg_index()!=ware->get_catg_index())  &&   vware->get_index()!=ware->get_index() ) {
+					if( ( ware->get_catg_index()!=goods_manager_t::INDEX_NONE  &&  vware->get_catg_index()!=ware->get_catg_index())  &&   vware->get_index()!=ware->get_index() ) {
 						continue;
 					}
 				}
@@ -769,7 +769,7 @@ void vehiclelist_frame_t::fill_list()
 			// goods category filter
 			if( ware ) {
 				const goods_desc_t *vware = veh->get_freight_type();
-				if( ( ware->get_catg_index()>0  &&  vware->get_catg_index()!=ware->get_catg_index())  &&   vware->get_index()!=ware->get_index() ) {
+				if( ( ware->get_catg_index()!=goods_manager_t::INDEX_NONE  &&  vware->get_catg_index()!=ware->get_catg_index())  &&   vware->get_index()!=ware->get_index() ) {
 					continue;
 				}
 			}
