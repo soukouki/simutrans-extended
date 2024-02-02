@@ -903,6 +903,7 @@ void gui_convoy_cargo_info_t::update()
 	old_total_cargo   = cnv->get_total_cargo();
 
 	set_table_layout(1,0);
+	set_table_frame(true, true);
 	set_alignment(ALIGN_LEFT | ALIGN_TOP);
 
 	if( !info_depth_from  &&  !info_depth_to  ) {
@@ -967,6 +968,7 @@ void gui_convoy_cargo_info_t::update()
 	else {
 		new_component<gui_cargo_info_t>(cnv)->init(info_depth_from, info_depth_to, divide_by_wealth, sort_mode);
 	}
+	new_component<gui_fill_t>(false, true);
 
 	set_size(get_min_size());
 }
