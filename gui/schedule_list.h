@@ -22,6 +22,7 @@
 
 #include "times_history_container.h"
 #include "vehicle_class_manager.h"
+#include "line_waiting_status.h"
 #include "components/gui_vehicle_capacitybar.h"
 #include "components/gui_schedule_item.h"
 #include "components/gui_line_lettercode.h"
@@ -31,27 +32,6 @@
 
 
 class player_t;
-
-
-class gui_line_waiting_status_t : public gui_aligned_container_t
-{
-	linehandle_t line;
-
-	schedule_t *schedule;
-
-	bool show_name=true;
-
-public:
-	gui_line_waiting_status_t(linehandle_t line);
-
-	void init();
-
-	// for reload from the save
-	void set_line(linehandle_t line_) { line = line_; init(); }
-	void set_show_name(bool yesno) { show_name = yesno; init(); }
-
-	void draw(scr_coord offset) OVERRIDE;
-};
 
 
 class schedule_list_gui_t : public gui_frame_t, public action_listener_t
