@@ -14,17 +14,22 @@
 #include "../simhalt.h"
 
 
-class gui_halt_waiting_catg_t : public gui_component_t
+class gui_halt_waiting_catg_t : public gui_aligned_container_t
 {
 	halthandle_t halt;
 	uint8 catg_index;
 	cbuffer_t buf;
+
+	// for update flag.
+	uint32 update_seed = 0;
+
 public:
 	gui_halt_waiting_catg_t(halthandle_t h, uint8 catg);
 
+	void update();
+
 	void draw(scr_coord offset) OVERRIDE;
 
-	scr_size get_min_size() const OVERRIDE { return size; }
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 

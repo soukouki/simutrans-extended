@@ -1089,7 +1089,6 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		cont_haltlist.set_visible(true);
 		cont_haltlist.set_line(new_line);
 
-		resize(scr_size(0,0));
 		livery_selector.set_visible(true);
 
 		// fill container with info of line's convoys
@@ -1297,6 +1296,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		delete last_schedule;
 		last_schedule = new_line->get_schedule()->copy();
 		last_vehicle_count = new_line->count_convoys();
+		resize(scr_size(0,0));
 	}
 	else if(  cont_line_name.is_visible()  ) {
 		// previously a line was visible
