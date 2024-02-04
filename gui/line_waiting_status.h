@@ -3,8 +3,8 @@
  * (see LICENSE.txt)
  */
 
-#ifndef GUI_LINE_WAITING_CARGO_H
-#define GUI_LINE_WAITING_CARGO_H
+#ifndef GUI_LINE_WAITING_STATUS_H
+#define GUI_LINE_WAITING_STATUS_H
 
 
 #include "components/gui_component.h"
