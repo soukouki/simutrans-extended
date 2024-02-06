@@ -17,6 +17,7 @@ gui_halt_waiting_catg_t::gui_halt_waiting_catg_t(halthandle_t h, uint8 catg)
 	halt = h;
 	catg_index = catg;
 	set_table_layout(1,0);
+	update();
 }
 
 void gui_halt_waiting_catg_t::update()
@@ -25,7 +26,7 @@ void gui_halt_waiting_catg_t::update()
 	haltestelle_t::connexions_map *connexions = halt->get_connexions(catg_index, g_class);
 
 	remove_all();
-	add_table(256,1);
+	add_table(0,1);
 	{
 		if (connexions->empty()) {
 			new_component<gui_label_t>("-", COL_INACTIVE);
@@ -174,6 +175,8 @@ void gui_line_waiting_status_t::draw(scr_coord offset)
 		if (!line->get_schedule()->matches(world(), schedule)) {
 			init();
 		}
+		// need to recheck child components size
+		set_size(gui_aligned_container_t::get_size());
 	}
 	gui_aligned_container_t::draw(offset);
 }

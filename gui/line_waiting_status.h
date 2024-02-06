@@ -29,8 +29,6 @@ public:
 	void update();
 
 	void draw(scr_coord offset) OVERRIDE;
-
-	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 
 
