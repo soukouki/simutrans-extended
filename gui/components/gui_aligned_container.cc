@@ -581,7 +581,7 @@ void gui_aligned_container_t::draw(scr_coord offset)
 {
 	const scr_coord screen_pos = pos + offset;
 	if (show_back_ground_color) {
-		display_fillbox_wh_clip_rgb(shorten(screen_pos.x), shorten(screen_pos.y), shorten(get_size().w), shorten(get_size().h), SYSCOL_TABLE_BACKGROUND, false);
+		display_fillbox_wh_clip_rgb(shorten(screen_pos.x+1), shorten(screen_pos.y), shorten(get_size().w-2), shorten(get_size().h), SYSCOL_TABLE_BACKGROUND, false);
 	}
 	if (show_frame) {
 		display_ddd_box_clip_rgb(shorten(screen_pos.x), shorten(screen_pos.y), shorten(get_size().w), shorten(get_size().h), SYSCOL_TABLE_FRAME, SYSCOL_TABLE_FRAME);
