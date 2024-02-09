@@ -117,7 +117,7 @@ static char const* const spec_table_first_col_text[gui_convoy_spec_table_t::MAX_
 	"Freight",
 	"engine_type",
 	"Range",
-	"replenishment_seconds",
+	//"replenishment_seconds",
 	"Power:",
 	"Gear:",
 	"Tractive force:",
@@ -137,11 +137,11 @@ static char const* const spec_table_first_col_text[gui_convoy_spec_table_t::MAX_
 	"Fixed cost per month", // Vehicle maintenance costs per month
 	"Restwert:",
 	"Too tall for low bridges",
-	"tilting_vehicle_equipment",
+	"tilting_vehicle_equipment"/*,
 	"maintenance_interval",
 	"max_overhauls_interval",
 	"initial_overhaul_cost",
-	"Staffing Needs"
+	"Staffing Needs"*/
 };
 
 static char const* const payload_table_first_col_text[gui_convoy_spec_table_t::MAX_PAYLOAD_ROW] =
@@ -482,7 +482,7 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 						lb->buf().printf("%u km", veh_type->get_range());
 					}
 					break;
-				case SPEC_REPLENSHMENT_SEC:
+				//case SPEC_REPLENSHMENT_SEC:
 					//if( veh_type->get_range()!=0 ) {
 					//	char time_as_clock[32];
 					//	world()->sprintf_ticks(time_as_clock, sizeof(time_as_clock), veh_type->get_replenishment_seconds());
@@ -491,10 +491,10 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 					//	lb->update();
 					//}
 					//else {
-						lb->buf().append("-");
-						lb->set_color(SYSCOL_TEXT_INACTIVE);
+					//	lb->buf().append("-");
+					//	lb->set_color(SYSCOL_TEXT_INACTIVE);
 					//}
-					break;
+					//break;
 				case SPEC_POWER:
 					if( !veh_type->get_power() ) {
 						lb->buf().append("-");
@@ -601,7 +601,7 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 				break;
 			case SPEC_FUEL_PER_KM: // Unified notation is difficult in the case of compound
 			case SPEC_FREIGHT_TYPE:
-			case SPEC_REPLENSHMENT_SEC:
+			//case SPEC_REPLENSHMENT_SEC:
 			case SPEC_GEAR:
 			case SPEC_RATED_SPEED:
 			default:
@@ -861,15 +861,15 @@ void gui_convoy_spec_table_t::insert_maintenance_rows()
 					new_component<gui_label_t>("-");
 				}
 			}
-			else if( i==SPEC_NEED_STAFF  /*&& skinverwaltung_t::staff_cost*/ ) {
+			//else if( i==SPEC_NEED_STAFF  /*&& skinverwaltung_t::staff_cost*/ ) {
 				// use symbol cell
 				//if (veh_type->get_total_staff_hundredths()) {
 				//	new_component<gui_image_t>(skinverwaltung_t::staff_cost->get_image_id(0), 0, ALIGN_CENTER_V, true);
 				//}
 				//else {
-					new_component<gui_label_t>("-");
+				//	new_component<gui_label_t>("-");
 				//}
-			}
+			//}
 			else {
 				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered);
 
@@ -910,14 +910,14 @@ void gui_convoy_spec_table_t::insert_maintenance_rows()
 					case SPEC_VALUE:
 						lb->buf().printf("%1.2f$", cnv->get_vehicle(j)->calc_sale_value() / 100.0);
 						break;
-					case SPEC_MAINTENANCE_INTERVAL:
+					/*case SPEC_MAINTENANCE_INTERVAL:
 					{
 						//const uint32 interval_km = veh_type->get_maintenance_interval_km();
 						//lb->buf().printf("%u km", interval_km);
 						//if (interval_km > 0) { // ignore "0"
 						//	total = min(total, interval_km);
 						//}
-						break;
+						//break;
 					}
 					case SPEC_OVERHAUL_INTERVAL:
 					{
@@ -944,7 +944,7 @@ void gui_convoy_spec_table_t::insert_maintenance_rows()
 							lb->buf().append("-");
 							lb->set_color(SYSCOL_TEXT_WEAK);
 						//}
-						break;
+						break;*/
 					default:
 						lb->buf().append("-");
 						break;
@@ -970,7 +970,7 @@ void gui_convoy_spec_table_t::insert_maintenance_rows()
 					td->buf().printf("%.2f$/%s", world()->calc_adjusted_monthly_figure(cnv->get_fixed_cost()) / 100.0, translator::translate("month")); break;
 				case SPEC_VALUE:
 					td->buf().printf("%.2f$", cnv->get_purchase_cost() / 100.0); break;
-				case SPEC_MAINTENANCE_INTERVAL:
+				/*case SPEC_MAINTENANCE_INTERVAL:
 				case SPEC_OVERHAUL_INTERVAL:
 					// Convoy min value
 					if (total > 0) {
@@ -991,7 +991,7 @@ void gui_convoy_spec_table_t::insert_maintenance_rows()
 					break;
 				case SPEC_NEED_STAFF:
 					//td->buf().printf("%1.2f$", cnv->get_salaries(100) / 100.0);
-					break;
+					break;*/
 				case SPEC_CAN_UPGRADE:
 				default:
 					break;
