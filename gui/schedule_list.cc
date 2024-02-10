@@ -268,7 +268,7 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 
 	scroll_line_info.set_visible(false);
 	cont_line_info.set_table_layout(1,0);
-	cont_line_info.set_margin(scr_size(D_MARGIN_LEFT,D_V_SPACE),scr_size(0,D_MARGIN_BOTTOM));
+	cont_line_info.set_margin(scr_size(D_MARGIN_LEFT,D_V_SPACE),scr_size(D_H_SPACE,D_MARGIN_BOTTOM));
 
 	cont_line_info.add_table(2,3)->set_spacing(scr_size(0,0));
 	{
@@ -296,23 +296,25 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	}
 	cont_line_info.end_table();
 
-	cont_line_info.add_table(2,0)->set_spacing(scr_size(D_H_SPACE, 0));
+	gui_aligned_container_t *tbl = cont_line_info.add_table(2,0);
+	tbl->set_spacing(scr_size(D_H_SPACE, 0));
+	tbl->set_table_frame(true,true);
+	tbl->set_margin(scr_size(D_MARGIN_LEFT, D_V_SPACE), scr_size(D_MARGIN_LEFT, D_V_SPACE));
 	{
 		cont_line_info.add_component(&halt_entry_origin);
 		cont_line_info.add_component(&lb_line_origin);
 
 		cont_line_info.add_component(&routebar_middle);
-		cont_line_info.new_component<gui_empty_t>();
+		cont_line_info.new_component<gui_fill_t>();
 
 		cont_line_info.add_component(&halt_entry_dest);
 		cont_line_info.add_component(&lb_line_destination);
 	}
 	cont_line_info.end_table();
 
-
-	cont_line_info.add_table(3,1);
+	cont_line_info.add_component(&lb_travel_distance);
+	cont_line_info.add_table(2,1);
 	{
-		cont_line_info.add_component(&lb_travel_distance);
 		if (skinverwaltung_t::service_frequency) {
 			cont_line_info.new_component<gui_image_t>(skinverwaltung_t::service_frequency->get_image_id(0), 0, ALIGN_NONE, true)->set_tooltip(translator::translate("Service frequency"));
 		}
@@ -995,7 +997,7 @@ void schedule_list_gui_t::display(scr_coord pos)
 	if (buf.len() > 0) {
 		display_proportional_clip_rgb(pos.x + left, pos.y + top, buf, ALIGN_LEFT, line->get_state_color(), true);
 	}
-	cont_line_info.set_size(cont_line_info.get_size());
+	cont_line_info.set_size(cont_line_info.get_min_size());
 }
 
 
