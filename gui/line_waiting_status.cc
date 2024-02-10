@@ -12,10 +12,11 @@
 #include "../simworld.h"
 
 
-gui_halt_waiting_catg_t::gui_halt_waiting_catg_t(halthandle_t h, uint8 catg)
+gui_halt_waiting_catg_t::gui_halt_waiting_catg_t(halthandle_t h, uint8 catg, bool yesno)
 {
 	halt = h;
 	catg_index = catg;
+	devide_by_class = yesno;
 	set_table_layout(1,0);
 	update();
 }
@@ -32,6 +33,7 @@ void gui_halt_waiting_catg_t::update()
 			new_component<gui_label_t>("-", COL_INACTIVE);
 		}
 		else if (!update_seed) {
+			new_component<gui_margin_t>(GOODS_COLOR_BOX_HEIGHT);
 			new_component<gui_label_t>("0", SYSCOL_TEXT_WEAK);
 		}
 		else {
