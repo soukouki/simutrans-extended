@@ -330,8 +330,8 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 
 	cont_line_info.new_component<gui_divider_t>();
 	// Transport density
-	cont_line_info.new_component<gui_label_t>("Transportation density");
-	cont_transport_density.set_table_layout(4,0);
+	cont_line_info.new_component<gui_label_t>("Monthly transportation density");
+	cont_transport_density.set_table_layout(3,0);
 	cont_transport_density.set_spacing(scr_size(1,1));
 	cont_transport_density.set_table_frame(true,true);
 	cont_line_info.add_component(&cont_transport_density);
@@ -1223,7 +1223,6 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 			th->set_fixed_width(D_FIXED_SYMBOL_WIDTH);
 			cont_transport_density.new_component<gui_table_header_t>("Last Month")->set_flexible(true, false);
 			cont_transport_density.new_component<gui_table_header_t>("Yearly average")->set_flexible(true, false);
-			cont_transport_density.new_component<gui_table_header_t>("")->set_flexible(true, false);
 
 			for (uint8 j=0; j<3; j++) {
 				// 0=pax, 1=mail, 2=freight
@@ -1251,21 +1250,6 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 				sint64 hist_sum = new_line->get_finance_history(1, j==0? LINE_PAX_DISTANCE : j==1? LINE_MAIL_DISTANCE: LINE_PAYLOAD_DISTANCE);
 				gui_table_cell_buf_t *td = cont_transport_density.new_component<gui_table_cell_buf_t>("", SYSCOL_TD_BACKGROUND, gui_label_t::right, true);
 				td->buf().printf("%.1f ", hist_sum/line_distance);
-				td->set_padding(scr_size(2,2));
-				td->set_flexible(true, false);
-				td->update();
-				for (uint8 i=2; i < MAX_MONTHS; i++) {
-					hist_sum += new_line->get_finance_history(2, j==0 ? LINE_PAX_DISTANCE : j==1 ? LINE_MAIL_DISTANCE : LINE_PAYLOAD_DISTANCE);
-				}
-				// yearly average
-				td = cont_transport_density.new_component<gui_table_cell_buf_t>("", SYSCOL_TD_BACKGROUND, gui_label_t::right, true);
-				td->buf().printf("%.1f ", hist_sum / line_distance / (MAX_MONTHS-1));
-				td->set_padding(scr_size(2,2));
-				td->set_flexible(true, false);
-				td->update();
-
-				td = cont_transport_density.new_component<gui_table_cell_buf_t>("", SYSCOL_TD_BACKGROUND, gui_label_t::left, true);
-				td->buf().append(" ");
 				switch (j)
 				{
 					case 0:
@@ -1278,10 +1262,32 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 						td->buf().append(translator::translate("tonnen"));
 						break;
 				}
-				td->buf().append(translator::translate("/mon"));
-				td->set_padding(scr_size(2, 2));
-				td->set_flexible(false, false);
-				td->set_fixed_width(td->get_size().w);
+				td->buf().append(" ");
+				td->set_padding(scr_size(2,2));
+				td->set_flexible(true, false);
+				td->update();
+
+				for (uint8 i=2; i < MAX_MONTHS; i++) {
+					hist_sum += new_line->get_finance_history(2, j==0 ? LINE_PAX_DISTANCE : j==1 ? LINE_MAIL_DISTANCE : LINE_PAYLOAD_DISTANCE);
+				}
+				// yearly average
+				td = cont_transport_density.new_component<gui_table_cell_buf_t>("", SYSCOL_TD_BACKGROUND, gui_label_t::right, true);
+				td->buf().printf("%.1f ", hist_sum / line_distance / (MAX_MONTHS-1));
+				switch (j)
+				{
+					case 0:
+						td->buf().append(translator::translate(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)->get_mass()));
+						break;
+					case 1:
+						td->buf().append(translator::translate("kg"));
+						break;
+					default:
+						td->buf().append(translator::translate("tonnen"));
+						break;
+				}
+				td->buf().append(" ");
+				td->set_padding(scr_size(2,2));
+				td->set_flexible(true, false);
 				td->update();
 			}
 		}
