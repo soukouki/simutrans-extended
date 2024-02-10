@@ -747,11 +747,6 @@ void schedule_t::gimme_stop_name(cbuffer_t & buf, karte_t* welt, const player_t 
 			buf.printf("%s (%s)", translator::translate("Wegpunkt"), entry.pos.get_str() );
 		}
 	}
-
-	if(entry.reverse == 1)
-	{
-		buf.printf(" [<<]");
-	}
 }
 
 void schedule_t::gimme_short_stop_name(cbuffer_t& buf, karte_t* welt, player_t const* const player_, const schedule_t *schedule, int i, int max_chars)
