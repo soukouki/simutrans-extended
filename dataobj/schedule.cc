@@ -730,21 +730,21 @@ void schedule_t::gimme_stop_name(cbuffer_t & buf, karte_t* welt, const player_t 
 		{
 			buf.printf("%d%% ", entry.minimum_loading);
 		}
-		buf.printf("%s (%s)", modified_name, entry.pos.get_str() );
+		buf.printf("%s", modified_name );
 	}
 	else {
 		const grund_t* gr = welt->lookup(entry.pos);
 		if(  gr==NULL  ) {
-			buf.printf("%s (%s)", translator::translate("Invalid coordinate"), entry.pos.get_str() );
+			buf.printf("%s", translator::translate("Invalid coordinate") );
 		}
 		else if(  gr->get_depot() != NULL  ) {
-			buf.printf("%s (%s)", translator::translate("Depot"), entry.pos.get_str() );
+			buf.printf("%s", translator::translate("Depot") );
 		}
 		else if(  const char *label_text = gr->get_text()  ){
-			buf.printf("%s %s (%s)", translator::translate("Wegpunkt"), label_text, entry.pos.get_str() );
+			buf.printf("%s %s)", translator::translate("Wegpunkt"), label_text );
 		}
 		else {
-			buf.printf("%s (%s)", translator::translate("Wegpunkt"), entry.pos.get_str() );
+			buf.printf("%s", translator::translate("Wegpunkt") );
 		}
 	}
 }
