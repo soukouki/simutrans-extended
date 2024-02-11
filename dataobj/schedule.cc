@@ -725,8 +725,7 @@ void schedule_t::gimme_stop_name(cbuffer_t & buf, karte_t* welt, const player_t 
 		{
 			buf.printf("[*] ");
 		}
-
-		if (entry.minimum_loading != 0)
+		else if (entry.minimum_loading != 0)
 		{
 			buf.printf("%d%% ", entry.minimum_loading);
 		}

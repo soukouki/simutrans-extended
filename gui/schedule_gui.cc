@@ -185,7 +185,7 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 void gui_schedule_entry_t::update_label()
 {
 	halthandle_t halt = haltestelle_t::get_halt(entry.pos, player);
-	wait_loading->init_data(entry.minimum_loading);
+	wait_loading->init_data(entry.wait_for_time ? 0 : entry.minimum_loading);
 
 	bool no_control_tower = false; // This flag is left in case the pakset doesn't have alert symbols. UI TODO: Make this unnecessary
 	if(welt->lookup(entry.pos) && welt->lookup(entry.pos)->get_depot() != NULL){
