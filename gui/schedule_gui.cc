@@ -48,39 +48,28 @@ static karte_ptr_t welt;
 #define L_ENTRY_NO_WIDTH (proportional_string_width("88")+6)
 
 // helper class
-gui_wait_loading_schedule_t::gui_wait_loading_schedule_t(uint32 flags_, uint16 val_)
+gui_wait_loading_schedule_t::gui_wait_loading_schedule_t(uint16 val_)
 {
 	val = val_;
-	flags = flags_;
 	size.h = L_ENTRY_NO_HEIGHT;
+	const scr_coord_val img_width = skinverwaltung_t::goods->get_image(0)->get_pic()->w;
+	set_size(scr_size(img_width+9, L_ENTRY_NO_HEIGHT));
 }
 
 void gui_wait_loading_schedule_t::draw(scr_coord offset)
 {
 	const scr_coord_val img_width = skinverwaltung_t::goods->get_image(0)->get_pic()->w;
 	scr_coord_val left = img_width+2;
-	size.w = img_width + 8; // symbol_width + margin + border*2 + bar_width
-	/*if (val || flags & schedule_entry_t::discharge_payload || flags & schedule_entry_t::pick_up_only || flags & schedule_entry_t::set_down_only) {
+	if (val ) {
 		display_color_img(skinverwaltung_t::goods->get_image_id(0), pos.x+offset.x, pos.y+offset.y + D_GET_CENTER_ALIGN_OFFSET(skinverwaltung_t::goods->get_image(0)->get_pic()->h, size.h), 0, false, false);
-		if (val || flags & schedule_entry_t::discharge_payload) {
-			const PIXVAL bgcolor = val ? color_idx_to_rgb(MN_GREY2) : color_idx_to_rgb(COL_RED+1);
-			display_ddd_box_clip_rgb(   pos.x+offset.x+left,   pos.y+offset.y,   6, size.h,   color_idx_to_rgb(MN_GREY0), color_idx_to_rgb(MN_GREY4)); // frame
-			display_fillbox_wh_clip_rgb(pos.x+offset.x+left+1, pos.y+offset.y+1, 4, size.h-2, bgcolor, true);                                          // background
-			if (val) {
-				const scr_coord_val bar_height = (size.h-2)*val/100;
-				display_fillbox_wh_clip_rgb(pos.x+offset.x+left+1, pos.y+offset.y+(size.h-2)+1-bar_height, 4, bar_height, COL_IN_TRANSIT, true);       // load limit
-			}
-			left += 6;
+		const PIXVAL bgcolor = val ? color_idx_to_rgb(MN_GREY2) : color_idx_to_rgb(COL_RED+1);
+		display_ddd_box_clip_rgb(   pos.x+offset.x+left,   pos.y+offset.y,   6, size.h,   color_idx_to_rgb(MN_GREY0), color_idx_to_rgb(MN_GREY4)); // frame
+		display_fillbox_wh_clip_rgb(pos.x+offset.x+left+1, pos.y+offset.y+1, 4, size.h-2, bgcolor, true);                                          // background
+		if (val) {
+			const scr_coord_val bar_height = (size.h-2)*val/100;
+			display_fillbox_wh_clip_rgb(pos.x+offset.x+left+1, pos.y+offset.y+(size.h-2)+1-bar_height, 4, bar_height, COL_IN_TRANSIT, true);       // load limit
 		}
-		if (flags & schedule_entry_t::pick_up_only) {
-			left += display_fluctuation_triangle_rgb(pos.x+offset.x+left+1, pos.y+offset.y+D_GET_CENTER_ALIGN_OFFSET(7, size.h), 7, false, 1);
-		}
-		else if(flags & schedule_entry_t::set_down_only){
-			left += display_fluctuation_triangle_rgb(pos.x+offset.x+left+1, pos.y+offset.y+D_GET_CENTER_ALIGN_OFFSET(7, size.h), 7, false, -1);
-		}
-		size.w = left+1;
-		set_size(size);
-	}*/
+	}
 }
 
 
@@ -143,10 +132,10 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 
 	img_hourglass.set_image(skinverwaltung_t::waiting_time ? skinverwaltung_t::waiting_time->get_image_id(0) : IMG_EMPTY, true);
 	img_hourglass.set_rigid(true);
-	img_hourglass.set_visible(/*entry.wait_for_time ||*/ (entry.minimum_loading > 0 && entry.waiting_time_shift > 0));
+	img_hourglass.set_visible(entry.wait_for_time || (entry.minimum_loading > 0 && entry.waiting_time_shift > 0));
 	add_component(&img_hourglass); //2
 
-	wait_loading = new_component<gui_wait_loading_schedule_t>(0, entry.minimum_loading); // 3
+	wait_loading = new_component<gui_wait_loading_schedule_t>(entry.minimum_loading); // 3
 
 	entry_no = new_component<gui_schedule_entry_number_t>(number, player->get_player_nr(), 0); // 4
 
@@ -196,8 +185,7 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 void gui_schedule_entry_t::update_label()
 {
 	halthandle_t halt = haltestelle_t::get_halt(entry.pos, player);
-	wait_loading->init_data(0, entry.minimum_loading);
-	//couple_order->set_value(entry.condition_bitfield_receiver, entry.condition_bitfield_broadcaster);
+	wait_loading->init_data(entry.minimum_loading);
 
 	bool no_control_tower = false; // This flag is left in case the pakset doesn't have alert symbols. UI TODO: Make this unnecessary
 	if(welt->lookup(entry.pos) && welt->lookup(entry.pos)->get_depot() != NULL){
@@ -225,7 +213,7 @@ void gui_schedule_entry_t::update_label()
 	schedule_t::gimme_stop_name(stop.buf(), world(), player, entry, no_control_tower); // UI TODO: After porting the function, remove this function
 	stop.update();
 
-	img_hourglass.set_visible(/*entry.wait_for_time ||*/ (entry.minimum_loading > 0 && entry.waiting_time_shift > 0));
+	img_hourglass.set_visible(entry.wait_for_time || (entry.minimum_loading > 0 && entry.waiting_time_shift > 0));
 	lb_reverse.set_visible(entry.reverse == 1);
 }
 
@@ -781,7 +769,7 @@ void schedule_gui_t::build_table()
 					cont_settings_1.add_component(&lb_spacing);
 
 					// UI TODO: Make it clearer to the player that this is set in increments of 12ths of a fraction of a month.
-					numimp_spacing.init(schedule->get_spacing(), 0, 999, 12);
+					numimp_spacing.init(schedule->get_spacing(), 0, 999, 1);
 					numimp_spacing.add_listener(this);
 					cont_settings_1.add_component(&numimp_spacing);
 
@@ -930,9 +918,8 @@ void schedule_gui_t::update_selection()
 			else if(!schedule->get_spacing())
 			{
 				// Cannot have wait for time without some spacing.
-				// 12 because the spacing is in 12ths of a fraction of a month.
-				schedule->set_spacing(12);
-				numimp_spacing.set_value(12);
+				schedule->set_spacing(1);
+				numimp_spacing.set_value(1);
 			}
 
 			if (schedule->entries[current_stop].minimum_loading > 0 || schedule->entries[current_stop].wait_for_time) {
@@ -942,7 +929,7 @@ void schedule_gui_t::update_selection()
 				numimp_spacing_shift.set_value(schedule->get_current_entry().spacing_shift);
 				if (schedule->get_spacing() ) {
 					lb_plus.set_visible(true);
-					welt->sprintf_ticks(str_spacing_as_clock, sizeof(str_spacing_as_clock), (welt->ticks_per_world_month * 12u) / schedule->get_spacing());
+					welt->sprintf_ticks(str_spacing_as_clock, sizeof(str_spacing_as_clock), welt->ticks_per_world_month / schedule->get_spacing());
 					welt->sprintf_ticks(str_spacing_shift_as_clock, sizeof(str_spacing_as_clock),
 							schedule->entries[current_stop].spacing_shift * welt->ticks_per_world_month / welt->get_settings().get_spacing_shift_divisor() + 1
 							);

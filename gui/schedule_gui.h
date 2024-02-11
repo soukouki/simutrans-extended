@@ -37,13 +37,12 @@ class gui_schedule_entry_t;
 class gui_wait_loading_schedule_t : public gui_component_t
 {
 	uint16 val = 0;
-	uint32 flags;
 public:
-	gui_wait_loading_schedule_t(uint32 flags, uint16 val=0);
+	gui_wait_loading_schedule_t(uint16 val=0);
 
 	void draw(scr_coord offset);
 
-	void init_data(uint32 flags_, uint16 v = 0) { flags = flags_, val = v; };
+	void init_data(uint16 v = 0) { val = v; };
 
 	scr_size get_min_size() const OVERRIDE { return size; }
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
@@ -84,7 +83,6 @@ class gui_schedule_entry_t : public gui_aligned_container_t, public gui_action_c
 	gui_schedule_entry_number_t *entry_no;
 	gui_colored_route_bar_t *route_bar;
 	gui_wait_loading_schedule_t *wait_loading;
-	//gui_schedule_couple_order_t *couple_order;
 
 public:
 	gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uint n, bool air_wt = false, uint8 line_color_index = 254);
