@@ -894,29 +894,33 @@ void schedule_list_gui_t::display(scr_coord pos)
 			halt_symbol_style = gui_schedule_entry_number_t::interchange;
 		}
 		halt_entry_origin.init(halt_entry_idx[0], origin_halt->get_owner()->get_player_color1(), halt_symbol_style, origin_halt->get_basis_pos3d());
+		if (line->get_schedule()->is_mirrored()) {
+			routebar_middle.set_line_style(gui_colored_route_bar_t::doubled);
+		}
+		else {
+			routebar_middle.set_line_style(gui_colored_route_bar_t::downward);
+		}
+		if ( line->get_line_color()==0 ) {
+			routebar_middle.set_color( player->get_player_color1() ); // uint8
+		}
+		else {
+			PIXVAL line_color = line->get_line_color();
+			if (!is_dark_color(line_color)) line_color = display_blend_colors(line_color, color_idx_to_rgb(COL_BLACK), 15);
+			routebar_middle.set_color( line_color );
+		}
 		if (destination_halt.is_bound()) {
+			halt_entry_dest.set_visible(true);
 			halt_symbol_style = gui_schedule_entry_number_t::halt;
 			if ((destination_halt->registered_lines.get_count() + destination_halt->registered_convoys.get_count()) > 1) {
 				halt_symbol_style = gui_schedule_entry_number_t::interchange;
 			}
 			halt_entry_dest.init(halt_entry_idx[1], destination_halt->get_owner()->get_player_color1(), halt_symbol_style, destination_halt->get_basis_pos3d());
-			if (line->get_schedule()->is_mirrored()) {
-				routebar_middle.set_line_style(gui_colored_route_bar_t::doubled);
-			}
-			else {
-				routebar_middle.set_line_style(gui_colored_route_bar_t::downward);
-			}
-			if ( line->get_line_color()==0 ) {
-				routebar_middle.set_color( player->get_player_color1() ); // uint8
-			}
-			else {
-				PIXVAL line_color = line->get_line_color();
-				if (!is_dark_color(line_color)) line_color = display_blend_colors(line_color, color_idx_to_rgb(COL_BLACK), 15);
-				routebar_middle.set_color( line_color );
-			}
 			lb_line_destination.buf().append(destination_halt->get_name());
 			lb_travel_distance.buf().printf("%s: %.1fkm ", translator::translate("travel_distance"), (float)(line->get_travel_distance()*world()->get_settings().get_meters_per_tile()/1000.0));
 			lb_travel_distance.update();
+		}
+		else {
+			halt_entry_dest.set_visible(false);
 		}
 	}
 	lb_line_origin.update();
