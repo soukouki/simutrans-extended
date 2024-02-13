@@ -466,11 +466,27 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	info_tabs.add_tab(&scroll_times_history, translator::translate("times_history"));
 
 	cont_tab_haltlist.set_table_layout(1,0);
-	bt_show_halt_name.init(button_t::square_state, "show station names");
-	bt_show_halt_name.set_tooltip("helptxt_show_station_name");
-	bt_show_halt_name.pressed=true;
-	bt_show_halt_name.add_listener(this);
-	cont_tab_haltlist.add_component(&bt_show_halt_name);
+	cont_tab_haltlist.add_table(4,1);
+	{
+		bt_hw_show_halt_name.init(button_t::square_state, "show station names");
+		bt_hw_show_halt_name.set_tooltip("helptxt_show_station_name");
+		bt_hw_show_halt_name.pressed=true;
+		bt_hw_show_halt_name.add_listener(this);
+		cont_tab_haltlist.add_component(&bt_hw_show_halt_name);
+
+		cont_tab_haltlist.new_component<gui_margin_t>(LINEASCENT);
+
+		bt_hw_divided_class.init(button_t::square_state, "Divided by class");
+		bt_hw_divided_class.set_tooltip("Waiting cargoes are displayed separately for each class.");
+		bt_hw_divided_class.pressed = true;
+		bt_hw_divided_class.add_listener(this);
+		cont_tab_haltlist.add_component(&bt_hw_divided_class);
+
+		cont_tab_haltlist.new_component<gui_fill_t>();
+	}
+	cont_tab_haltlist.end_table();
+
+
 	cont_tab_haltlist.add_component(&cont_haltlist);
 	info_tabs.add_tab(&scroll_halt_waiting, translator::translate("waiting_status"));
 
@@ -744,9 +760,13 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 		filter_btn_all_freights.pressed = line_type_flags & (1 << simline_t::all_freight);
 		build_line_list(tabs.get_active_tab_index());
 	}
-	else if (comp == &bt_show_halt_name) {
-		bt_show_halt_name.pressed = !bt_show_halt_name.pressed;
-		cont_haltlist.set_show_name( bt_show_halt_name.pressed );
+	else if (comp == &bt_hw_show_halt_name) {
+		bt_hw_show_halt_name.pressed = !bt_hw_show_halt_name.pressed;
+		cont_haltlist.set_show_name( bt_hw_show_halt_name.pressed );
+	}
+	else if (comp == &bt_hw_divided_class) {
+		bt_hw_divided_class.pressed = !bt_hw_divided_class.pressed;
+		cont_haltlist.set_divided_by_class(bt_hw_divided_class.pressed);
 	}
 	else if (comp == &reset_all_pass_button) {
 		cbuffer_t buf;

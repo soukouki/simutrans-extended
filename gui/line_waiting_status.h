@@ -22,9 +22,10 @@ class gui_halt_waiting_catg_t : public gui_aligned_container_t
 
 	// for update flag.
 	uint32 update_seed = 0;
+	bool divide_by_class;
 
 public:
-	gui_halt_waiting_catg_t(halthandle_t h, uint8 catg);
+	gui_halt_waiting_catg_t(halthandle_t h, uint8 catg, bool divide_by_class = true);
 
 	void update();
 
@@ -39,6 +40,7 @@ class gui_line_waiting_status_t : public gui_aligned_container_t
 	schedule_t *schedule;
 
 	bool show_name=true;
+	bool divide_by_class = false;
 
 public:
 	gui_line_waiting_status_t(linehandle_t line);
@@ -48,6 +50,7 @@ public:
 	// for reload from the save
 	void set_line(linehandle_t line_) { line = line_; init(); }
 	void set_show_name(bool yesno) { show_name = yesno; init(); }
+	void set_divided_by_class(bool yesno) { divide_by_class = yesno; init(); }
 
 	void draw(scr_coord offset) OVERRIDE;
 };
