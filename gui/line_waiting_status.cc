@@ -51,14 +51,15 @@ void gui_halt_waiting_catg_t::update()
 						new_component<gui_label_t>(", ", SYSCOL_TEXT);
 					}
 
-					PIXVAL goods_color = wtyp->get_color();
+					const PIXVAL goods_color = wtyp->get_color();
 					new_component<gui_colorbox_t>(goods_color)->set_size(GOODS_COLOR_BOX_SIZE);
 					gui_label_buf_t *lb = new_component<gui_label_buf_t>(overcrowded ? SYSCOL_OVERCROWDED : SYSCOL_TEXT);
 					const uint8 number_of_classes = wtyp->get_number_of_classes();
 					if (divide_by_class && number_of_classes>1) {
 						bool got_one_class = false;
 						for (uint8 wealth = 0; wealth<number_of_classes; wealth++) {
-							if (const uint32 csum = halt->get_ware_summe(wtyp, wealth)) {
+							const uint32 csum = line.is_bound() ? halt->get_ware_summe(wtyp, line, number_of_classes ? wealth:255) : halt->get_ware_summe(wtyp, wealth);
+							if (csum) {
 								if (got_one_class) lb->buf().append(", ");
 								lb->buf().printf("%s %d", goods_manager_t::get_translated_wealth_name(catg_index,wealth), csum);
 								got_one_class = true;
