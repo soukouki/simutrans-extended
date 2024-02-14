@@ -74,6 +74,10 @@ void gui_halt_waiting_catg_t::update()
 					got_one = true;
 				}
 			}
+			if (!got_one) {
+				new_component<gui_margin_t>(GOODS_COLOR_BOX_HEIGHT);
+				new_component<gui_label_t>("0", SYSCOL_TEXT_WEAK);
+			}
 		}
 	}
 	end_table();
