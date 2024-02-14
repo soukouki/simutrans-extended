@@ -188,9 +188,10 @@ bool gui_schedule_entry_number_t::infowin_event(const event_t *ev)
 	return false;
 }
 
-gui_convoy_arrow_t::gui_convoy_arrow_t(PIXVAL col, scr_size size_)
+gui_convoy_arrow_t::gui_convoy_arrow_t(PIXVAL col, bool rev, scr_size size_)
 {
 	color = col;
+	reverse = rev;
 	size = size_;
 	set_size(size);
 }
@@ -198,5 +199,5 @@ gui_convoy_arrow_t::gui_convoy_arrow_t(PIXVAL col, scr_size size_)
 void gui_convoy_arrow_t::draw(scr_coord offset)
 {
 	offset += pos;
-	display_convoy_arrow_wh_clip_rgb(offset.x, offset.y, size.w, size.h, color, true);
+	display_convoy_arrow_wh_clip_rgb(offset.x, offset.y, size.w, size.h, color, reverse, false);
 }

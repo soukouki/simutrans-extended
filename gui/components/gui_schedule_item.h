@@ -89,9 +89,11 @@ public:
 class gui_convoy_arrow_t : public gui_component_t
 {
 	PIXVAL color;
+	bool reverse;
+
 public:
 
-	gui_convoy_arrow_t(PIXVAL color=COL_SAFETY, scr_size size = scr_size(LINESPACE*0.7, LINESPACE));
+	gui_convoy_arrow_t(PIXVAL color=COL_SAFETY, bool reverse=false, scr_size size = scr_size(LINESPACE*0.7, LINESPACE));
 
 	void draw(scr_coord offset) OVERRIDE;
 
