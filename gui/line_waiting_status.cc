@@ -171,11 +171,12 @@ void gui_line_waiting_status_t::init()
 							lb->buf().append(halt->get_name());
 						}
 						lb->update();
+						lb->set_fixed_width(lb->get_min_size().w);
 					}
 
 					for (uint8 catg_index = 0; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
 						if (line->get_goods_catg_index().is_contained(catg_index)) {
-							new_component<gui_halt_waiting_catg_t>(halt, catg_index, line);
+							new_component<gui_halt_waiting_catg_t>(halt, catg_index, filter_by_line ? line : linehandle_t(), divide_by_class);
 						}
 					}
 				}
