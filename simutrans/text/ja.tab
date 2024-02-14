@@ -233,6 +233,8 @@ Show no revenue messages
 全てのプレイヤーの収益を非表示
 Show only player's revenue
 現在のプレイヤーの収益のみ表示
+Show only cargoes waiting for this line
+この路線を待っている貨物の数量を表示します
 Terraforming not possible\nhere in underground view
 スロープツールは、\n地下では使用できません。
 This tunnel branches. You can try Control+Click to remove.
@@ -3779,6 +3781,8 @@ allow_takeover_of_your_company
 会社の買収を許可
 take_over
 買収
+filter_by_line
+この路線を待っている貨物に絞り込む
 filter_pas_line
 旅客取扱い路線
 filter_mail_line
