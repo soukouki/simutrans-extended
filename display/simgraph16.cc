@@ -4275,11 +4275,11 @@ void display_convoy_arrow_wh_clip_rgb(scr_coord_val xp, scr_coord_val yp, scr_co
 {
 	for (int x = 0; x < w; x++) {
 		if (x < (w + 1) / 2) {
-			const scr_coord_val top = reverse ? yp + (w/2) - x + 1 : yp + x;
+			const scr_coord_val top = reverse ? yp + (w/2) - x - 1 : yp + x;
 			display_vline_wh_clip_rgb(xp + x, top, h - w / 2, color, dirty  CLIP_NUM_PAR);
 		}
 		else {
-			const scr_coord_val top = reverse ? yp - (w/2) + x + 1 : yp + w - x - 1;
+			const scr_coord_val top = reverse ? yp - (w/2) + x : yp + w - x - 1;
 			display_vline_wh_clip_rgb(xp + x, top, h - w / 2, color, dirty  CLIP_NUM_PAR);
 		}
 	}
