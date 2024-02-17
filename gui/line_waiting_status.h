@@ -18,9 +18,13 @@
 class gui_convoy_access_arrow_t : public gui_aligned_container_t
 {
 	convoihandle_t cnv;
+	cbuffer_t tooltip_buf;
+
 public:
 	gui_convoy_access_arrow_t(convoihandle_t cnv);
 	bool infowin_event(event_t const*) OVERRIDE;
+
+	void draw(scr_coord offset) OVERRIDE;
 };
 
 

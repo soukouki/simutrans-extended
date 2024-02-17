@@ -26,8 +26,23 @@ gui_convoy_access_arrow_t::gui_convoy_access_arrow_t(convoihandle_t cnv_)
 		lb->buf().printf("%i%% ", loading_rate);
 		lb->update();
 		lb->set_fixed_width(lb->get_min_size().w);
+		set_size(get_min_size());
+		tooltip_buf.clear();
+		tooltip_buf.printf("%s, %u/%u", cnv->get_name(), cnv->get_total_cargo(), cnv->get_cargo_max());
 	}
 }
+
+void gui_convoy_access_arrow_t::draw(scr_coord offset)
+{
+	if (getroffen(get_mouse_x() - offset.x, get_mouse_y() - offset.y)) {
+		const scr_coord_val by = offset.y + pos.y;
+		const scr_coord_val bh = size.h;
+
+		win_set_tooltip(get_mouse_x() + TOOLTIP_MOUSE_OFFSET_X, by + bh + TOOLTIP_MOUSE_OFFSET_Y, tooltip_buf, this);
+	}
+	gui_aligned_container_t::draw(offset);
+}
+
 
 
 bool gui_convoy_access_arrow_t::infowin_event(const event_t * ev)
