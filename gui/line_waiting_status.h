@@ -15,6 +15,15 @@
 #include "../simhalt.h"
 
 
+class gui_convoy_access_arrow_t : public gui_aligned_container_t
+{
+	convoihandle_t cnv;
+public:
+	gui_convoy_access_arrow_t(convoihandle_t cnv);
+	bool infowin_event(event_t const*) OVERRIDE;
+};
+
+
 class gui_line_convoy_location_t : public gui_aligned_container_t
 {
 	linehandle_t line;

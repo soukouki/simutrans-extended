@@ -10,8 +10,48 @@
 #include "components/gui_schedule_item.h"
 #include "../player/simplay.h"
 #include "../simworld.h"
+#include "../vehicle/vehicle.h"  // get_route_index
+#include "../display/viewport.h" // change_world_position
 
-#include "../vehicle/vehicle.h"
+gui_convoy_access_arrow_t::gui_convoy_access_arrow_t(convoihandle_t cnv_)
+{
+	cnv = cnv_;
+	if(cnv.is_bound()) {
+		set_table_layout(2,1);
+		const uint16 loading_rate = cnv->get_cargo_max() ? cnv->get_total_cargo() * 100 / cnv->get_cargo_max() : 0;
+		PIXVAL state_col = cnv->get_overcrowded() ? SYSCOL_OVERCROWDED
+			: loading_rate == 0 ? SYSCOL_EMPTY : loading_rate == 100 ? COL_WARNING : COL_SAFETY;
+		new_component<gui_convoy_arrow_t>(state_col, cnv->get_reverse_schedule());
+		gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+		lb->buf().printf("%i%% ", loading_rate);
+		lb->update();
+		lb->set_fixed_width(lb->get_min_size().w);
+	}
+}
+
+
+bool gui_convoy_access_arrow_t::infowin_event(const event_t * ev)
+{
+	if (cnv.is_bound()) {
+		if (IS_LEFTRELEASE(ev)) {
+			if (IS_SHIFT_PRESSED(ev)) {
+				cnv->show_detail();
+			}
+			else {
+				cnv->show_info();
+			}
+			return true;
+		}
+		else if (IS_RIGHTRELEASE(ev)) {
+			world()->get_viewport()->change_world_position(cnv->get_pos());
+			return true;
+		}
+	}
+	return false;
+}
+
+
+
 void gui_line_convoy_location_t::check_convoy()
 {
 	vector_tpl<convoihandle_t> located_convoys;
@@ -33,17 +73,7 @@ void gui_line_convoy_location_t::check_convoy()
 		convoy_count = located_convoys.get_count();
 		remove_all();
 		for (uint32 icnv = 0; icnv < located_convoys.get_count(); icnv++) {
-			convoihandle_t cnv = located_convoys.get_element(icnv);
-			//loading_rate
-			// NOTE: The get_loading_level() used for bars is capped at 100%.
-			const uint16 loading_rate = cnv->get_cargo_max() ? cnv->get_total_cargo()*100 / cnv->get_cargo_max() : 0;
-			PIXVAL state_col = cnv->get_overcrowded() ? SYSCOL_OVERCROWDED
-				: loading_rate == 0 ? SYSCOL_EMPTY : loading_rate == 100 ? COL_WARNING : COL_SAFETY;
-			new_component<gui_convoy_arrow_t>(state_col, cnv->get_reverse_schedule());
-			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
-			lb->buf().printf("%i%% ", loading_rate);
-			lb->update();
-			lb->set_fixed_width(lb->get_min_size().w);
+			new_component<gui_convoy_access_arrow_t>(located_convoys.get_element(icnv));
 		}
 		new_component<gui_fill_t>();
 		set_size(gui_aligned_container_t::get_size());
