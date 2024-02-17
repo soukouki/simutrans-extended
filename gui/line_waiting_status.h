@@ -10,8 +10,31 @@
 #include "components/gui_component.h"
 #include "components/gui_aligned_container.h"
 #include "components/gui_label.h"
+#include "components/gui_schedule_item.h"
 #include "../simline.h"
 #include "../simhalt.h"
+
+
+class gui_line_convoy_location_t : public gui_aligned_container_t
+{
+	linehandle_t line;
+	uint8 section; // schedule entry
+	uint16 convoy_count = 0;
+
+public:
+	gui_line_convoy_location_t(linehandle_t line_, uint8 prev_entry)
+	{
+		line = line_;
+		section = prev_entry;
+		set_table_layout(0, 1);
+		check_convoy();
+	}
+
+	void check_convoy();
+
+	void draw(scr_coord offset) OVERRIDE;
+
+};
 
 
 class gui_halt_waiting_catg_t : public gui_aligned_container_t

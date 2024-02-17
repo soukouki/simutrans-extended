@@ -11,6 +11,55 @@
 #include "../player/simplay.h"
 #include "../simworld.h"
 
+#include "../vehicle/vehicle.h"
+void gui_line_convoy_location_t::check_convoy()
+{
+	vector_tpl<convoihandle_t> located_convoys;
+	for (uint32 icnv = 0; icnv < line->count_convoys(); icnv++){
+		convoihandle_t cnv = line->get_convoy(icnv);
+		if( cnv->get_route()->get_count() == cnv->front()->get_route_index() ) {
+			// stopping at the stop...
+			continue;
+		}
+		 
+		const uint8 cnv_section_at = cnv->get_reverse_schedule() ? cnv->get_schedule()->get_current_stop()
+			: cnv->get_schedule()->get_current_stop() == 0 ? cnv->get_schedule()->entries.get_count()-1 : cnv->get_schedule()->get_current_stop() - 1;
+
+		if (cnv_section_at==section) {
+			located_convoys.append(cnv);
+		}
+	}
+	if (located_convoys.get_count() != convoy_count) {
+		convoy_count = located_convoys.get_count();
+		remove_all();
+		for (uint32 icnv = 0; icnv < located_convoys.get_count(); icnv++) {
+			convoihandle_t cnv = located_convoys.get_element(icnv);
+			//loading_rate
+			// NOTE: The get_loading_level() used for bars is capped at 100%.
+			const uint16 loading_rate = cnv->get_cargo_max() ? cnv->get_total_cargo()*100 / cnv->get_cargo_max() : 0;
+			PIXVAL state_col = cnv->get_overcrowded() ? SYSCOL_OVERCROWDED
+				: loading_rate == 0 ? SYSCOL_EMPTY : loading_rate == 100 ? COL_WARNING : COL_SAFETY;
+			new_component<gui_convoy_arrow_t>(state_col, cnv->get_reverse_schedule());
+			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+			lb->buf().printf("%i%% ", loading_rate);
+			lb->update();
+			lb->set_fixed_width(lb->get_min_size().w);
+		}
+		new_component<gui_fill_t>();
+		set_size(gui_aligned_container_t::get_size());
+	}
+}
+
+
+void gui_line_convoy_location_t::draw(scr_coord offset)
+{
+	if (line.is_bound()) {
+		check_convoy();
+	}
+	gui_aligned_container_t::draw(offset);
+}
+
+
 
 gui_halt_waiting_catg_t::gui_halt_waiting_catg_t(halthandle_t h, uint8 catg, linehandle_t l, bool yesno)
 {
@@ -125,10 +174,24 @@ void gui_line_waiting_status_t::init()
 
 		uint8 cols; // table cols
 		cols = line->get_goods_catg_index().get_count()+show_name+1;
-
+		const bool mirrored = schedule->is_mirrored();
+		PIXVAL base_color;
+		switch (line->get_line_color_index()) {
+			case 254:
+				base_color = color_idx_to_rgb(line->get_owner()->get_player_color1() + 4);
+				break;
+			case 255:
+				base_color = color_idx_to_rgb(line->get_owner()->get_player_color1() + 2);
+				break;
+			default:
+				base_color = line_color_idx_to_rgb(line->get_line_color_index());
+				break;
+		}
 		add_table(1,1); // main table
 		{
-			add_table(cols, 0)->set_margin(scr_size(D_MARGIN_LEFT, D_MARGIN_TOP), scr_size(D_MARGIN_LEFT, D_MARGIN_TOP));
+			gui_aligned_container_t *tbl = add_table(cols, 0);
+			tbl->set_margin(scr_size(D_MARGIN_LEFT, D_MARGIN_TOP), scr_size(D_MARGIN_LEFT, D_MARGIN_TOP));
+			tbl->set_spacing(scr_size(D_H_SPACE, 0));
 			{
 				// header
 				new_component<gui_empty_t>();
@@ -158,6 +221,7 @@ void gui_line_waiting_status_t::init()
 					halthandle_t const halt = haltestelle_t::get_halt(i.pos, line->get_owner());
 					if( !halt.is_bound() ) { continue; }
 
+					// 1st row
 					const bool is_interchange = (halt->registered_lines.get_count() + halt->registered_convoys.get_count()) > 1;
 					new_component<gui_schedule_entry_number_t>(entry_idx, halt->get_owner()->get_player_color1(),
 						is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt,
@@ -183,6 +247,19 @@ void gui_line_waiting_status_t::init()
 							new_component<gui_halt_waiting_catg_t>(halt, catg_index, filter_by_line ? line : linehandle_t(), divide_by_class);
 						}
 					}
+
+					// 2nd row
+					uint8 line_style = schedule->is_mirrored() ? gui_colored_route_bar_t::doubled : gui_colored_route_bar_t::solid;
+					if (entry_idx== schedule->entries.get_count()-1) {
+						if (mirrored) {
+							continue;
+						}
+						else {
+							line_style = gui_colored_route_bar_t::dashed;
+						}
+					}
+					new_component<gui_colored_route_bar_t>(base_color, line_style, true);
+					new_component_span<gui_line_convoy_location_t>(line, entry_idx, cols-1);
 				}
 			}
 			end_table();
