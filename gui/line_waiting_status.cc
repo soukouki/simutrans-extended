@@ -21,7 +21,7 @@ void gui_line_convoy_location_t::check_convoy()
 			// stopping at the stop...
 			continue;
 		}
-		 
+
 		const uint8 cnv_section_at = cnv->get_reverse_schedule() ? cnv->get_schedule()->get_current_stop()
 			: cnv->get_schedule()->get_current_stop() == 0 ? cnv->get_schedule()->entries.get_count()-1 : cnv->get_schedule()->get_current_stop() - 1;
 
