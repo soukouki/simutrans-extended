@@ -585,6 +585,6 @@ void gui_aligned_container_t::draw(scr_coord offset)
 	}
 	gui_container_t::draw(offset);
 	if (show_frame) {
-		display_ddd_box_clip_rgb(shorten(screen_pos.x), shorten(screen_pos.y), shorten(get_size().w), shorten(get_size().h), SYSCOL_TABLE_FRAME, SYSCOL_TABLE_FRAME);
+		display_ddd_box_clip_rgb(screen_pos.x, screen_pos.y, shorten(get_size().w), shorten(get_size().h), SYSCOL_TABLE_FRAME, SYSCOL_TABLE_FRAME);
 	}
 }
