@@ -736,7 +736,9 @@ void gui_convoy_assembler_t::init(waytype_t wt, signed char player_nr, bool elec
 				static const char *txt_veh_action[4] = { "anhaengen", "voranstellen", "verkaufen", "Upgrade" };
 				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[0]), SYSCOL_TEXT);
 				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[1]), SYSCOL_TEXT);
-				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
+				if (depot_frame) {
+					action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[2]), SYSCOL_TEXT);
+				}
 				action_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(txt_veh_action[3]), SYSCOL_TEXT);
 				action_selector.set_selection(veh_action);
 				action_selector.add_listener(this);
@@ -1078,7 +1080,7 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 			build_vehicle_lists();
 		}
 		else if(comp == &action_selector) {
-			sint32 selection = p.i;
+			sint32 selection = replace_frame&&(p.i == va_sell) ? va_upgrade : p.i;
 			if ( selection < 0 ) {
 				action_selector.set_selection(0);
 				selection=0;
