@@ -1376,21 +1376,9 @@ void gui_convoy_assembler_t::build_vehicle_lists()
 						vector_tpl<const vehicle_desc_t*> vehicle_list;
 						upgradeable = false;
 
-						if(replace_frame == NULL)
+						FOR(vector_tpl<const vehicle_desc_t*>, vehicle, vehicles)
 						{
-							FOR(vector_tpl<const vehicle_desc_t*>, vehicle, vehicles)
-							{
-								vehicle_list.append(vehicle);
-							}
-						}
-						else
-						{
-							const convoihandle_t cnv = replace_frame->get_convoy();
-
-							for(uint8 i = 0; i < cnv->get_vehicle_count(); i ++)
-							{
-								vehicle_list.append(cnv->get_vehicle(i)->get_desc());
-							}
+							vehicle_list.append(vehicle);
 						}
 
 						if(vehicle_list.get_count() < 1)
