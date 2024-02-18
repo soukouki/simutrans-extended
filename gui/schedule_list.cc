@@ -334,7 +334,12 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	cont_transport_density.set_table_layout(3,0);
 	cont_transport_density.set_spacing(scr_size(1,1));
 	cont_transport_density.set_table_frame(true,true);
-	cont_line_info.add_component(&cont_transport_density);
+	cont_line_info.add_table(2, 1);
+	{
+		cont_line_info.add_component(&cont_transport_density);
+		cont_line_info.new_component<gui_fill_t>();
+	}
+	cont_line_info.end_table();
 
 	scroll_line_info.set_pos(scr_coord(0, 8 + SCL_HEIGHT + D_BUTTON_HEIGHT + D_BUTTON_HEIGHT + 2));
 	add_component(&scroll_line_info);
