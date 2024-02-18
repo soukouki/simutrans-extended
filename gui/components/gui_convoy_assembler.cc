@@ -2075,6 +2075,7 @@ void gui_convoy_assembler_t::image_from_storage_list(gui_image_list_t::image_dat
 								return;
 							}
 						}
+						n++;
 					}
 				}
 				else
