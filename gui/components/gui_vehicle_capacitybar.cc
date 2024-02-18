@@ -147,6 +147,25 @@ uint16 gui_convoy_loading_info_t::get_overcrowded_capacity()
 	return capacity;
 }
 
+uint16 gui_convoy_loading_info_t::get_overcrowded_capacity(uint8 g_class)
+{
+	uint16 capacity = 0;
+	if (cnv.is_bound()) {
+		return cnv->get_overcrowded_capacity(g_class);
+	}
+	else if (line.is_bound()) {
+		for (uint32 i = 0; i < line->count_convoys(); i++) {
+			convoihandle_t const convoy = line->get_convoy(i);
+			// we do not want to count the capacity of depot convois
+			if (!convoy->in_depot()) {
+				capacity += convoy->get_overcrowded_capacity(g_class);
+			}
+		}
+	}
+	return capacity;
+}
+
+
 uint16 gui_convoy_loading_info_t::get_total_cargo_by_fare_class(uint8 catg_index, uint8 g_class)
 {
 	uint16 sum=0;

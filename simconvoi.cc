@@ -2459,6 +2459,16 @@ uint16 convoi_t::get_overcrowded_capacity() const
 	return standing_capacity;
 }
 
+uint16 convoi_t::get_overcrowded_capacity(uint8 fare_class) const
+{
+	uint16 standing_capacity = 0;
+	for (uint8 i = 0; i < vehicle_count; i++)
+	{
+		standing_capacity += vehicle[i]->get_overcrowded_capacity(fare_class);
+	}
+	return standing_capacity;
+}
+
 uint8 convoi_t::get_comfort(uint8 g_class, bool check_reassigned) const
 {
 	uint32 comfort = 0;
