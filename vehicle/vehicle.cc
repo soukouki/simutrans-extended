@@ -2330,18 +2330,35 @@ uint16 vehicle_t::get_overcrowded_capacity(uint8 g_class) const
 	{
 		return 0;
 	}
-	for (uint8 i = 0; i < number_of_classes; i++)
-	{
-		if (desc->get_capacity(i) > 0)
-		{
-			return i == g_class ? desc->get_overcrowded_capacity() : 0;
+	// The overcrowded capacity class is the lowest fare class of this vehicle.
+	uint8 lowest_fare_class = 0;
+	for (uint8 i = 0; i < number_of_classes; i++) {
+		if (get_fare_capacity(i) > 0) {
+			lowest_fare_class = i;
+			break;
 		}
 	}
-	return 0;
+	if (g_class != lowest_fare_class) return 0;
+
+	return desc->get_overcrowded_capacity();
 }
 
 uint16 vehicle_t::get_overcrowding(uint8 g_class) const
 {
+	if (g_class >= number_of_classes)
+	{
+		return 0;
+	}
+	// The overcrowded capacity class is the lowest fare class of this vehicle.
+	uint8 lowest_fare_class = 0;
+	for (uint8 i = 0; i < number_of_classes; i++) {
+		if (get_fare_capacity(i) > 0) {
+			lowest_fare_class = i;
+			break;
+		}
+	}
+	if (g_class != lowest_fare_class) return 0;
+
 	const uint16 carried = get_total_cargo_by_class(g_class);
 	const uint16 capacity = get_accommodation_capacity(g_class); // Do not count a vehicle as overcrowded if the higher class passengers can travel in lower class accommodation and still get a seat.
 
