@@ -86,7 +86,7 @@ void gui_convoy_loading_info_t::update_list()
 						add_table(1,2)->set_spacing(scr_size(0,0));
 						{
 							PIXVAL catg_bar_col = catg_index < goods_manager_t::INDEX_NONE ? ware->get_color() : color_idx_to_rgb(115);
-							new_component<gui_capacity_bar_t>(scr_size(102, scr_coord_val(LINESPACE*0.6+2)), catg_bar_col)->set_value(capacity, cargo_sum);
+							new_component<gui_capacity_bar_t>(scr_size(102, scr_coord_val(LINESPACE*0.6+2)), catg_bar_col)->set_value(capacity, min(cargo_sum, capacity));
 							if (overcrowded_capacity) {
 								new_component<gui_capacity_bar_t>(scr_size(102, scr_coord_val(LINESPACE>>1)), SYSCOL_OVERCROWDED)->set_value(overcrowded_capacity, get_overcrowded(i));
 							}
