@@ -196,6 +196,22 @@ uint16 gui_convoy_loading_info_t::get_overcrowded()
 	return sum;
 }
 
+uint16 gui_convoy_loading_info_t::get_overcrowded(uint8 g_class)
+{
+	uint16 sum = 0;
+	if (cnv.is_bound()) {
+		return cnv->get_overcrowded(g_class);
+	}
+	else if (line.is_bound()) {
+		for (uint32 i = 0; i < line->count_convoys(); i++) {
+			convoihandle_t const convoy = line->get_convoy(i);
+			sum += convoy->get_overcrowded(g_class);
+		}
+	}
+	return sum;
+}
+
+
 gui_convoy_loading_info_t::gui_convoy_loading_info_t(linehandle_t line, convoihandle_t cnv, bool show_loading_info)
 {
 	this->cnv = cnv;
