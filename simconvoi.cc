@@ -2448,6 +2448,20 @@ uint16 convoi_t::get_overcrowded() const
 	return overcrowded;
 }
 
+uint16 convoi_t::get_overcrowded(uint8 fare_class) const
+{
+	uint16 overcrowded = 0;
+	for (uint8 i = 0; i < vehicle_count; i++)
+	{
+		if (vehicle[i]->get_cargo_type()->get_catg_index() != goods_manager_t::INDEX_PAS) continue;
+		if (!vehicle[i]->get_overcrowded_capacity(fare_class)) continue;
+
+		overcrowded += vehicle[i]->get_overcrowding(fare_class);
+	}
+	return overcrowded;
+}
+
+
 uint16 convoi_t::get_overcrowded_capacity() const
 {
 	uint16 standing_capacity = 0;
