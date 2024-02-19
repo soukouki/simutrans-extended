@@ -853,6 +853,8 @@ bool simline_t::has_overcrowded() const
 {
 	ITERATE(line_managed_convoys,i)
 	{
+		if (!line_managed_convoys[i]->get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS)) continue;
+
 		if(line_managed_convoys[i]->get_overcrowded() > 0)
 		{
 			return true;
