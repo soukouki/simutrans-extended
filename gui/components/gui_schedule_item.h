@@ -16,10 +16,12 @@
 
 class gui_colored_route_bar_t : public gui_component_t
 {
-	uint8 style;
 	uint8 alert_level=0;
-	PIXVAL base_color;
 	bool flexible_height;
+
+protected:
+	uint8 style;
+	PIXVAL base_color;
 
 public:
 	enum line_style {
@@ -45,6 +47,23 @@ public:
 
 	scr_size get_min_size() const OVERRIDE { return scr_size(D_ENTRY_NO_WIDTH, LINESPACE); }
 	scr_size get_max_size() const OVERRIDE { return flexible_height ? scr_size(get_min_size().w, scr_size::inf.h) : get_min_size(); }
+};
+
+
+class gui_waypoint_box_t : public gui_colored_route_bar_t
+{
+	koord3d entry_pos;
+
+public:
+	gui_waypoint_box_t(PIXVAL line_color, uint8 line_style, koord3d pos3d)
+		: gui_colored_route_bar_t(line_color, line_style, false)
+	{
+		entry_pos = pos3d;
+	}
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	bool infowin_event(event_t const*) OVERRIDE;
 };
 
 

@@ -101,6 +101,38 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 	}
 }
 
+void gui_waypoint_box_t::draw(scr_coord offset)
+{
+	gui_colored_route_bar_t::draw(offset);
+	// draw waypoint symbol on the color bar
+	offset += pos;
+	display_filled_circle_rgb(offset.x + size.w/2, offset.y + size.h/2, size.h/2, color_idx_to_rgb(COL_WHITE));
+	display_filled_circle_rgb(offset.x + size.w/2, offset.y + size.h/2, size.h/2-1, base_color);
+}
+
+bool gui_waypoint_box_t::infowin_event(const event_t *ev)
+{
+	if(entry_pos != koord3d::invalid) {
+		if (IS_LEFTRELEASE(ev)) {
+			halthandle_t halt = haltestelle_t::get_halt(entry_pos, world()->get_public_player());
+			if (halt.is_bound()) {
+				if( IS_SHIFT_PRESSED(ev) ) {
+					halt->show_detail();
+				}
+				else {
+					halt->show_info();
+				}
+				return true;
+			}
+			return false;
+		}
+		else if (IS_RIGHTRELEASE(ev)) {
+			world()->get_viewport()->change_world_position(entry_pos);
+			return true;
+		}
+	}
+	return false;
+}
 
 gui_schedule_entry_number_t::gui_schedule_entry_number_t(uint8 number_, uint8 p_col, uint8 style_, scr_size size_, koord3d pos_)
 {
