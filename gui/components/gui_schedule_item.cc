@@ -101,13 +101,30 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 	}
 }
 
+
+gui_waypoint_box_t::gui_waypoint_box_t(PIXVAL line_color, uint8 line_style, koord3d pos3d, waytype_t wt)
+	: gui_colored_route_bar_t(line_color, line_style, false)
+{
+	entry_pos = pos3d;
+	grund_t *gr = world()->lookup_kartenboden(entry_pos.get_2d());
+	if (gr) {
+		weg_t *weg = gr->get_weg(wt);
+		if (weg) {
+			player_nr = weg->get_owner_nr();
+			if (player_nr==PLAYER_UNOWNED) {
+				player_nr = PUBLIC_PLAYER_NR;
+			}
+		}
+	}
+}
+
 void gui_waypoint_box_t::draw(scr_coord offset)
 {
 	gui_colored_route_bar_t::draw(offset);
 	// draw waypoint symbol on the color bar
 	offset += pos;
 	display_filled_circle_rgb(offset.x + size.w/2, offset.y + size.h/2, size.h/2, color_idx_to_rgb(COL_WHITE));
-	display_filled_circle_rgb(offset.x + size.w/2, offset.y + size.h/2, size.h/2-1, base_color);
+	display_filled_circle_rgb(offset.x + size.w/2, offset.y + size.h/2, size.h/2-1, color_idx_to_rgb(world()->get_player(player_nr)->get_player_color1() + env_t::gui_player_color_dark));
 }
 
 bool gui_waypoint_box_t::infowin_event(const event_t *ev)

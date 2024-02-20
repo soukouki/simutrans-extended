@@ -14,6 +14,8 @@
 #include "../../dataobj/translator.h"
 #include "../../dataobj/koord3d.h"
 
+#include "../../player/simplay.h"
+
 class gui_colored_route_bar_t : public gui_component_t
 {
 	uint8 alert_level=0;
@@ -53,13 +55,10 @@ public:
 class gui_waypoint_box_t : public gui_colored_route_bar_t
 {
 	koord3d entry_pos;
+	uint8 player_nr = PUBLIC_PLAYER_NR;
 
 public:
-	gui_waypoint_box_t(PIXVAL line_color, uint8 line_style, koord3d pos3d)
-		: gui_colored_route_bar_t(line_color, line_style, false)
-	{
-		entry_pos = pos3d;
-	}
+	gui_waypoint_box_t(PIXVAL line_color, uint8 line_style, koord3d pos3d, waytype_t wt = ignore_wt);
 
 	void draw(scr_coord offset) OVERRIDE;
 
