@@ -13,6 +13,13 @@
 #include "../../display/simgraph.h"
 #include "../../display/viewport.h"
 
+
+void display_framed_circle_rgb(scr_coord_val x0, scr_coord_val  y0, int radius, const PIXVAL base_color, const PIXVAL frame_color)
+{
+	display_filled_circle_rgb(x0 + radius, y0 + radius, radius, frame_color);
+	display_filled_circle_rgb(x0 + radius, y0 + radius, radius - 1, base_color);
+}
+
 gui_colored_route_bar_t::gui_colored_route_bar_t(uint8 p_col, uint8 style_, bool flexible_h)
 {
 	style = style_;
@@ -123,8 +130,7 @@ void gui_waypoint_box_t::draw(scr_coord offset)
 	gui_colored_route_bar_t::draw(offset);
 	// draw waypoint symbol on the color bar
 	offset += pos;
-	display_filled_circle_rgb(offset.x + size.w/2, offset.y + size.h/2, size.h/2, color_idx_to_rgb(COL_WHITE));
-	display_filled_circle_rgb(offset.x + size.w/2, offset.y + size.h/2, size.h/2-1, color_idx_to_rgb(world()->get_player(player_nr)->get_player_color1() + env_t::gui_player_color_dark));
+	display_framed_circle_rgb(offset.x + size.w/2-size.h/2, offset.y, size.h/2, color_idx_to_rgb(world()->get_player(player_nr)->get_player_color1() + env_t::gui_player_color_dark), color_idx_to_rgb(COL_WHITE));
 }
 
 bool gui_waypoint_box_t::infowin_event(const event_t *ev)
@@ -196,7 +202,7 @@ void gui_schedule_entry_number_t::draw(scr_coord offset)
 			break;
 		case number_style::waypoint:
 			display_fillbox_wh_clip_rgb(pos.x+offset.x + size.w/2 - D_ENTRY_NO_WIDTH/4+1, pos.y+offset.y, (D_ENTRY_NO_WIDTH-4)/2, size.h, base_colval, true);
-			display_filled_circle_rgb(  pos.x+offset.x + size.w/2, pos.y+offset.y + size.h/2, size.h/2, base_colval);
+			display_framed_circle_rgb( pos.x+offset.x + size.w/2 - size.h/2, pos.y+offset.y, size.h/2, base_colval, color_idx_to_rgb(COL_WHITE));
 			break;
 		default:
 			display_fillbox_wh_clip_rgb(pos.x+offset.x, pos.y+offset.y, size.w, size.h, base_colval, false);

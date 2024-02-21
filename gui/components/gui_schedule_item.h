@@ -16,6 +16,10 @@
 
 #include "../../player/simplay.h"
 
+
+void display_framed_circle_rgb(scr_coord_val x0, scr_coord_val  y0, int radius, const PIXVAL base_color, const PIXVAL frame_color);
+
+
 class gui_colored_route_bar_t : public gui_component_t
 {
 	uint8 alert_level=0;
