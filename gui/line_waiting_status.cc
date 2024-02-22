@@ -10,7 +10,7 @@
 #include "components/gui_schedule_item.h"
 #include "../player/simplay.h"
 #include "../simworld.h"
-#include "../simdepot.h" 
+#include "../simdepot.h"
 #include "../obj/gebaeude.h" // depot name
 #include "../vehicle/vehicle.h"  // get_route_index
 #include "../display/viewport.h" // change_world_position
