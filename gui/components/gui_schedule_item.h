@@ -51,6 +51,8 @@ public:
 	// Color the edges of the line according to the warning level.  0=ok(none), 1=yellow, 2=orange, 3=red
 	void set_alert_level(uint8 level) { alert_level = level; }
 
+	void set_flexible_height(bool yesno) { flexible_height=yesno; }
+
 	scr_size get_min_size() const OVERRIDE { return scr_size(D_ENTRY_NO_WIDTH, LINESPACE); }
 	scr_size get_max_size() const OVERRIDE { return flexible_height ? scr_size(get_min_size().w, scr_size::inf.h) : get_min_size(); }
 };
