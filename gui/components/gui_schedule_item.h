@@ -23,9 +23,9 @@ void display_framed_circle_rgb(scr_coord_val x0, scr_coord_val  y0, int radius, 
 class gui_colored_route_bar_t : public gui_component_t
 {
 	uint8 alert_level=0;
-	bool flexible_height;
 
 protected:
+	bool flexible_height;
 	uint8 style;
 	PIXVAL base_color;
 
