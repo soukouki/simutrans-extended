@@ -116,7 +116,8 @@ void gui_schedule_couple_order_t::draw(scr_coord offset)
 
 
 
-gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uint n, bool air_wt, uint8 line_color_index)
+gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uint n, bool air_wt, uint8 line_color_index) :
+	entry_no(n, pl->get_player_nr(), 0), wpbox(0,0,e.pos) // <-- mod here for EX15
 {
 	player = pl;
 	entry  = e;
@@ -137,7 +138,17 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 
 	wait_loading = new_component<gui_wait_loading_schedule_t>(entry.minimum_loading); // 3
 
-	entry_no = new_component<gui_schedule_entry_number_t>(number, player->get_player_nr(), 0); // 4
+	entry_no.set_visible(true);
+	entry_no.set_rigid(false);
+	wpbox.set_visible(false);
+	wpbox.set_rigid(false);
+	wpbox.set_flexible_height(true);
+	add_table(2,1)->set_spacing(scr_size(0,0));
+	{
+		add_component(&entry_no);
+		add_component(&wpbox);
+	}
+	end_table();
 
 	add_table(7,1); //5
 	{
@@ -174,7 +185,20 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 	lb_distance.update();
 	add_component(&lb_distance, 4); // 5
 
-	route_bar = new_component<gui_colored_route_bar_t>(line_color_index >= 254 ? color_idx_to_rgb(player->get_player_color1() + 4) : line_color_idx_to_rgb(line_color_index),0); // 6
+	PIXVAL base_color;
+	switch (line_color_index) {
+		case 254:
+			base_color = color_idx_to_rgb(player->get_player_color1()+4);
+			break;
+		case 255:
+			base_color = color_idx_to_rgb(player->get_player_color1()+2);
+			break;
+		default:
+			base_color = line_color_idx_to_rgb(line_color_index);
+			break;
+	}
+	route_bar = new_component<gui_colored_route_bar_t>(base_color, 0); // 6
+	wpbox.set_color(base_color);
 	route_bar->set_visible(true);
 
 	new_component<gui_empty_t>();  //7
@@ -188,15 +212,16 @@ void gui_schedule_entry_t::update_label()
 	wait_loading->init_data(entry.wait_for_time ? 0 : entry.minimum_loading);
 
 	bool no_control_tower = false; // This flag is left in case the pakset doesn't have alert symbols. UI TODO: Make this unnecessary
+	wpbox.set_visible(false);
 	if(welt->lookup(entry.pos) && welt->lookup(entry.pos)->get_depot() != NULL){
 		// Depot check must come first, as depot and dock tiles can overlap at sea
-		entry_no->set_number_style(gui_schedule_entry_number_t::number_style::depot);
-		entry_no->set_color(player->get_player_color1());
+		entry_no.set_number_style(gui_schedule_entry_number_t::number_style::depot);
+		entry_no.set_color(player->get_player_color1());
 	}
 	else if (halt.is_bound()) {
 		const bool is_interchange = (halt->registered_lines.get_count() + halt->registered_convoys.get_count())>1;
-		entry_no->set_number_style(is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt);
-		entry_no->set_color(halt->get_owner()->get_player_color1());
+		entry_no.set_number_style(is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt);
+		entry_no.set_color(halt->get_owner()->get_player_color1());
 
 		if (is_air_wt) {
 			img_nc_alert.set_visible(halt->has_no_control_tower());
@@ -206,9 +231,11 @@ void gui_schedule_entry_t::update_label()
 		}
 	}
 	else {
-		entry_no->set_number_style(gui_schedule_entry_number_t::number_style::waypoint);
-		entry_no->set_color(player->get_player_color1()); // can't get the owner of the way without passing the value of waytype
+		entry_no.set_number_style(gui_schedule_entry_number_t::number_style::waypoint);
+		entry_no.set_color(player->get_player_color1()); // can't get the owner of the way without passing the value of waytype
+		wpbox.set_visible(true);
 	}
+	entry_no.set_visible(!wpbox.is_visible());
 
 	schedule_t::gimme_stop_name(stop.buf(), world(), player, entry, no_control_tower); // UI TODO: After porting the function, remove this function
 	stop.update();
@@ -236,6 +263,7 @@ void gui_schedule_entry_t::set_distance(koord3d next_pos, uint32 distance_to_nex
 void gui_schedule_entry_t::set_line_style(uint8 s)
 {
 	route_bar->set_line_style(s);
+	wpbox.set_line_style(s);
 }
 
 void gui_schedule_entry_t::set_active(bool yesno)
@@ -256,7 +284,7 @@ void gui_schedule_entry_t::draw(scr_coord offset)
 bool gui_schedule_entry_t::infowin_event(const event_t *ev)
 {
 	if( ev->ev_class == EVENT_CLICK ) {
-		if(  IS_RIGHTCLICK(ev)  ||  (ev->mx < entry_no->get_pos().x+L_ENTRY_NO_WIDTH && ev->mx > entry_no->get_pos().x) ) {
+		if(  IS_RIGHTCLICK(ev)  ||  (ev->mx < entry_no.get_pos().x+L_ENTRY_NO_WIDTH && ev->mx > entry_no.get_pos().x) ) {
 			// just center on it
 			welt->get_viewport()->change_world_position( entry.pos );
 		}
@@ -958,7 +986,7 @@ void schedule_gui_t::update_selection()
 				entry_no->init(current_stop + 1, 0, gui_schedule_entry_number_t::number_style::depot);
 			}
 			else {
-				entry_no->init(0, player->get_player_nr(), gui_schedule_entry_number_t::number_style::waypoint);
+				entry_no->init(old_line.is_bound() ? old_line->get_line_color_index() : 255, player->get_player_nr(), gui_schedule_entry_number_t::number_style::waypoint);
 			}
 
 			// tab1 componets

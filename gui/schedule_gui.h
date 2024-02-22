@@ -80,7 +80,8 @@ class gui_schedule_entry_t : public gui_aligned_container_t, public gui_action_c
 	gui_image_t img_hourglass, img_nc_alert;
 	gui_label_buf_t stop;
 	gui_label_buf_t lb_reverse, lb_distance, lb_pos;
-	gui_schedule_entry_number_t *entry_no;
+	gui_schedule_entry_number_t entry_no;
+	gui_waypoint_box_t wpbox;
 	gui_colored_route_bar_t *route_bar;
 	gui_wait_loading_schedule_t *wait_loading;
 
