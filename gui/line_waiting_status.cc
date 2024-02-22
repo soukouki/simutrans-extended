@@ -180,24 +180,26 @@ void gui_halt_waiting_catg_t::update()
 
 void gui_halt_waiting_catg_t::draw(scr_coord offset)
 {
-	// update seed
-	uint32 temp;
-	if (catg_index == goods_manager_t::INDEX_PAS) {
-		temp = halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS));
-	}
-	else if (catg_index == goods_manager_t::INDEX_MAIL) {
-		temp = halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
-	}
-	else {
-		// freight
-		temp = halt->get_finance_history(0, HALT_WAITING) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
-	}
+	if (halt.is_bound()) {
+		// update seed
+		uint32 temp;
+		if (catg_index == goods_manager_t::INDEX_PAS) {
+			temp = halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS));
+		}
+		else if (catg_index == goods_manager_t::INDEX_MAIL) {
+			temp = halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
+		}
+		else {
+			// freight
+			temp = halt->get_finance_history(0, HALT_WAITING) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_PAS)) - halt->get_ware_summe(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL));
+		}
 
-	if(temp!= update_seed) {
-		update_seed = temp;
-		update();
+		if(temp!= update_seed) {
+			update_seed = temp;
+			update();
+		}
+		gui_aligned_container_t::draw(offset);
 	}
-	gui_aligned_container_t::draw(offset);
 }
 
 
