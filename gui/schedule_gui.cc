@@ -270,6 +270,7 @@ void gui_schedule_entry_t::set_active(bool yesno)
 {
 	is_current = yesno;
 	stop.set_color(yesno ? SYSCOL_TEXT_HIGHLIGHT : SYSCOL_TEXT);
+	lb_pos.set_color(yesno ? SYSCOL_TEXT_HIGHLIGHT : SYSCOL_TEXT);
 }
 
 void gui_schedule_entry_t::draw(scr_coord offset)
