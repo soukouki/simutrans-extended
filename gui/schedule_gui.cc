@@ -1072,6 +1072,18 @@ bool schedule_gui_t::infowin_event(const event_t *ev)
 			minimap_t::get_instance()->set_selected_cnv(cnv);
 		}
 	}
+	else if (!line_selector.is_dropped() && ((ev)->ev_code == MOUSE_WHEELUP || (ev->ev_class == EVENT_KEYBOARD && ev->ev_code == SIM_KEY_UP)) && schedule->entries.get_count()>1) {
+		if (schedule->get_current_stop()){
+			schedule->set_current_stop(schedule->get_current_stop()-1);
+			update_selection();
+		}
+		return true;
+	}
+	else if (!line_selector.is_dropped() && ((ev)->ev_code == MOUSE_WHEELDOWN || (ev->ev_class == EVENT_KEYBOARD && ev->ev_code == SIM_KEY_DOWN)) && schedule->entries.get_count()>1 && schedule->get_current_stop() < schedule->entries.get_count()) {
+		schedule->set_current_stop(schedule->get_current_stop()+1);
+		update_selection();
+		return true;
+	}
 
 	return gui_frame_t::infowin_event(ev);
 }
