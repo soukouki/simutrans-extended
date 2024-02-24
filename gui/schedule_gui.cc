@@ -127,7 +127,6 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 	set_table_layout(7,0);
 	set_spacing(scr_size(1,0));
 
-	//bt_del.init(button_t::box, "X", scr_coord(0, 0), scr_size(LINEASCENT-D_BUTTON_PADDINGS_X, LINESPACE-2));
 	bt_del.init(button_t::imagebox, NULL);
 	bt_del.set_image(skinverwaltung_t::gadget->get_image_id(SKIN_GADGET_CLOSE));
 	bt_del.set_size(gui_theme_t::gui_arrow_left_size);
