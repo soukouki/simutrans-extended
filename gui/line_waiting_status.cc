@@ -382,13 +382,17 @@ void gui_line_waiting_status_t::init()
 			end_table();
 		}
 		end_table();
+		update_time = world()->get_ticks();
 	}
 }
 
 void gui_line_waiting_status_t::draw(scr_coord offset)
 {
 	if (line.is_bound()) {
-		if (!line->get_schedule()->matches(world(), schedule)) {
+		if (!line->get_schedule()->matches(world(), schedule) || world()->get_ticks() - update_time > 10000) {
+			// We have to deal with changing the stop name and switching between waypoint and stop,
+			// but since it is difficult to constantly monitor changes outside the component,
+			// we deal with it by automatically updating the entire table at regular intervals.
 			init();
 		}
 		// need to recheck child components size
