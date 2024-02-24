@@ -346,7 +346,7 @@ void gui_line_waiting_status_t::init()
 										lb->buf().printf(" %s", label_text);
 									}
 									else {
-										lb->buf().printf(" %s", translator::translate("Wegpunkt"));
+										lb->buf().printf(" %s %s", translator::translate("Wegpunkt"), i.pos.get_2d().get_fullstr());
 									}
 								}
 								else {
