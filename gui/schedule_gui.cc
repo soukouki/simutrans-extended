@@ -127,7 +127,14 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 	set_table_layout(7,0);
 	set_spacing(scr_size(1,0));
 
-	new_component<gui_margin_t>(D_H_SPACE); // UI TODO: Use variables to make the right margins
+	//bt_del.init(button_t::box, "X", scr_coord(0, 0), scr_size(LINEASCENT-D_BUTTON_PADDINGS_X, LINESPACE-2));
+	bt_del.init(button_t::imagebox, NULL);
+	bt_del.set_image(skinverwaltung_t::gadget->get_image_id(SKIN_GADGET_CLOSE));
+	bt_del.set_size(gui_theme_t::gui_arrow_left_size);
+	bt_del.background_color = color_idx_to_rgb(COL_RED);
+	bt_del.add_listener(this);
+	add_component(&bt_del);
+	//new_component<gui_margin_t>(D_H_SPACE); // UI TODO: Use variables to make the right margins
 
 	new_component<gui_margin_t>(1); //add_component(&img_layover); //1
 
@@ -294,6 +301,15 @@ bool gui_schedule_entry_t::infowin_event(const event_t *ev)
 		}
 		return true;
 	}
+	return gui_aligned_container_t::infowin_event(ev);
+}
+
+bool gui_schedule_entry_t::action_triggered(gui_action_creator_t *c, value_t )
+{
+	if ( c == &bt_del ) {
+		call_listeners( DELETE_FLAG | number);
+		return true;
+	}
 	return false;
 }
 
@@ -456,7 +472,16 @@ void schedule_gui_stats_t::draw(scr_coord offset)
 bool schedule_gui_stats_t::action_triggered(gui_action_creator_t *, value_t v)
 {
 	// has to be one of the entries
-	call_listeners(v);
+	if( v.i & DELETE_FLAG ) {
+		uint8 delete_stop = v.i & 0x00FF;
+		highlight_schedule( schedule, false );
+		schedule->remove_entry( delete_stop );
+		highlight_schedule(  schedule, true );
+		call_listeners( schedule->get_current_stop() );
+	}
+	else {
+		call_listeners(v);
+	}
 	return true;
 }
 
