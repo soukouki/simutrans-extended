@@ -291,7 +291,7 @@ void gui_schedule_entry_t::draw(scr_coord offset)
 bool gui_schedule_entry_t::infowin_event(const event_t *ev)
 {
 	if( ev->ev_class == EVENT_CLICK ) {
-		if(  IS_RIGHTCLICK(ev)  ||  (ev->mx < entry_no.get_pos().x+L_ENTRY_NO_WIDTH && ev->mx > entry_no.get_pos().x) ) {
+		if(  IS_RIGHTCLICK(ev)  ) {
 			// just center on it
 			welt->get_viewport()->change_world_position( entry.pos );
 		}
