@@ -33,6 +33,9 @@ class cbuffer_t;
 class loadsave_t;
 class gui_schedule_entry_t;
 
+#define DELETE_FLAG (0x8000)
+#define UP_FLAG (0x4000)
+#define DOWN_FLAG (0x2000)
 
 class gui_wait_loading_schedule_t : public gui_component_t
 {
@@ -70,7 +73,7 @@ public:
 /**
  * One entry in the list of schedule entries.
  */
-class gui_schedule_entry_t : public gui_aligned_container_t, public gui_action_creator_t
+class gui_schedule_entry_t : public gui_aligned_container_t, public gui_action_creator_t, public action_listener_t
 {
 	schedule_entry_t entry;
 	bool is_current;
@@ -80,9 +83,11 @@ class gui_schedule_entry_t : public gui_aligned_container_t, public gui_action_c
 	gui_image_t img_hourglass, img_nc_alert;
 	gui_label_buf_t stop;
 	gui_label_buf_t lb_reverse, lb_distance, lb_pos;
-	gui_schedule_entry_number_t *entry_no;
+	gui_schedule_entry_number_t entry_no;
+	gui_waypoint_box_t wpbox;
 	gui_colored_route_bar_t *route_bar;
 	gui_wait_loading_schedule_t *wait_loading;
+	button_t bt_del;
 
 public:
 	gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uint n, bool air_wt = false, uint8 line_color_index = 254);
@@ -99,6 +104,8 @@ public:
 
 	void draw(scr_coord offset) OVERRIDE;
 	bool infowin_event(const event_t *ev) OVERRIDE;
+
+	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 };
 
 
@@ -241,6 +248,7 @@ protected:
 	uint16 min_range = UINT16_MAX;
 	gui_label_buf_t lb_min_range;
 
+	void init_components();
 	void build_table();
 
 	inline void set_min_range(uint16 range) { stats->range_limit = range; };
