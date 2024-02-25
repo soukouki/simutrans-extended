@@ -121,7 +121,7 @@ static char const* const spec_table_first_col_text[gui_convoy_spec_table_t::MAX_
 	"Power:",
 	"Gear:",
 	"Tractive force:",
-	"Fuel per km",
+	//"Fuel per km",
 	"Rated speed",
 	"Max. speed:",
 	"curb_weight",
@@ -514,11 +514,11 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 						lb->buf().printf("%u kN", veh_type->get_tractive_effort());
 					}
 					break;
-				case SPEC_FUEL_PER_KM:
-					if( veh_type->get_power() ) {
-						//lb->buf().printf("%u", veh_type->get_fuel_per_km()); // TODO: add fuel unit such as km/L
-					}
-					break;
+				//case SPEC_FUEL_PER_KM:
+				//	if( veh_type->get_power() ) {
+				//		//lb->buf().printf("%u", veh_type->get_fuel_per_km()); // TODO: add fuel unit such as km/L
+				//	}
+				//	break;
 				case SPEC_RATED_SPEED:
 					if (veh_type->get_power()) {
 						vehicle_as_potential_convoy_t convoy(*veh_type);
@@ -599,7 +599,7 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 					buf.printf("%u km", cnv->get_min_range());
 				}
 				break;
-			case SPEC_FUEL_PER_KM: // Unified notation is difficult in the case of compound
+			//case SPEC_FUEL_PER_KM: // Unified notation is difficult in the case of compound
 			case SPEC_FREIGHT_TYPE:
 			//case SPEC_REPLENSHMENT_SEC:
 			case SPEC_GEAR:
