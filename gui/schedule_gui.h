@@ -248,6 +248,7 @@ protected:
 	uint16 min_range = UINT16_MAX;
 	gui_label_buf_t lb_min_range;
 
+	void init_components();
 	void build_table();
 
 	inline void set_min_range(uint16 range) { stats->range_limit = range; };

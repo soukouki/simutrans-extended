@@ -540,7 +540,7 @@ void schedule_gui_t::init(schedule_t* schedule_, player_t* player, convoihandle_
 	}
 	old_line_count = 0;
 
-	build_table();
+	init_components();
 }
 
 
@@ -564,6 +564,67 @@ void schedule_gui_t::init(linehandle_t line)
 		}
 		lb_min_range.set_visible(min_range>0 && min_range<UINT16_MAX);
 	}
+	init_components();
+}
+
+// Initializations that are not required when executing the revert schedule are performed here.
+void schedule_gui_t::init_components()
+{
+	// init frame
+	set_owner(player);
+
+	line_selector.set_highlight_color(color_idx_to_rgb(player->get_player_color1() + 1));
+
+	filter_btn_all_pas.init(button_t::roundbox_state, NULL, scr_coord(0, 0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+	filter_btn_all_pas.set_image(skinverwaltung_t::passengers->get_image_id(0));
+	filter_btn_all_pas.set_tooltip("filter_pas_line");
+	filter_btn_all_pas.add_listener(this);
+
+	filter_btn_all_mails.init(button_t::roundbox_state, NULL, scr_coord(0,0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+	filter_btn_all_mails.set_image(skinverwaltung_t::mail->get_image_id(0));
+	filter_btn_all_mails.set_tooltip("filter_mail_line");
+	filter_btn_all_mails.add_listener(this);
+
+	filter_btn_all_freights.init(button_t::roundbox_state, NULL, scr_coord(0, 0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+	filter_btn_all_freights.set_image(skinverwaltung_t::goods->get_image_id(0));
+	filter_btn_all_freights.set_tooltip("filter_freight_line");
+	filter_btn_all_freights.add_listener(this);
+
+	bt_promote_to_line.init(button_t::roundbox, "promote to line", scr_coord(0, 0), D_BUTTON_SIZE);
+	bt_promote_to_line.set_tooltip("Create a new line based on this schedule");
+	bt_promote_to_line.add_listener(this);
+
+	img_electric.set_image(skinverwaltung_t::electricity->get_image_id(0), true);
+	img_electric.set_tooltip(translator::translate("This line/convoy needs electrification"));
+	img_electric.set_rigid(false);
+
+	bt_add.init(button_t::roundbox_state | button_t::flexible, "Add Stop", scr_coord(0, 0), D_BUTTON_SIZE);
+	bt_add.set_tooltip("Appends stops at the end of the schedule");
+	bt_add.add_listener(this);
+
+	bt_insert.init(button_t::roundbox_state | button_t::flexible, "Ins Stop", scr_coord(0, 0), D_BUTTON_SIZE);
+	bt_insert.set_tooltip("Insert stop before the current stop");
+	bt_insert.add_listener(this);
+
+	bt_remove.init(button_t::roundbox_state | button_t::flexible, "Del Stop", scr_coord(0, 0), D_BUTTON_SIZE);
+	bt_remove.set_tooltip("Delete the current stop");
+	bt_remove.add_listener(this);
+
+	lb_min_range.set_fixed_width(proportional_string_width("8888km "));
+	lb_min_range.set_rigid(false);
+
+	bt_mirror.init(button_t::square_automatic, "return ticket");
+	bt_mirror.set_tooltip("Vehicles make a round trip between the schedule endpoints, visiting all stops in reverse after reaching the end.");
+	bt_mirror.add_listener(this);
+
+	bt_bidirectional.init(button_t::square_automatic, "Alternate directions");
+	bt_bidirectional.set_tooltip("When adding convoys to the line, every second convoy will follow it in the reverse direction.");
+	bt_bidirectional.add_listener(this);
+
+	bt_same_spacing_shift.init(button_t::square_automatic, "Use same shift for all stops.");
+	bt_same_spacing_shift.set_tooltip("Use one spacing shift value for all stops in schedule.");
+	bt_same_spacing_shift.add_listener(this);
+
 	build_table();
 }
 
@@ -572,9 +633,6 @@ void schedule_gui_t::build_table()
 	// prepare editing
 	old_schedule->start_editing();
 	schedule = old_schedule->copy();
-
-	// init frame
-	set_owner(player);
 
 	// init stats
 	stats->player = player;
@@ -590,38 +648,24 @@ void schedule_gui_t::build_table()
 		add_table(4,1)->set_margin(scr_size(D_H_SPACE, 0), scr_size(D_H_SPACE, D_V_SPACE));
 		{
 			new_component<gui_label_t>("Serves Line:");
-			line_selector.set_highlight_color(color_idx_to_rgb(player->get_player_color1() + 1));
 			line_selector.clear_elements();
 			init_line_selector();
 			line_selector.add_listener(this);
 			add_component(&line_selector);
 
 			add_table(3,1)->set_spacing(scr_size(0,0));
-			filter_btn_all_pas.init(button_t::roundbox_state, NULL, scr_coord(0, 0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
-			filter_btn_all_pas.set_image(skinverwaltung_t::passengers->get_image_id(0));
-			filter_btn_all_pas.set_tooltip("filter_pas_line");
-			filter_btn_all_pas.disable();
-			filter_btn_all_pas.add_listener(this);
-			add_component(&filter_btn_all_pas);
+			{
+				filter_btn_all_pas.disable();
+				add_component(&filter_btn_all_pas);
 
-			filter_btn_all_mails.init(button_t::roundbox_state, NULL, scr_coord(0,0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
-			filter_btn_all_mails.set_image(skinverwaltung_t::mail->get_image_id(0));
-			filter_btn_all_mails.set_tooltip("filter_mail_line");
-			filter_btn_all_mails.disable();
-			filter_btn_all_mails.add_listener(this);
-			add_component(&filter_btn_all_mails);
+				filter_btn_all_mails.disable();
+				add_component(&filter_btn_all_mails);
 
-			filter_btn_all_freights.init(button_t::roundbox_state, NULL, scr_coord(0,0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
-			filter_btn_all_freights.set_image(skinverwaltung_t::goods->get_image_id(0));
-			filter_btn_all_freights.set_tooltip("filter_freight_line");
-			filter_btn_all_freights.disable();
-			filter_btn_all_freights.add_listener(this);
-			add_component(&filter_btn_all_freights);
+				filter_btn_all_freights.disable();
+				add_component(&filter_btn_all_freights);
+			}
 			end_table();
 
-			bt_promote_to_line.init(button_t::roundbox, "promote to line", scr_coord(0, 0), D_BUTTON_SIZE);
-			bt_promote_to_line.set_tooltip("Create a new line based on this schedule");
-			bt_promote_to_line.add_listener(this);
 			add_component(&bt_promote_to_line);
 		}
 		end_table();
@@ -637,27 +681,15 @@ void schedule_gui_t::build_table()
 			add_table(3,1)->set_margin(scr_size(D_H_SPACE, 0), scr_size(D_H_SPACE, D_V_SPACE));
 			{
 				new_component<gui_waytype_image_box_t>(schedule->get_waytype());
-				img_electric.set_image(skinverwaltung_t::electricity->get_image_id(0), true);
-				img_electric.set_tooltip(translator::translate("This line/convoy needs electrification"));
-				img_electric.set_rigid(false);
 				add_component(&img_electric);
 
 				add_table(3,1)->set_spacing(scr_size(0,0));
-				bt_add.init(button_t::roundbox_state | button_t::flexible, "Add Stop", scr_coord(0,0), D_BUTTON_SIZE);
-				bt_add.set_tooltip("Appends stops at the end of the schedule");
-				bt_add.add_listener(this);
 				bt_add.pressed = true;
 				add_component(&bt_add);
 
-				bt_insert.init(button_t::roundbox_state | button_t::flexible, "Ins Stop", scr_coord(0,0), D_BUTTON_SIZE);
-				bt_insert.set_tooltip("Insert stop before the current stop");
-				bt_insert.add_listener(this);
 				bt_insert.pressed = false;
 				add_component(&bt_insert);
 
-				bt_remove.init(button_t::roundbox_state | button_t::flexible, "Del Stop", scr_coord(0,0), D_BUTTON_SIZE);
-				bt_remove.set_tooltip("Delete the current stop");
-				bt_remove.add_listener(this);
 				bt_remove.pressed = false;
 				add_component(&bt_remove);
 				end_table();
@@ -673,9 +705,7 @@ void schedule_gui_t::build_table()
 					lb_min_range.buf().printf("%u km", min_range);
 					lb_min_range.update();
 				}
-				lb_min_range.set_fixed_width(proportional_string_width("8888km "));
 				lb_min_range.set_visible(min_range && min_range != UINT16_MAX);
-				lb_min_range.set_rigid(false);
 				add_component(&lb_min_range);
 
 				new_component<gui_fill_t>();
@@ -683,18 +713,12 @@ void schedule_gui_t::build_table()
 				{
 					new_component<gui_image_t>()->set_image(skinverwaltung_t::reverse_arrows ? skinverwaltung_t::reverse_arrows->get_image_id(0) : IMG_EMPTY, true);
 					// Mirror schedule/alternate directions
-					bt_mirror.init(button_t::square_automatic, "return ticket");
-					bt_mirror.set_tooltip("Vehicles make a round trip between the schedule endpoints, visiting all stops in reverse after reaching the end.");
 					bt_mirror.pressed = schedule->is_mirrored();
-					bt_mirror.add_listener(this);
 					add_component(&bt_mirror);
 				}
 				end_table();
 
-				bt_bidirectional.init(button_t::square_automatic, "Alternate directions");
-				bt_bidirectional.set_tooltip("When adding convoys to the line, every second convoy will follow it in the reverse direction.");
 				bt_bidirectional.pressed = schedule->is_bidirectional();
-				bt_bidirectional.add_listener(this);
 				add_component(&bt_bidirectional);
 			}
 			end_table();
@@ -714,10 +738,7 @@ void schedule_gui_t::build_table()
 			const uint8 spacing_shift_mode = welt->get_settings().get_spacing_shift_mode();
 			if (!cnv.is_bound() && spacing_shift_mode > settings_t::SPACING_SHIFT_PER_LINE) {
 				//Same spacing button
-				bt_same_spacing_shift.init(button_t::square_automatic, "Use same shift for all stops.");
-				bt_same_spacing_shift.set_tooltip("Use one spacing shift value for all stops in schedule.");
 				bt_same_spacing_shift.pressed = schedule->is_same_spacing_shift();
-				bt_same_spacing_shift.add_listener(this);
 				add_component(&bt_same_spacing_shift);
 			}
 
