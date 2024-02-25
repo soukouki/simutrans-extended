@@ -87,7 +87,7 @@ void gui_line_convoy_location_t::check_convoy()
 				cnv_section_at = (cnv->get_schedule()->get_current_stop()+i+1) % entries;
 			}
 			else {
-				cnv_section_at = (cnv->get_schedule()->get_current_stop()-1-i) % entries;
+				cnv_section_at = (entries+cnv->get_schedule()->get_current_stop()-1-i) % entries;
 			}
 			const koord3d check_pos = line->get_schedule()->entries[cnv_section_at].pos;
 			halthandle_t halt = haltestelle_t::get_halt(check_pos, player);
