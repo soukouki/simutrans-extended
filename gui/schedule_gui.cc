@@ -170,18 +170,25 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 
 		new_component<gui_margin_t>(1);  //5-5
 
-		lb_pos.buf().printf("(%s)", entry.pos.get_str());
-		lb_pos.update();
-		add_component(&lb_pos); // 5-6
-
 		lb_reverse.set_visible(true);
 		lb_reverse.buf().append("[<<]");
 		lb_reverse.set_color(SYSCOL_TEXT_STRONG);
 		lb_reverse.update();
-		add_component(&lb_reverse); // 5-7
+		add_component(&lb_reverse); // 5-6
+
+		new_component<gui_empty_t>(); // 5-7
 	}
 	end_table();
-	new_component<gui_fill_t>(); // 6
+
+	add_table(2,1); //6
+	{
+		new_component<gui_fill_t>(); // 6-1
+		lb_pos.buf().printf("(%s) ", entry.pos.get_str());
+		lb_pos.update();
+		lb_pos.set_fixed_width(lb_pos.get_min_size().w);
+		add_component(&lb_pos); // 6-2
+	}
+	end_table();
 
 	// 2nd row
 	lb_distance.set_fixed_width(proportional_string_width("(0000km) "));
