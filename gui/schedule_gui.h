@@ -88,6 +88,7 @@ class gui_schedule_entry_t : public gui_aligned_container_t, public gui_action_c
 	gui_colored_route_bar_t *route_bar;
 	gui_wait_loading_schedule_t *wait_loading;
 	button_t bt_del;
+	button_t bt_pos;
 
 public:
 	gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uint n, bool air_wt = false, uint8 line_color_index = 254);

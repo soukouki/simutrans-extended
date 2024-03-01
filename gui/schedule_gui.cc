@@ -180,9 +180,14 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 	}
 	end_table();
 
-	add_table(2,1); //6
+	add_table(3,1)->set_spacing(NO_SPACING); //6
 	{
-		new_component<gui_fill_t>(); // 6-1
+		new_component<gui_fill_t>();
+
+		// pos button and label
+		bt_pos.set_typ(button_t::posbutton_automatic);
+		bt_pos.set_targetpos3d(entry.pos);
+		add_component(&bt_pos); // 6-1
 		lb_pos.buf().printf("(%s) ", entry.pos.get_str());
 		lb_pos.update();
 		lb_pos.set_fixed_width(lb_pos.get_min_size().w);
