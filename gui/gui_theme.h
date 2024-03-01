@@ -115,6 +115,8 @@ class image_t;
 #define D_H_SPACE              (gui_theme_t::gui_hspace)
 #define D_V_SPACE              (gui_theme_t::gui_vspace)
 
+#define NO_SPACING (scr_size(0,0))
+
 // bars of goods waiting in stations
 #define D_WAITINGBAR_WIDTH     (gui_theme_t::gui_waitingbar_width)
 
