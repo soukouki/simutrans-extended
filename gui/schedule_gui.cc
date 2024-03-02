@@ -612,15 +612,15 @@ void schedule_gui_t::init_components()
 	img_electric.set_tooltip(translator::translate("This line/convoy needs electrification"));
 	img_electric.set_rigid(false);
 
-	bt_add.init(button_t::roundbox_state | button_t::flexible, "Add Stop", scr_coord(0, 0), D_BUTTON_SIZE);
+	bt_add.init(button_t::roundbox_state, "Add Stop", scr_coord(0, 0), D_BUTTON_SIZE);
 	bt_add.set_tooltip("Appends stops at the end of the schedule");
 	bt_add.add_listener(this);
 
-	bt_insert.init(button_t::roundbox_state | button_t::flexible, "Ins Stop", scr_coord(0, 0), D_BUTTON_SIZE);
+	bt_insert.init(button_t::roundbox_state, "Ins Stop", scr_coord(0, 0), D_BUTTON_SIZE);
 	bt_insert.set_tooltip("Insert stop before the current stop");
 	bt_insert.add_listener(this);
 
-	//bt_revert.init(button_t::roundbox | button_t::flexible, "Revert schedule");
+	//bt_revert.init(button_t::roundbox, "Revert schedule");
 	//bt_revert.set_tooltip("Revert to original schedule");
 	//bt_revert.add_listener(this);
 
@@ -708,7 +708,7 @@ void schedule_gui_t::build_table()
 					//bt_revert.pressed = false;
 					//bt_revert.enable(false); // schedule was not changed yet
 					//add_component(&bt_revert);
-					new_component<gui_fill_t>();
+					new_component<gui_margin_t>(D_BUTTON_WIDTH);
 				}
 				end_table();
 			}
