@@ -124,7 +124,7 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 	number = n;
 	is_current = false;
 	is_air_wt = air_wt;
-	set_table_layout(7,0);
+	set_table_layout(8,0);
 	set_spacing(scr_size(1,0));
 
 	bt_del.init(button_t::imagebox, NULL);
@@ -180,18 +180,17 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 	}
 	end_table();
 
-	add_table(3,1)->set_spacing(NO_SPACING); //6
+	new_component<gui_fill_t>(); // 7
+	add_table(2,1)->set_spacing(NO_SPACING); //8
 	{
-		new_component<gui_fill_t>();
-
 		// pos button and label
 		bt_pos.set_typ(button_t::posbutton_automatic);
 		bt_pos.set_targetpos3d(entry.pos);
-		add_component(&bt_pos); // 6-1
+		add_component(&bt_pos); // 8-1
 		lb_pos.buf().printf("(%s) ", entry.pos.get_str());
 		lb_pos.update();
 		lb_pos.set_fixed_width(lb_pos.get_min_size().w);
-		add_component(&lb_pos); // 6-2
+		add_component(&lb_pos); // 8-2
 	}
 	end_table();
 
@@ -219,8 +218,9 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 	wpbox.set_color(base_color);
 	route_bar->set_visible(true);
 
-	new_component<gui_empty_t>();  //7
-	new_component<gui_fill_t>();  //8
+	new_component<gui_empty_t>();  // 6
+	new_component<gui_fill_t>();   // 7
+	new_component<gui_empty_t>();  // 8
 	update_label();
 }
 
