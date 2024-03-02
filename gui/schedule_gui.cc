@@ -124,7 +124,7 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 	number = n;
 	is_current = false;
 	is_air_wt = air_wt;
-	set_table_layout(8,0);
+	set_table_layout(9,0);
 	set_spacing(scr_size(1,0));
 
 	bt_del.init(button_t::imagebox, NULL);
@@ -193,6 +193,7 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 		add_component(&lb_pos); // 8-2
 	}
 	end_table();
+	new_component<gui_empty_t>(); // 9
 
 	// 2nd row
 	lb_distance.set_fixed_width(proportional_string_width("(0000km) "));
@@ -220,7 +221,13 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 
 	new_component<gui_empty_t>();  // 6
 	new_component<gui_fill_t>();   // 7
-	new_component<gui_empty_t>();  // 8
+
+	new_component<gui_empty_t>(); // 8
+	bt_swap.init(button_t::swap_vertical| button_t::automatic, NULL);
+	bt_swap.set_tooltip("helptxt_swap_schedule_entries");
+	bt_swap.add_listener(this);
+	add_component(&bt_swap); // 9
+
 	update_label();
 }
 
@@ -323,6 +330,11 @@ bool gui_schedule_entry_t::action_triggered(gui_action_creator_t *c, value_t )
 		call_listeners( DELETE_FLAG | number);
 		return true;
 	}
+	else if ( c == &bt_swap ) {
+		call_listeners( DOWN_FLAG | number);
+		return true;
+	}
+
 	return false;
 }
 
@@ -490,6 +502,11 @@ bool schedule_gui_stats_t::action_triggered(gui_action_creator_t *, value_t v)
 		highlight_schedule( schedule, false );
 		schedule->remove_entry( delete_stop );
 		highlight_schedule(  schedule, true );
+		call_listeners( schedule->get_current_stop() );
+	}
+	else if( v.i & DOWN_FLAG ) {
+		uint8 down_stop = v.i & 0x00FF;
+		schedule->move_entry_backward( down_stop );
 		call_listeners( schedule->get_current_stop() );
 	}
 	else {

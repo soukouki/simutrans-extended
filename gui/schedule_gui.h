@@ -34,7 +34,7 @@ class loadsave_t;
 class gui_schedule_entry_t;
 
 #define DELETE_FLAG (0x8000)
-#define UP_FLAG (0x4000)
+//#define UP_FLAG (0x4000)
 #define DOWN_FLAG (0x2000)
 
 class gui_wait_loading_schedule_t : public gui_component_t
@@ -87,7 +87,7 @@ class gui_schedule_entry_t : public gui_aligned_container_t, public gui_action_c
 	gui_waypoint_box_t wpbox;
 	gui_colored_route_bar_t *route_bar;
 	gui_wait_loading_schedule_t *wait_loading;
-	button_t bt_del;
+	button_t bt_del, bt_swap;
 	button_t bt_pos;
 
 public:
