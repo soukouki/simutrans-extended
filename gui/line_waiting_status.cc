@@ -341,7 +341,7 @@ void gui_line_waiting_status_t::init()
 						if (show_name) {
 							gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT_WEAK);
 							if (is_waypoint) {
-								
+
 								if (gr) {
 									if (const char *label_text = gr->get_text()) {
 										lb->buf().printf(" %s", label_text);
