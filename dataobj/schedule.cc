@@ -786,7 +786,7 @@ void schedule_t::gimme_stop_name(cbuffer_t & buf, karte_t* welt, const player_t 
 			sprintf(modified_name, "%s", halt->get_name());
 		}
 
-		if(entry.wait_for_time)
+		if(entry.wait_for_time && !skinverwaltung_t::waiting_time)
 		{
 			buf.printf("[*] ");
 		}
