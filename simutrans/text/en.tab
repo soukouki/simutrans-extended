@@ -5689,7 +5689,7 @@ Select vehicles to make up a convoy
 Vehicle bar shape legend:
 Legend:
 cd_spec_tab
-Spec
+Details
 cd_payload_tab
 Payload
 cd_maintenance_tab
@@ -6562,3 +6562,29 @@ helptxt_swap_schedule_entries
 Swap
 can_also_jump_to_the_coordinate_by_right-clicking_on_the_entry
 Right click to jump to this stop
+principal_spec
+Overview
+show_sideview
+Show images
+payload_spec
+Payload details
+maintenance_spec
+Costs
+equipments
+Miscellaneous
+mixed_load_prohibition
+Cannot take mixed loads
+min_loading_time
+Min. loading time
+max_loading_time
+Max. loading time
+car_age_in_month
+Age (months)
+can_upgrade
+Upgradeable
+convoy_value
+Whole convoy
+Car no.
+Vehicle no.
+Rated speed
+Rated speed
