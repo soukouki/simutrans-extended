@@ -188,6 +188,7 @@ gui_schedule_entry_t::gui_schedule_entry_t(player_t* pl, schedule_entry_t e, uin
 		bt_pos.set_targetpos3d(entry.pos);
 		add_component(&bt_pos); // 8-1
 		lb_pos.buf().printf("(%s) ", entry.pos.get_str());
+		lb_pos.set_tooltip(translator::translate("can_also_jump_to_the_coordinate_by_right-clicking_on_the_entry"));
 		lb_pos.update();
 		lb_pos.set_fixed_width(lb_pos.get_min_size().w);
 		add_component(&lb_pos); // 8-2
