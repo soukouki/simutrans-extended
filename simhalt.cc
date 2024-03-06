@@ -6695,3 +6695,57 @@ void haltestelle_t::set_all_building_tiles()
 		}
 	}
 }
+
+uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits)
+{
+	uint32 sum=0;
+	const vector_tpl<ware_t> * chk_warray = cargo[catg_index];
+	if (chk_warray != NULL) {
+		FOR(vector_tpl<ware_t>, const& i, *chk_warray) {
+			ware_t ware = i;
+
+			// Remove unnecessary data
+			if (merge_condition_bits & ignore_ware_data_t::ignore_trip_type) {
+				ware.is_commuting_trip = false;
+			}
+			if (merge_condition_bits & ignore_ware_data_t::ignore_class) {
+				ware.g_class = 0;
+			}
+			if (merge_condition_bits & ignore_ware_data_t::ignore_goal_stop) {
+				ware.set_ziel(halthandle_t());
+			}
+			if (merge_condition_bits & ignore_ware_data_t::ignore_via_stop) {
+				ware.set_zwischenziel(halthandle_t());
+			}
+			if (merge_condition_bits & ignore_ware_data_t::ignore_origin_stop) {
+				ware.set_origin(halthandle_t());
+			}
+			if (merge_condition_bits & ignore_ware_data_t::ignore_destination) {
+				ware.set_zielpos(koord::invalid);
+			}
+
+			if (ware.menge) {
+				sum += ware.menge;
+				bool found = false;
+
+				FOR(slist_tpl<ware_t>, j, warray) {
+					if (ware.can_merge_with(j))	{
+						j.menge += ware.menge;
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					warray.append(ware);
+				}
+			}
+			else {
+				// error
+				// For some reason sometimes 0 cargoes are found...
+				dbg->warning("haltestelle_t::get_ware", "%s with quantity 0 is wandering at %s", ware.get_name(),get_name());
+			}
+		}
+	}
+
+	return sum;
+}

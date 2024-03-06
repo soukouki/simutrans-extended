@@ -1037,6 +1037,19 @@ public:
 	bool is_station_signal_contained(koord3d pos) const { return station_signals.is_contained(pos); }
 
 	void set_all_building_tiles();
+
+	enum ignore_ware_data_t : uint8 {
+		ignore_trip_type   = 1<<0, // pax only
+		ignore_class       = 1<<1, // *by wealth
+		ignore_goal_stop   = 1<<2, // ziel
+		ignore_via_stop    = 1<<3, // zwischenziel
+		ignore_origin_stop = 1<<4,
+		ignore_destination = 1<<5  //zielpos
+	};
+
+	// Returns the total amount of cargo
+	uint32 get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits);
+
 };
 
 ENUM_BITSET(haltestelle_t::stationtyp)
