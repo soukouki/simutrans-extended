@@ -823,7 +823,7 @@ void gui_cargo_info_t::init(uint8 info_depth_from, uint8 info_depth_to, bool div
 						add_table(5,1)->set_spacing(scr_size(D_H_SPACE,0));
 						{
 							if( info_depth_from ) new_component<gui_margin_t>(LINESPACE); // add left margin for lower row
-							bool display_goal_halt = (info_depth_to>1)  &&  ware.get_ziel().is_bound()  &&  (ware.get_zwischenziel()!=ware.get_ziel());
+							const bool display_goal_halt = (info_depth_to>1)  &&  ware.get_ziel().is_bound()  &&  (ware.get_zwischenziel()!=ware.get_ziel());
 							new_component<gui_label_t>(display_goal_halt ? "Via:" : "To:");
 							bool is_interchange = (ware.get_zwischenziel().get_rep()->registered_lines.get_count() + ware.get_zwischenziel().get_rep()->registered_convoys.get_count()) > 1;
 							new_component<gui_schedule_entry_number_t>(cnv->get_schedule()->get_entry_index(ware.get_zwischenziel(), cnv->get_owner(), cnv->is_reversed()),
