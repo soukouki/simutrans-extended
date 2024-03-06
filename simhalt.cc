@@ -6705,11 +6705,9 @@ uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint
 			ware_t ware = i;
 
 			// Remove unnecessary data
-			if (merge_condition_bits & ignore_ware_data_t::ignore_trip_type) {
-				ware.is_commuting_trip = false;
-			}
 			if (merge_condition_bits & ignore_ware_data_t::ignore_class) {
 				ware.g_class = 0;
+				ware.is_commuting_trip = false;
 			}
 			if (merge_condition_bits & ignore_ware_data_t::ignore_goal_stop) {
 				ware.set_ziel(halthandle_t());

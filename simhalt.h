@@ -1039,12 +1039,11 @@ public:
 	void set_all_building_tiles();
 
 	enum ignore_ware_data_t : uint8 {
-		ignore_trip_type   = 1<<0, // pax only
-		ignore_class       = 1<<1, // *by wealth
-		ignore_goal_stop   = 1<<2, // ziel
-		ignore_via_stop    = 1<<3, // zwischenziel
-		ignore_origin_stop = 1<<4,
-		ignore_destination = 1<<5  //zielpos
+		ignore_class       = 1<<0, // *by wealth, also ignore trip type
+		ignore_goal_stop   = 1<<1, // ziel
+		ignore_via_stop    = 1<<2, // zwischenziel
+		ignore_origin_stop = 1<<3,
+		ignore_destination = 1<<4  //zielpos
 	};
 
 	// Returns the total amount of cargo
