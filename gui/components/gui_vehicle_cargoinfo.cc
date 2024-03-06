@@ -796,6 +796,7 @@ void gui_cargo_info_t::init(uint8 info_depth_from, uint8 info_depth_to, bool div
 								);
 							gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT);
 							lb->buf().append(ware.get_last_transfer()->get_name());
+							lb->update();
 
 							if( info_depth_from>1  &&  ware.get_origin().is_bound()  &&  (ware.get_last_transfer()!=ware.get_origin()) ) {
 								add_table(3,1);
@@ -809,6 +810,7 @@ void gui_cargo_info_t::init(uint8 info_depth_from, uint8 info_depth_to, bool div
 										);
 									lb = new_component<gui_label_buf_t>(SYSCOL_TEXT);
 									lb->buf().append(ware.get_origin()->get_name());
+									lb->update();
 								}
 								end_table();
 							}
