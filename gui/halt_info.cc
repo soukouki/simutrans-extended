@@ -700,7 +700,7 @@ void halt_info_t::init(halthandle_t halt)
 		end_table();
 
 		// top right
-		add_table(1,0)->set_spacing(scr_size(0,0));
+		add_table(1,0)->set_spacing(NO_SPACING);
 		{
 			add_component(&view);
 			view.set_location(halt->get_basis_pos3d());
@@ -760,11 +760,11 @@ void halt_info_t::init(halthandle_t halt)
 
 	// departure board
 	cont_tab_departure.set_table_layout(1,0);
-	cont_tab_departure.set_margin(scr_size(0,D_V_SPACE), scr_size(0,0));
-	cont_tab_departure.set_spacing(scr_size(0,0));
+	cont_tab_departure.set_margin(scr_size(0,D_V_SPACE), NO_SPACING);
+	cont_tab_departure.set_spacing(NO_SPACING);
 	cont_departure.set_table_layout(2,0);
 	cont_departure.set_margin(scr_size(D_H_SPACE, 0), scr_size(D_H_SPACE, 0));
-	cont_tab_departure.add_table(10,1)->set_spacing(scr_size(0,0));
+	cont_tab_departure.add_table(10,1)->set_spacing(NO_SPACING);
 	{
 		cont_tab_departure.new_component<gui_margin_t>(D_MARGIN_LEFT);
 		bt_arrivals.init(button_t::roundbox_left_state, "Arrivals from\n");
