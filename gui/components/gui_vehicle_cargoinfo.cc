@@ -22,8 +22,6 @@
 #define LOADING_BAR_WIDTH 170
 #define LOADING_BAR_HEIGHT 5
 
-#define HALT_WAITING_BAR_MAX_WIDTH 80
-
 bool gui_cargo_info_t::sort_reverse = false;
 
 static int compare_amount(const ware_t &a, const ware_t &b) {

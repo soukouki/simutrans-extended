@@ -14,6 +14,8 @@
 #include "../../descriptor/vehicle_desc.h"
 #include "../../utils/cbuffer_t.h"
 
+#define HALT_WAITING_BAR_MAX_WIDTH 80
+
 /**
  * Draws a simple colored box.
  */
