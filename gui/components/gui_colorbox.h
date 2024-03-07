@@ -240,4 +240,15 @@ public:
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 
+
+class gui_capped_arrow_t : public gui_component_t
+{
+public:
+	gui_capped_arrow_t() {};
+
+	void draw(scr_coord offset) OVERRIDE;
+	scr_size get_min_size() const OVERRIDE { return scr_size(5,5); }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
 #endif
