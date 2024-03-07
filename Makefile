@@ -385,6 +385,7 @@ SOURCES += gui/components/gui_container.cc
 SOURCES += gui/components/gui_convoiinfo.cc
 SOURCES += gui/components/gui_divider.cc
 SOURCES += gui/components/gui_obj_view_t.cc
+SOURCES += gui/components/gui_destination_building_info.cc
 SOURCES += gui/components/gui_factory_storage_info.cc
 SOURCES += gui/components/gui_halthandled_lines.cc
 SOURCES += gui/components/gui_fixedwidth_textarea.cc
