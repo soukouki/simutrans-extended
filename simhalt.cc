@@ -6724,18 +6724,14 @@ uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint
 
 			if (ware.menge) {
 				sum += ware.menge;
-				bool found = false;
-
 				FOR(slist_tpl<ware_t>, j, warray) {
-					if (ware.can_merge_with(j))	{
-						j.menge += ware.menge;
-						found = true;
+					if (j.can_merge_with(ware))	{
+						ware.menge += j.menge;
+						warray.remove(j);
 						break;
 					}
 				}
-				if (!found) {
-					warray.append(ware);
-				}
+				warray.append(ware);
 			}
 			else {
 				// error
