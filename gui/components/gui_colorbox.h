@@ -243,8 +243,9 @@ public:
 
 class gui_capped_arrow_t : public gui_component_t
 {
+	bool left;
 public:
-	gui_capped_arrow_t() {};
+	gui_capped_arrow_t(bool left_arrow = false) { left = left_arrow; }
 
 	void draw(scr_coord offset) OVERRIDE;
 	scr_size get_min_size() const OVERRIDE { return scr_size(5,5); }
