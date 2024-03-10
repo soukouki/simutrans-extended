@@ -6089,7 +6089,7 @@ Acceleration (full load)
 Acceleration(empty)
 Acceleration (empty)
 Tractive effort
-Tractive effort
+Max. tractive effort
 Running resistance
 Running resistance
 helptxt_actual_acceleration
@@ -6539,7 +6539,7 @@ Image
 engine_type
 Traction type
 TF_
-Tractive effort
+Max. tractive effort
 curb_weight
 Weight
 Industry: %s in %s has closed, with the loss of %d jobs.\n%d upstream suppliers and %d downstream customers are affected.
@@ -6587,4 +6587,6 @@ Whole convoy
 Car no.
 Vehicle no.
 Rated speed
-Rated speed
+Max. tractive effort to:
+Tractive force:
+Max. tractive effort:
