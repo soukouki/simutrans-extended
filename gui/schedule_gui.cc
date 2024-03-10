@@ -449,7 +449,7 @@ void schedule_gui_stats_t::update_schedule()
 		else {
 			const uint8 base_line_style = schedule->is_mirrored() ? gui_colored_route_bar_t::line_style::doubled : gui_colored_route_bar_t::line_style::solid;
 			const bool is_air_wt = schedule->get_waytype() == air_wt;
-			
+
 			for (uint i = 0; i < schedule->entries.get_count(); i++) {
 				const grund_t* gr_i = welt->lookup(schedule->entries[i].pos);
 				entries.append(new_component<gui_schedule_entry_t>(player, schedule->entries[i], i, is_air_wt, line_color_index));
