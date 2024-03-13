@@ -1043,11 +1043,16 @@ public:
 		ignore_goal_stop   = 1<<1, // ziel
 		ignore_via_stop    = 1<<2, // zwischenziel
 		ignore_origin_stop = 1<<3,
-		ignore_destination = 1<<4  //zielpos
+		ignore_destination = 1<<4, // zielpos
+		ignore_route       = 1<<5,  // preferred line/convoy
 	};
 
 	// Returns the total amount of cargo
 	uint32 get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits);
+
+	// check waiting same line/convoy or not
+	bool is_same_route(const ware_t &ware, convoihandle_t cnv = convoihandle_t());
+	bool is_same_route(const ware_t &ware, linehandle_t line = linehandle_t());
 
 };
 
