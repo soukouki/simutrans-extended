@@ -1052,7 +1052,7 @@ public:
 	bool is_same_route(const ware_t &ware, convoihandle_t cnv = convoihandle_t());
 	bool is_same_route(const ware_t &ware, linehandle_t line = linehandle_t());
 
-	// helper function for get_ware 
+	// helper function for get_ware
 	void merge_ware(ware_t ware, slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state=0);
 
 	// Merge cargo according to conditions and store in warray
