@@ -6713,94 +6713,136 @@ bool haltestelle_t::is_same_route(const ware_t &ware, convoihandle_t cnv)
 	return false;
 }
 
-uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits)
+
+void haltestelle_t::merge_ware(ware_t ware, slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state)
+{
+	linehandle_t preferred_line = linehandle_t();
+	convoihandle_t preferred_cnv = convoihandle_t();
+
+	// check route first
+	if (!(merge_condition_bits & ignore_ware_data_t::ignore_route)) {
+		preferred_line = get_preferred_line(ware.get_zwischenziel(), ware.get_desc()->get_catg_index(), goods_manager_t::get_classes_catg_index(ware.get_index()) - 1);
+		if (!preferred_line.is_bound()) {
+			preferred_cnv = get_preferred_convoy(ware.get_zwischenziel(), ware.get_desc()->get_catg_index(), goods_manager_t::get_classes_catg_index(ware.get_index()) - 1);
+		}
+	}
+
+	// Remove unnecessary data
+	if (merge_condition_bits & ignore_ware_data_t::ignore_goal_stop) {
+		ware.set_ziel(halthandle_t());
+	}
+	if ((merge_condition_bits & ignore_ware_data_t::ignore_route)) {
+		// "Via stop" and "wealth class" are required for displaying the route, so it must not be executed.
+		if (merge_condition_bits & ignore_ware_data_t::ignore_via_stop) {
+			ware.set_zwischenziel(halthandle_t());
+		}
+		if (merge_condition_bits & ignore_ware_data_t::ignore_class) {
+			ware.g_class = 0;
+		}
+	}
+	if (merge_condition_bits & ignore_ware_data_t::ignore_class) {
+		ware.is_commuting_trip = false;
+	}
+	if (merge_condition_bits & ignore_ware_data_t::ignore_origin_stop) {
+		ware.set_origin(halthandle_t());
+	}
+	if (merge_condition_bits & ignore_ware_data_t::ignore_destination) {
+		ware.set_zielpos(koord::invalid);
+	}
+
+
+	FOR(slist_tpl<ware_t>, j, warray) {
+		// check route
+		if (!(merge_condition_bits & ignore_ware_data_t::ignore_route)) {
+			if (merge_condition_bits & ignore_ware_data_t::ignore_class) {
+				ware.g_class = goods_manager_t::get_classes_catg_index(ware.get_index()) - 1;
+			}
+			if (preferred_line.is_bound()) {
+				if (is_same_route(j, preferred_line)) {
+					// Set the same relay station to merge ware
+					// This is hidden data for displaying routes and is not actually displayed.
+					if ((merge_condition_bits & ignore_ware_data_t::ignore_via_stop)) {
+						ware.set_zwischenziel(j.get_zwischenziel());
+					}
+				}
+				else {
+					continue; // cannot merge
+				}
+			}
+			else if (preferred_cnv.is_bound() && !is_same_route(j, preferred_cnv)) {
+				if (is_same_route(j, preferred_cnv)) {
+					if ((merge_condition_bits & ignore_ware_data_t::ignore_via_stop)) {
+						ware.set_zwischenziel(j.get_zwischenziel());
+					}
+				}
+				else {
+					continue; // cannot merge
+				}
+			}
+		}
+
+		if (j.can_merge_with(ware)) {
+			ware.menge += j.menge;
+			warray.remove(j);
+			break;
+		}
+	}
+	warray.append(ware);
+}
+
+uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state)
 {
 	uint32 sum=0;
-	const vector_tpl<ware_t> * chk_warray = cargo[catg_index];
-	if (chk_warray != NULL) {
-		FOR(vector_tpl<ware_t>, const& i, *chk_warray) {
-			ware_t ware = i;
+	if (!ware_state) {
+		// waiting cargoes
+		const vector_tpl<ware_t> * chk_warray = cargo[catg_index];
+		if (chk_warray != NULL) {
+			FOR(vector_tpl<ware_t>, const& i, *chk_warray) {
+				ware_t ware = i;
 
-			if (ware.menge) {
-				sum += ware.menge;
-
-				linehandle_t preferred_line = linehandle_t();
-				convoihandle_t preferred_cnv = convoihandle_t();
-
-				// check route first
-				if (!(merge_condition_bits & ignore_ware_data_t::ignore_route)) {
-					preferred_line = get_preferred_line(ware.get_zwischenziel(), ware.get_desc()->get_catg_index(), goods_manager_t::get_classes_catg_index(ware.get_index())-1);
-					if (!preferred_line.is_bound()) {
-						preferred_cnv = get_preferred_convoy(ware.get_zwischenziel(), ware.get_desc()->get_catg_index(), goods_manager_t::get_classes_catg_index(ware.get_index())-1);
-					}
+				if (ware.menge) {
+					sum += ware.menge;
+					merge_ware(ware, warray, catg_index, merge_condition_bits);
 				}
-
-				// Remove unnecessary data
-				if (merge_condition_bits & ignore_ware_data_t::ignore_goal_stop) {
-					ware.set_ziel(halthandle_t());
+				else {
+					// error
+					// For some reason sometimes 0 cargoes are found...
+					dbg->warning("haltestelle_t::get_ware", "%s with quantity 0 is wandering at %s", ware.get_name(),get_name());
 				}
-				if ((merge_condition_bits & ignore_ware_data_t::ignore_route)) {
-					// "Via stop" and "wealth class" are required for displaying the route, so it must not be executed.
-					if (merge_condition_bits & ignore_ware_data_t::ignore_via_stop) {
-						ware.set_zwischenziel(halthandle_t());
-					}
-					if (merge_condition_bits & ignore_ware_data_t::ignore_class) {
-						ware.g_class = 0;
-					}
-				}
-				if (merge_condition_bits & ignore_ware_data_t::ignore_class) {
-					ware.is_commuting_trip = false;
-				}
-				if (merge_condition_bits & ignore_ware_data_t::ignore_origin_stop) {
-					ware.set_origin(halthandle_t());
-				}
-				if (merge_condition_bits & ignore_ware_data_t::ignore_destination) {
-					ware.set_zielpos(koord::invalid);
-				}
-
-
-				FOR(slist_tpl<ware_t>, j, warray) {
-					// check route
-					if (!(merge_condition_bits & ignore_ware_data_t::ignore_route)) {
-						if (merge_condition_bits & ignore_ware_data_t::ignore_class) {
-							ware.g_class = goods_manager_t::get_classes_catg_index(ware.get_index())-1;
-						}
-						if (preferred_line.is_bound()) {
-							if (is_same_route(j, preferred_line)) {
-								// Set the same relay station to merge ware
-								// This is hidden data for displaying routes and is not actually displayed.
-								if ((merge_condition_bits & ignore_ware_data_t::ignore_via_stop)) {
-									ware.set_zwischenziel(j.get_zwischenziel());
-								}
-							}
-							else {
-								continue; // cannot merge
-							}
-						}
-						else if (preferred_cnv.is_bound() && !is_same_route(j, preferred_cnv)) {
-							if (is_same_route(j, preferred_cnv)) {
-								if ((merge_condition_bits & ignore_ware_data_t::ignore_via_stop)) {
-									ware.set_zwischenziel(j.get_zwischenziel());
-								}
-							}
-							else {
-								continue; // cannot merge
-							}
-						}
-					}
-
-					if (j.can_merge_with(ware))	{
-						ware.menge += j.menge;
-						warray.remove(j);
-						break;
-					}
-				}
-				warray.append(ware);
 			}
-			else {
-				// error
-				// For some reason sometimes 0 cargoes are found...
-				dbg->warning("haltestelle_t::get_ware", "%s with quantity 0 is wandering at %s", ware.get_name(),get_name());
+		}
+	}
+	else {
+		// transferring cargoes
+#ifdef MULTI_THREAD
+		sint32 po = world()->get_parallel_operations();
+#else
+		sint32 po = 1;
+#endif
+		for (sint32 i = 0; i < po; i++)
+		{
+			FOR(vector_tpl<transferring_cargo_t>, tc, transferring_cargoes[i])
+			{
+				ware_t ware = tc.ware;
+				ware.set_last_transfer(self);
+				if (catg_index == ware.get_desc()->get_catg_index() && ware.menge) {
+					// check transfer in or out
+					if (ware_state==1 && ware.get_zwischenziel()==self) {
+						ware.set_zwischenziel(halthandle_t());
+						// transfer out
+						continue;
+					}
+					else if (ware_state==2 && ware.get_zwischenziel()!=self) {
+						// transfer in
+						continue;
+					}
+					sum += ware.menge;
+					if (ware_state == 2) {
+						merge_condition_bits |= ignore_route;
+						merge_condition_bits |= ignore_goal_stop;
+					}
+					merge_ware(ware, warray, catg_index, merge_condition_bits, ware_state);
+				}
 			}
 		}
 	}

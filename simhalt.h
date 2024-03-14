@@ -1038,6 +1038,7 @@ public:
 
 	void set_all_building_tiles();
 
+	// for waiting cargo list
 	enum ignore_ware_data_t : uint8 {
 		ignore_class       = 1<<0, // *by wealth, also ignore trip type
 		ignore_goal_stop   = 1<<1, // ziel
@@ -1047,13 +1048,17 @@ public:
 		ignore_route       = 1<<5,  // preferred line/convoy
 	};
 
-	// Returns the total amount of cargo
-	uint32 get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits);
-
 	// check waiting same line/convoy or not
 	bool is_same_route(const ware_t &ware, convoihandle_t cnv = convoihandle_t());
 	bool is_same_route(const ware_t &ware, linehandle_t line = linehandle_t());
 
+	// helper function for get_ware 
+	void merge_ware(ware_t ware, slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state=0);
+
+	// Merge cargo according to conditions and store in warray
+	// and returns the total amount of cargo
+	// ware_state: 0=waiting cargoes, 1=transferring in, 2=tranferring out
+	uint32 get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state=0);
 };
 
 ENUM_BITSET(haltestelle_t::stationtyp)
