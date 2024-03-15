@@ -906,7 +906,7 @@ void schedule_list_gui_t::draw(scr_coord pos, scr_size size)
 	}
 }
 
-#define GOODS_SYMBOL_CELL_WIDTH 14 // TODO: This will be used in common with halt detail in the future
+
 void schedule_list_gui_t::display(scr_coord pos)
 {
 	uint32 icnv = line->count_convoys();

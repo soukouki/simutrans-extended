@@ -31,7 +31,6 @@
 #include "components/gui_convoy_payloadinfo.h"
 
 
-#define GOODS_SYMBOL_CELL_WIDTH 14
 #define GOODS_WAITING_CELL_WIDTH 64
 #define GOODS_WAITING_BAR_BASE_WIDTH 128
 #define GOODS_LEAVING_BAR_HEIGHT 2
