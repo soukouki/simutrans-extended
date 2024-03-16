@@ -487,10 +487,6 @@ void gui_halt_cargo_infot_t::update(uint8 filter_bits, uint8 merge_condition_bit
 		}
 	}
 
-	//gui_label_buf_t *lb1 = new_component<gui_label_buf_t>();
-	//lb1->buf().printf("filter_bits = %u", filter_bits);
-	//lb1->update();
-
 	if (filter_bits&SHOW_TRANSFER_OUT) {
 
 		new_component<gui_divider_t>();
