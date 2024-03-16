@@ -769,9 +769,9 @@ public:
 	uint8 get_empty_lane(const grund_t *gr, convoihandle_t cnv) const;
 
 	/**
-	 * @param[out] buf Goods description text
+	 * return update flag of waiting cargo info.
 	 */
-	void get_freight_info(cbuffer_t & buf);
+	bool get_freight_info();
 
 	/**
 	 * Opens an information window for this station.

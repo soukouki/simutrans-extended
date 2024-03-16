@@ -5,8 +5,6 @@
 
 #include <algorithm>
 
-#include "freight_list_sorter.h"
-
 #include "path_explorer.h"
 #include "simcity.h"
 #include "simcolor.h"
@@ -432,7 +430,7 @@ haltestelle_t::haltestelle_t(loadsave_t* file)
 
 	enables = NOT_ENABLED;
 
-	sortierung = freight_list_sorter_t::by_name;
+	sortierung = 0; // by_amount
 	resort_freight_info = true;
 
 	init_financial_history();
@@ -503,7 +501,7 @@ haltestelle_t::haltestelle_t(koord k, player_t* player)
 	status_color_freight = COL_INACTIVE;
 	last_bar_count = 0;
 
-	sortierung = freight_list_sorter_t::by_name;
+	sortierung = 0; // by_amount
 	resort_freight_info = true;
 	init_financial_history();
 
@@ -3449,53 +3447,16 @@ void haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 }
 
 
-/**
- * @param[out] buf Goods description text (buf)
- */
-void haltestelle_t::get_freight_info(cbuffer_t & buf)
+bool haltestelle_t::get_freight_info()
 {
 	if (resort_freight_info)
 	{
-		// resort only inf absolutely needed ...
+		// update only inf absolutely needed ...
 		resort_freight_info = false;
-		buf.clear();
-
-		for (unsigned i = 0; i < goods_manager_t::get_max_catg_index(); i++)
-		{
-			const vector_tpl<ware_t> * warray = cargo[i];
-			if (warray)
-			{
-				freight_list_sorter_t::sort_freight(*warray, buf, (freight_list_sorter_t::sort_mode_t)sortierung, NULL, "waiting", 0, 0, NULL);
-			}
-		}
-
-		buf.append("\n");
-		if (get_transferring_cargoes_count() > 0)
-		{
-			buf.printf("%s:\n", translator::translate("transfers"));
-		}
-		vector_tpl<ware_t> ware_transfers;
-		ware_t ware;
-#ifdef MULTI_THREAD
-		sint32 po = world()->get_parallel_operations();
-#else
-		sint32 po = 1;
-#endif
-		for (sint32 i = 0; i < po; i++)
-		{
-			FOR(vector_tpl<transferring_cargo_t>, tc, transferring_cargoes[i])
-			{
-				ware = tc.ware;
-				ware.set_last_transfer(self);
-				ware_transfers.append(ware);
-			}
-		}
-		// show new info
-		freight_list_sorter_t::sort_freight(ware_transfers, buf, (freight_list_sorter_t::sort_mode_t)sortierung, NULL, "transferring", 0, 0, NULL);
+		return true;
 	}
+	return false;
 }
-
-
 
 void haltestelle_t::show_info()
 {
