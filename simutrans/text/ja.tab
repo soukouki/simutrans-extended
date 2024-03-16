@@ -2241,6 +2241,26 @@ hd_sv_mode_catg
 取扱い貨物
 hd_sv_mode_route
 運行ルート
+distance_to_via
+次の降車駅までの距離
+distance_to_origin
+出発駅からの距離
+Show route
+予定ルートを表示
+Show transfer (in)
+乗換中/搬入中
+Show transfer (out)
+退出中/搬出中
+Shows the line or convoy where the cargo is waiting
+この駅から次の乗車・積み込み予定の路線を表示します
+Shows cargos heading to the platform to depart from this stop
+出発ホームへ移動中・搬入中の乗客・貨物を表示します
+Shows cargos leaving this stop
+駅に到着し、退出中の乗客と搬出中の貨物を表示します
+cargo_list_by_catg
+貨物種別順
+This stop
+当駅
 #_________________________________program_text__________________________________
 #_________________________________program_text__________________________________
  %1.2f$/mon
@@ -3444,9 +3464,9 @@ Transfer time:
 transferring
 移動中
 transfers
-移動中の旅客/貨物
 Transfers
 乗降客数
+退出中の旅客/搬出中の貨物
 Transformer only next to factory or in city!
 変電所は産業の隣接マスか市域内にのみ建設できます。
 transparent background
