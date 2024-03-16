@@ -21,11 +21,11 @@
 #define TRANSFER_MODE_IN (1)
 #define TRANSFER_MODE_OUT (2)
 
-bool gui_halt_cargo_infot_t::sort_reverse = false;
+bool gui_halt_cargoinfo_t::sort_reverse = false;
 
 static int compare_amount(const ware_t &a, const ware_t &b) {
 	int comp = b.menge - a.menge;
-	return gui_halt_cargo_infot_t::sort_reverse ? -comp : comp;
+	return gui_halt_cargoinfo_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_index(const ware_t &a, const ware_t &b) {
@@ -36,7 +36,7 @@ static int compare_index(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return gui_halt_cargo_infot_t::sort_reverse ? -comp : comp;
+	return gui_halt_cargoinfo_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_via(const ware_t &a, const ware_t &b) {
@@ -50,7 +50,7 @@ static int compare_via(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return gui_halt_cargo_infot_t::sort_reverse ? -comp : comp;
+	return gui_halt_cargoinfo_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_origin(const ware_t &a, const ware_t &b) {
@@ -61,7 +61,7 @@ static int compare_origin(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return gui_halt_cargo_infot_t::sort_reverse ? -comp : comp;
+	return gui_halt_cargoinfo_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_via_distance(const ware_t &a, const ware_t &b) {
@@ -74,7 +74,7 @@ static int compare_via_distance(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return gui_halt_cargo_infot_t::sort_reverse ? -comp : comp;
+	return gui_halt_cargoinfo_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_origin_distance(const ware_t &a, const ware_t &b) {
@@ -87,7 +87,7 @@ static int compare_origin_distance(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return gui_halt_cargo_infot_t::sort_reverse ? -comp : comp;
+	return gui_halt_cargoinfo_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_destination(const ware_t &a, const ware_t &b) {
@@ -97,7 +97,7 @@ static int compare_destination(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return gui_halt_cargo_infot_t::sort_reverse ? -comp : comp;
+	return gui_halt_cargoinfo_t::sort_reverse ? -comp : comp;
 }
 
 static int compare_route(const ware_t &a, const ware_t &b) {
@@ -137,7 +137,7 @@ static int compare_route(const ware_t &a, const ware_t &b) {
 	if (comp == 0) {
 		comp = b.menge - a.menge;
 	}
-	return gui_halt_cargo_infot_t::sort_reverse ? -comp : comp;
+	return gui_halt_cargoinfo_t::sort_reverse ? -comp : comp;
 }
 
 
@@ -349,7 +349,7 @@ gui_halt_waiting_table_t::gui_halt_waiting_table_t(slist_tpl<ware_t> const& warr
 	set_size(get_min_size());
 }
 
-gui_halt_cargo_infot_t::gui_halt_cargo_infot_t(halthandle_t halt_)
+gui_halt_cargoinfo_t::gui_halt_cargoinfo_t(halthandle_t halt_)
 {
 	halt = halt_;
 	set_table_layout(1,0);
@@ -359,7 +359,7 @@ gui_halt_cargo_infot_t::gui_halt_cargo_infot_t(halthandle_t halt_)
 }
 
 
-void gui_halt_cargo_infot_t::sort_cargo(slist_tpl<ware_t> & cargoes, uint8 sort_mode)
+void gui_halt_cargoinfo_t::sort_cargo(slist_tpl<ware_t> & cargoes, uint8 sort_mode)
 {
 	switch (sort_mode)
 	{
@@ -391,7 +391,7 @@ void gui_halt_cargo_infot_t::sort_cargo(slist_tpl<ware_t> & cargoes, uint8 sort_
 	}
 }
 
-void gui_halt_cargo_infot_t::update(uint8 filter_bits, uint8 merge_condition_bits, uint8 sort_mode)
+void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits, uint8 sort_mode)
 {
 	remove_all();
 	if (!halt.is_bound()) { return; }

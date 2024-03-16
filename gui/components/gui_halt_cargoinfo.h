@@ -23,7 +23,7 @@ public:
 /**
  * List of cargo waiting at the stop
  */
-class gui_halt_cargo_infot_t : public gui_aligned_container_t
+class gui_halt_cargoinfo_t : public gui_aligned_container_t
 {
 public:
 	enum {
@@ -55,7 +55,7 @@ private:
 	void sort_cargo(slist_tpl<ware_t> & warray, uint8 sort_mode);
 
 public:
-	gui_halt_cargo_infot_t(halthandle_t halt);
+	gui_halt_cargoinfo_t(halthandle_t halt);
 
 	// for loading
 	void set_halt(halthandle_t halt_) { halt = halt_; }

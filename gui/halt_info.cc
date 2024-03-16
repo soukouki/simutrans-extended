@@ -42,7 +42,7 @@
 #define L_WAITING_CELL_WIDTH (proportional_string_width(" 0000000"))
 #define L_CAPACITY_CELL_WIDTH (proportional_string_width("000000"))
 
-static const char *sort_text[gui_halt_cargo_infot_t::SORT_MODES] = {
+static const char *sort_text[gui_halt_cargoinfo_t::SORT_MODES] = {
 	"Menge", // amount
 	"via",
 	"origin",
@@ -851,16 +851,16 @@ void halt_info_t::init_cargo_info_controller()
 		{
 			cont_tab_cargo_info.new_component_span<gui_label_t>("Sort by", 2);
 			freight_sort_selector.clear_elements();
-			for (uint8 i = 0; i < gui_halt_cargo_infot_t::SORT_MODES; ++i) {
+			for (uint8 i = 0; i < gui_halt_cargoinfo_t::SORT_MODES; ++i) {
 				freight_sort_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
 			}
-			freight_sort_selector.set_selection(env_t::default_sortmode < gui_halt_cargo_infot_t::SORT_MODES ? env_t::default_sortmode : 0);
+			freight_sort_selector.set_selection(env_t::default_sortmode < gui_halt_cargoinfo_t::SORT_MODES ? env_t::default_sortmode : 0);
 			freight_sort_selector.add_listener(this);
 			cont_tab_cargo_info.add_component(&freight_sort_selector);
 
 			sort_order.init(button_t::sortarrow_state, "");
 			sort_order.set_tooltip(translator::translate("hl_btn_sort_order"));
-			sort_order.pressed = !gui_halt_cargo_infot_t::sort_reverse;
+			sort_order.pressed = !gui_halt_cargoinfo_t::sort_reverse;
 			sort_order.add_listener(this);
 			cont_tab_cargo_info.add_component(&sort_order);
 		}
@@ -1523,7 +1523,7 @@ bool halt_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 	}
 	else if (comp == &sort_order) {
 		sort_order.pressed = !sort_order.pressed;
-		gui_halt_cargo_infot_t::sort_reverse = !sort_order.pressed;
+		gui_halt_cargoinfo_t::sort_reverse = !sort_order.pressed;
 		update_cargo_list();
 	}
 
@@ -1534,11 +1534,11 @@ bool halt_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 void halt_info_t::update_cargo_list()
 {
 	uint8 ft_filter_bits = 0;
-	if (filter_btn_all_pas.pressed)      ft_filter_bits |= gui_halt_cargo_infot_t::SHOW_WAITING_PAX;
-	if (filter_btn_all_mails.pressed)    ft_filter_bits |= gui_halt_cargo_infot_t::SHOW_WAITING_MAIL;
-	if (filter_btn_all_freights.pressed) ft_filter_bits |= gui_halt_cargo_infot_t::SHOW_WAITING_GOODS;
-	if (bt_show_transfer_in.pressed)     ft_filter_bits |= gui_halt_cargo_infot_t::SHOW_TRANSFER_IN;
-	if (bt_show_transfer_out.pressed)    ft_filter_bits |= gui_halt_cargo_infot_t::SHOW_TRANSFER_OUT;
+	if (filter_btn_all_pas.pressed)      ft_filter_bits |= gui_halt_cargoinfo_t::SHOW_WAITING_PAX;
+	if (filter_btn_all_mails.pressed)    ft_filter_bits |= gui_halt_cargoinfo_t::SHOW_WAITING_MAIL;
+	if (filter_btn_all_freights.pressed) ft_filter_bits |= gui_halt_cargoinfo_t::SHOW_WAITING_GOODS;
+	if (bt_show_transfer_in.pressed)     ft_filter_bits |= gui_halt_cargoinfo_t::SHOW_TRANSFER_IN;
+	if (bt_show_transfer_out.pressed)    ft_filter_bits |= gui_halt_cargoinfo_t::SHOW_TRANSFER_OUT;
 
 	uint8 merge_condition_bits = 0;
 	if (!bt_divide_by_wealth.pressed) merge_condition_bits |= haltestelle_t::ignore_class;

@@ -200,7 +200,7 @@ private:
 
 	void init_cargo_info_controller();
 	gui_aligned_container_t cont_tab_waiting_list;
-	gui_halt_cargo_infot_t cargo_info;
+	gui_halt_cargoinfo_t cargo_info;
 	gui_scrollpane_t scroll_freight;
 
 	int pax_ev_num[5], mail_ev_num[2];
