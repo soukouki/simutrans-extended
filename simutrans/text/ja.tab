@@ -2073,10 +2073,6 @@ Verkehrsteilnehmer
 自家用車
 via
 経由地
-via %s\n
- (%s経由)\n
-via Menge
-待機数/経由地
 voranstellen
 先頭へ
 Waggon_tab
@@ -2695,8 +2691,6 @@ Departures to\n
 出発予想時間:\n
 Depot found but could not be inserted in schedule.  This is a bug!%s\n
 適切な車庫へのスケジュール挿入が出来ません。\n
-destination (detail)
-目的地 (詳細)
 differential
 微分値
 Direction
@@ -3025,10 +3019,6 @@ Operating revenue less operating expenditure
 収入から運行費と維持費を差し引いた利益を表します。
 origin
 出発地
-origin (amount)
-出発地 (待機数)
-origin (detail)
-出発地 (詳細)
 out of range
 航続距離オーバー
 overcrowded_capacity
@@ -3464,8 +3454,6 @@ Transfer time:
 transferring
 移動中
 transfers
-Transfers
-乗降客数
 退出中の旅客/搬出中の貨物
 Transformer only next to factory or in city!
 変電所は産業の隣接マスか市域内にのみ建設できます。
@@ -3565,10 +3553,6 @@ way_cannot_be_used_by_any_vehicle
 通行不能です！
 way_speed
 軌道の最高速度
-wealth (detail)
-裕福度別 (詳細)
-wealth (via)
-裕福度別 (経由地)
 wealth_of_commuters
 通勤客の裕福度
 wealth_of_visitors
@@ -4551,3 +4535,19 @@ Power: %4d kW\n
 #郵便度
 #comfort: %i
 #快適度: %i
+#via Menge
+#待機数/経由地
+#origin (amount)
+#出発地 (待機数)
+#origin (detail)
+#出発地 (詳細)
+#destination (detail)
+#目的地 (詳細)
+#wealth (detail)
+#裕福度別 (詳細)
+#wealth (via)
+#裕福度別 (経由地)
+#via %s\n
+# (%s経由)\n
+#Transfers
+#乗降客数
