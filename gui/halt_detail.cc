@@ -1286,7 +1286,7 @@ void gui_halt_service_info_t::update_connections()
 				// Convoy buttons
 				new_component<gui_convoi_button_t>(cnv);
 
-				// Line labels with color of player
+				// Convoy labels with color of player
 				gui_label_buf_t *lb = new_component<gui_label_buf_t>(PLAYER_FLAG | color_idx_to_rgb(cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
 				lb->buf().append(cnv->get_name());
 				lb->update();
