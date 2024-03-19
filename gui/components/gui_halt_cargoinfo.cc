@@ -158,6 +158,9 @@ gui_halt_waiting_table_t::gui_halt_waiting_table_t(slist_tpl<ware_t> const& warr
 		}
 	}
 
+	// top margin
+	new_component_span<gui_margin_t>(0, D_V_SPACE>>1, 4);
+
 	for (auto const& ware : warray) {
 		// col1, horizontal color bar
 		const scr_coord_val width = min(HALT_WAITING_BAR_MAX_WIDTH, (HALT_WAITING_BAR_MAX_WIDTH*ware.menge + border - 1) / border + 2);
@@ -346,6 +349,10 @@ gui_halt_waiting_table_t::gui_halt_waiting_table_t(slist_tpl<ware_t> const& warr
 		// col4
 		new_component<gui_fill_t>();
 	}
+
+	// bottom margin
+	new_component_span<gui_margin_t>(0, D_V_SPACE>>1, 4);
+
 	set_size(get_min_size());
 }
 
@@ -353,7 +360,7 @@ gui_halt_cargoinfo_t::gui_halt_cargoinfo_t(halthandle_t halt_)
 {
 	halt = halt_;
 	set_table_layout(1,0);
-	set_table_frame(true, true);
+	set_table_frame(true);
 	set_alignment(ALIGN_LEFT | ALIGN_TOP);
 	update();
 }
@@ -397,7 +404,6 @@ void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits,
 	if (!halt.is_bound()) { return; }
 
 	slist_tpl<ware_t> cargoes;
-	bool got_one = false;
 
 	for (uint8 catg_index = 0; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
 
@@ -426,10 +432,6 @@ void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits,
 		}
 
 		if (sum) {
-			if (got_one) {
-				new_component<gui_divider_t>();
-			}
-			got_one = true;
 			add_table(3,1);
 			{
 				new_component<gui_image_t>(goods_manager_t::get_info_catg_index(catg_index)->get_catg_symbol(), 0, 0, true);
