@@ -6751,7 +6751,7 @@ void haltestelle_t::merge_ware(ware_t ware, slist_tpl<ware_t> &warray, uint8 cat
 	warray.append(ware);
 }
 
-uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state)
+uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state, linehandle_t line, convoihandle_t cnv)
 {
 	uint32 sum=0;
 	if (!ware_state) {
@@ -6760,6 +6760,18 @@ uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint
 		if (chk_warray != NULL) {
 			FOR(vector_tpl<ware_t>, const& i, *chk_warray) {
 				ware_t ware = i;
+				if (line.is_bound()) {
+					if (line != get_preferred_line(ware.get_zwischenziel(), ware.get_desc()->get_catg_index(), goods_manager_t::get_classes_catg_index(ware.get_index()) - 1))
+					{
+						continue;
+					}
+				}
+				if (cnv.is_bound()) {
+					if (cnv != get_preferred_convoy(ware.get_zwischenziel(), ware.get_desc()->get_catg_index(), goods_manager_t::get_classes_catg_index(ware.get_index()) - 1))
+					{
+						continue;
+					}
+				}
 
 				if (ware.menge) {
 					sum += ware.menge;
