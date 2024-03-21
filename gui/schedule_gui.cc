@@ -1010,7 +1010,7 @@ void schedule_gui_t::update_selection()
 		schedule->set_current_stop(min(schedule->get_count() - 1, schedule->get_current_stop()));
 		const uint8 current_stop = schedule->get_current_stop();
 		const grund_t *gr = welt->lookup(schedule->get_current_entry().pos);
-		const bool is_depot = gr ? welt->lookup(schedule->get_current_entry().pos)->get_depot() : false;
+		const bool is_depot = gr ? (welt->lookup(schedule->get_current_entry().pos)->get_depot()!=NULL) : false;
 		bt_wait_for_time.enable(is_depot ? false : true); // ??? waypoint ?
 		bt_wait_for_time.pressed = schedule->get_current_entry().wait_for_time;
 		entry_no->set_visible(true);
