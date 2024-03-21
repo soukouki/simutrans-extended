@@ -144,6 +144,7 @@ static int compare_route(const ware_t &a, const ware_t &b) {
 gui_halt_waiting_table_t::gui_halt_waiting_table_t(slist_tpl<ware_t> const& warray, uint8 filter_bits, uint8 merge_condition_bits, uint32 border, uint8 transfer_mode)
 {
 	set_table_layout(4,0);
+	set_table_frame(true, true);
 	set_spacing(scr_size(D_H_SPACE, 2));
 
 	const bool divide_by_wealth = !(merge_condition_bits & haltestelle_t::ignore_class);
