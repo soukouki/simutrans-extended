@@ -491,6 +491,7 @@ void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits,
 
 	if (filter_bits&SHOW_TRANSFER_OUT) {
 
+		bool got_one = false;
 		new_component<gui_divider_t>();
 		add_table(2, 1);
 		{
