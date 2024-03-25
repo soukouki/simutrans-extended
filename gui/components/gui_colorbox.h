@@ -15,6 +15,7 @@
 #include "../../utils/cbuffer_t.h"
 
 #define HALT_WAITING_BAR_MAX_WIDTH 80
+#define L_CAPPED_ARROW_WIDTH (5)
 
 /**
  * Draws a simple colored box.
@@ -248,7 +249,7 @@ public:
 	gui_capped_arrow_t(bool left_arrow = false) { left = left_arrow; }
 
 	void draw(scr_coord offset) OVERRIDE;
-	scr_size get_min_size() const OVERRIDE { return scr_size(5,5); }
+	scr_size get_min_size() const OVERRIDE { return scr_size(L_CAPPED_ARROW_WIDTH,5); }
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 

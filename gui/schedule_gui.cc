@@ -440,13 +440,13 @@ void schedule_gui_stats_t::update_schedule()
 		entries.clear();
 		buf.clear();
 		buf.append(translator::translate("Please click on the map to add\nwaypoints or stops to this\nschedule."));
-		const grund_t* gr_0 = welt->lookup(schedule->entries[0].pos);
 		if (schedule->empty()) {
 			add_table(1,1)->set_margin(scr_size(D_MARGIN_LEFT, D_MARGIN_TOP), scr_size(D_MARGIN_RIGHT, D_MARGIN_BOTTOM));
 			new_component<gui_textarea_t>(&buf);
 			end_table();
 		}
 		else {
+			const grund_t* gr_0 = welt->lookup(schedule->entries[0].pos);
 			const uint8 base_line_style = schedule->is_mirrored() ? gui_colored_route_bar_t::line_style::doubled : gui_colored_route_bar_t::line_style::solid;
 			const bool is_air_wt = schedule->get_waytype() == air_wt;
 
@@ -1009,7 +1009,8 @@ void schedule_gui_t::update_selection()
 	if (!schedule->empty()) {
 		schedule->set_current_stop(min(schedule->get_count() - 1, schedule->get_current_stop()));
 		const uint8 current_stop = schedule->get_current_stop();
-		const bool is_depot = welt->lookup(schedule->get_current_entry().pos)->get_depot();
+		const grund_t *gr = welt->lookup(schedule->get_current_entry().pos);
+		const bool is_depot = gr ? (welt->lookup(schedule->get_current_entry().pos)->get_depot()!=NULL) : false;
 		bt_wait_for_time.enable(is_depot ? false : true); // ??? waypoint ?
 		bt_wait_for_time.pressed = schedule->get_current_entry().wait_for_time;
 		entry_no->set_visible(true);
