@@ -173,7 +173,7 @@ gui_halt_waiting_table_t::gui_halt_waiting_table_t(slist_tpl<ware_t> const& warr
 				new_component<gui_capped_arrow_t>(true);
 			}
 			else {
-				new_component<gui_empty_t>(); // margin_t ?
+				new_component<gui_margin_t>(L_CAPPED_ARROW_WIDTH);
 			}
 			new_component<gui_margin_t>(HALT_WAITING_BAR_MAX_WIDTH - width + 2);
 			new_component<gui_capacity_bar_t>(scr_size(width, GOODS_COLOR_BOX_HEIGHT), barcolor)->set_show_frame(false);
