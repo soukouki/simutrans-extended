@@ -18,7 +18,6 @@
 #include "../display/viewport.h"
 #include "../simmenu.h"
 #include "../simskin.h"
-#include "../simline.h"
 
 #include "../dataobj/schedule.h"
 #include "../dataobj/environment.h"
@@ -549,8 +548,10 @@ halt_info_t::halt_info_t(halthandle_t halt) :
 		gui_frame_t("", NULL),
 		lb_evaluation("Evaluation:"),
 		scrolly_departure_board(&cont_departure, true, true),
-		cargo_info(halt),
-		scroll_freight(&cargo_info, true, true),
+		cargo_info1(halt),
+		cargo_info2(halt),
+		scroll_freight1(&cargo_info1, true, true),
+		scroll_freight2(&cargo_info2, true, true),
 		waiting_bar(halt, false),
 		view(koord3d::invalid, scr_size(max(64, get_base_tile_raster_width()), max(56, get_base_tile_raster_width() * 7 / 8)))
 {
@@ -724,7 +725,8 @@ void halt_info_t::init(halthandle_t halt)
 
 	// list of waiting cargo
 	init_cargo_info_controller();
-	scroll_freight.set_maximize(true);
+	scroll_freight1.set_maximize(true);
+	scroll_freight2.set_maximize(true);
 
 	// departure board
 	cont_tab_departure.set_table_layout(1,0);
@@ -814,8 +816,10 @@ void halt_info_t::init(halthandle_t halt)
 
 void halt_info_t::init_cargo_info_controller()
 {
-	cont_tab_waiting_list.set_table_layout(1,0);
-	cont_tab_waiting_list.set_spacing(scr_size(0,D_V_SPACE));
+	cont_tab_waiting_list1.set_table_layout(1,0);
+	cont_tab_waiting_list1.set_spacing(scr_size(0,D_V_SPACE));
+	cont_tab_waiting_list2.set_table_layout(1, 0);
+	cont_tab_waiting_list2.set_spacing(scr_size(0, D_V_SPACE));
 	// line
 	bt_show_route.init(button_t::square_automatic, "Show route");
 	bt_show_route.set_tooltip("Shows the line or convoy where the cargo is waiting");
@@ -832,15 +836,61 @@ void halt_info_t::init_cargo_info_controller()
 	bt_show_transfer_out.pressed = false;
 	bt_show_transfer_out.add_listener(this);
 
-	cont_tab_waiting_list.add_table(4,1)->set_spacing(scr_size(D_H_SPACE<<1, 0));
+	cont_tab_waiting_list1.add_table(4,1)->set_spacing(scr_size(D_H_SPACE<<1, 0));
 	{
-		cont_tab_waiting_list.add_component(&bt_show_route);
-		cont_tab_waiting_list.add_component(&bt_show_transfer_in);
-		cont_tab_waiting_list.add_component(&bt_show_transfer_out);
-		cont_tab_waiting_list.new_component<gui_fill_t>();
+		cont_tab_waiting_list1.add_component(&bt_show_route);
+		cont_tab_waiting_list1.add_component(&bt_show_transfer_in);
+		cont_tab_waiting_list1.add_component(&bt_show_transfer_out);
+		cont_tab_waiting_list1.new_component<gui_fill_t>();
 	}
-	cont_tab_waiting_list.end_table();
-	cont_tab_waiting_list.add_component(&scroll_freight);
+	cont_tab_waiting_list1.end_table();
+	cont_tab_waiting_list1.add_component(&scroll_freight1);
+
+	cont_tab_waiting_list2.add_table(4, 1)->set_spacing(scr_size(D_H_SPACE << 1, 0));
+	{
+		cont_tab_waiting_list2.new_component<gui_label_t>("Filter:");
+		viewed_player_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All"), SYSCOL_TEXT);
+		viewable_players[0] = -1;
+		for (int np = 0, count = 1; np < MAX_PLAYER_COUNT; np++) {
+			player_t *player = welt->get_player(np);
+			if (player && halt->check_access(welt->get_player(np))) {
+				viewed_player_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(welt->get_player(np)->get_name(), color_idx_to_rgb(welt->get_player(np)->get_player_color1() + env_t::gui_player_color_dark));
+				viewable_players[count++] = np;
+			}
+		}
+		viewed_player_c.set_selection(0);
+		viewed_player_c.set_focusable(true);
+		viewed_player_c.add_listener(this);
+		cont_tab_waiting_list2.add_component(&viewed_player_c);
+		cont_tab_waiting_list2.add_table(simline_t::MAX_LINE_TYPE-1,1)->set_spacing(NO_SPACING);
+		{
+			for (uint8 i = 1; i < simline_t::MAX_LINE_TYPE; i++) {
+				waytype_t wt = simline_t::linetype_to_waytype(simline_t::linetype(i));
+				if (!way_builder_t::is_active_waytype(wt)) {
+					continue;
+				}
+				//bt_waytype_filter[i-1].init(button_t::imagebox_state, NULL, scr_coord(0, 0), scr_size(D_BUTTON_HEIGHT, D_BUTTON_HEIGHT));
+				//bt_waytype_filter[i-1].background_color= world()->get_settings().get_waytype_color(simline_t::linetype_to_waytype(simline_t::linetype(i)));
+				bt_waytype_filter[i-1].set_waytype(simline_t::linetype_to_waytype(simline_t::linetype(i)));
+				bt_waytype_filter[i-1].set_rigid(false);
+				if ((halt->get_station_type() & simline_t::linetype_to_stationtype[i]) == 0) {
+					//continue;
+					bt_waytype_filter[i-1].pressed = false;
+					bt_waytype_filter[i-1].disable();
+					bt_waytype_filter[i-1].set_visible(false);
+				}
+				else {
+					bt_waytype_filter[i-1].pressed = true;
+				}
+				bt_waytype_filter[i-1].add_listener(this);
+				cont_tab_waiting_list2.add_component(&bt_waytype_filter[i-1]);
+			}
+		}
+		cont_tab_waiting_list2.end_table();
+		cont_tab_waiting_list2.new_component<gui_fill_t>();
+	}
+	cont_tab_waiting_list2.end_table();
+	cont_tab_waiting_list2.add_component(&scroll_freight2);
 
 	cont_tab_cargo_info.set_table_layout(1,0);
 	// top
@@ -929,7 +979,9 @@ void halt_info_t::init_cargo_info_controller()
 		cont_tab_cargo_info.new_component<gui_fill_t>();
 	}
 	cont_tab_cargo_info.end_table();
-	tab_waiting_list.add_tab(&cont_tab_waiting_list, translator::translate("cargo_list_by_catg"));
+	tab_waiting_list.add_tab(&cont_tab_waiting_list1, translator::translate("cargo_list_by_catg"));
+	tab_waiting_list.add_tab(&cont_tab_waiting_list2, translator::translate("cargo_list_by_route"));
+	tab_waiting_list.add_listener(this);
 	cont_tab_cargo_info.add_component(&tab_waiting_list);
 
 	update_cargo_list();
@@ -1170,7 +1222,7 @@ void halt_info_t::update_components()
 
 	// update now only when needed by halt itself
 	if (halt->get_freight_info()) {
-		update_cargo_list();
+		update_cargo_list((tab_waiting_list.get_active_tab_index()==0),(tab_waiting_list.get_active_tab_index()==1));
 	}
 
 	if (switch_mode.get_aktives_tab() == &cont_tab_departure){
@@ -1501,39 +1553,56 @@ bool halt_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 	}
 	else if (comp == &filter_btn_all_pas) {
 		filter_btn_all_pas.pressed = !filter_btn_all_pas.pressed;
-		update_cargo_list();
+		update_cargo_list((tab_waiting_list.get_active_tab_index() == 0), (tab_waiting_list.get_active_tab_index() == 1));
 	}
 	else if (comp == &filter_btn_all_mails) {
 		filter_btn_all_mails.pressed = !filter_btn_all_mails.pressed;
-		update_cargo_list();
+		update_cargo_list((tab_waiting_list.get_active_tab_index() == 0), (tab_waiting_list.get_active_tab_index() == 1));
 	}
 	else if (comp == &filter_btn_all_freights) {
 		filter_btn_all_freights.pressed = !filter_btn_all_freights.pressed;
-		update_cargo_list();
+		update_cargo_list((tab_waiting_list.get_active_tab_index() == 0), (tab_waiting_list.get_active_tab_index() == 1));
 	}
 	else if (comp == &bt_divide_by_wealth) {
 		bt_divide_by_wealth.pressed = !bt_divide_by_wealth.pressed;
-		update_cargo_list();
+		update_cargo_list((tab_waiting_list.get_active_tab_index() == 0), (tab_waiting_list.get_active_tab_index() == 1));
 	}
-	else if (comp == &selector_ci_depth_from || comp == &selector_ci_depth_to) {
-		update_cargo_list();
+	else if (comp == &selector_ci_depth_from || comp == &selector_ci_depth_to || comp == &viewed_player_c) {
+		update_cargo_list((tab_waiting_list.get_active_tab_index() == 0), (tab_waiting_list.get_active_tab_index() == 1));
 	}
 	else if (comp == &bt_show_route || comp == &bt_show_transfer_in || comp == &bt_show_transfer_out) {
-		update_cargo_list();
+		update_cargo_list(true, false);
 	}
 	else if (comp == &sort_order) {
 		sort_order.pressed = !sort_order.pressed;
 		gui_halt_cargoinfo_t::sort_reverse = !sort_order.pressed;
-		update_cargo_list();
+		update_cargo_list((tab_waiting_list.get_active_tab_index() == 0), (tab_waiting_list.get_active_tab_index() == 1));
+	}
+	else if (comp == &tab_waiting_list) {
+		update_cargo_list((tab_waiting_list.get_active_tab_index() == 0), (tab_waiting_list.get_active_tab_index() == 1));
+	}
+	else if (tab_waiting_list.get_active_tab_index()==1){
+		for (uint8 i = 0; i < simline_t::MAX_LINE_TYPE-1; i++) {
+			if (comp == &bt_waytype_filter[i]) {
+				bt_waytype_filter[i].pressed = !bt_waytype_filter[i].pressed;
+				update_cargo_list(false, true);
+			}
+		}
 	}
 
 	return true;
 }
 
 
-void halt_info_t::update_cargo_list()
+void halt_info_t::update_cargo_list(bool update_tab1, bool update_tab2)
 {
 	uint8 ft_filter_bits = 0;
+	if (!filter_btn_all_pas.pressed && !filter_btn_all_mails.pressed && !filter_btn_all_freights.pressed) {
+		// reset freght type filter
+		filter_btn_all_pas.pressed = true;
+		filter_btn_all_mails.pressed = true;
+		filter_btn_all_freights.pressed = true;
+	}
 	if (filter_btn_all_pas.pressed)      ft_filter_bits |= gui_halt_cargoinfo_t::SHOW_WAITING_PAX;
 	if (filter_btn_all_mails.pressed)    ft_filter_bits |= gui_halt_cargoinfo_t::SHOW_WAITING_MAIL;
 	if (filter_btn_all_freights.pressed) ft_filter_bits |= gui_halt_cargoinfo_t::SHOW_WAITING_GOODS;
@@ -1577,7 +1646,19 @@ void halt_info_t::update_cargo_list()
 		sort_mode = (uint8)tmp;
 	}
 
-	cargo_info.update(ft_filter_bits, merge_condition_bits, sort_mode);
+	if (update_tab1) {
+		cargo_info1.update(ft_filter_bits, merge_condition_bits, sort_mode);
+	}
+	if (update_tab2) {
+		uint16 waytype_filterbits=0;
+		for (uint8 i = 0; i < simline_t::MAX_LINE_TYPE - 1; i++) {
+			if (bt_waytype_filter[i].pressed) {
+				waytype_filterbits |= 1 << i;
+			}
+		}
+
+		cargo_info2.update(ft_filter_bits, merge_condition_bits, sort_mode, true, viewable_players[viewed_player_c.get_selection()], waytype_filterbits);
+	}
 }
 
 void halt_info_t::map_rotate90( sint16 new_ysize )
@@ -1601,7 +1682,8 @@ void halt_info_t::rdwr(loadsave_t *file)
 		halt = world()->lookup( halt_pos )->get_halt();
 		if (halt.is_bound()) {
 			init(halt);
-			cargo_info.set_halt(halt);
+			cargo_info1.set_halt(halt);
+			cargo_info2.set_halt(halt);
 			update_cargo_list();
 			reset_min_windowsize();
 			set_windowsize(size);
@@ -1611,7 +1693,7 @@ void halt_info_t::rdwr(loadsave_t *file)
 	// sort
 	file->rdwr_byte( env_t::default_sortmode );
 
-	scroll_freight.rdwr(file);
+	scroll_freight1.rdwr(file);
 	scrolly_departure_board.rdwr(file);
 	switch_mode.rdwr(file);
 

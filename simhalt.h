@@ -1061,7 +1061,7 @@ public:
 	// Merge cargo according to conditions and store in warray
 	// and returns the total amount of cargo
 	// ware_state: 0=waiting cargoes, 1=transferring in, 2=tranferring out
-	uint32 get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state=0, linehandle_t line = linehandle_t(), convoihandle_t cnv = convoihandle_t());
+	uint32 get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state=0, linehandle_t line = linehandle_t(), convoihandle_t cnv = convoihandle_t(), uint8 entry_start=0, uint8 entry_end = 0);
 };
 
 ENUM_BITSET(haltestelle_t::stationtyp)

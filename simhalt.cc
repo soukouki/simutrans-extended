@@ -6789,16 +6789,39 @@ void haltestelle_t::merge_ware(ware_t ware, slist_tpl<ware_t> &warray, uint8 cat
 	warray.append(ware);
 }
 
-uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state, linehandle_t line, convoihandle_t cnv)
+uint32 haltestelle_t::get_ware(slist_tpl<ware_t> &warray, uint8 catg_index, uint8 merge_condition_bits, uint8 ware_state, linehandle_t line, convoihandle_t cnv, uint8 entry_start, uint8 entry_end)
 {
 	uint32 sum=0;
 	if (!ware_state) {
 		// waiting cargoes
 		const vector_tpl<ware_t> * chk_warray = cargo[catg_index];
 		if (chk_warray != NULL) {
+			const schedule_t *schedule = cnv.is_bound() ? cnv->get_schedule() : line.is_bound() ? line->get_schedule() : NULL;
+			const player_t *player = cnv.is_bound() ? cnv->get_owner() : line.is_bound() ? line->get_owner(): NULL;
+			slist_tpl<halthandle_t> halt_list;
+			if (schedule!=NULL) {
+				uint16 to=(uint16)entry_end;
+				to = min(entry_end+1, schedule->entries.get_count());
+				if (to<(uint16)entry_start) {
+					to += schedule->entries.get_count();
+				}
+
+				for (uint16 i = entry_start; i < to; i++) {
+					const uint16 check_index=i%schedule->entries.get_count();
+					const halthandle_t halt = haltestelle_t::get_halt(schedule->entries[check_index].pos, player);
+					if (halt.is_bound() && halt!=self) {
+						halt_list.append_unique(halt);
+					}
+				}
+			}
+
 			FOR(vector_tpl<ware_t>, const& i, *chk_warray) {
 				ware_t ware = i;
 				if (line.is_bound()) {
+					if (!halt_list.is_contained(ware.get_zwischenziel())) {
+						continue;
+					}
+
 					if (line != get_preferred_line(ware.get_zwischenziel(), ware.get_desc()->get_catg_index(), goods_manager_t::get_classes_catg_index(ware.get_index()) - 1))
 					{
 						continue;

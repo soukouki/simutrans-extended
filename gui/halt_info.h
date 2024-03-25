@@ -23,9 +23,11 @@
 #include "components/gui_combobox.h"
 #include "components/gui_speedbar.h"
 #include "components/gui_halt_cargoinfo.h"
+#include "components/gui_waytype_image_box.h"
 
 #include "../utils/cbuffer_t.h"
 #include "../simhalt.h"
+#include "../simline.h"
 #include "simwin.h"
 
 #define HALT_CAPACITY_BAR_WIDTH 100
@@ -192,16 +194,18 @@ private:
 	// new cargo detail
 	uint8 cargo_info_depth_from = 0;
 	uint8 cargo_info_depth_to = 1;
+	int viewable_players[MAX_PLAYER_COUNT + 1];
 	button_t bt_divide_by_wealth, sort_order;
 	button_t filter_btn_all_pas, filter_btn_all_mails, filter_btn_all_freights;
 	button_t bt_show_route, bt_show_transfer_in, bt_show_transfer_out;
-	gui_combobox_t selector_ci_depth_from, selector_ci_depth_to, freight_sort_selector;
-	void update_cargo_list();
+	gui_waytype_button_t bt_waytype_filter[simline_t::MAX_LINE_TYPE-1];
+	gui_combobox_t selector_ci_depth_from, selector_ci_depth_to, freight_sort_selector, viewed_player_c;
+	void update_cargo_list(bool update_tab1=true, bool update_tab2=true);
 
 	void init_cargo_info_controller();
-	gui_aligned_container_t cont_tab_waiting_list;
-	gui_halt_cargoinfo_t cargo_info;
-	gui_scrollpane_t scroll_freight;
+	gui_aligned_container_t cont_tab_waiting_list1, cont_tab_waiting_list2;
+	gui_halt_cargoinfo_t cargo_info1, cargo_info2;
+	gui_scrollpane_t scroll_freight1, scroll_freight2;
 
 	int pax_ev_num[5], mail_ev_num[2];
 	int old_pax_ev_sum, old_mail_ev_sum;

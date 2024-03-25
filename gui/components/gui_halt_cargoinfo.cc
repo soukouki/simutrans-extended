@@ -6,6 +6,8 @@
 #include "gui_halt_cargoinfo.h"
 #include "gui_schedule_item.h"
 #include "gui_destination_building_info.h"
+#include "gui_waytype_image_box.h"
+#include "gui_convoi_button.h"
 #include "../../tpl/vector_tpl.h"
 #include "gui_colorbox.h"
 #include "../../dataobj/environment.h"
@@ -141,7 +143,7 @@ static int compare_route(const ware_t &a, const ware_t &b) {
 }
 
 
-gui_halt_waiting_table_t::gui_halt_waiting_table_t(slist_tpl<ware_t> const& warray, uint8 filter_bits, uint8 merge_condition_bits, uint32 border, uint8 transfer_mode)
+gui_halt_waiting_table_t::gui_halt_waiting_table_t(slist_tpl<ware_t> const& warray, uint8 filter_bits, uint8 merge_condition_bits, uint32 border, uint8 transfer_mode, const schedule_t *schedule)
 {
 	set_table_layout(4,0);
 	set_table_frame(true, true);
@@ -293,10 +295,19 @@ gui_halt_waiting_table_t::gui_halt_waiting_table_t(slist_tpl<ware_t> const& warr
 
 					if (!(merge_condition_bits & haltestelle_t::ignore_via_stop)) {
 						if (transfer_mode != TRANSFER_MODE_OUT) {
+							uint8 entry_num = 255;
+							uint8 entry_num_r = 255;
+							const halthandle_t via_halt = ware.get_zwischenziel();
+							if (schedule) {
+								entry_num = schedule->get_entry_index(via_halt, via_halt->get_owner(), false);
+								if (schedule->is_mirrored()) {
+									entry_num_r = schedule->get_entry_index(via_halt, via_halt->get_owner(), true);
+								}
+							}
 							const bool is_interchange = (ware.get_zwischenziel().get_rep()->registered_lines.get_count() + ware.get_zwischenziel().get_rep()->registered_convoys.get_count()) > 1;
-							new_component<gui_schedule_entry_number_t>(-1, ware.get_zwischenziel().get_rep()->get_owner()->get_player_color1(),
+							new_component<gui_schedule_entry_number_t>(entry_num, ware.get_zwischenziel().get_rep()->get_owner()->get_player_color1(),
 								is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt,
-								scr_size(LINESPACE+4, LINESPACE),
+								(entry_num==255) ? scr_size(LINESPACE+4, LINESPACE) : scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT, D_ENTRY_NO_HEIGHT)),
 								ware.get_zwischenziel().get_rep()->get_basis_pos3d()
 								);
 							gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT);
@@ -399,12 +410,11 @@ void gui_halt_cargoinfo_t::sort_cargo(slist_tpl<ware_t> & cargoes, uint8 sort_mo
 	}
 }
 
-void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits, uint8 sort_mode)
-{
-	remove_all();
-	if (!halt.is_bound()) { return; }
 
+uint32 gui_halt_cargoinfo_t::list_by_catg(uint8 filter_bits, uint8 merge_condition_bits, uint8 sort_mode, linehandle_t line, convoihandle_t cnv, uint8 entry_start, uint8 entry_end)
+{
 	slist_tpl<ware_t> cargoes;
+	uint32 catg_sum=0;
 
 	for (uint8 catg_index = 0; catg_index < goods_manager_t::get_max_catg_index(); catg_index++) {
 
@@ -418,7 +428,7 @@ void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits,
 
 		cargoes.clear();
 
-		uint32 sum = halt->get_ware(cargoes, catg_index, merge_condition_bits);
+		uint32 sum = halt->get_ware(cargoes, catg_index, merge_condition_bits, 0, line, cnv, entry_start, entry_end);
 
 		uint32 border = 10;
 		border = max(border,sum);
@@ -433,6 +443,7 @@ void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits,
 		}
 
 		if (sum) {
+			catg_sum += sum;
 			add_table(3,1);
 			{
 				new_component<gui_image_t>(goods_manager_t::get_info_catg_index(catg_index)->get_catg_symbol(), 0, 0, true);
@@ -447,15 +458,19 @@ void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits,
 			end_table();
 
 			sort_cargo(cargoes, sort_mode);
-			new_component<gui_halt_waiting_table_t>(cargoes, filter_bits, merge_condition_bits, border);
+
+			const schedule_t* schedule = line.is_bound() ? line->get_schedule() : cnv.is_bound() ? cnv->get_schedule() : NULL;
+			new_component<gui_halt_waiting_table_t>(cargoes, filter_bits, merge_condition_bits, border, 0, schedule);
 		}
 
-		if (filter_bits&SHOW_TRANSFER_IN) {
+		// not support route display
+		if (filter_bits&SHOW_TRANSFER_IN && !line.is_bound() && !cnv.is_bound() ) {
 			const bool found_waiting = sum > 0;
 
 			cargoes.clear();
-			sum = halt->get_ware(cargoes, catg_index, merge_condition_bits, TRANSFER_MODE_IN);
+			sum = halt->get_ware(cargoes, catg_index, merge_condition_bits, TRANSFER_MODE_IN, line, cnv, entry_start, entry_end);
 			if (sum) {
+				catg_sum += sum;
 				border = max(border, sum);
 				if (!found_waiting) {
 					new_component<gui_divider_t>();
@@ -485,14 +500,211 @@ void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits,
 				end_table();
 
 				sort_cargo(cargoes, sort_mode);
-				new_component<gui_halt_waiting_table_t>(cargoes, filter_bits, merge_condition_bits, border, TRANSFER_MODE_IN);
+				//const schedule_t* schedule = line.is_bound() ? line->get_schedule() : cnv.is_bound() ? cnv->get_schedule() : NULL;
+				new_component<gui_halt_waiting_table_t>(cargoes, filter_bits, merge_condition_bits, border, TRANSFER_MODE_IN/*, schedule*/);
+			}
+		}
+	}
+	return catg_sum;
+}
+
+
+void gui_halt_cargoinfo_t::list_by_route(uint8 filter_bits, uint8 merge_condition_bits, uint8 sort_mode, linehandle_t line, convoihandle_t cnv)
+{
+	if (line.is_null() && cnv.is_null()) {
+		return;
+	}
+
+	const bool is_interchange = (halt->registered_lines.get_count() + halt->registered_convoys.get_count()) > 1;
+	minivec_tpl<uint8> entry_idx_of_this_stop;
+	uint32 sum = 0;
+	const schedule_t *schedule = line.is_bound() ? line->get_schedule() : cnv->get_schedule();
+	player_t *player= line.is_bound() ? line->get_owner() : cnv->get_owner();
+	for (uint8 entry_idx = 0; entry_idx < schedule->entries.get_count(); entry_idx++) {
+		halthandle_t entry_halt = haltestelle_t::get_halt(schedule->entries[entry_idx].pos, player);
+		if (halt == entry_halt) {
+			entry_idx_of_this_stop.append(entry_idx);
+		}
+	}
+
+	uint8 loop_count = 0;
+	for (uint8 j = 0; j < entry_idx_of_this_stop.get_count(); j++) {
+		// schedule direction
+		for (uint8 dir = 0; dir < 2; dir++) {
+			if (dir == 1 && (!schedule->is_mirrored() || (schedule->is_mirrored() && (entry_idx_of_this_stop[j] == 0 || entry_idx_of_this_stop[j] == schedule->entries.get_count() - 1)))) {
+				break;
+			}
+
+			uint8 entry_start = dir == 1 ? 0 : (entry_idx_of_this_stop[j] + 1) % schedule->entries.get_count();
+			if (!loop_count) {
+				add_table(4, 1);
+				{
+					if (line.is_bound()) {
+						new_component<gui_line_button_t>(line);
+						// Line labels with color of player
+						new_component<gui_line_label_t>(line);
+					}
+					else {
+						new_component<gui_convoi_button_t>(cnv);
+						// convoy ID
+						add_table(2,1);
+						{
+							char buf[128];
+							sprintf(buf, "%u", cnv->self.get_id());
+							new_component<gui_vehicle_number_t>(buf, color_idx_to_rgb(cnv->get_owner()->get_player_color1() + 3));
+							gui_label_buf_t *lb = new_component<gui_label_buf_t>(PLAYER_FLAG | color_idx_to_rgb(cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark));
+							lb->buf().append(cnv->access_internal_name());
+							lb->update();
+						}
+						end_table();
+					}
+
+					// schedule number"s" of this stop
+					if (merge_condition_bits & haltestelle_t::ignore_via_stop) {
+						entry_start = 0;
+						add_table(0, 1);
+						for (uint8 k = 0; k < entry_idx_of_this_stop.get_count(); k++) {
+							new_component<gui_schedule_entry_number_t>(entry_idx_of_this_stop[k], halt->get_owner()->get_player_color1(),
+								is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt,
+								scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT, D_ENTRY_NO_HEIGHT)),
+								halt->get_basis_pos3d());
+						}
+						end_table();
+					}
+
+					new_component<gui_fill_t>();
+				}
+				end_table();
+			}
+
+			uint8 entry_end = (dir == 1 && entry_idx_of_this_stop[0] != 0) ? entry_idx_of_this_stop[0] - 1 : schedule->entries.get_count() - 1;
+			if (entry_idx_of_this_stop.get_count() != 1) {
+				if (j == entry_idx_of_this_stop.get_count() - 1 && !schedule->is_mirrored()) {
+					entry_end = entry_idx_of_this_stop[0] == 0 ? schedule->entries.get_count() - 1 : entry_idx_of_this_stop[0] - 1;
+				}
+			}
+
+			if (!(merge_condition_bits & haltestelle_t::ignore_via_stop)
+				&&
+				!(entry_idx_of_this_stop.get_count() == 1
+					&& (!schedule->is_mirrored() || (schedule->is_mirrored() && (entry_idx_of_this_stop[0] == 0 || entry_idx_of_this_stop[0] == schedule->entries.get_count() - 1))))) {
+				// display the route direction
+				uint8 next_stop_index = entry_idx_of_this_stop[j];
+				bool rev = dir > 0;
+				schedule->increment_index_until_next_halt(player, &next_stop_index, &rev);
+				const halthandle_t next_halt = haltestelle_t::get_halt(schedule->entries[next_stop_index].pos, player);
+
+				if (next_halt.is_bound()) {
+					add_table(2, 1);
+					{
+						new_component<gui_schedule_entry_number_t>(entry_idx_of_this_stop[j], halt->get_owner()->get_player_color1(),
+							is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt,
+							scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT, D_ENTRY_NO_HEIGHT)),
+							halt->get_basis_pos3d());
+
+						gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+						lb->buf().printf(translator::translate("for %s"), next_halt->get_name());
+						lb->update();
+					}
+					end_table();
+				}
+
+			}
+
+			sum += list_by_catg(filter_bits, merge_condition_bits | haltestelle_t::ignore_route, sort_mode, line, cnv, entry_start, entry_end);
+
+			loop_count++;
+			if (!sum) {
+				gui_aligned_container_t *tbl = add_table(2, 1);
+				{
+					tbl->set_table_frame(true, true);
+					tbl->set_margin(scr_size(D_MARGIN_LEFT, D_V_SPACE), scr_size(0, D_V_SPACE));
+					new_component<gui_label_t>((filter_bits&SHOW_WAITING_PAX && filter_bits&SHOW_WAITING_MAIL && filter_bits&SHOW_WAITING_GOODS) ? "no goods waiting" : "no goods found", SYSCOL_TEXT_WEAK);
+					new_component<gui_fill_t>();
+				}
+				end_table();
+			}
+			if ((merge_condition_bits & haltestelle_t::ignore_via_stop)) {
+				break; // display only once
+			}
+		}
+		if ((merge_condition_bits & haltestelle_t::ignore_via_stop)) {
+			break; // display only once
+		}
+	}
+	new_component<gui_divider_t>();
+}
+
+void gui_halt_cargoinfo_t::update(uint8 filter_bits, uint8 merge_condition_bits, uint8 sort_mode, bool route_mode, int player_nr, uint16 wt_filter_bits)
+{
+	remove_all();
+	if (!halt.is_bound()) { return; }
+
+	if (!route_mode) {
+		list_by_catg(filter_bits, merge_condition_bits, sort_mode);
+	}
+	else {
+		for (uint8 lt = 1; lt < simline_t::MAX_LINE_TYPE; lt++) {
+			// waytype filter
+			if (!(wt_filter_bits & (1 << lt - 1))) {
+				continue;
+			}
+			uint waytype_route_cnt = 0;
+			for (uint32 i = 0; i < halt->registered_lines.get_count(); i++) {
+				const linehandle_t line = halt->registered_lines[i];
+				if (line->get_linetype() != lt) {
+					continue;
+				}
+				if (player_nr != -1 && line->get_owner()->get_player_nr() != player_nr) {
+					continue;
+				}
+				// Draw waytype if it is the first
+				if (!waytype_route_cnt) {
+					waytype_route_cnt++;
+
+					add_table(3, 1);
+					{
+						new_component<gui_waytype_image_box_t>(simline_t::linetype_to_waytype(line->get_linetype()));
+						new_component<gui_label_t>(translator::translate(line->get_linetype_name()));
+						new_component<gui_fill_t>();
+					}
+					end_table();
+				}
+
+				list_by_route(filter_bits, merge_condition_bits, sort_mode, line);
+			}
+
+			for (uint32 i = 0; i < halt->registered_convoys.get_count(); i++) {
+				const convoihandle_t cnv = halt->registered_convoys[i];
+				if (cnv->get_schedule()->get_type() != lt) {
+					continue;
+				}
+				if (player_nr != -1 && cnv->get_owner()->get_player_nr() != player_nr) {
+					continue;
+				}
+				// Draw waytype if it is the first
+				if (!waytype_route_cnt) {
+					waytype_route_cnt++;
+
+					add_table(3, 1);
+					{
+						const waytype_t wt = simline_t::linetype_to_waytype((simline_t::linetype)cnv->get_schedule()->get_type());
+						new_component<gui_waytype_image_box_t>(wt);
+						new_component<gui_label_t>(gui_waytype_tab_panel_t::get_translated_waytype_name(wt));
+						new_component<gui_fill_t>();
+					}
+					end_table();
+				}
+
+				list_by_route(filter_bits, merge_condition_bits, sort_mode, linehandle_t(), cnv);
 			}
 		}
 	}
 
-	if (filter_bits&SHOW_TRANSFER_OUT) {
-
+	if (!route_mode && filter_bits&SHOW_TRANSFER_OUT) {
+		slist_tpl<ware_t> cargoes;
 		bool got_one = false;
+
 		new_component<gui_divider_t>();
 		add_table(2, 1);
 		{
