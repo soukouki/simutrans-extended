@@ -5796,16 +5796,18 @@ void convoi_t::hat_gehalten(halthandle_t halt)
 		// harbour has any size
 		vehicles_loading = vehicle_count;
 	}
-	else
-	{
-		// calculate real station length
-		// and numbers of vehicles that can be (un)loaded
+	else if (vehicle_count == 1  &&  CARUNITS_PER_TILE >= vehicle[0]->get_desc()->get_length()) {
+		vehicles_loading = 1;
+		// one vehicle, which fits into one tile
+	}
+	else {
+		// difference between actual station length and vehicle lenghts
+		sint16 station_length = -vehicle[vehicles_loading]->get_desc()->get_length();
+		// iterate through tiles in straight line and look for station
 		koord zv = koord( ribi_t::backward(front()->get_direction()) );
 		koord3d pos = front()->get_pos();
 		// start on bridge?
 		pos.z += gr->get_weg_yoff() / TILE_HEIGHT_STEP;
-		// difference between actual station length and vehicle lenghts
-		sint16 station_length = -vehicle[vehicles_loading]->get_desc()->get_length();
 		do {
 			// advance one station tile
 			station_length += CARUNITS_PER_TILE;
