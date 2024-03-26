@@ -4592,28 +4592,11 @@ size_t display_fit_proportional( const char *text, scr_coord_val max_width)
 	scr_coord_val current_offset = 0;
 
 	const char *tmp_text = text;
-	while(  get_next_char_with_metrics(tmp_text, byte_length, pixel_width)  &&  max_width > (current_offset+ellipsis_width+pixel_width)  ) {
+	while(  get_next_char_with_metrics(tmp_text, byte_length, pixel_width)  &&  max_width > (current_offset+pixel_width)  ) {
 		current_offset += pixel_width;
 		max_idx += byte_length;
 	}
-	size_t ellipsis_idx = max_idx;
-
-	// now check if the text would fit completely
-	if(  ellipsis_width  &&  pixel_width > 0  ) {
-		// only when while above failed because of exceeding length
-		current_offset += pixel_width;
-		max_idx += byte_length;
-		// check the rest ...
-		while(  get_next_char_with_metrics(tmp_text, byte_length, pixel_width)  &&  max_width > (current_offset+pixel_width)  ) {
-			current_offset += pixel_width;
-			max_idx += byte_length;
-		}
-		// if this fits, return end of string
-		if(  max_width > (current_offset+pixel_width)  ) {
-			return max_idx+byte_length;
-		}
-	}
-	return ellipsis_idx;
+	return max_idx;
 }
 
 
