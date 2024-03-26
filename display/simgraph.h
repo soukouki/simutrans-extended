@@ -276,7 +276,7 @@ inline void display_set_image_proc( bool is_global )
 PIXVAL display_blend_colors(PIXVAL background, PIXVAL foreground, int percent_blend);
 
 // blends a rectangular region
-void display_blend_wh_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, int percent_blend);
+void display_blend_wh_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, int percent_blend );
 
 void display_linear_gradient_wh_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, int percent_blend_start, int percent_blend_end);
 void display_vlinear_gradient_wh_rgb(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, int percent_blend_start, int percent_blend_end);

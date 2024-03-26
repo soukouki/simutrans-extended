@@ -522,7 +522,7 @@ void main_view_t::display_region( koord lt, koord wh, sint16 y_min, sint16 y_max
 
 									num_threads_paused--;
 								}
-								if(  shortest_distance( pos, cursor_pos ) < env_t::cursor_hide_range  ) {
+								if(  shortest_distance( pos, cursor_pos ) <= env_t::cursor_hide_range  ) {
 									// wait until all threads are paused
 									threads_req_pause = true;
 									while(  num_threads_paused < env_t::num_threads - 1  ) {
@@ -553,7 +553,7 @@ void main_view_t::display_region( koord lt, koord wh, sint16 y_min, sint16 y_max
 							}
 							else {
 #endif
-								if(  shortest_distance( pos, cursor_pos ) < env_t::cursor_hide_range  ) {
+								if(  shortest_distance( pos, cursor_pos ) <= env_t::cursor_hide_range  ) {
 									const bool saved_hide_trees = env_t::hide_trees;
 									const uint8 saved_hide_buildings = env_t::hide_buildings;
 									env_t::hide_trees = true;
