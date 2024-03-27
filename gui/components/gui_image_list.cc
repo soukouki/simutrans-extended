@@ -83,7 +83,7 @@ void gui_image_list_t::draw(scr_coord parent_pos)
 		display_blend_wh_rgb(xpos + grid.x*focus + 1, ypos + 1, grid.x - 2, grid.y - 2, SYSCOL_UPGRADEABLE, 25);
 	}
 
-	FOR(vector_tpl<image_data_t*>, const& iptr, *images) {
+	for(image_data_t* const& iptr : *images) {
 		image_data_t const& idata = *iptr;
 		if(idata.count!=-32768) {
 

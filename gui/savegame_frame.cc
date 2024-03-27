@@ -127,7 +127,7 @@ savegame_frame_t::savegame_frame_t(const char *suffix, bool only_directories, co
  */
 savegame_frame_t::~savegame_frame_t()
 {
-	FOR(slist_tpl<dir_entry_t>, const& i, entries) {
+	for(dir_entry_t const& i : entries) {
 		if(i.button) {
 			delete [] const_cast<char*>(i.button->get_text());
 			delete i.button;
@@ -237,7 +237,7 @@ void savegame_frame_t::fill_list( void )
 	}
 
 	// for each path, we search.
-	FOR(vector_tpl<std::string>, &path, paths){
+	for(std::string &path : paths){
 
 		const char *path_c      = path.c_str();
 		const size_t path_c_len = strlen(path_c);
@@ -247,7 +247,7 @@ void savegame_frame_t::fill_list( void )
 		bool section_added = false;
 
 		// Add the entries that pass the check
-		FOR(searchfolder_t, const &name, sf) {
+		for(const char* const &name : sf) {
 			fullname = new char [path_c_len+strlen(name)+1];
 			sprintf(fullname,"%s%s",path_c,name);
 
@@ -521,7 +521,7 @@ bool savegame_frame_t::action_triggered(gui_action_creator_t *component, value_t
 	else {
 		// File in list selected
 		//--------------------------
-		FOR(slist_tpl<dir_entry_t>, const& i, entries) {
+		for(dir_entry_t const& i : entries) {
 			if(in_action){
 				break;
 			}

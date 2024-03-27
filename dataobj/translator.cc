@@ -201,7 +201,7 @@ void translator::clear_custom_list(vector_tpl<vector_tpl<char *>>&name_list)
 }
 void translator::clear_custom_list(vector_tpl<char *>&name_list)
 {
-	FOR(vector_tpl<char*>, const i, name_list) {
+	for(char* const i : name_list) {
 		free(i);
 	}
 	name_list.clear();
