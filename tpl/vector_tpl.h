@@ -47,7 +47,7 @@ public:
 			data[i] = copy_from.data[i];
 		}
 	}
-	
+
 	vector_tpl& operator=( vector_tpl const& other ) {
 		vector_tpl tmp(other);
 		swap(tmp, *this);

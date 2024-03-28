@@ -217,7 +217,7 @@ private:
 		uint16 row_end = row_ptr[ pos.y + 1 ];
 		if (row_start >= row_end || col_ind[row_end-1] < pos.x) return row_end;
 		if (col_ind[row_start]>=pos.x) return row_start;
-		
+
 		do {
 				uint16 i = (row_start + row_end) / 2;
 			if( col_ind[i] >= pos.x ) {
