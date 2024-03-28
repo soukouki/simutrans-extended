@@ -94,7 +94,7 @@ void init_fab_map( karte_t *welt )
 
 
 /**
- * @param x,y world position
+ * @param x,y world position, needs to be valid coordinates
  * @returns true, if factory coordinate
  */
 inline bool is_factory_at(sint16 x, sint16 y)

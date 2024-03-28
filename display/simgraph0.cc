@@ -35,7 +35,6 @@ PIXVAL line_color_idx_to_rgb(uint8)
 	return 0;
 }
 
-
 void env_t_rgb_to_system_colors()
 {
 }
