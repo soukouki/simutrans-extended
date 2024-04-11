@@ -1,3 +1,8 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include "export_objs.h"
 
 #include <string.h>
@@ -7,23 +12,21 @@
 
 #include "api/api.h"
 
-static karte_t *welt;
 
-void register_export_function(HSQUIRRELVM vm, karte_t *welt_)
+void register_export_function(HSQUIRRELVM vm)
 {
-	welt = welt_;
-	script_api::welt = welt_;
-
 	script_api::start_squirrel_type_logging();
 
 	sq_pushroottable(vm);
 
 	export_city(vm);
+	export_control(vm);
 	export_convoy(vm);
 	export_factory(vm);
 	export_goods_desc(vm);
 	export_gui(vm);
 	export_halt(vm);
+	export_line(vm);
 	export_map_objects(vm);
 	export_player(vm);
 	export_scenario(vm);

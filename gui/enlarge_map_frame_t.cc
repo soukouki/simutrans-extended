@@ -1,49 +1,29 @@
 /*
- * Dialogue to increase map size.
- *
- * Gerd Wachsmuth
- *
- * October 2008
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include <string.h>
 
 #include "enlarge_map_frame_t.h"
-#include "karte.h"
-#include "messagebox.h"
+#include "minimap.h"
+#include "welt.h"
+#include "components/gui_divider.h"
 
 #include "../simdebug.h"
 #include "../simworld.h"
-#include "../simwin.h"
-#include "../simimg.h"
-#include "../simtools.h"
-#include "../simintr.h"
+#include "simwin.h"
+#include "../display/simimg.h"
 
-#include "../dataobj/einstellungen.h"
-#include "../dataobj/umgebung.h"
+#include "../dataobj/environment.h"
+#include "../dataobj/settings.h"
 #include "../dataobj/translator.h"
-
-// just for their structure size ...
-#include "../boden/wege/schiene.h"
-#include "../dings/baum.h"
-#include "../simcity.h"
-#include "../vehicle/simvehikel.h"
-#include "../player/simplay.h"
 
 #include "../simcolor.h"
 
-#include "../simgraph.h"
+#include "../display/simgraph.h"
 
-#include "../utils/simstring.h"
-
-#define START_HEIGHT (28)
-
-#define LEFT_ARROW (110)
-#define RIGHT_ARROW (160)
-
-#define RIGHT_COLUMN (185)
-#define RIGHT_COLUMN_WIDTH (60)
-
+#include "../utils/simrandom.h"
 
 
 koord enlarge_map_frame_t::koord_from_rotation(settings_t const* const sets, sint16 const x, sint16 const y, sint16 const w, sint16 const h)
@@ -59,95 +39,116 @@ koord enlarge_map_frame_t::koord_from_rotation(settings_t const* const sets, sin
 }
 
 
-enlarge_map_frame_t::enlarge_map_frame_t(spieler_t *, karte_t *w) :
+enlarge_map_frame_t::enlarge_map_frame_t() :
 	gui_frame_t( translator::translate("enlarge map") ),
-	sets(new settings_t(w->get_settings())), // Make a copy.
-	memory(memory_str),
-	welt(w)
+	sets(new settings_t(welt->get_settings())), // Make a copy.
+	map(MAP_PREVIEW_SIZE_X-2, MAP_PREVIEW_SIZE_Y-2)
 {
-	sets->set_groesse_x(welt->get_size().x);
-	sets->set_groesse_y(welt->get_size().y);
+	sets->set_size_x(welt->get_size().x);
+	sets->set_size_y(welt->get_size().y);
 	number_of_big_cities  = 0;
 	number_of_clusters = 0;
-	cluster_size = umgebung_t::cluster_size;
-	
+	cluster_size = env_t::cluster_size;
+
 	changed_number_of_towns = false;
-	int intTopOfButton = 24;
 
-	memory.set_pos( koord(10,intTopOfButton) );
-	add_komponente( &memory );
+	// Component creation
+	set_table_layout(1,0);
+	// top part: preview, maps size
+	// Map size label
+	size_label.init();
+	size_label.buf().printf(translator::translate("Size (%d MB):"), 9999);
+	size_label.update();
+	add_component( &size_label );
 
-	inp_x_size.set_pos(koord(LEFT_ARROW,intTopOfButton) );
-	inp_x_size.set_groesse(koord(RIGHT_ARROW-LEFT_ARROW+10, 12));
-	inp_x_size.add_listener(this);
-	inp_x_size.set_value( sets->get_groesse_x() );
-	inp_x_size.set_limits( welt->get_size().x, min(32766,4194304/sets->get_groesse_y()) );
-	inp_x_size.set_increment_mode( sets->get_groesse_x()>=512 ? 128 : 64 );
-	inp_x_size.wrap_mode( false );
-	add_komponente( &inp_x_size );
-	intTopOfButton += 12;
+	add_table(2,1);
+	{
+		// input fields
+		add_table(3,3);
+		{
+			// map seed number label
+			map_number_label.init();
+			map_number_label.buf().printf("%s %d", translator::translate("2WORLD_CHOOSE"), welt->get_settings().get_map_number());
+			map_number_label.update();
+			add_component(&map_number_label,3);
 
-	inp_y_size.set_pos(koord(LEFT_ARROW,intTopOfButton) );
-	inp_y_size.set_groesse(koord(RIGHT_ARROW-LEFT_ARROW+10, 12));
-	inp_y_size.add_listener(this);
-	inp_y_size.set_limits( welt->get_size().y, min(32766,4194304/sets->get_groesse_x()) );
-	inp_y_size.set_value( sets->get_groesse_y() );
-	inp_y_size.set_increment_mode( sets->get_groesse_y()>=512 ? 128 : 64 );
-	inp_y_size.wrap_mode( false );
-	add_komponente( &inp_y_size );
+			// Map X size edit
+			new_component<gui_label_t>("West To East");
+			info_x_size.init();
+			add_component(&info_x_size);
 
-	// city stuff
-	intTopOfButton = 64+10;
-	inp_number_of_towns.set_pos(koord(RIGHT_COLUMN,intTopOfButton) );
-	inp_number_of_towns.set_groesse(koord(RIGHT_COLUMN_WIDTH, 12));
-	inp_number_of_towns.add_listener(this);
-	inp_number_of_towns.set_limits(0,999);
-	inp_number_of_towns.set_value(0);
-	add_komponente( &inp_number_of_towns );
-	intTopOfButton += 12;
+			inp_x_size.init( sets->get_size_x(), welt->get_size().x, 32766, sets->get_size_x()>=512 ? 128 : 64, false );
+			inp_x_size.add_listener(this);
+			add_component( &inp_x_size );
 
-	inp_number_of_big_cities.set_pos(koord(RIGHT_COLUMN,intTopOfButton) );
-	inp_number_of_big_cities.set_groesse(koord(RIGHT_COLUMN_WIDTH, 12));
-	inp_number_of_big_cities.add_listener(this);
-	inp_number_of_big_cities.set_limits(0,0);
-	inp_number_of_big_cities.set_value(0);
-	add_komponente( &inp_number_of_big_cities );
-	intTopOfButton += 12;
+			// Map size Y edit
+			new_component<gui_label_t>("North To South");
+			info_y_size.init();
+			add_component(&info_y_size);
 
-	inp_number_of_clusters.set_pos(koord(RIGHT_COLUMN,intTopOfButton) );
-	inp_number_of_clusters.set_groesse(koord(RIGHT_COLUMN_WIDTH, 12));
-	inp_number_of_clusters.add_listener(this);
-	inp_number_of_clusters.set_limits(0,sets->get_anzahl_staedte()/3 );
-	inp_number_of_clusters.set_value(number_of_clusters);
-	add_komponente( &inp_number_of_clusters );
-	intTopOfButton += 12;
+			inp_y_size.init( sets->get_size_y(), sets->get_size_y(), 32766, sets->get_size_y()>=512 ? 128 : 64, false );
+			inp_y_size.add_listener(this);
+			add_component( &inp_y_size );
+		}
+		end_table();
 
-	inp_cluster_size.set_pos(koord(RIGHT_COLUMN,intTopOfButton) );
-	inp_cluster_size.set_groesse(koord(RIGHT_COLUMN_WIDTH, 12));
-	inp_cluster_size.add_listener(this);
-	inp_cluster_size.set_limits(1,9999);
-	inp_cluster_size.set_value(cluster_size);
-	add_komponente( &inp_cluster_size );
-	intTopOfButton += 12;
+		// Map preview (will be initialized in update_preview
+		add_component( &map_preview );
+	}
+	end_table();
 
-	inp_town_size.set_pos(koord(RIGHT_COLUMN,intTopOfButton) );
-	inp_town_size.set_groesse(koord(RIGHT_COLUMN_WIDTH, 12));
-	inp_town_size.add_listener(this);
-	inp_town_size.set_limits(0,999999);
-	inp_town_size.set_increment_mode(50);
-	inp_town_size.set_value( sets->get_mittlere_einwohnerzahl() );
-	add_komponente( &inp_town_size );
-	intTopOfButton += 12+5;
+	// specify map parameters
+	add_table(2,0);
+	{
+		// Number of towns
+		new_component<gui_label_t>("5WORLD_CHOOSE");
+		inp_number_of_towns.add_listener(this);
+		inp_number_of_towns.init(abs(sets->get_city_count()), 0, 999);
+		add_component( &inp_number_of_towns );
+
+		// number of big cities
+		new_component<gui_label_t>("Number of big cities:");
+		inp_number_of_big_cities.add_listener(this);
+		inp_number_of_big_cities.set_limits(0, 0);
+		inp_number_of_big_cities.set_value(0);
+		add_component(&inp_number_of_big_cities);
+
+		// number of city clusters
+		new_component<gui_label_t>("Number of city clusters:");
+		inp_number_of_clusters.add_listener(this);
+		inp_number_of_clusters.set_limits(0, sets->get_city_count() / 3);
+		inp_number_of_clusters.set_value(number_of_clusters);
+		add_component(&inp_number_of_clusters);
+
+		// city cluster size
+		new_component<gui_label_t>("City cluster size:");
+		inp_cluster_size.add_listener(this);
+		inp_cluster_size.set_limits(1, 9999);
+		inp_cluster_size.set_value(cluster_size);
+		add_component(&inp_cluster_size);
+
+		// Town size
+		new_component<gui_label_t>("Median Citizen per town");
+		inp_town_size.add_listener(this);
+		inp_town_size.set_limits(0,999999);
+		inp_town_size.set_increment_mode(50);
+		inp_town_size.set_value( sets->get_mean_citizen_count() );
+		add_component( &inp_town_size );
+	}
+	end_table();
+
+	new_component<gui_divider_t>();
 
 	// start game
-	intTopOfButton += 5;
-	start_button.init( button_t::roundbox, "enlarge map", koord(10, intTopOfButton), koord(240, 14) );
+	start_button.init( button_t::roundbox | button_t::flexible, "enlarge map");
 	start_button.add_listener( this );
-	add_komponente( &start_button );
+	add_component( &start_button );
 
-	set_fenstergroesse( koord(260, intTopOfButton+14+8+16) );
-
+	welt_gui_t::update_memory(&size_label, sets);
 	update_preview();
+
+	reset_min_windowsize();
+	set_windowsize(get_min_windowsize());
 }
 
 
@@ -159,31 +160,28 @@ enlarge_map_frame_t::~enlarge_map_frame_t()
 
 /**
  * This method is called if an action is triggered
- * @author Hj. Malthaner
  */
-bool enlarge_map_frame_t::action_triggered( gui_action_creator_t *komp,value_t v)
+bool enlarge_map_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 {
-	if(komp==&inp_x_size) {
-		sets->set_groesse_x( v.i );
+	if(comp==&inp_x_size) {
+		sets->set_size_x( v.i );
 		inp_x_size.set_increment_mode( v.i>=64 ? (v.i>=512 ? 128 : 64) : 8 );
-		inp_y_size.set_limits( welt->get_size().y, min(32766,16777216/sets->get_groesse_x()) );
 		update_preview();
 	}
-	else if(komp==&inp_y_size) {
-		sets->set_groesse_y( v.i );
+	else if(comp==&inp_y_size) {
+		sets->set_size_y( v.i );
 		inp_y_size.set_increment_mode( v.i>=64 ? (v.i>=512 ? 128 : 64) : 8 );
-		inp_x_size.set_limits( welt->get_size().x, min(32766,16777216/sets->get_groesse_y()) );
 		update_preview();
 	}
-	else if(komp==&inp_number_of_towns) {
-		sets->set_anzahl_staedte( v.i );
+	else if(comp==&inp_number_of_towns) {
+		sets->set_city_count( v.i );
 		if (v.i == 0) {
 			number_of_big_cities = 0;
 			inp_number_of_big_cities.set_limits(0,0);
 			inp_number_of_big_cities.set_value(0);
 		}
 		else {
-			inp_number_of_big_cities.set_limits(0, v.i); 
+			inp_number_of_big_cities.set_limits(0, v.i);
 		}
 
 		if ( number_of_big_cities > unsigned(v.i)) {
@@ -191,21 +189,20 @@ bool enlarge_map_frame_t::action_triggered( gui_action_creator_t *komp,value_t v
 			inp_number_of_big_cities.set_value( number_of_big_cities );
 		}
 	}
-	else if(komp==&inp_number_of_big_cities) {
+	else if(comp==&inp_number_of_big_cities) {
 		number_of_big_cities = v.i;
 	}
-	else if(komp==&inp_town_size) {
-		sets->set_mittlere_einwohnerzahl( v.i );
+	else if(comp==&inp_town_size) {
+		sets->set_mean_citizen_count( v.i );
 	}
-	else if(komp==&start_button) {
-		// since soon those are invalid
-		intr_refresh_display( true );
-		//Quick and Ugly Hack: we don't want change main umgebung_t
-		uint32 saved_number_of_big_cities = umgebung_t::number_of_big_cities; umgebung_t::number_of_big_cities = number_of_big_cities;
-		uint32 saved_number_of_clusters  = umgebung_t::number_of_clusters; umgebung_t::number_of_clusters = number_of_clusters;
+	else if(comp==&start_button) {
+		//Quick and Ugly Hack: we don't want change main env_t
+		uint32 saved_number_of_big_cities = env_t::number_of_big_cities; env_t::number_of_big_cities = number_of_big_cities;
+		uint32 saved_number_of_clusters  = env_t::number_of_clusters; env_t::number_of_clusters = number_of_clusters;
+		env_t::number_of_big_cities = saved_number_of_big_cities;
+		env_t::number_of_clusters = saved_number_of_clusters;
+		destroy_all_win( true );
 		welt->enlarge_map(sets, NULL);
-		umgebung_t::number_of_big_cities = saved_number_of_big_cities;
-		umgebung_t::number_of_clusters = saved_number_of_clusters; 		
 	}
 	else {
 		return false;
@@ -214,119 +211,83 @@ bool enlarge_map_frame_t::action_triggered( gui_action_creator_t *komp,value_t v
 }
 
 
-void enlarge_map_frame_t::zeichnen(koord pos, koord gr)
+void enlarge_map_frame_t::draw(scr_coord pos, scr_size size)
 {
 	while (welt->get_settings().get_rotation() != sets->get_rotation()) {
 		// map was rotated while we are active ... => rotate too!
 		sets->rotate90();
-		sets->set_groesse( sets->get_groesse_y(), sets->get_groesse_x() );
+		sets->set_size( sets->get_size_y(), sets->get_size_x() );
 		update_preview();
 	}
 
-	gui_frame_t::zeichnen(pos, gr);
-
-	int x = pos.x+10;
-	int y = pos.y+4+16;
-
-	display_ddd_box_clip(x+173, y, preview_size+2, preview_size+2, MN_GREY0,MN_GREY4);
-	display_array_wh(x+174, y+1, preview_size, preview_size, karte);
-
-	y = pos.y+64+10+16;
-	display_proportional_clip(x, y, translator::translate("5WORLD_CHOOSE"), ALIGN_LEFT, COL_BLACK, true);
-	y += 12;
-	display_proportional_clip(x, y, translator::translate("Number of big cities"), ALIGN_LEFT, COL_BLACK, true);
-	y += 12;
-	display_proportional_clip(x, y, translator::translate("Number of clusters"), ALIGN_LEFT, COL_BLACK, true);
-	y += 12;
-	display_proportional_clip(x, y, translator::translate("Cluster size"), ALIGN_LEFT, COL_BLACK, true);
-	y += 12;
-	display_proportional_clip(x, y, translator::translate("Median Citizen per town"), ALIGN_LEFT, COL_BLACK, true);
-	y += 12+5;
-
-	display_ddd_box_clip(x, y, 240, 0, MN_GREY0, MN_GREY4);
+	gui_frame_t::draw(pos, size);
 }
 
 
 /**
  * Calculate the new Map-Preview. Initialize the new RNG!
- * @author Hj. Malthaner
  */
 void enlarge_map_frame_t::update_preview()
 {
 	// reset noise seed
-	setsimrand(0xFFFFFFFF, welt->get_settings().get_karte_nummer());
+	setsimrand(0xFFFFFFFF, welt->get_settings().get_map_number());
 
 	// "welt" still knows the old size. The new size is saved in "sets".
-	sint16 old_x = welt->get_size().x;
-	sint16 old_y = welt->get_size().y;
-	sint16 pre_x = min(sets->get_groesse_x(), preview_size);
-	sint16 pre_y = min(sets->get_groesse_y(), preview_size);
+	uint16 old_x = welt->get_size().x;
+	uint16 old_y = welt->get_size().y;
+	uint16 pre_x = min(sets->get_size_x(), map.get_width());
+	uint16 pre_y = min(sets->get_size_y(), map.get_height());
 
-	const int mx = sets->get_groesse_x()/pre_x;
-	const int my = sets->get_groesse_y()/pre_y;
-	const sint32 map_size = max(sets->get_groesse_y(), sets->get_groesse_x());
-
+	const int mx = sets->get_size_x()/pre_x;
+	const int my = sets->get_size_y()/pre_y;
+	const sint32 map_size = max(sets->get_size_y(), sets->get_size_x());
 
 	for(  int j=0;  j<pre_y;  j++  ) {
 		for(  int i=0;  i<pre_x;  i++  ) {
-			COLOR_VAL color;
+			PIXVAL color;
 			koord pos(i*mx,j*my);
 
 			if(  pos.x<=old_x  &&  pos.y<=old_y  ){
 				if(  i==(old_x/mx)  ||  j==(old_y/my)  ){
 					// border
-					color = COL_WHITE;
+					color = color_idx_to_rgb(COL_WHITE);
 				}
 				else {
 					const sint16 height = welt->lookup_hgt( pos );
-					color = reliefkarte_t::calc_hoehe_farbe(height, sets->get_grundwasser());
+					color = minimap_t::calc_height_color(height, sets->get_groundwater());
 				}
 			}
 			else {
 				// new part
 				const sint16 height = karte_t::perlin_hoehe(sets, pos, koord(old_x,old_y), map_size );
-				color = reliefkarte_t::calc_hoehe_farbe(height, sets->get_grundwasser());
+				color = minimap_t::calc_height_color(height, sets->get_groundwater());
 			}
-			karte[j*preview_size+i] = color;
+			map.at(i,j) = color;
 		}
 	}
-	for(  int j=0;  j<preview_size;  j++  ) {
-		for(  int i=(j<pre_y ? pre_x : 0);  i<preview_size;   i++  ) {
-			karte[j*preview_size+i] = COL_GREY1;
+	for(  uint j=0;  j<map.get_height();  j++  ) {
+		for(  uint i=(j<pre_y ? pre_x : 0);  i<map.get_width();   i++  ) {
+			map.at(i,j) = color_idx_to_rgb(COL_GREY1);
 		}
 	}
+	map_preview.set_map_data(&map);
+
 	sets->heightfield = "";
 
 	if(!changed_number_of_towns){// Interpolate number of towns.
-		sint32 new_area = sets->get_groesse_x() * sets->get_groesse_y();
+		sint32 new_area = sets->get_size_x() * sets->get_size_y();
 		sint32 old_area = old_x * old_y;
-		sint32 const towns = welt->get_settings().get_anzahl_staedte();
+		sint32 const towns = welt->get_settings().get_city_count();
 		const sint32 new_towns = towns * new_area / old_area - towns;
-		sets->set_anzahl_staedte( new_towns );
-		inp_number_of_towns.set_value(abs(sets->get_anzahl_staedte()) );
+		sets->set_city_count( new_towns );
+		inp_number_of_towns.set_value(abs(sets->get_city_count()) );
 		if (new_towns != 0 ) {
 			number_of_big_cities = 1;
 			inp_number_of_big_cities.set_value(1);
-			inp_number_of_big_cities.set_limits(1, new_towns); 
+			inp_number_of_big_cities.set_limits(1, new_towns);
 		}
 	}
 
 	// guess the new memory needed
-	const uint sx = sets->get_groesse_x();
-	const uint sy = sets->get_groesse_y();
-	const long memory = (
-		sizeof(karte_t) +
-		sizeof(spieler_t) * 8 +
-		sizeof(convoi_t) * 1000 +
-		(sizeof(schiene_t) + sizeof(vehikel_t)) * 10 * (sx + sy) +
-		sizeof(stadt_t) * sets->get_anzahl_staedte() +
-		(
-			sizeof(grund_t) +
-			sizeof(planquadrat_t) +
-			sizeof(baum_t) * 2 +
-			sizeof(void*) * 4
-		) * sx * sy
-	) / (1024 * 1024);
-	sprintf(memory_str, translator::translate("Size (%d MB):"), memory);
-
+	welt_gui_t::update_memory(&size_label, sets);
 }

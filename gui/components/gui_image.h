@@ -1,46 +1,56 @@
 /*
- * just displays an image
- *
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef gui_image_h
-#define gui_image_h
-
-#include "../../simimg.h"
-#include "../../simgraph.h"
-#include "gui_komponente.h"
+#ifndef GUI_COMPONENTS_GUI_IMAGE_H
+#define GUI_COMPONENTS_GUI_IMAGE_H
 
 
-class gui_image_t : public gui_komponente_t
+#include "../../display/simimg.h"
+#include "../../display/simgraph.h"
+#include "gui_component.h"
+
+
+/*
+ * just displays an image
+ */
+class gui_image_t : public gui_component_t
 {
-private:
-	image_id id;
-	uint16 player_nr;
+		control_alignment_t alignment;
+		uint16              player_nr;
+		bool                remove_enabled;
 
-public:
-	gui_image_t( const image_id i=IMG_LEER, const uint8 p=0 ) : player_nr(p) { set_image(i); }
+		const char * tooltip;
 
-    void set_image( const image_id i ) {
-		id = i;
-		if(  id!=IMG_LEER  ) {
-			KOORD_VAL x,y,w,h;
-			display_get_base_image_offset( id, &x, &y, &w, &h );
-			set_groesse( koord( x+w, y+h ) );
-		}
-		else {
-			set_groesse( koord(0,0) );
-		}
-	}
+		scr_size padding = scr_size(0, 0);
 
-    /**
-     * Zeichnet die Komponente
-     * @author Hj. Malthaner
-     */
-    void zeichnen( koord offset ) { display_base_img( id, pos.x+offset.x, pos.y+offset.y, (sint8)player_nr, false, true ); }
+protected:
+		image_id            id;
+		scr_coord           remove_offset;
+		FLAGGED_PIXVAL      color_index;
+
+	public:
+		gui_image_t( const image_id i=IMG_EMPTY, const uint8 p=0, control_alignment_t alignment_par = ALIGN_NONE, bool remove_offset = false );
+		void set_size( scr_size size_par ) OVERRIDE;
+		void set_image( const image_id i, bool remove_offsets = false );
+
+		void enable_offset_removal(bool remove_offsets) { set_image(id,remove_offsets); }
+
+		void set_transparent(FLAGGED_PIXVAL c) { color_index = c; }
+
+		/**
+		 * Draw the component
+		 */
+		void draw( scr_coord offset ) OVERRIDE;
+
+		scr_size get_min_size() const OVERRIDE;
+
+		scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+
+		void set_tooltip(const char * tooltip);
+
+		void set_padding(scr_size padding) { this->padding = padding; set_size(size + padding + padding); }
 };
 
 #endif

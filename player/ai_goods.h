@@ -1,20 +1,20 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
- *
- * Simple goods transport AI
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
+
+#ifndef PLAYER_AI_GOODS_H
+#define PLAYER_AI_GOODS_H
 
 
 #include "ai.h"
 
 
+/// Simple goods transport AI
 class ai_goods_t : public ai_t
 {
 private:
-	enum zustand {
+	enum state {
 		NR_INIT,
 		NR_SAMMLE_ROUTEN,
 		NR_BAUE_ROUTE1,
@@ -28,29 +28,29 @@ private:
 		CHECK_CONVOI
 	};
 
-	// vars für die KI
-	zustand state;
+	// vars for the KI
+	state state;
 
-	/* test more than one supplier and more than one good *
+	/**
+	 * test more than one supplier and more than one good *
 	 * save last factory for building next supplier/consumer *
-	 * @author prissi
 	 */
 	fabrik_t *root;
 
 	// actual route to be built between those
 	fabrik_t *start;
 	fabrik_t *ziel;
-	const ware_besch_t *freight;
+	const goods_desc_t *freight;
 
 	// we will use this vehicle!
-	const vehikel_besch_t *rail_vehicle;
-	const vehikel_besch_t *rail_engine;
-	const vehikel_besch_t *road_vehicle;
-	const vehikel_besch_t *ship_vehicle;
+	const vehicle_desc_t *rail_vehicle;
+	const vehicle_desc_t *rail_engine;
+	const vehicle_desc_t *road_vehicle;
+	const vehicle_desc_t *ship_vehicle;
 
 	// and the convoi will run on this track:
-	const weg_besch_t *rail_weg;
-	const weg_besch_t *road_weg;
+	const way_desc_t *rail_weg;
+	const way_desc_t *road_weg;
 
 	sint32 count_rail;
 	sint32 count_road;
@@ -58,7 +58,7 @@ private:
 	// multi-purpose counter
 	sint32 count;
 
-	// time to wait before next contruction
+	// time to wait before next construction
 	sint32 next_construction_steps;
 
 	/* start and end stop position (and their size) */
@@ -68,25 +68,25 @@ private:
 	class fabconnection_t{
 		friend class ai_goods_t;
 		fabrik_t *fab1;
-		fabrik_t *fab2;	// koord1 must be always "smaller" than koord2
-		const ware_besch_t *ware;
+		fabrik_t *fab2; // koord1 must be always "smaller" than koord2
+		const goods_desc_t *ware;
 
 	public:
-		fabconnection_t( fabrik_t *k1=0, fabrik_t *k2=0, const ware_besch_t *w=0 ) : fab1(k1), fab2(k2), ware(w) {}
+		fabconnection_t( fabrik_t *k1=0, fabrik_t *k2=0, const goods_desc_t *w=0 ) : fab1(k1), fab2(k2), ware(w) {}
 		void rdwr( loadsave_t *file );
 
-		bool operator != (const fabconnection_t & k) { return fab1 != k.fab1 || fab2 != k.fab2 || ware != k.ware; }
-		bool operator == (const fabconnection_t & k) { return fab1 == k.fab1 && fab2 == k.fab2 && ware == k.ware; }
+		bool operator != (const fabconnection_t & k) const { return fab1 != k.fab1 || fab2 != k.fab2 || ware != k.ware; }
+		bool operator == (const fabconnection_t & k) const { return fab1 == k.fab1 && fab2 == k.fab2 && ware == k.ware; }
 //		const bool operator < (const fabconnection_t & k) { return (abs(fab1.x)+abs(fab1.y)) - (abs(k.fab1.x)+abs(k.fab1.y)) < 0; }
 	};
 
 	slist_tpl<fabconnection_t*> forbidden_connections;
 
-	// return true, if this a route to avoid (i.e. we did a construction without sucess here ...)
-	bool is_forbidden( fabrik_t *fab1, fabrik_t *fab2, const ware_besch_t *w ) const;
+	// return true, if this a route to avoid (i.e. we did a construction without success here ...)
+	bool is_forbidden( fabrik_t *fab1, fabrik_t *fab2, const goods_desc_t *w ) const;
 
 	/* recursive lookup of a factory tree:
-	 * sets start and ziel to the next needed supplier
+	 * sets start and destination  to the next needed supplier
 	 * start always with the first branch, if there are more goods
 	 */
 	bool get_factory_tree_lowest_missing( fabrik_t *fab );
@@ -98,42 +98,41 @@ private:
 
 	bool suche_platz1_platz2(fabrik_t *qfab, fabrik_t *zfab, int length);
 
-	int baue_bahnhof(const koord* p, int anz_vehikel);
+	int baue_bahnhof(const koord* p, int vehicle_count);
 
 	bool create_simple_rail_transport();
 
 	// create way and stops for these routes
-	bool create_ship_transport_vehikel(fabrik_t *qfab, int anz_vehikel);
-	void create_road_transport_vehikel(fabrik_t *qfab, int anz_vehikel);
-	void create_rail_transport_vehikel(const koord pos1,const koord pos2, int anz_vehikel, int ladegrad);
+	bool create_ship_transport_vehicle(fabrik_t *qfab, int vehicle_count);
+	void create_road_transport_vehicle(fabrik_t *qfab, int vehicle_count);
+	void create_rail_transport_vehicle(const koord pos1,const koord pos2, int vehicle_count, int minimum_loading);
 
 public:
-	ai_goods_t(karte_t *wl, uint8 nr);
-
-	virtual ~ai_goods_t() {}
+	ai_goods_t(uint8 nr);
 
 	// this type of AIs identifier
-	virtual uint8 get_ai_id() const { return AI_GOODS; }
+	uint8 get_ai_id() const OVERRIDE { return AI_GOODS; }
 
 	// cannot do airfreight at the moment
-	virtual void set_air_transport( bool ) { air_transport = false; }
+	void set_air_transport( bool ) OVERRIDE { air_transport = false; }
 
-	virtual void rdwr(loadsave_t *file);
+	void rdwr(loadsave_t *file) OVERRIDE;
 
-	virtual void bescheid_vehikel_problem(convoihandle_t cnv,const koord3d ziel);
+	void report_vehicle_problem(convoihandle_t cnv,const koord3d ziel) OVERRIDE;
 
-	bool set_active( bool b );
+	bool set_active( bool b ) OVERRIDE;
 
-	void step();
+	void step() OVERRIDE;
 
-	void neues_jahr();
+	void new_year() OVERRIDE;
 
-	virtual void rotate90( const sint16 y_size );
+	void rotate90( const sint16 y_size ) OVERRIDE;
 
 	/**
 	 * Tells the player that a fabrik_t is going to be deleted.
-	 * It could also tell, that a fab has been created, but by now the fabrikbauer_t does not.
-	 * @author Bernd Gabriel, Jan 01, 2010
+	 * It could also tell, that a fab has been created, but by now the factory_builder_t does not.
 	 */
-	virtual void notify_factory(notification_factory_t flag, const fabrik_t*);
+	void notify_factory(notification_factory_t flag, const fabrik_t*) OVERRIDE;
 };
+
+#endif

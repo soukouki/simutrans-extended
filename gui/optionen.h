@@ -1,50 +1,42 @@
 /*
- * Dialog for game options/Main menu
- * Niels Roest, Hj. Malthaner, 2000
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef gui_optionen_h
-#define gui_optionen_h
+#ifndef GUI_OPTIONEN_H
+#define GUI_OPTIONEN_H
 
 
+#include "simwin.h"
 #include "gui_frame.h"
-#include "components/gui_button.h"
-#include "components/gui_label.h"
-#include "components/gui_divider.h"
 #include "components/action_listener.h"
+#include "components/gui_button.h"
 
 
-/**
+/*
  * Settings in the game
- * @author Hj. Malthaner
+ *
+ * Dialog for game options/Main menu
  */
 class optionen_gui_t : public gui_frame_t, action_listener_t
 {
-private:
-	button_t option_buttons[6];
+	private:
+		button_t option_buttons[11];
 
-	button_t bt_load;
-	button_t bt_load_scenario;
-	button_t bt_save;
+	public:
+		optionen_gui_t();
 
-	button_t bt_new;
-	button_t bt_quit;
+		/**
+		 * Set the window associated helptext
+		 * @return the filename for the helptext, or NULL
+		 */
+		const char * get_help_filename() const OVERRIDE {return "options.txt";}
 
-	gui_divider_t seperator;
+		bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
-	karte_t *welt;
+		void rdwr(loadsave_t *) OVERRIDE {}
 
-public:
-    optionen_gui_t(karte_t *welt);
-
-	/**
-	 * Set the window associated helptext
-	 * @return the filename for the helptext, or NULL
-	 * @author Hj. Malthaner
-	 */
-	const char * get_hilfe_datei() const {return "options.txt";}
-
-	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
+		uint32 get_rdwr_id() OVERRIDE { return magic_optionen_gui_t; }
 };
 
 #endif

@@ -1,3 +1,8 @@
+;
+; This file is part of the Simutrans-Extended project under the Artistic License.
+; (see LICENSE.txt)
+;
+
 ; Section define/macro header file
 ; See this header file for more info
 !include "MUI2.nsh"
@@ -80,7 +85,7 @@ Function PostExeInstall
 
   ; just change to simuconf.tab "singleuser_install = 1"
   FileOpen $0 "$INSTDIR\config\simuconf.tab" a
-  FileSeek $0 866
+  FileSeek $0 924
   FileWrite $0 "singleuser_install = 1 "
   FileClose $0
   goto finishGDIexe

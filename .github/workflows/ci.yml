@@ -1,0 +1,334 @@
+name: CI
+on: [push, pull_request]
+
+
+jobs:
+  check-code-formatting:
+    name: Code Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Code Check
+        shell: bash
+        run: ./cleanup_code.sh
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: run ./cleanup_code.sh
+
+
+  simutrans-linux-sdl2:
+    name: Linux (SDL2)
+    needs: check-code-formatting
+    if: always()
+    uses: ./.github/workflows/linux-build.yml
+    with:
+      backend: sdl2
+      additional_dependencies: libsdl2-dev libfreetype6-dev libfluidsynth-dev
+
+  sim-linux-posix:
+    name: Linux (headless)
+    needs: check-code-formatting
+    if: always()
+    uses: ./.github/workflows/linux-build.yml
+
+  makeobj-linux:
+    name: Linux Makeobj
+    needs: check-code-formatting
+    if: always()
+    uses: ./.github/workflows/linux-build.yml
+    with:
+      additional_dependencies: libpng-dev
+      target: makeobj
+
+  nettool-linux:
+    name: Linux Nettool
+    needs: check-code-formatting
+    if: always()
+    uses: ./.github/workflows/linux-build.yml
+    with:
+      target: nettool
+
+
+  sim-mac-sdl2:
+    name: macOS (SDL2)
+    runs-on: macos-latest
+    needs: check-code-formatting
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get Dependencies
+        run: |
+          brew install cmake freetype libpng pkg-config sdl2 fluidsynth
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: |
+          cd build
+          make -j$(sysctl -n hw.logicalcpu) simutrans-extended
+          make package
+      - name: Upload Artifact (CI)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-nightly
+          path: build/simutrans/simutrans-extended
+          if-no-files-found: error
+
+
+  sim-mac-posix:
+    name: macOS (headless)
+    runs-on: macos-latest
+    needs: check-code-formatting
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DSIMUTRANS_BACKEND=none
+      - name: Build
+        run: |
+          cd build
+          make -j$(sysctl -n hw.logicalcpu) simutrans-extended
+          make package
+      - name: Upload Artifact (CI)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-nightly
+          path: build/simutrans/simutrans-extended
+          if-no-files-found: error
+
+
+  makeobj-mac:
+    name: macOS Makeobj
+    runs-on: macos-latest
+    needs: check-code-formatting
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DSIMUTRANS_BACKEND=none
+      - name: Build
+        run: |
+          cd build
+          make -j$(sysctl -n hw.logicalcpu) makeobj-extended
+      - name: Upload Artifact (CI)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-nightly
+          path: build/makeobj/makeobj-extended
+          if-no-files-found: error
+
+
+  nettool-mac:
+    name: macOS Nettool
+    runs-on: macos-latest
+    needs: check-code-formatting
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DSIMUTRANS_BACKEND=none
+      - name: Build
+        run: |
+          cd build
+          make -j$(sysctl -n hw.logicalcpu) nettool-extended
+      - name: Upload Artifact (CI)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-nightly
+          path: build/nettools/nettool-extended
+          if-no-files-found: error
+
+
+  sim-mingw-sdl2:
+    name: Windows (MinGW, SDL2)
+    runs-on: ubuntu-latest
+    needs: check-code-formatting
+    if: always()
+    container:
+      image: ceeac/simutrans-build-env:mingw-sdl2
+    steps:
+      - name: Additional setup
+        run: sudo dnf -y install git cmake
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./.github/toolchain_mingw.cmake -DSIMUTRANS_BACKEND=sdl2
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc) simutrans-extended
+          make package
+      - name: Upload Artifact (CI)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-nightly
+          path: build/simutrans/simutrans-extended.exe
+          if-no-files-found: error
+
+
+  sim-mingw-gdi:
+    name: Windows (MinGW, GDI)
+    runs-on: ubuntu-latest
+    needs: check-code-formatting
+    if: always()
+    container:
+      image: ceeac/simutrans-build-env:mingw-sdl2
+    steps:
+      - name: Additional setup
+        run: sudo dnf -y install git cmake
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./.github/toolchain_mingw.cmake -DSIMUTRANS_BACKEND=gdi
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc) simutrans-extended
+          make package
+      - name: Upload Artifact (CI)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-nightly
+          path: build/simutrans/simutrans-extended.exe
+          if-no-files-found: error
+
+
+  sim-mingw-posix:
+    name: Windows (MinGW, headless)
+    runs-on: ubuntu-latest
+    needs: check-code-formatting
+    if: always()
+    container:
+      image: ceeac/simutrans-build-env:mingw-sdl2
+    steps:
+      - name: Additional setup
+        run: sudo dnf -y install git cmake
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./.github/toolchain_mingw.cmake -DSIMUTRANS_BACKEND=none
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc) simutrans-extended
+          make package
+      - name: Upload Artifact (CI)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-nightly
+          path: build/simutrans/simutrans-extended.exe
+          if-no-files-found: error
+
+
+  makeobj-mingw:
+    name: Windows Makeobj (MinGW)
+    runs-on: ubuntu-latest
+    needs: check-code-formatting
+    if: always()
+    container:
+      image: ceeac/simutrans-build-env:mingw-sdl2
+    steps:
+      - name: Additional setup
+        run: sudo dnf -y install git cmake
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./.github/toolchain_mingw.cmake -DSIMUTRANS_BACKEND=none
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc) makeobj-extended
+      - name: Upload Artifact (CI)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-nightly
+          path: build/makeobj/makeobj-extended.exe
+          if-no-files-found: error
+
+
+  nettool-mingw:
+    name: Windows Nettool (MinGW)
+    runs-on: ubuntu-latest
+    needs: check-code-formatting
+    if: always()
+    container:
+      image: ceeac/simutrans-build-env:mingw-sdl2
+    steps:
+      - name: Additional setup
+        run: sudo dnf -y install git cmake
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./.github/toolchain_mingw.cmake -DSIMUTRANS_BACKEND=none
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc) nettool-extended
+      - name: Upload Artifact (CI)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-nightly
+          path: build/nettools/nettool-extended.exe
+          if-no-files-found: error
+
+
+  simutrans-windows-gdi:
+    name: Windows (MSVC, GDI)
+    needs: check-code-formatting
+    if: always()
+    uses: ./.github/workflows/msvc-build.yml
+    with:
+      backend: gdi
+
+  simutrans-windows-sdl2:
+    name: Windows (MSVC, SDL2)
+    needs: check-code-formatting
+    if: always()
+    uses: ./.github/workflows/msvc-build.yml
+    with:
+      backend: sdl2
+      additional_dependencies: sdl2
+
+  simutrans-windows-headless:
+    name: Windows (MSVC, POSIX)
+    needs: check-code-formatting
+    if: always()
+    uses: ./.github/workflows/msvc-build.yml
+
+  makeobj-windows:
+    name: Windows Makeobj(MSVC)
+    needs: check-code-formatting
+    if: always()
+    uses: ./.github/workflows/msvc-build.yml
+    with:
+      target: makeobj
+
+  nettool-windows:
+    name: Windows Nettool (MSVC)
+    needs: check-code-formatting
+    if: always()
+    uses: ./.github/workflows/msvc-build.yml
+    with:
+      target: nettool

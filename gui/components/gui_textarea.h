@@ -1,47 +1,38 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/*
- * A text display component
- *
- * @autor Hj. Malthaner
- */
+#ifndef GUI_COMPONENTS_GUI_TEXTAREA_H
+#define GUI_COMPONENTS_GUI_TEXTAREA_H
 
-#ifndef gui_textarea_h
-#define gui_textarea_h
 
-#include "gui_komponente.h"
+#include "gui_component.h"
 
 class cbuffer_t;
 
-class gui_textarea_t : public gui_komponente_t
+/**
+ * A text display component
+ */
+class gui_textarea_t : public gui_component_t
 {
 private:
 	/**
 	* The text to display. May be multi-lined.
-	* @autor Hj. Malthaner
 	*/
 	cbuffer_t* buf;
-	/**
-	 * gui_textarea_t(const char* text) constructor will allocate new cbuffer_t
-	 * but gui_textarea_t(cbuffer_t* buf_) don't do it.
-	 * we need track it for destructor
-	 */
-	bool my_own_buf;
 
-	// we cache the number of lines, to dynamically recalculate the size, if needed
-	uint16	lines;
+	/**
+	 * recalc the current size, needed for speculative size calculations
+	 * @returns size necessary to show the component
+	 */
+	scr_size calc_size() const;
+
 
 public:
 	gui_textarea_t(cbuffer_t* buf_);
-	gui_textarea_t(const char* text);
-	~gui_textarea_t();
 
-	void set_text(const char *text);
+	void set_buf( cbuffer_t* buf_ );
 
 	/**
 	 * recalc the current size, needed for speculative size calculations
@@ -50,9 +41,12 @@ public:
 
 	/**
 	* Draw the component
-	* @author Hj. Malthaner
 	*/
-	virtual void zeichnen(koord offset);
+	void draw(scr_coord offset) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE;
+
+	scr_size get_max_size() const OVERRIDE;
 };
 
 #endif

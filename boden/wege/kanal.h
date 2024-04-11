@@ -1,26 +1,29 @@
-#ifndef boden_wege_dock_h
-#define boden_wege_dock_h
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef BODEN_WEGE_KANAL_H
+#define BODEN_WEGE_KANAL_H
+
 
 #include "weg.h"
 #include "../../dataobj/loadsave.h"
 #include "../../utils/cbuffer_t.h"
 
 /**
- * Am Dock können Schiffe anlegen
- *
- * @author Hj. Malthaner
+ * Ships can be created on docks
  */
 class kanal_t : public weg_t
 {
-
 public:
-	static const weg_besch_t *default_kanal;
+	static const way_desc_t *default_kanal;
 
-	kanal_t(karte_t *welt, loadsave_t *file);
-	kanal_t(karte_t *welt);
+	kanal_t(loadsave_t *file);
+	kanal_t();
 
-	//waytype_t get_waytype() const {return water_wt;}
-	virtual void rdwr(loadsave_t *file);
+	//waytype_t get_waytype() const OVERRIDE {return water_wt;}
+	void rdwr(loadsave_t *file) OVERRIDE;
 };
 
 #endif

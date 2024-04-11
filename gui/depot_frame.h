@@ -1,90 +1,77 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/*
- * The depot window, where to buy convois
- */
+#ifndef GUI_DEPOT_FRAME_H
+#define GUI_DEPOT_FRAME_H
 
-#ifndef gui_depot_frame2_t_h
-#define gui_depot_frame2_t_h
 
 #include "gui_frame.h"
 #include "components/gui_label.h"
-#include "components/gui_textinput.h"
-#include "components/gui_combobox.h"
-#include "components/gui_button.h"
 #include "components/action_listener.h"
-#include "components/gui_scrollpane.h"
+#include "components/gui_button.h"
+#include "components/gui_combobox.h"
 #include "components/gui_convoy_assembler.h"
-#include "../simtypes.h"
-#include "../simdepot.h"
+#include "components/gui_label.h"
+#include "components/gui_scrollpane.h"
 #include "components/gui_speedbar.h"
+#include "components/gui_textinput.h"
+#include "../simdepot.h"
 #include "../simtypes.h"
 #include "../utils/cbuffer_t.h"
 
-class vehikel_besch_t;
+class vehicle_desc_t;
 
 /**
  * Depot frame, handles all interaction with a vehicle depot.
- *
- * @author Hansjörg Malthaner
- * @date 22-Nov-01
  */
-class depot_frame_t : public gui_frame_t,
-                      public action_listener_t
+class depot_frame_t : public gui_frame_t, public action_listener_t
 {
     friend class gui_convoy_assembler_t;
 
 private:
 	/**
 	 * The depot to display
-	 * @author Hansjörg Malthaner
 	 */
 	depot_t *depot;
 
 	/**
 	 * The current convoi to display.
-	 * @author Volker Meyer
-	 * @date  09.06.2003
 	 */
 	int icnv;
 
+	// initialize everything
+	void init(depot_t *depot);
+
+	void init_table();
+
 	/**
 	 * Gui elements
-	 * @author Volker Meyer
-	 * @date  09.06.2003
 	 */
-	gui_label_t lb_convois;
+	gui_label_buf_t lb_convois, lb_vehicle_count, lb_traction_types;
+
+	char name[256], old_name[256];
+	gui_textinput_t name_input;
 
 	/// contains the current translation of "new convoi"
 	const char* new_convoy_text;
 	gui_combobox_t convoy_selector;
 
-	button_t line_button;	// goto line ...
-
-	gui_label_t lb_convoi_line;
-
-//	gui_speedbar_t sb_convoi_length;
-//	sint32 convoi_length_ok_sb, convoi_length_slower_sb, convoi_length_too_slow_sb, convoi_tile_length_sb, new_vehicle_length_sb;
-
+	button_t line_button; // goto line ...
 	button_t bt_start;
 	button_t bt_schedule;
-	button_t bt_destroy;
 	button_t bt_sell;
+	button_t bt_details;
+
+	cbuffer_t txt_convoi_cost;
 
 	/**
 	 * buttons for new route-management
-	 * @author hsiegeln
 	 */
-//	button_t bt_new_line;
-//	button_t bt_change_line;
 	button_t bt_copy_convoi;
-//	button_t bt_apply_line;
 
+	// line selector stuff
 	/// contains the current translation of "<no schedule set>"
 	const char* no_schedule_text;
 	/// contains the current translation of "<clear schedule>"
@@ -96,9 +83,14 @@ private:
 	/// contains the current translation of "<promote to line>"
 	const char* promote_to_line_text;
 	/// "-----------" between header items and lines
-	const char* line_seperator;
+	const char* line_separator;
 
 	gui_combobox_t line_selector;
+	button_t filter_btn_all_pas, filter_btn_all_mails, filter_btn_all_freights;
+	// rebuild the line selector
+	void build_line_list();
+	// pas=1, mail=2, freight=3
+	uint8 line_type_flags = 0;
 
 	gui_convoy_assembler_t convoy_assembler;
 
@@ -111,33 +103,16 @@ private:
 	/**
 	 * Calculate the values of the vehicles of the given type owned by the
 	 * player.
-	 * @author Volker Meyer
-	 * @date  09.06.2003
 	 */
-	sint64 calc_restwert(const vehikel_besch_t *veh_type);
+	sint64 calc_sale_value(const vehicle_desc_t *veh_type);
 
-	/**
-	 * Does this window need a min size button in the title bar?
-	 * @return true if such a button is needed
-	 * @author Hj. Malthaner
-	 */
-	bool has_min_sizer() const {return true;}
+	// cache old values
+	uint32 old_vehicle_count;
 
-//<<<<<<< HEAD
-//=======
-//	// true if already stored here
-//	bool is_contained(const vehikel_besch_t *info);
-//
-//	// add a single vehicle (helper function)
-//	void add_to_vehicle_list(const vehikel_besch_t *info);
-//
-//	// for convoi image
-//	void image_from_convoi_list(uint nr, bool to_end);
-//
-//	void image_from_storage_list(gui_image_list_t::image_data_t *bild_data);
-//
-//>>>>>>> aburch/master
-	karte_t* get_welt() { return depot->get_welt(); }
+	static bool compare_line(linehandle_t const& l1, linehandle_t const& l2);
+
+	/// Renames the depot to the name given in the text input field
+	void rename_depot();
 
 public:
 	// the next two are only needed for depot_t update notifications
@@ -146,92 +121,63 @@ public:
 	int get_icnv() const { return icnv; }
 
 	/**
-	 * Do the dynamic dialog layout
-	 * @author Volker Meyer
-	 * @date  18.06.2003
-	 */
-	void layout(koord *);
-
-	/**
 	 * Update texts, image lists and buttons according to the current state.
-	 * @author Volker Meyer
-	 * @date  09.06.2003
 	 */
 	void update_data();
 
+	void reset_depot_name();
+
 	// more general functions ...
-	depot_frame_t(depot_t* depot);
+	depot_frame_t(depot_t* depot = NULL);
 
 	/**
 	 * Set the window size
-	 * @author (Mathew Hounsell)
-	 * @date   11-Mar-2003
 	 */
-	void set_fenstergroesse(koord groesse);
-
-	/**
-	 * Create and fill loks_vec and waggons_vec.
-	 * @author Volker Meyer
-	 * @date  09.06.2003
-	 */
-	inline void build_vehicle_lists() { convoy_assembler.build_vehicle_lists(); }
-
-	/*
-	 * Will update the tabs (don't show empty ones).
-	 * @author Gerd Wachsmuth
-	 * @date 08.05.2009
-	 */
-	void update_tabs();
+	void set_windowsize(scr_size size) OVERRIDE;
 
 	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
-	 * @author Hj. Malthaner
 	 */
-	const char * get_hilfe_datei() const {return "depot.txt";}
+	const char * get_help_filename() const OVERRIDE {return "depot.txt";}
 
 	/**
 	 * Does this window need a next button in the title bar?
 	 * @return true if such a button is needed
-	 * @author Volker Meyer
 	 */
-	bool has_next() const {return true;}
+	bool has_next() const OVERRIDE {return true;}
 
-	virtual koord3d get_weltpos(bool);
+	koord3d get_weltpos(bool) OVERRIDE;
+	bool is_weltpos() OVERRIDE;
 
 	/**
 	 * Open dialog for schedule entry.
-	 * @author Hj. Malthaner
 	 */
-	void fahrplaneingabe();
+	void open_schedule_editor();
 
 	bool infowin_event(event_t const*) OVERRIDE;
 
-	/**
-	 * Draw the Frame
-	 * @author Hansjörg Malthaner
-	 */
-	void zeichnen(koord pos, koord gr);
+	void draw(scr_coord pos, scr_size size) OVERRIDE;
 
-	// @author hsiegeln
 	void apply_line();
 
 	void set_selected_line(linehandle_t line) { selected_line = line; }
 
-	/**
-	 * This method is called if an action is triggered
-	 * @author Hj. Malthaner
-	 *
-	 * Returns true, if action is done and no more
-	 * components should be triggered.
-	 * V.Meyer
-	 */
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 	inline depot_t *get_depot() const {return depot;}
 	inline convoihandle_t get_convoy() const {return depot->get_convoi(icnv);}
-	inline void update_convoy() {icnv<0?convoy_assembler.clear_convoy():convoy_assembler.set_vehicles(get_convoy());}
+
+	// set convoy and update assembler
+	void set_convoy();
+
 	// Check the electrification
 	bool check_way_electrified(bool init = false);
+
+	void set_resale_value(uint32 nominal_cost = 0, sint64 resale_value = 0);
+
+	uint32 get_rdwr_id() OVERRIDE;
+
+	void rdwr(loadsave_t *) OVERRIDE;
 };
 
 #endif

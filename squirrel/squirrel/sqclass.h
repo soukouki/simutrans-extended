@@ -7,6 +7,10 @@ struct SQInstance;
 struct SQClassMember {
 	SQObjectPtr val;
 	SQObjectPtr attrs;
+	void Null() {
+		val.Null();
+		attrs.Null();
+	}
 };
 
 typedef sqvector<SQClassMember> SQClassMemberVec;
@@ -126,7 +130,7 @@ public:
 	bool Set(const SQObjectPtr &key,const SQObjectPtr &val) {
 		SQObjectPtr idx;
 		if(_class->_members->Get(key,idx) && _isfield(idx)) {
-            _values[_member_idx(idx)] = val;
+			_values[_member_idx(idx)] = val;
 			return true;
 		}
 		return false;
@@ -155,4 +159,4 @@ public:
 	SQObjectPtr _values[1];
 };
 
-#endif //_SQCLASS_H_
+#endif

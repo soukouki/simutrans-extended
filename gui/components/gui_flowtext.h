@@ -1,87 +1,58 @@
-#ifndef GUI_COMPONENTS_FLOWTEXT_H
-#define GUI_COMPONENTS_FLOWTEXT_H
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
 
-#include <string>
+#ifndef GUI_COMPONENTS_GUI_FLOWTEXT_H
+#define GUI_COMPONENTS_GUI_FLOWTEXT_H
 
+
+#include "action_listener.h"
 #include "gui_action_creator.h"
-#include "gui_komponente.h"
-#include "../../tpl/slist_tpl.h"
+#include "gui_scrollpane.h"
 
+class gui_flowtext_intern_t;
 
 /**
- * A component for floating text.
- * @author Hj. Malthaner
+ * A component for floating text wrapped into a scrollpane.
  */
 class gui_flowtext_t :
 	public gui_action_creator_t,
-	public gui_komponente_t
+	public action_listener_t,
+	public gui_scrollpane_t
 {
+	gui_flowtext_intern_t* flowtext;
+
+	using gui_scrollpane_t::set_component;
+
 public:
 	gui_flowtext_t();
 
+	~gui_flowtext_t();
+
 	/**
 	 * Sets the text to display.
-	 * @author Hj. Malthaner
 	 */
 	void set_text(const char* text);
 
 	const char* get_title() const;
 
-	koord get_preferred_size();
-
-	koord get_text_size();
+	/**
+	 * Updates size and preferred_size.
+	 */
+	void set_size(scr_size size_par) OVERRIDE;
 
 	/**
-	 * Paints the component
-	 * @author Hj. Malthaner
+	 * Computes and returns preferred size.
+	 * Depends on current width.
 	 */
-	void zeichnen(koord offset);
+	scr_size get_preferred_size();
 
-	bool infowin_event(event_t const*) OVERRIDE;
+	// preferred with. Not affected by current width.
+	scr_coord_val get_required_text_width();
 
-	bool dirty;
-	koord last_offset;
-
-private:
-	koord output(koord pos, bool doit, bool return_max_width=true);
-
-	enum attributes
-	{
-		ATT_NONE,
-		ATT_NO_SPACE,	// same as none, but no trailing space
-		ATT_NEWLINE,
-		ATT_A_START,      ATT_A_END,
-		ATT_H1_START,     ATT_H1_END,
-		ATT_EM_START,     ATT_EM_END,
-		ATT_IT_START,     ATT_IT_END,
-		ATT_STRONG_START, ATT_STRONG_END,
-		ATT_UNKNOWN
-	};
-
-	struct node_t
-	{
-		node_t(const std::string &text_, attributes att_) : text(text_), att(att_) {}
-
-		std::string text;
-		attributes att;
-	};
-
-	/**
-	 * Hyperlink position container
-	 * @author Hj. Malthaner
-	 */
-	struct hyperlink_t
-	{
-		hyperlink_t(const std::string &param_) : param(param_) {}
-
-		koord        tl;    // top left display position
-		koord        br;    // bottom right display position
-		std::string  param;
-	};
-
-	slist_tpl<node_t>      nodes;
-	slist_tpl<hyperlink_t> links;
-	char title[128];
+	bool action_triggered(gui_action_creator_t *comp, value_t extra) OVERRIDE;
 };
+
 
 #endif

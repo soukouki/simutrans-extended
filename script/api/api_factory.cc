@@ -1,3 +1,8 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include "api.h"
 
 /** @file api_factory.cc exports factory related functions. */
@@ -15,39 +20,35 @@ SQInteger exp_factory_constructor(HSQUIRRELVM vm)
 	sint16 x = param<sint16>::get(vm, 2);
 	sint16 y = param<sint16>::get(vm, 3);
 	// set coordinates
-	sq_pushstring(vm, "x", -1);
-	sq_pushinteger(vm, x);
-	sq_set(vm, 1);
-	sq_pushstring(vm, "y", -1);
-	sq_pushinteger(vm, y);
-	sq_set(vm, 1);
+	set_slot(vm, "x", x, 1);
+	set_slot(vm, "y", y, 1);
 	// transform coordinates
 	koord pos(x,y);
 	welt->get_scenario()->koord_sq2w(pos);
-	fabrik_t *fab =  fabrik_t::get_fab(welt, pos);
+	fabrik_t *fab =  fabrik_t::get_fab(pos);
 	if (!fab) {
-		sq_raise_error(vm, "No factory found at (%s)", pos.get_str());
-		return -1;
+		return sq_raise_error(vm, "No factory found at (%s)", pos.get_str());
 	}
+	const factory_desc_t *desc = fab->get_desc();
 	// create input/output tables
 	for (int io=0; io<2; io++) {
 		sq_pushstring(vm, io==0 ? "input" : "output", -1);
 		sq_newtable(vm);
-		const array_tpl<ware_production_t> &prodslot = io==0 ? fab->get_eingang() :fab->get_ausgang();
+		const array_tpl<ware_production_t> &prodslot = io==0 ? fab->get_input() :fab->get_output();
 		for(uint32 p=0; p < prodslot.get_count(); p++) {
 			// create slots 'good name' <- {x,y,name}   //'factory_production'
 			sq_pushstring(vm, prodslot[p].get_typ()->get_name(), -1);
 			// create instance of factory_production_x
 			if(!SQ_SUCCEEDED(push_instance(vm, "factory_production_x",
-				x, y, prodslot[p].get_typ()->get_name(), p + (io > 0  ?  fab->get_eingang().get_count() : 0))))
+				x, y, prodslot[p].get_typ()->get_name(), p + (io > 0  ?  fab->get_input().get_count() : 0))))
 			{
 				// create empty table
 				sq_newtable(vm);
 			}
 			// set max value
-			sq_pushstring(vm, "max_storage", -1);
-			sq_pushinteger(vm, prodslot[p].max >> fabrik_t::precision_bits);
-			sq_set(vm, -3);
+			set_slot(vm, "max_storage", prodslot[p].max >> fabrik_t::precision_bits, -1);
+			//production/consumption scaling
+			set_slot(vm, "scalling", io == 0 ? (sint64)desc->get_supplier(p)->get_consumption() : (sint64)desc->get_product(p)->get_factor(), -1);
 			// put class into table
 			sq_newslot(vm, -3, false);
 		}
@@ -83,6 +84,36 @@ vector_tpl<sint64> const& get_factory_production_stat(const ware_production_t *p
 }
 
 
+vector_tpl<koord> const& factory_get_tile_list(fabrik_t *fab)
+{
+	static vector_tpl<koord> list;
+	fab->get_tile_list(list);
+	return list;
+}
+
+vector_tpl<halthandle_t> const& square_get_halt_list(planquadrat_t *plan); // api_tiles.cc
+
+vector_tpl<halthandle_t> const& factory_get_halt_list(fabrik_t *fab)
+{
+	planquadrat_t *plan = welt->access(fab->get_pos().get_2d());
+	return square_get_halt_list(plan);
+}
+
+
+SQInteger ware_production_get_production(HSQUIRRELVM vm)
+{
+	fabrik_t* fab = param<fabrik_t*>::get(vm, 1);
+	sint64 prod = 0;
+	if (fab) {
+		sint64 scaling = 0;
+		if (SQ_SUCCEEDED(get_slot(vm, "scaling", scaling, 1))) {
+			// see fabrik_t::step
+			prod = (scaling * welt->scale_with_month_length(fab->get_base_production()) * DEFAULT_PRODUCTION_FACTOR ) >> (8+8);
+		}
+	}
+	return param<sint64>::push(vm, prod);
+}
+
 SQInteger world_get_next_factory(HSQUIRRELVM vm)
 {
 	return generic_get_next(vm, welt->get_fab_list().get_count());
@@ -93,13 +124,7 @@ SQInteger world_get_factory_by_index(HSQUIRRELVM vm)
 {
 	uint32 index = param<uint32>::get(vm, -1);
 	fabrik_t *fab = welt->get_fab(index);
-	koord pos(koord::invalid);
-	if (fab) {
-		pos = fab->get_pos().get_2d();
-		// transform coordinates
-		welt->get_scenario()->koord_w2sq(pos);
-	}
-	return push_instance(vm, "factory_x",  pos.x, pos.y);
+	return param<fabrik_t*>::push(vm, fab);
 }
 
 
@@ -153,10 +178,10 @@ void export_factory(HSQUIRRELVM vm)
 	 * To print a list of all available goods names use this example:
 	 * @code
 	 * foreach(key,value in input) {
-	 * 	// print raw name of the good
-	 * 	print("Input slot key: " + key)
-	 * 	// print current storage
-	 * 	print("Input slot storage: " + value.get_storage()[0])
+	 *     // print raw name of the good
+	 *     print("Input slot key: " + key)
+	 *     // print current storage
+	 *     print("Input slot storage: " + value.get_storage()[0])
 	 * }
 	 * @endcode
 	 * To catch the output of this example see @ref sec_err.
@@ -177,19 +202,26 @@ void export_factory(HSQUIRRELVM vm)
 	 * Get list of consumers of this factory.
 	 * @returns array of coordinates of consumers
 	 */
-	register_method(vm, &fabrik_t::get_lieferziele, "get_consumers");
+	//FIXTHIS?
+	//register_method(vm, &fabrik_t::get_consumers, "get_consumers");
 
 	/**
 	 * Get list of consumers of this factory.
 	 * @returns array of coordinates of suppliers
 	 */
-	register_method(vm, &fabrik_t::get_suppliers, "get_suppliers");
+	//FIXTHIS
+	//register_method(vm, &fabrik_t::get_suppliers, "get_suppliers");
 
 	/**
-	 * Get (untranslated) name of factory.
+	 * Get (translated or custom) name of factory.
 	 * @returns name
 	 */
 	register_method(vm, &fabrik_t::get_name, "get_name");
+
+	/**
+	 * Change name.
+	 */
+	register_method(vm, &fabrik_t::set_name, "set_name");
 
 	/**
 	 * Get monthly statistics of production.
@@ -225,13 +257,13 @@ void export_factory(HSQUIRRELVM vm)
 	 * Get monthly statistics of generated passengers.
 	 * @returns array, index [0] corresponds to current month
 	 */
-	register_method_fv(vm, &get_factory_stat, "get_pax_generated",  freevariable<sint32>(FAB_PAX_GENERATED), true);
+	//register_method_fv(vm, &get_factory_stat, "get_pax_generated",  freevariable<sint32>(FAB_PAX_GENERATED), true);
 
 	/**
 	 * Get monthly statistics of departed passengers.
 	 * @returns array, index [0] corresponds to current month
 	 */
-	register_method_fv(vm, &get_factory_stat, "get_pax_departed",   freevariable<sint32>(FAB_PAX_DEPARTED), true);
+	//register_method_fv(vm, &get_factory_stat, "get_pax_departed", freevariable<sint32>(FAB_PAX_DEPARTED), true);
 
 	/**
 	 * Get monthly statistics of arrived passengers.
@@ -243,7 +275,7 @@ void export_factory(HSQUIRRELVM vm)
 	 * Get monthly statistics of generated mail.
 	 * @returns array, index [0] corresponds to current month
 	 */
-	register_method_fv(vm, &get_factory_stat, "get_mail_generated", freevariable<sint32>(FAB_MAIL_GENERATED), true);
+	//register_method_fv(vm, &get_factory_stat, "get_mail_generated", freevariable<sint32>(FAB_MAIL_GENERATED), true);
 
 	/**
 	 * Get monthly statistics of departed mail.
@@ -256,6 +288,24 @@ void export_factory(HSQUIRRELVM vm)
 	 * @returns array, index [0] corresponds to current month
 	 */
 	register_method_fv(vm, &get_factory_stat, "get_mail_arrived",   freevariable<sint32>(FAB_MAIL_ARRIVED), true);
+
+	/**
+	 * Get list of all tiles occupied by buildings belonging to this factory.
+	 * @returns array of tile_x objects
+	 */
+	register_method(vm, &factory_get_tile_list, "get_tile_list", true);
+
+	/**
+	 * Get monthly statistics of arrived visitors.
+	 * @returns array, index [0] corresponds to current month
+	 */
+	register_method_fv(vm, &get_factory_stat, "get_visitor_arrived", freevariable<sint32>(FAB_CONSUMER_ARRIVED), true);
+
+	/**
+	 * Get list of all halts that serve this this factory.
+	 * @returns array of tile_x objects
+	 */
+	register_method(vm, &factory_get_halt_list, "get_halt_list", true);
 
 	// pop class
 	end_class(vm);
@@ -289,6 +339,12 @@ void export_factory(HSQUIRRELVM vm)
 	 * @returns array, index [0] corresponds to current month
 	 */
 	register_method_fv(vm, &get_factory_production_stat, "get_consumed",  freevariable<sint32>(FAB_GOODS_CONSUMED), true);
+
+	/**
+	 * Get monthly statistics of in-transit goods (for input slots).
+	 * @returns array, index [0] corresponds to current month
+	 */
+	register_method_fv(vm, &get_factory_production_stat, "get_in_transit",freevariable<sint32>(FAB_GOODS_TRANSIT), true);
 
 	/**
 	 * Get monthly statistics of delivered goods (for output slots).

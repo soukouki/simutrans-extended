@@ -1,5 +1,7 @@
-#ifndef _SIM_DEBUG
-#define _SIM_DEBUG
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
 
 #include <assert.h>
 #include <stdlib.h>
@@ -10,14 +12,12 @@
 
 /**
  * The log for all messages
- * @author Hj. Malthaner
  */
 log_t *dbg = NULL;
 
 
 /**
  * Inits logging facility.
- * @author Hj. Malthaner
  */
 void init_logging(const char* logname, bool force_flush, bool log_debug, const char* greeting, const char* syslogtag )
 {
@@ -25,17 +25,15 @@ void init_logging(const char* logname, bool force_flush, bool log_debug, const c
 }
 
 
-#ifdef DEBUG
+#if (MSG_LEVEL >= 1)
 
 #ifdef _MSC_VER
 int __cdecl _purecall()
 #else
-extern "C" void __cxa_pure_virtual()
+extern "C" NORETURN void __cxa_pure_virtual()
 #endif
 {
 	dbg->fatal("unknown", "pure virtual function call");
 }
-
-#endif
 
 #endif

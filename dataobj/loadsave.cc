@@ -1,39 +1,55 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string>
 #include <ctype.h>
 #include <assert.h>
 #include <errno.h>
 
+#include "../sys/simsys.h"
 #include "../simtypes.h"
 #include "../macros.h"
 #include "../simversion.h"
 #include "../simmem.h"
 #include "../simdebug.h"
+
 #include "../utils/plainstring.h"
-#include "loadsave.h"
-
-#include "../besch/grund_besch.h"
-
 #include "../utils/simstring.h"
 
-#include <zlib.h> 
-#include <bzlib.h>
+#include "../io/rdwr/bzip2_file_rdwr_stream.h"
+#include "../io/rdwr/raw_file_rdwr_stream.h"
+#include "../io/rdwr/zlib_file_rdwr_stream.h"
+#if USE_ZSTD
+#include "../io/rdwr/zstd_file_rdwr_stream.h"
+#endif
+#include "../io/rdwr/compare_file_rd_stream.h"
+
 
 #define INVALID_RDWR_ID (-1)
 
-// buffer size for read/write - bzip2 gains upto 8M for non-threaded, 1M for threaded. binary, zipped ok with 256K or smaller.
-#define LS_BUF_SIZE (1024*1024)
+//#undef MULTI_THREAD
 
-#if MULTI_THREAD>1
-// enable barriers by this
-#define _XOPEN_SOURCE 600
-#include <pthread.h>
+// buffer size for read/write - bzip2 gains up to 8M for non-threaded, 1M for threaded. binary, zipped ok with 256K or smaller.
+// zstd need their own buffer size ...
+#define LS_BUF_SIZE (1024 * 1024)
+
+#define LS_MAX_STRING_LEN  (0x7FFF)
+#define LS_STRING_BUF_SIZE (0x8000) // includes the trailing 0
+
+#ifdef MULTI_THREAD
+#include "../utils/simthread.h"
 
 static pthread_t ls_thread;
-static pthread_barrier_t loadsave_barrier;
+static simthread_barrier_t loadsave_barrier;
 static pthread_mutex_t loadsave_mutex;
+
+static pthread_mutex_t readdata_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t  readdata_cond  = PTHREAD_COND_INITIALIZER;
+static int readdata_flag = 0;  // > 0 read more, < 0 no data needed/error while reading
 
 // parameters passed starting a thread
 typedef struct{
@@ -41,65 +57,165 @@ typedef struct{
 } loadsave_param_t;
 static loadsave_param_t ls;
 
-
-void *loadsave_thread( void *ptr )
+/*
+ * Multi-threaded loading:
+ * more complicated synchronization due to different sources of errors
+ * - less data available than needed (noticed within load_thread)
+ * - more data available than needed (main thread finishes reading but load_thread still waits)
+ *
+ * Communication of error by variable readdata_flag, protected by readdata_mutex
+ *
+ * Intended program flow:
+ *
+ * main                                                      load_thread
+ * (data processing)                        (finalize)       fill_buffer
+ * < --  thread_barrier_wait ------------------------------------------------>
+ * (error handling)                                          pthread_cond_wait
+ * if readdata_flag < 0
+ *       load_thread already exited
+ *       not enough data -> fatal error
+ *
+ * readdata_flag = 1                        readdata_flag = -1
+ * pthread_cond_broadcast --------------------------------------------------->
+ * repeat                                                            (error handling)
+ *                                                           if readdata_flag < 0
+ *                                                         <------ end thread
+ *                                                           if error occurred during previous fill_buffer
+ *                                                                 readdata_flag = -1
+ *                                          (join threads) <------ end thread
+ *                                                           repeat
+ */
+void *load_thread( void *ptr )
 {
 	loadsave_param_t *lsp = reinterpret_cast<loadsave_param_t *>(ptr);
 	int buf = 1;
 
 	while(true) {
-		if(  lsp->loadsave_routine->is_saving()  ) {
-			// wait to sync with main thread before flushing the buffer
-			pthread_barrier_wait(&loadsave_barrier);
+		int res = lsp->loadsave_routine->fill_buffer(buf);
 
-			buf = (buf+1)&1;
-			if(  lsp->loadsave_routine->get_buf_pos(buf)==0  ) {
-				// empty buffer after sync - signal to exit
-				break;
-			}
-			lsp->loadsave_routine->flush_buffer(buf);
-		}
-		else {
-			if(  lsp->loadsave_routine->fill_buffer(buf) <= 0  ) {
-				// nothing read into buffer - exit
-				break;
-			}
-			// wait to sync with main thread before filling the next buffer
-			pthread_barrier_wait(&loadsave_barrier);
+		// always wait to sync with main thread before filling the next buffer
+		pthread_mutex_lock(&readdata_mutex);
+		simthread_barrier_wait(&loadsave_barrier);
 
-			buf = (buf+1)&1;
+		while(  readdata_flag == 0  ) {
+			pthread_cond_wait(&readdata_cond, &readdata_mutex);
 		}
+		if (readdata_flag < 0) {
+			// leave if  no more data needed
+			pthread_mutex_unlock(&readdata_mutex);
+			break;
+		}
+		if (res <= 0) {
+			// nothing read into buffer, or error occurred
+			// flag error to main thread
+			readdata_flag = -1;
+			pthread_mutex_unlock(&readdata_mutex);
+			break;
+		}
+		readdata_flag = 0;
+		pthread_mutex_unlock(&readdata_mutex);
+
+		// switch buffer
+		buf = (buf+1)&1;
 	}
 	return ptr;
 }
+
+void loading_trigger_fill_buffer()
+{
+	// sync with other thread, tell to read more data
+	simthread_barrier_wait(&loadsave_barrier);
+
+	pthread_mutex_lock(&readdata_mutex);
+	if (readdata_flag < 0) {
+		pthread_mutex_unlock(&readdata_mutex);
+		// reading thread exited due to error
+		dbg->fatal("loadsave_t::read", "savegame corrupt, not enough data");
+	}
+	readdata_flag = 1; // more data please
+
+	pthread_cond_broadcast(&readdata_cond);
+	pthread_mutex_unlock(&readdata_mutex);
+}
+
+void loading_finalize()
+{
+	simthread_barrier_wait(&loadsave_barrier);
+	// reader thread waits, signal end of loadingdata
+	pthread_mutex_lock(&readdata_mutex);
+	readdata_flag = -1; // no more data
+
+	pthread_cond_broadcast(&readdata_cond);
+	pthread_mutex_unlock(&readdata_mutex);
+}
+/*
+ * Multi-threaded saving:
+ *
+ * - synchronization is done with barriers
+ * - end-of-saving is signaled to thread with get_buf_pos(buf)==0,
+ *   which is protected by loadsave_mutex
+ */
+
+void *save_thread( void *ptr )
+{
+	loadsave_param_t *lsp = reinterpret_cast<loadsave_param_t *>(ptr);
+	int buf = 1;
+
+	while(true) {
+		// wait to sync with main thread before flushing the buffer
+		simthread_barrier_wait(&loadsave_barrier);
+
+		buf = (buf+1)&1;
+		if(  lsp->loadsave_routine->get_buf_pos(buf)==0  ) {
+			// empty buffer after sync - signal to exit
+			break;
+		}
+		lsp->loadsave_routine->flush_buffer(buf);
+	}
+	return ptr;
+}
+
+void saving_trigger_flush()
+{
+	// sync with thread to flush the buffer
+	simthread_barrier_wait(&loadsave_barrier);
+}
+
+void saving_finalize()
+{
+	// first sync with thread causes buffer to be flushed
+	simthread_barrier_wait(&loadsave_barrier);
+	// second sync with empty buffer signals thread to exit
+	simthread_barrier_wait(&loadsave_barrier);
+}
+
 #endif
-
-
-struct file_descriptors_t {
-	FILE *fp;
-	gzFile gzfp;
-	BZFILE *bzfp;
-	int bse;
-	file_descriptors_t() : fp(NULL), gzfp(NULL), bzfp(NULL), bse(BZ_OK+1) {}
-};
 
 
 loadsave_t::mode_t loadsave_t::save_mode = bzip2;	// default to use for saving
 loadsave_t::mode_t loadsave_t::autosave_mode = zipped;	// default to use for autosaving
+int loadsave_t::save_level = 6;
+int loadsave_t::autosave_level = 1;
 
-loadsave_t::loadsave_t() : filename()
+
+loadsave_t::loadsave_t() :
+	mode(binary),
+	buffered(false),
+	stream(NULL)
 {
-	mode = 0;
-	saving = false;
-	buffered = false;
-	fd = new file_descriptors_t();
+	curr_buff = 0;
 }
 
 loadsave_t::~loadsave_t()
 {
 	set_buffered(false);
-	close();
-	delete fd;
+
+	const bool saving = is_saving();
+	const char *errmsg = close();
+
+	if(  errmsg  ) {
+		dbg->error( "loadsave_t::~loadsave_t", "Could not %s save file: %s", (saving ? "save" : "load"), errmsg );
+	}
 }
 
 
@@ -109,14 +225,17 @@ void loadsave_t::set_buffered(bool enable)
 		if(  !buffered  ) {
 			buffered = true;
 			curr_buff = 0;
-			buf_pos[0] = buf_pos[1] = 0;
-			buf_len[0] = buf_len[1] = 0;
-			ls_buf[0] = new char[LS_BUF_SIZE];
-#if MULTI_THREAD>1
-			ls_buf[1] = new char[LS_BUF_SIZE]; // second buffer only when multithreaded
+			buff[0].pos = buff[1].pos = 0;
+			buff[0].len = buff[1].len = 0;
+			buff[0].buf = new char[LS_BUF_SIZE];
 
-			pthread_barrier_init(&loadsave_barrier, NULL, 2);
+#ifdef MULTI_THREAD
+			buff[1].buf = new char[LS_BUF_SIZE]; // second buffer only when multithreaded
+
+			simthread_barrier_init(&loadsave_barrier, NULL, 2);
 			pthread_mutex_init(&loadsave_mutex, NULL);
+			pthread_mutex_init(&readdata_mutex, NULL);
+			readdata_flag = 0;
 
 			pthread_attr_t attr;
 			pthread_attr_init(&attr);
@@ -124,7 +243,7 @@ void loadsave_t::set_buffered(bool enable)
 
 			ls.loadsave_routine = this;
 
-			pthread_create(&ls_thread, &attr, loadsave_thread, (void *)&ls);
+			pthread_create(&ls_thread, &attr, is_saving() ? save_thread : load_thread, (void *)&ls);
 
 			pthread_attr_destroy(&attr);
 #endif
@@ -132,203 +251,198 @@ void loadsave_t::set_buffered(bool enable)
 	}
 	else {
 		if(  buffered  ) {
-			if(  saving  &&  buf_pos[curr_buff]>0  ) {
-#if MULTI_THREAD>1
-				// first sync with thread causes buffer to be flushed
-				pthread_barrier_wait(&loadsave_barrier);
-				// second sync with empty buffer signals thread to exit
-				pthread_barrier_wait(&loadsave_barrier);
+			if(  is_saving()  &&  buff[curr_buff].pos>0  ) {
+#ifdef MULTI_THREAD
+				saving_finalize();
 #else
 				flush_buffer(curr_buff);
 #endif
 			}
-#if MULTI_THREAD>1
+#ifdef MULTI_THREAD
+			if(  !is_saving()  ) {
+				loading_finalize();
+			}
 			pthread_join(ls_thread,NULL);
 
 			pthread_mutex_destroy(&loadsave_mutex);
-			pthread_barrier_destroy(&loadsave_barrier);
+			pthread_mutex_destroy(&readdata_mutex);
+			simthread_barrier_destroy(&loadsave_barrier);
 
-			delete [] ls_buf[1]; // second buffer only when multithreaded
+			delete[] buff[1].buf; // second buffer only when multithreaded
 #endif
-			delete [] ls_buf[0];
+			delete[] buff[0].buf;
 			buffered = false;
 		}
 	}
 }
 
 
-bool loadsave_t::rd_open(const char *filename)
+loadsave_t::file_status_t loadsave_t::rd_open(const char *filename_utf8)
 {
 	close();
 
-	version = 0;
-	mode = zipped;
-	experimental_version = 0;
-	fd->fp = fopen(filename, "rb");
-	if(  fd->fp==NULL  ) {
-		// most likely not existing
-		return false;
+	const file_classify_status_t cl_status = classify_file(filename_utf8, &finfo);
+
+	if (cl_status != FILE_CLASSIFY_OK) {
+		// file likely does not exist
+		dbg->warning("loadsave_t::rd_open", "File '%s' does not exist or is not accessible", filename_utf8);
+		return FILE_STATUS_ERR_NOT_EXISTING;
 	}
-	// now check for BZ2 format
-	char buf[512];
-	if(  fread( buf, 1, 512, fd->fp )==512  ) {
-		if(  buf[0]=='B'  &&  buf[1]=='Z'  ) {
-			mode = bzip2;
-		}
-		fseek(fd->fp,0,SEEK_SET);
+	else if(  finfo.ext_version.version == INVALID_FILE_VERSION  ) {
+		return FILE_STATUS_ERR_NO_VERSION;
+	}
+	else if(  finfo.ext_version.version > (SIM_VERSION_MAJOR*1000 + SIM_SERVER_MINOR)  ) {
+		/*
+		 * Reading future versions will almost certainly lead to exceptions; so we close here.
+		 * It would be nice to give a detailed message what failed (like the fatal error does)
+		 * But this error may happening also in regular installations after running a nighly
+		 * so we just record the failure.
+		 */
+		return FILE_STATUS_ERR_FUTURE_VERSION;
 	}
 
-	if(  mode==bzip2  ) {
-		fd->bse = BZ_OK+1;
-		fd->bzfp = NULL;
-		fd->bzfp = BZ2_bzReadOpen( &fd->bse, fd->fp, 0, 0, NULL, 0 );
-		bool ok = false;
-		if(  fd->bse==BZ_OK  ) {
-			// else: use zlib
-			MEMZERO(buf);
-			if(  BZ2_bzRead( &fd->bse, fd->bzfp, buf, sizeof(SAVEGAME_PREFIX) )==sizeof(SAVEGAME_PREFIX)  &&  fd->bse==BZ_OK  ) {
-				// get the rest of the string
-				for(  int i=sizeof(SAVEGAME_PREFIX);  buf[i-1]>=32  &&  i<511;  i++  ) {
-					buf[i] = lsgetc();
-				}
-				ok = fd->bse==BZ_OK;
-			}
-		}
-		// BZ-Header but wrong data ...
-		if(  !ok  ) {
-			close();
-			return false;
-		}
+	// now open the file
+	assert(stream == NULL);
+	mode = 0;
+
+	switch (finfo.file_type) {
+		case file_info_t::TYPE_XML_ZSTD:
+			mode = xml;
+			// fallthrough
+		case file_info_t::TYPE_ZSTD:
+			mode |= zstd;
+#if USE_ZSTD
+			stream = new zstd_file_rdwr_stream_t(filename_utf8, false, 0); break;
+#else
+			dbg->warning("loadsave_t::rd_open", "Cannot read from '%s': Unsupported save file compression 'zstd'", filename_utf8);
+			return FILE_STATUS_ERR_UNSUPPORTED_COMPRESSION;
+#endif
+
+		case file_info_t::TYPE_XML_BZIP2:
+			mode = xml;
+			// fallthrough
+		case file_info_t::TYPE_BZIP2:
+			mode |= bzip2;
+			stream = new bzip2_file_rdwr_stream_t(filename_utf8, false); break;
+
+		case file_info_t::TYPE_XML_ZIPPED:
+			mode = xml;
+			// fallthrough
+		case file_info_t::TYPE_ZIPPED:
+			mode |= zipped;
+			stream = new zlib_file_rdwr_stream_t(filename_utf8, false, 0); break;
+
+		case file_info_t::TYPE_XML:
+			mode = xml;
+			// fallthrough
+		default:
+			stream = new raw_file_rdwr_stream_t(filename_utf8, false); break;
 	}
 
-	if(  mode!=bzip2  ) {
-		fclose(fd->fp);
-		// and now with zlib ...
-		fd->gzfp = gzopen(filename, "rb");
-		if(fd->gzfp==NULL) {
-			return false;
-		}
-		gzgets(fd->gzfp, buf, 512);
-	}
-	saving = false;
+	if (!stream || stream->get_status() != rdwr_stream_t::STATUS_OK) {
+		const char *errmsg = close();
 
-	if (strstart(buf, SAVEGAME_PREFIX)) {
-		combined_version versions = int_version(buf + sizeof(SAVEGAME_PREFIX) - 1, &mode, pak_extension);
-		version = versions.version;
-		experimental_version = versions.experimental_version;
-	} else if (strstart(buf, XML_SAVEGAME_PREFIX)) {
-		mode |= xml;
-		while (lsgetc() != '<') { /* nothing */ }
-		read(buf, sizeof(SAVEGAME_PREFIX) - 1);
-		if (!strstart(buf, SAVEGAME_PREFIX)) {
-			close();
-			// not a simutrans XML file ...
-			return false;
+		// file likely does not exist any longer
+		if (errmsg) {
+			dbg->warning("loadsave_t::rd_open", "Cannot read from '%s': %s", filename_utf8, errmsg);
+		}
+		else {
+			dbg->warning("loadsave_t::rd_open", "Cannot read from '%s'", filename_utf8);
 		}
 
-		read(buf, sizeof("version=\"") - 1);
-		char str[256];
-		char *s = str;
-		for (int i = 0; i < 255; i++) {
-			char c = lsgetc();
-			if (c=='\"') {
-				break;
-			}
-			*s++ = c;
-		}
-		*s = 0;
-		combined_version versions = int_version(str, &mode, pak_extension);
-		version = versions.version;
-		experimental_version = versions.experimental_version;
-
-		read(buf, sizeof(" pak=\"") - 1);
-		if (version > 0) {
-			s = pak_extension;
-			for (int i = 0; i < 63; i++) {
-				char c = lsgetc();
-				if (c=='\"') {
-					break;
-				}
-				*s++ = c;
-			}
-			*s = 0;
-			while (lsgetc() != '>');
-		}
-	} else {
-		close();
-		return false;
-	}
-	if(mode==text) {
-		close();
-		dbg->error("loadsave_t::rd_open()","text mode no longer supported." );
-		return false;
+		return FILE_STATUS_ERR_NOT_EXISTING;
 	}
 
-	if(*pak_extension==0) {
-		strcpy( pak_extension, "(unknown)" );
+	// skip header
+	size_t header_size = finfo.header_size;
+
+	while (header_size != 0) {
+		char buf[128];
+		const size_t sz = min(header_size, 128);
+		stream->read(buf, sz);
+		header_size -= sz;
 	}
-	this->filename = filename;
-	return true;
+
+	if(*finfo.pak_extension==0) {
+		strcpy( finfo.pak_extension, "(unknown)" );
+	}
+
+#ifndef SPECIAL_RESCUE_12_6
+	if (finfo.ext_version.extended_version >= 12)
+	{
+		rdwr_long(finfo.ext_version.extended_revision);
+	}
+	else
+	{
+		finfo.ext_version.extended_revision = 0;
+	}
+#else
+	finfo.ext_version.extended_revision = 0;
+#endif
+
+	return FILE_STATUS_OK;
 }
 
-void loadsave_t::rdwr_string(std::string &s) {
-        if (saving) {
-                const char* name = s.c_str();
-                rdwr_str(name);
-        } else {
-                const char *name = NULL;
-                rdwr_str(name);
-                s = name;
-                free(const_cast<char *>(name));
-        } 
+
+void loadsave_t::rdwr_string(std::string &s)
+{
+	if (is_saving()) {
+		const char* name = s.c_str();
+		rdwr_str(name);
+	}
+	else {
+		const char *name = NULL;
+		rdwr_str(name);
+		s = name;
+		free(const_cast<char *>(name));
+	}
 }
 
-bool loadsave_t::wr_open(const char *filename, mode_t m, const char *pak_extension, const char *savegame_version, const char *savegame_version_ex)
+
+
+loadsave_t::file_status_t loadsave_t::wr_open( const char *filename_utf8, mode_t m, int level, const char *pak_extension,
+	const char *savegame_version, const char *savegame_version_ex, const char * )
 {
 	mode = m;
 	close();
 
-	if(  is_zipped()  ) {
-		// using zlib
-		fd->gzfp = gzopen(filename, "wb");
+#if !USE_ZSTD
+	if( mode & zstd ) {
+		mode &= ~zstd;
+		mode |= bzip2;
+		dbg->warning( "loadsave_t::wr_open", "Compiled without zstd support, using bzip2!" );
 	}
-	else if(  mode==binary  ) {
-		// no compression
-		fd->fp = fopen(filename, "wb");
-	}
-	else if(  is_bzip2()  ) {
-		// XML or bzip ...
-		fd->fp = fopen(filename, "wb");
-		// the additional magic for bzip2
-		fd->bse = BZ_OK+1;
-		fd->bzfp = NULL;
-		if(  fd->fp  ) {
-			fd->bzfp = BZ2_bzWriteOpen( &fd->bse, fd->fp, 9, 0, 30 /* default is 30 */ );
-			if(  fd->bse!=BZ_OK  ) {
-				return false;
-			}
-		}
-	}
-	else {
-		// uncompressed xml should be here ...
-		assert(  mode==xml  );
-		fd->fp = fopen(filename, "wb");
+#endif
+
+	assert(stream == NULL);
+
+	switch (mode & ~xml) {
+#if USE_ZSTD
+		case zstd: stream = new zstd_file_rdwr_stream_t(filename_utf8, true, level); break;
+#endif
+		case bzip2:  stream = new bzip2_file_rdwr_stream_t(filename_utf8, true);       break;
+		case zipped: stream = new zlib_file_rdwr_stream_t(filename_utf8, true, level); break;
+		case binary: stream = new raw_file_rdwr_stream_t(filename_utf8, true);         break;
+		default:
+			dbg->error("loadsave_t::wr_open", "Unsupported save file compression");
+			return FILE_STATUS_ERR_UNSUPPORTED_COMPRESSION;
 	}
 
-	// check whether we could open the file
-	if(  is_zipped()  ?  fd->gzfp == NULL  :  fd->fp == NULL  ) {
-		return false;
+	if (stream->get_status() != rdwr_stream_t::STATUS_OK) {
+		dbg->error("loadsave_t::wr_open", "Cannot open '%s' for writing!", filename_utf8);
+		return (stream->get_status() == rdwr_stream_t::STATUS_ERR_NOT_EXISTING) ? FILE_STATUS_ERR_NOT_EXISTING : FILE_STATUS_ERR_CORRUPT;
 	}
-	saving = true;
+
+	set_buffered( true );
 
 	// get the right extension
 	const char *start = pak_extension;
 	const char *end = pak_extension + strlen(pak_extension)-1;
 	const char *c = pak_extension;
-	
-	// Add Experimental version numbering.
+
+	// Add Extended version numbering.
 	std::string savegame_ver = savegame_version;
-	if(savegame_version_ex && savegame_version_ex != savegame_version)
+	if (savegame_version_ex && savegame_version_ex != savegame_version)
 	{
 		savegame_ver.append(savegame_version_ex);
 	}
@@ -341,88 +455,84 @@ bool loadsave_t::wr_open(const char *filename, mode_t m, const char *pak_extensi
 		c++;
 	}
 	assert(start<end);
-	tstrncpy(this->pak_extension, start, lengthof(this->pak_extension));
-	// delete trailing path seperator
-	this->pak_extension[strlen(this->pak_extension)-1] = 0;
+	tstrncpy(finfo.pak_extension, start, lengthof(finfo.pak_extension));
+	// delete trailing path separator
+	finfo.pak_extension[strlen(finfo.pak_extension)-1] = 0;
 
-	loadsave_t::combined_version combined_version = int_version(savegame_version, NULL, NULL );
-	version = combined_version.version;
+	extended_version_t combined_version = int_version(savegame_version,  NULL);
+	finfo.ext_version.version = combined_version.version;
 
-	const char* pakset_string = this->pak_extension;
+	const char* pakset_string = finfo.pak_extension;
 
 	if(  !is_xml()  ) {
 		char str[8192];
 		size_t len;
-		if(  version<102002  ) {
-			len = sprintf( str, SAVEGAME_PREFIX "%s%s%s\n", savegame_ver.c_str(), "zip", pakset_string );
+		if(  finfo.ext_version.version<=102002  ) {
+			len = sprintf(str, SAVEGAME_PREFIX "%s%s%s\n", savegame_ver.c_str(), "zip", pakset_string);
 		}
 		else {
-			len = sprintf( str, SAVEGAME_PREFIX "%s-%s\n", savegame_ver.c_str(), pakset_string );
+			len = sprintf(str, SAVEGAME_PREFIX "%s-%s\n", savegame_ver.c_str(), pakset_string);
 		}
 		write( str, len );
 	}
 	else {
 		char str[4096];
-		int n = sprintf( str, "<?xml version=\"1.0\"?>\n<Simutrans version=\"%s\" pak=\"%s\">\n", savegame_ver.c_str(), pakset_string );
+		int n = sprintf(str, "<?xml version=\"1.0\"?>\n<Simutrans version=\"%s\" pak=\"%s\">\n", savegame_ver.c_str(), pakset_string);
 		write( str, n );
-		ident = 1;
+		indent = 1;
 	}
 
-	loadsave_t::combined_version versions = int_version(savegame_ver.c_str(), NULL, NULL );
-	version = versions.version;
-	experimental_version = versions.experimental_version;
+	finfo.ext_version = int_version(savegame_ver.c_str(), NULL);
 
-	this->mode = mode;
-	this->filename = filename;
+	if (finfo.ext_version.extended_version >= 12)
+	{
+		rdwr_long(finfo.ext_version.extended_revision);
+	}
+	else
+	{
+		finfo.ext_version.extended_revision = 0;
+	}
 
-	return true;
+	return FILE_STATUS_OK;
 }
 
 
 const char *loadsave_t::close()
 {
-	const char *success = NULL;
+	if (!stream) {
+		return NULL;
+	}
 
-	if(  is_xml()  &&  saving  &&  (!is_bzip2()  ||  fd->bse==BZ_OK)
-	     &&  (is_zipped()  ?  fd->gzfp != NULL :  fd->fp != NULL) ) {
+	if(  is_xml()  && stream->is_writing() && stream->get_status() == rdwr_stream_t::STATUS_OK) {
 		// only write when close and no error occurred
 		const char *end = "\n</Simutrans>\n";
 		write( end, strlen(end) );
 	}
-	if(  is_zipped()  &&  fd->gzfp) {
-		int err_no;
-		const char *err_str = gzerror( fd->gzfp, &err_no );
-		if(err_no!=Z_OK  &&  err_no!=Z_STREAM_END) {
-			success =  err_no==Z_ERRNO ? strerror(errno) : err_str;
-		}
-		gzclose(fd->gzfp);
-		fd->gzfp = NULL;
-	}
-	if(  is_bzip2()  &&  fd->fp ) {
-		if(   saving  ) {
-			/* BZLIB seems to eat the last byte, if it is at odd position
-				* => we just write a dummy zero padding byte
-				*/
-			write( "", 1 );
-			BZ2_bzWriteClose( &fd->bse, fd->bzfp, 0, NULL, NULL );
-		}
-		else {
-			BZ2_bzReadClose( &fd->bse, fd->bzfp );
-		}
-		fclose( fd->fp );
-		fd->bzfp = fd->fp = NULL;
-		fd->bse = BZ_STREAM_END;
-	}
-	if(  !is_bzip2()  &&  !is_zipped()  &&  fd->fp  ) {
-		int err_no = ferror(fd->fp);
-		fclose(fd->fp);
-		if(err_no!=0) {
-			success = strerror(err_no);
-		}
-	}
-	fd->fp = NULL;
 
-	return success;
+	if (buffered) {
+		// flush buffers
+		set_buffered(false);
+	}
+
+	const char *errmsg = NULL;
+
+	switch (stream->get_status()) {
+		case rdwr_stream_t::STATUS_EOF:
+		case rdwr_stream_t::STATUS_OK: errmsg = NULL; break;
+
+		case rdwr_stream_t::STATUS_ERR_CORRUPT:        errmsg = "Corrupt save file";         break;
+		case rdwr_stream_t::STATUS_ERR_DEPRECATED:     errmsg = "Save file version too old"; break;
+		case rdwr_stream_t::STATUS_ERR_FUTURE_VERSION: errmsg = "Save file version too new"; break;
+		case rdwr_stream_t::STATUS_ERR_NO_VERSION:     errmsg = "Unversioned save file";     break;
+		case rdwr_stream_t::STATUS_ERR_FULL:           errmsg = "No space left on device";   break;
+		case rdwr_stream_t::STATUS_ERR_NOT_EXISTING:   errmsg = "File not found";            break;
+		case rdwr_stream_t::STATUS_INVALID:            errmsg = "<Invalid status>";          break;
+	}
+
+	delete stream;
+	stream = NULL;
+
+	return errmsg;
 }
 
 
@@ -430,43 +540,25 @@ const char *loadsave_t::close()
 
 /**
  * Checks end-of-file
- * @author Hj. Malthaner
  */
 bool loadsave_t::is_eof()
 {
-	if(  is_bzip2()  ) {
-		if(  buffered  ) {
-			bool r;
-#if MULTI_THREAD>1
-			pthread_mutex_lock(&loadsave_mutex);
-#endif
-			r = buf_pos[0]>=buf_len[0]  &&  buf_pos[1]>=buf_len[1]  &&  fd->bse!=BZ_OK;
-#if MULTI_THREAD>1
-			pthread_mutex_unlock(&loadsave_mutex);
-#endif
-			return r;
-		}
-		else {
-			// any error is EOF ...
-			return fd->bse!=BZ_OK;
-		}
+#ifdef MULTI_THREAD
+	if (buffered) {
+		pthread_mutex_lock( &loadsave_mutex );
 	}
-	else {
-		if(  buffered  ) {
-			bool r;
-#if MULTI_THREAD>1
-			pthread_mutex_lock(&loadsave_mutex);
 #endif
-			r = buf_pos[0]>=buf_len[0]  &&  buf_pos[1]>=buf_len[1]  &&  gzeof(fd->gzfp)!=0;
-#if MULTI_THREAD>1
-			pthread_mutex_unlock(&loadsave_mutex);
-#endif
-			return r;
-		}
-		else {
-			return gzeof(fd->gzfp)!=0;
-		}
+
+	const bool eof = (!buffered || (buff[0].pos >= buff[0].len && buff[1].pos >= buff[1].len)) &&
+	stream->get_status() == rdwr_stream_t::STATUS_EOF;
+
+#ifdef MULTI_THREAD
+	if (buffered) {
+		pthread_mutex_unlock(&loadsave_mutex);
 	}
+#endif
+
+	return eof;
 }
 
 
@@ -489,169 +581,145 @@ int loadsave_t::lsgetc()
 
 size_t loadsave_t::write(const void *buf, size_t len)
 {
-	if(  buffered  ) {
-		if(  buf_pos[curr_buff]+len<=LS_BUF_SIZE  ) {
-			// room in the buffer, copy it all
-			for(  unsigned i=0;  i<len;  i++  ) {
-				ls_buf[curr_buff][buf_pos[curr_buff]++] = ((const char*)buf)[i];
-			}
-			return len;
-		}
-		else {
-			// copy up to full buffer
-			unsigned i = 0;
-			const unsigned left = LS_BUF_SIZE-buf_pos[curr_buff];
-			while(  i<left  ) {
-				ls_buf[curr_buff][buf_pos[curr_buff]++] = ((const char*)buf)[i++];
-			}
+	if (!buffered) {
+		return stream->write(buf, len);
+	}
 
-#if MULTI_THREAD>1
-			// sync with thread to flush the buffer
-			pthread_barrier_wait(&loadsave_barrier);
-
-			// switch buffers
-			curr_buff = (curr_buff+1)&1;
-#else
-			// not threaded, flush single buffer ourselves
-			flush_buffer(curr_buff);
-#endif
-			// copy the rest
-			while(  i<len  ) {
-				ls_buf[curr_buff][buf_pos[curr_buff]++] = ((const char*)buf)[i++];
-			}
-			return len;
+	if(  buff[curr_buff].pos+len<=LS_BUF_SIZE  ) {
+		// room in the buffer, copy it all
+		for(  unsigned i=0;  i<len;  i++  ) {
+			buff[curr_buff].buf[buff[curr_buff].pos++] = ((const char*)buf)[i];
 		}
+		return len;
 	}
 	else {
-		if(  is_zipped()  ) {
-			return gzwrite(fd->gzfp, const_cast<void *>(buf), len);
+		// copy up to full buffer
+		unsigned i = 0;
+		const unsigned left = LS_BUF_SIZE-buff[curr_buff].pos;
+		while(  i<left  ) {
+			buff[curr_buff].buf[buff[curr_buff].pos++] = ((const char*)buf)[i++];
 		}
-		else if(  is_bzip2()  ) {
-			BZ2_bzWrite( &fd->bse, fd->bzfp, const_cast<void *>(buf), len);
-			assert(fd->bse==BZ_OK);
-			return len;
+
+#ifdef MULTI_THREAD
+		saving_trigger_flush();
+
+		// switch buffers
+		curr_buff = (curr_buff+1)&1;
+#else
+		// not threaded, flush single buffer ourselves
+		flush_buffer(curr_buff);
+#endif
+		// copy the rest
+		while(  i<len  ) {
+			buff[curr_buff].buf[buff[curr_buff].pos++] = ((const char*)buf)[i++];
 		}
-		else {
-			return fwrite(buf, 1, len, fd->fp);
-		}
+		return len;
 	}
 }
 
 
 void loadsave_t::flush_buffer(int buf_num)
 {
-	int bse = fd->bse;
-	if(  is_zipped()  ) {
-		gzwrite(fd->gzfp, ls_buf[buf_num], buf_pos[buf_num]);
-	}
-	else if(  is_bzip2()  ) {
-		BZ2_bzWrite( &bse, fd->bzfp, ls_buf[buf_num], buf_pos[buf_num]);
-		assert(bse==BZ_OK);
-	}
-	else {
-		fwrite(ls_buf[buf_num], 1, buf_pos[buf_num], fd->fp);
-	}
-#if MULTI_THREAD>1
+#ifdef MULTI_THREAD
 	pthread_mutex_lock(&loadsave_mutex);
 #endif
-	if(  is_bzip2()  ) {
-		fd->bse = bse;
+
+	// Cannot abort the saving process, so just ignore any further flushes
+	// if the previous flush has failed.
+	// loadsave_t::close() handles propagation of the error message.
+	if (stream->get_status() == rdwr_stream_t::STATUS_OK) {
+		stream->write(buff[buf_num].buf, buff[buf_num].pos);
 	}
-	buf_pos[buf_num] = 0;
-#if MULTI_THREAD>1
+	buff[buf_num].pos = 0;
+
+#ifdef MULTI_THREAD
 	pthread_mutex_unlock(&loadsave_mutex);
 #endif
+}
+
+
+void loadsave_t::write_indent()
+{
+	static const int max_indent = 64;
+	static const char spaces[max_indent] = "                                                               ";
+
+	write(spaces, min(indent, max_indent) );
 }
 
 
 size_t loadsave_t::read(void *buf, size_t len)
 {
-	if(  buffered  ) {
-		if(  len>=LS_BUF_SIZE*2  ) {
-			dbg->fatal("loadsave_t::read()","Request for %d too long", len);
-			return 0;
-		}
-		if(  buf_pos[curr_buff]+len<=buf_len[curr_buff]  ) {
-			// room in the buffer, copy it all
-			for(  unsigned i=0;  i<len;  i++  ) {
-				((char*)buf)[i] = ls_buf[curr_buff][buf_pos[curr_buff]++];
-			}
- 			return len;
-		}
-		else {
-			// copy up to full buffer
-			unsigned i = 0;
-			if(  buf_len[curr_buff]>0  ) {
-				const unsigned left = buf_len[curr_buff]-buf_pos[curr_buff];
-				while(  i<left  ) {
-					((char*)buf)[i++] = ls_buf[curr_buff][buf_pos[curr_buff]++];
-				}
-			}
-#if MULTI_THREAD>1
-			// sync with other thread to read more
-			pthread_barrier_wait(&loadsave_barrier);
+	if (!buffered) {
+		return stream->read( buf, len);
+	}
 
-			// switch buffers
-			curr_buff = (curr_buff+1)&1;
+	if(  len>=LS_BUF_SIZE*2  ) {
+		dbg->fatal("loadsave_t::read()","Request for %d too long", len);
+	}
+	if(  buff[curr_buff].pos+len<=buff[curr_buff].len  ) {
+		// room in the buffer, copy it all
+		for(  unsigned i=0;  i<len;  i++  ) {
+			((char*)buf)[i] = buff[curr_buff].buf[buff[curr_buff].pos++];
+		}
+
+		return len;
+	}
+	else {
+		// copy up to full buffer
+		unsigned i = 0;
+		if(  buff[curr_buff].len>0  ) {
+			const unsigned left = buff[curr_buff].len-buff[curr_buff].pos;
+			while(  i<left  ) {
+				((char*)buf)[i++] = buff[curr_buff].buf[buff[curr_buff].pos++];
+			}
+		}
+#ifdef MULTI_THREAD
+		loading_trigger_fill_buffer();
+
+		// switch buffers
+		curr_buff = (curr_buff+1)&1;
 #else
-			// not threaded, read more into single buffer ourselves
-			fill_buffer(curr_buff);
+		// not threaded, read more into single buffer ourselves
+		fill_buffer(curr_buff);
 #endif
-			// check if enough read
-			if(  len-i>buf_len[curr_buff]  ) {
-				return 0;
-			}
+		// check if enough read
+		if(  len-i>buff[curr_buff].len  ) {
+			dbg->fatal("loadsave_t::read","savegame corrupt, not enough data");
+		}
 
-			// copy the rest
-			while(  i<len  ) {
-				((char*)buf)[i++] = ls_buf[curr_buff][buf_pos[curr_buff]++];
-			}
-			return len;
+		// copy the rest
+		while(  i<len  ) {
+			((char*)buf)[i++] = buff[curr_buff].buf[buff[curr_buff].pos++];
 		}
-	}
-	else {
-		if(  is_bzip2()  ) {
-			if(  fd->bse==BZ_OK  ) {
-				BZ2_bzRead( &fd->bse, fd->bzfp, buf, len);
-			}
-			return fd->bse==BZ_OK ? len : 0;
-		}
-		else {
-			return gzread(fd->gzfp, buf, len);
-		}
+
+		return len;
 	}
 }
 
 
-int loadsave_t::fill_buffer(int buf_num)
+size_t loadsave_t::fill_buffer( int buf_num )
 {
-	int r;
-	int bse = fd->bse;
+	assert(buffered);
 
-	if(  is_bzip2()  ) {
-		if(  bse==BZ_OK  ) {
-			r = BZ2_bzRead( &bse, fd->bzfp, ls_buf[buf_num], LS_BUF_SIZE);
-		}
-		else {
-			r = 0;
-		}
-	}
-	else {
-		r = gzread(fd->gzfp, ls_buf[buf_num], LS_BUF_SIZE);
-	}
-#if MULTI_THREAD>1
+	const size_t sz = stream->read(buff[ buf_num ].buf, LS_BUF_SIZE);
+
+	#ifdef MULTI_THREAD
 	pthread_mutex_lock(&loadsave_mutex);
-#endif
-	if(  is_bzip2()  ) {
-		fd->bse = bse;
-	}
-	buf_pos[buf_num] = 0;
-	buf_len[buf_num] = r;
-#if MULTI_THREAD>1
+	#endif
+
+	const rdwr_stream_t::status_t status = stream->get_status();
+	const bool stream_ok = (status == rdwr_stream_t::STATUS_EOF || status == rdwr_stream_t::STATUS_OK);
+
+	assert((status == rdwr_stream_t::STATUS_OK) == (sz == LS_BUF_SIZE));
+	buff[buf_num].pos = 0;
+	buff[buf_num].len = stream_ok ? sz : 0; // buf_len is unsigned, set to zero in case of error
+
+	#ifdef MULTI_THREAD
 	pthread_mutex_unlock(&loadsave_mutex);
-#endif
-	return r;
+	#endif
+	return sz;
 }
+
 
 
 /*************** High level routines to read/write data types *************
@@ -662,7 +730,7 @@ int loadsave_t::fill_buffer(int buf_num)
 void loadsave_t::rdwr_byte(sint8 &c)
 {
 	if(!is_xml()) {
-		if(saving) {
+		if(is_saving()) {
 			lsputc(c);
 		}
 		else {
@@ -688,7 +756,7 @@ void loadsave_t::rdwr_byte(uint8 &c)
 void loadsave_t::rdwr_short(sint16 &i)
 {
 	if(!is_xml()) {
-		if (saving) {
+		if (is_saving()) {
 #ifdef SIM_BIG_ENDIAN
 			sint16 ii = endian(i);
 			write(&ii, sizeof(sint16));
@@ -724,7 +792,7 @@ void loadsave_t::rdwr_short(uint16 &i)
 void loadsave_t::rdwr_long(sint32 &l)
 {
 	if(!is_xml()) {
-		if (saving) {
+		if (is_saving()) {
 #ifdef SIM_BIG_ENDIAN
 			uint32 ii = endian(l);
 			write(&ii, sizeof(uint32));
@@ -760,7 +828,7 @@ void loadsave_t::rdwr_long(uint32 &l)
 void loadsave_t::rdwr_longlong(sint64 &ll)
 {
 	if(!is_xml()) {
-		if (saving) {
+		if (is_saving()) {
 #ifdef SIM_BIG_ENDIAN
 			sint64 ii = endian(ll);
 			write(&ii, sizeof(sint64));
@@ -786,7 +854,7 @@ void loadsave_t::rdwr_longlong(sint64 &ll)
 void loadsave_t::rdwr_double(double &dbl)
 {
 	if(!is_xml()) {
-		if(saving) {
+		if(is_saving()) {
 			write(&dbl, sizeof(double));
 		}
 		else {
@@ -805,7 +873,7 @@ void loadsave_t::rdwr_double(double &dbl)
 void loadsave_t::rdwr_bool(bool &i)
 {
 	if(  !is_xml()  ) {
-		if(saving) {
+		if(is_saving()) {
 			lsputc(i ? '1' : '0');
 		}
 		else {
@@ -814,8 +882,8 @@ void loadsave_t::rdwr_bool(bool &i)
 	}
 	else {
 		// bool xml
-		if(saving) {
-			write( "                                                                ", min(64,ident) );
+		if(is_saving()) {
+			write_indent();
 			if(  i  ) {
 				write( "<bool>true</bool>\n", sizeof("<bool>true</bool>\n")-1 );
 			}
@@ -831,7 +899,7 @@ void loadsave_t::rdwr_bool(bool &i)
 			read( buffer, 5 );
 			buffer[5] = 0;
 			if(  strcmp("bool>",buffer)!=0  ) {
-				dbg->fatal( "loadsave_t::rdwr_str()","expected \"<bool>\", got \"<%s\"", buffer );
+				dbg->fatal( "loadsave_t::rdwr_bool()","expected \"<bool>\", got \"<%s\"", buffer );
 			}
 			read( buffer, 4 );
 			buffer[4] = 0;
@@ -840,7 +908,7 @@ void loadsave_t::rdwr_bool(bool &i)
 			read( buffer, 6 );
 			buffer[6] = 0;
 			if(  strcmp("/bool>",buffer)!=0  ) {
-				dbg->fatal( "loadsave_t::rdwr_str()","expected \"</bool>\", got \"<%s\"", buffer );
+				dbg->fatal( "loadsave_t::rdwr_bool()","expected \"</bool>\", got \"<%s\"", buffer );
 			}
 		}
 	}
@@ -849,22 +917,32 @@ void loadsave_t::rdwr_bool(bool &i)
 
 void loadsave_t::rdwr_xml_number(sint64 &s, const char *typ)
 {
-	if(saving) {
+	if(is_saving()) {
 		static char nr[256];
-		size_t len = sprintf( nr, "%*s<%s>%.0f</%s>\n", ident, "", typ, (double)s, typ );
+		size_t len = sprintf( nr, "%*s<%s>%.0f</%s>\n", indent, "", typ, (double)s, typ );
 		write( nr, len );
 	}
 	else {
 		const int len = (int)strlen(typ);
 		assert(len<256);
-		// find start of tag
-		while(  lsgetc()!='<'  ) { /* nothing */ }
+
+		// find start of tag and handle eof correctly
+		while( 1 ) {
+			int ch = lsgetc();
+			if( ch == '<' ) {
+				break;
+			}
+			if( ch < 0 ) {
+				dbg->fatal( "loadsave_t::rdwr_xml_number()", "Reached end of file while trying to read <%s>", typ );
+			}
+		}
+
 		// check for correct tag
 		char buffer[256];
 		read( buffer, len );
 		buffer[len] = 0;
 		if(  strcmp(typ,buffer)!=0  ) {
-			dbg->fatal( "loadsave_t::rdwr_str()","expected \"<%s>\", got \"<%s>\"", typ, buffer );
+			dbg->fatal( "loadsave_t::rdwr_xml_number()","expected \"<%s>\", got \"<%s>\"", typ, buffer );
 		}
 		while(  lsgetc()!='>'  )  ;
 		// read number;
@@ -907,7 +985,7 @@ void loadsave_t::rdwr_xml_number(sint64 &s, const char *typ)
 		read( buffer, len );
 		buffer[6] = 0;
 		if(  strcmp(typ,buffer)!=0  ) {
-			dbg->fatal( "loadsave_t::rdwr_str()","expected \"</%s>\", got \"</%s>\"", typ, buffer );
+			dbg->fatal( "loadsave_t::rdwr_xml_number()","expected \"</%s>\", got \"</%s>\"", typ, buffer );
 		}
 		while(  lsgetc()!='>'  )  ;
 	}
@@ -919,8 +997,8 @@ void loadsave_t::rdwr_str(const char *&s)
 {
 	if(!is_xml()) {
 		sint16 size;
-		if(saving) {
-			size = s ? (sint16)min(32767,strlen(s)) : 0;
+		if(is_saving()) {
+			size = s ? (sint16)min(LS_MAX_STRING_LEN,strlen(s)) : 0;
 #ifdef SIM_BIG_ENDIAN
 			{
 				uint16 ii = endian(size);
@@ -957,8 +1035,8 @@ void loadsave_t::rdwr_str(const char *&s)
 	}
 	else {
 		// use CDATA tag: <![CDATA[%s]]>
-		if(saving) {
-			write( "                                                                ", min(64,ident) );
+		if(is_saving()) {
+			write_indent();
 			write( "<![CDATA[", 9 );
 			if(s) {
 				write( s, strlen(s) );
@@ -966,8 +1044,8 @@ void loadsave_t::rdwr_str(const char *&s)
 			write( "]]>\n", 4 );
 		}
 		else {
-			char buffer[4096];
-			rdwr_str( buffer, 4096 );
+			char buffer[LS_STRING_BUF_SIZE];
+			rdwr_str( buffer, LS_STRING_BUF_SIZE );
 			if(s) {
 				free(const_cast<char *>(s));
 			}
@@ -982,8 +1060,8 @@ void loadsave_t::rdwr_str( char* result_buffer, size_t const size)
 {
 	if(!is_xml()) {
 		uint16 len;
-		if(saving) {
-			len = (uint16)min(32767,strlen(result_buffer));
+		if(is_saving()) {
+			len = (uint16)min(LS_MAX_STRING_LEN,strlen(result_buffer));
 #ifdef SIM_BIG_ENDIAN
 			{
 				sint16 ii = endian(len);
@@ -1007,8 +1085,8 @@ void loadsave_t::rdwr_str( char* result_buffer, size_t const size)
 	else {
 		// use CDATA tag: <![CDATA[%s]]>
 		char *s = result_buffer;
-		if(saving) {
-			write( "                                                                ", min(64,ident) );
+		if(is_saving()) {
+			write_indent();
 			write( "<![CDATA[", 9 );
 			if(s) {
 				write( s, strlen(s) );
@@ -1053,7 +1131,7 @@ void loadsave_t::rdwr_str( char* result_buffer, size_t const size)
 				}
 			}
 			else {
-				char temp[32767];
+				static char temp[LS_STRING_BUF_SIZE + 3];
 				char *s = temp;
 				for(  size_t i=0;  i<size+3;  i++  ) {
 					*s++ = lsgetc();
@@ -1094,19 +1172,19 @@ void loadsave_t::rdwr_str(plainstring& s)
 void loadsave_t::start_tag(const char *tag)
 {
 	if(  is_xml()  ) {
-		if(saving) {
-			write( "                                                                ", min(64,ident) );
+		if(is_saving()) {
+			write_indent();
 			write( "<", 1 );
 			write( tag, strlen(tag) );
 			write( ">\n", 2 );
-			ident ++;
+			indent ++;
 		}
 		else {
 			char buf[256];
 			// find start of tag
 			while(  lsgetc()!='<'  ) { /* nothing */ }
-			read(buf, strlen(tag));
-			if (!strstart(buf, tag)) {
+			read( buf, strlen(tag) );
+			if(  !strstart(buf, tag)  ) {
 				dbg->fatal( "loadsave_t::start_tag()","expected \"%s\", got \"%s\"", tag, buf );
 			}
 			while(  lsgetc()!='>'  )  ;
@@ -1118,9 +1196,9 @@ void loadsave_t::start_tag(const char *tag)
 void loadsave_t::end_tag(const char *tag)
 {
 	if(  is_xml()  ) {
-		if(saving) {
-			ident --;
-			write( "                                                                ", min(64,ident) );
+		if(is_saving()) {
+			indent --;
+			write_indent();
 			write( "</", 2 );
 			write( tag, strlen(tag) );
 			write( ">\n", 2 );
@@ -1138,7 +1216,7 @@ void loadsave_t::end_tag(const char *tag)
 
 void loadsave_t::wr_obj_id(sint16 id)
 {
-	if(!saving) {
+	if(!is_saving()) {
 		dbg->fatal( "loadsave_t::wr_obj_id()", "must be only called during saving!" );
 	}
 	if(!is_xml()) {
@@ -1153,7 +1231,7 @@ void loadsave_t::wr_obj_id(sint16 id)
 
 sint16 loadsave_t::rd_obj_id()
 {
-	if(saving) {
+	if(is_saving()) {
 		dbg->fatal( "loadsave_t::rd_obj_id()", "must be only called during reading!" );
 		return INVALID_RDWR_ID;
 	}
@@ -1172,7 +1250,7 @@ sint16 loadsave_t::rd_obj_id()
 
 void loadsave_t::wr_obj_id(const char *id_text)
 {
-	if(saving) {
+	if(is_saving()) {
 		if(  !is_xml()  ) {
 			write( id_text, strlen(id_text) );
 			lsputc( 10 );
@@ -1188,7 +1266,7 @@ void loadsave_t::wr_obj_id(const char *id_text)
 
 void loadsave_t::rd_obj_id(char *id_buf, int size)
 {
-	if(!saving) {
+	if(!is_saving()) {
 		if(  !is_xml()  ) {
 			int i=0;
 			*id_buf = 0;
@@ -1226,80 +1304,76 @@ void loadsave_t::rd_obj_id(char *id_buf, int size)
 }
 
 
-loadsave_t::combined_version loadsave_t::int_version(const char *version_text, int * /*mode*/, char *pak_extension_str)
+extended_version_t loadsave_t::int_version(const char *version_text, char *pak_extension_str)
 {
-	uint32 experimental_version = 0;
+	uint32 extended_version = 0;
 	// major number (0..)
 	uint32 v0 = atoi(version_text);
-	while(*version_text && *version_text++ != '.');
+	while(*version_text  &&  *version_text++ != '.')
+		;
 	if(!*version_text) {
-		dbg->fatal( "loadsave_t::int_version()","Really broken version string!" );
-		combined_version dud;
-		dud.version = 0;
-		dud.experimental_version = 0;
-		return dud;
+		return { 0, 0, 0 };
 	}
 
 	// middle number (.99.)
 	uint32 v1 = atoi(version_text);
-	while(*version_text && *version_text++ != '.');
+	while(*version_text  &&  *version_text++ != '.')
+		;
 	if(!*version_text) {
-		dbg->fatal( "loadsave_t::int_version()","Really broken version string!" );
-		combined_version dud;
-		dud.version = 0;
-		dud.experimental_version = 0;
-		return dud;
+		return { 0, 0, 0 };
 	}
 
 	// minor number (..08)
 	uint32 v2 = atoi(version_text);
 
-	// Experimental version
+	// Extended version
 	uint16 count = 0;
-	while(*version_text && *version_text++ != '.')
+	while (*version_text && *version_text++ != '.')
 	{
 		count++;
 	}
-	if(!*version_text) 
+	if (!*version_text)
 	{
-		// Decrement the pointer if this is not an Experimental version.
+		// Decrement the pointer if this is not an Extended version.
 		//*version_text -= count;
-		while(count > 0)
+		while (count > 0)
 		{
-			version_text --;
+			version_text--;
 			count--;
 		}
 	}
 	else
 	{
-		experimental_version = atoi(version_text);
-		while(count > 0)
+		extended_version = atoi(version_text);
+		while (count > 0)
 		{
-			version_text --;
+			version_text--;
 			count--;
 		}
 	}
 
 	uint32 version = v0 * 1000000 + v1 * 1000 + v2;
 
-	while(  isdigit(*version_text) || *version_text == '.'  ) {
+	while (isdigit(*version_text) || *version_text == '.') {
 		version_text++;
 	}
 
 	if(  version<=102002  ) {
-		/* the compression and the mode we determined already ourselves (otherwise we cannot read this
-		 * => leave the mode alone but for unknown modes!
+		/* the compression and the mode we determined already ourselves
+		 * (otherwise we cannot read this => leave the mode alone but for unknown modes!)
 		 */
 		if (strstart(version_text, "bin")) {
-			//*mode = binary;
 			version_text += 3;
-		} else if (strstart(version_text, "zip")) {
-			//*mode = zipped;
+		}
+		else if (strstart(version_text, "zip")) {
 			version_text += 3;
 		}
 		else if(  *version_text  ) {
 			// illegal version ...
-			version = 999999999;
+			if (pak_extension_str) {
+				std::strcpy(pak_extension_str,"(broken)");
+				version = 999999999;
+			}
 		}
 	}
 	else {
@@ -1322,9 +1396,31 @@ loadsave_t::combined_version loadsave_t::int_version(const char *version_text, i
 		}
 		*pak_extension_str = 0;
 	}
-	combined_version loadsave_version;
-	loadsave_version.version = version;
-	loadsave_version.experimental_version = experimental_version;
 
-	return loadsave_version;
+	return { version, extended_version, EX_SAVE_MINOR };
+}
+
+
+stream_loadsave_t::stream_loadsave_t(rdwr_stream_t *stream)
+{
+	this->stream = stream;
+	finfo.ext_version = int_version(SAVEGAME_VER_NR EXTENDED_VER_NR "." QUOTEME(EX_SAVE_MINOR), NULL);
+}
+
+
+compare_loadsave_t::compare_loadsave_t(loadsave_t *file1, loadsave_t *file2)
+{
+	stream = new compare_file_rd_stream_t(file1->stream, file2->stream);
+	finfo.ext_version = int_version(SAVEGAME_VER_NR EXTENDED_VER_NR "." QUOTEME(EX_SAVE_MINOR), NULL);
+
+	set_buffered(false);
+	file1->set_buffered(false);
+	file2->set_buffered(false);
+}
+
+
+compare_loadsave_t::~compare_loadsave_t()
+{
+	delete stream;
+	stream = NULL;
 }

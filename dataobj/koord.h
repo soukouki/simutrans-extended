@@ -1,5 +1,11 @@
-#ifndef KOORD_H
-#define KOORD_H
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef DATAOBJ_KOORD_H
+#define DATAOBJ_KOORD_H
+
 
 #include "ribi.h"
 #include "../simtypes.h"
@@ -9,7 +15,7 @@
 class loadsave_t;
 
 /**
- * 2d Koordinaten
+ * 2D Coordinates
  */
 class koord
 {
@@ -19,10 +25,10 @@ public:
 
 	koord() : x(0), y(0) {}
 
-	koord(short xp, short yp) : x(xp), y(yp) {}
+	koord(sint16 xp, sint16 yp) : x(xp), y(yp) {}
 	koord(loadsave_t* file);
 	koord(ribi_t::ribi ribi) { *this = from_ribi[ribi]; }
-	koord(hang_t::typ hang)  { *this = from_hang[hang]; }
+	koord(slope_t::type slope) { *this = from_hang[slope]; }
 
 	// use this instead of koord(simrand(x),simrand(y)) to avoid
 	// different order on different compilers
@@ -31,7 +37,7 @@ public:
 	void rdwr(loadsave_t *file);
 
 	const char *get_str() const;
-	const char *get_fullstr() const;	// including brackets
+	const char *get_fullstr() const; // including brackets
 
 	const koord& operator += (const koord & k)
 	{
@@ -58,13 +64,37 @@ public:
 		x = new_x;
 	}
 
+	inline void clip_min( koord k_min )
+	{
+		if (x < k_min.x) {
+			x = k_min.x;
+		}
+		if (y < k_min.y) {
+			y = k_min.y;
+		}
+	}
+
+	inline void clip_max( koord k_max )
+	{
+		if (x > k_max.x) {
+			x = k_max.x;
+		}
+		if (y > k_max.y) {
+			y = k_max.y;
+		}
+	}
+
+	ribi_t::ribi to_ribi() const{
+		return ribi_type(*this);
+	}
+
 	static const koord invalid;
-	static const koord nord;
-	static const koord sued;
-	static const koord ost;
+	static const koord north;
+	static const koord south;
+	static const koord east;
 	static const koord west;
-	// die 4 Grundrichtungen als Array
-	static const koord nsow[4];
+	// the 4 basic directions as an Array
+	static const koord nesw[4];
 	// 8 next neighbours
 	static const koord neighbours[8];
 	// 15 next nearest neightbours
@@ -72,31 +102,25 @@ public:
 
 private:
 	static const koord from_ribi[16];
-	static const koord from_hang[16];
+	static const koord from_hang[81];
 };
 
-//static inline uint32 int_sqrt(const uint32 num) 
+//static inline uint32 int_sqrt(const uint32 num)
 //{
-//    if (0 == num) 
-//	{ 
+//    if (0 == num)
+//	{
 //		// Avoid zero divide
-//		return 0; 
-//	}  
+//		return 0;
+//	}
 //    uint32 n = (num / 2) + 1;       // Initial estimate, never low
 //    uint32 n1 = (n + (num / n)) / 2;
-//    while (n1 < n) 
+//    while (n1 < n)
 //	{
 //        n = n1;
 //        n1 = (n + (num / n)) / 2;
 //    }
 //    return n;
 //}
-
-static inline uint32 koord_distance(const koord &a, const koord &b)
-{
-	// Manhattan distance
-	return abs(a.x - b.x) + abs(a.y - b.y);
-}
 
 //static inline uint32 accurate_distance(const koord &a, const koord &b)
 //{
@@ -107,7 +131,7 @@ static inline uint32 koord_distance(const koord &a, const koord &b)
 //}
 
 
-// Knightly : shortest distance in cardinal (N, E, S, W) and ordinal (NE, SE, SW, NW) directions
+// shortest distance in cardinal (N, E, S, W) and ordinal (NE, SE, SW, NW) directions
 static inline uint32 shortest_distance(const koord &a, const koord &b)
 {
 	const uint32 x_offset = abs(a.x - b.x);
@@ -121,8 +145,14 @@ static inline uint32 shortest_distance(const koord &a, const koord &b)
 	}
 }
 
-// Knightly : multiply the value by the distance weight
-static inline uint32 weight_by_distance(const uint32 value, const uint32 distance)
+static inline uint32 koord_distance(const koord &a, const koord &b)
+{
+	// Manhattan distance
+	return abs(a.x - b.x) + abs(a.y - b.y);
+}
+
+// multiply the value by the distance weight
+static inline uint32 weight_by_distance(const sint32 value, const uint32 distance)
 {
 	return (uint32)( ((sint64)value << 10) / (sint64)(distance < 4u ? 4u : distance) );
 }
@@ -168,7 +198,7 @@ static inline koord operator - (const koord &a, const koord &b)
 	return koord(a.x - b.x, a.y - b.y);
 }
 
- 
+
 static inline koord operator - (const koord &a)
 {
 	return koord(-a.x, -a.y);
@@ -201,6 +231,5 @@ static inline bool operator == (const koord& a, int b)
 //		return abs_distance(m_origin, a) < abs_distance(m_origin, b);
 //	}
 //};
-
 
 #endif

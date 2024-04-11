@@ -5,16 +5,20 @@
  *      Author: Bernd Gabriel
  */
 
-#include <stdlib.h>
 #include "float32e8_t.h"
+
 #include "../simdebug.h"
 #include "../dataobj/loadsave.h"
 
-ostream & operator << (ostream &out, const float32e8_t &x)
+#include <cstdlib>
+
+
+std::ostream & operator << (std::ostream &out, const float32e8_t &x)
 {
 	out << x.to_double();
 	return out;
 }
+
 
 //remember: most significant bit is always set except for 0.
 //after any operation the mantissa is shifted and the exponent is in-/decremented accordingly.
@@ -27,8 +31,6 @@ ostream & operator << (ostream &out, const float32e8_t &x)
 // -2.00 = { 0x80000000L,  2,  true };
 // -5.00 = { 0xA0000000L,  3,  true };
 
-static const double log_of_2 = log(2.0);
-
 #define EXPONENT_BITS 10
 #define MIN_EXPONENT -1023
 #define MAX_EXPONENT 1023
@@ -38,22 +40,22 @@ const uint8 float32e8_t::_ild[256] =
 {
 	 0,  1,  2,  2,  3,  3,  3,  3,    4,  4,  4,  4,  4,  4,  4,  4,   //   0.. 15
 	 5,  5,  5,  5,  5,  5,  5,  5,    5,  5,  5,  5,  5,  5,  5,  5,   //  16.. 31
-	 6,  6,  6,  6,  6,  6,  6,  6,    6,  6,  6,  6,  6,  6,  6,  6,   //  32.. 
+	 6,  6,  6,  6,  6,  6,  6,  6,    6,  6,  6,  6,  6,  6,  6,  6,   //  32..
 	 6,  6,  6,  6,  6,  6,  6,  6,    6,  6,  6,  6,  6,  6,  6,  6,   //    .. 63
 
-	 7,  7,  7,  7,  7,  7,  7,  7,    7,  7,  7,  7,  7,  7,  7,  7,   //  64.. 
-	 7,  7,  7,  7,  7,  7,  7,  7,    7,  7,  7,  7,  7,  7,  7,  7,   //  
-	 7,  7,  7,  7,  7,  7,  7,  7,    7,  7,  7,  7,  7,  7,  7,  7,   //  
+	 7,  7,  7,  7,  7,  7,  7,  7,    7,  7,  7,  7,  7,  7,  7,  7,   //  64..
+	 7,  7,  7,  7,  7,  7,  7,  7,    7,  7,  7,  7,  7,  7,  7,  7,   //
+	 7,  7,  7,  7,  7,  7,  7,  7,    7,  7,  7,  7,  7,  7,  7,  7,   //
 	 7,  7,  7,  7,  7,  7,  7,  7,    7,  7,  7,  7,  7,  7,  7,  7,   //    ..127
 
-	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   // 128.. 
-	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   //  
-	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   //  
+	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   // 128..
+	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   //
+	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   //
 	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   //    ..191
 
-	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   // 192.. 
-	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   //  
-	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   //  
+	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   // 192..
+	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   //
+	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8,   //
 	 8,  8,  8,  8,  8,  8,  8,  8,    8,  8,  8,  8,  8,  8,  8,  8    //    ..255
 };
 
@@ -96,6 +98,9 @@ struct float32e8_pair_t {
 	float32e8_t r;
 };
 
+// This is a list of 1+2^-i, log2(1+2^-i) for i between 1 and 31
+// The logs are rounded to the nearest representable float
+// They have been verified by ACarlotti using integer arithmetic in Python
 #define LD_TBL_LEN 31
 const float32e8_pair_t ld_tbl[LD_TBL_LEN] =
 {
@@ -143,24 +148,13 @@ const float32e8_t float32e8_t::log2() const
 	}
 	float32e8_t r((sint32)(e - 1L));
 	float32e8_t v(m, 1, false);
-	int i = 0;
-	while (i < LD_TBL_LEN && v != one)
+	for (int i = 0; i < LD_TBL_LEN; i++)
 	{
-#ifdef DEBUG_COUT
-		cout << "\t" << i << ") v.e = " << v.e << ", v = " << v << ", r = " << r << "\n"; cout.flush();
-#endif
 		const float32e8_pair_t &p = get_pair(i);
-		if (v.e <= 0)
-		{
-			v *= p.v;
-			r -= p.r;
-			if (v.e > 0) i++;
-		}
-		else
+		if (p.v <= v)
 		{
 			v /= p.v;
 			r += p.r;
-			if (v.e <= 0) i++;
 		}
 	}
 	return r;
@@ -170,44 +164,33 @@ const float32e8_t float32e8_t::exp2() const
 {
 	if (!m)	return one;
 
-	sint16 e1 = e < 0 ? -e : e;
 	if (e > EXPONENT_BITS)
 	{
 		dbg->error(" float32e8_t::exp2()", "Illegal argument of exp2(%.9G): must be between about %d and %d.", to_double(), MIN_EXPONENT, MAX_EXPONENT);
 	}
-	uint32 m1 = e > 0 ? m >> (32 - e) : 0;
-	float32e8_t v(0x80000000L, (sint16)m1 + 1, false);
-	if (e >= -EXPONENT_BITS)
+	sint16 e1 = e > 0 ? m >> (32 - e) : 0;
+	e1 = ms ? - 1 - e1 : e1;
+
+	float32e8_t v(0x80000000, e1+1, false);
+	float32e8_t r(m, e, ms);
+	r -= e1;
+
+	for (int i = 0; i < LD_TBL_LEN; i++)
 	{
-		// if e < -EXPONENT_BITS, the result is a little bit more than 1.0, but beyond the precision of a float32e8_t.
-		uint32 m2 = m << e1;
-		if (!m2) return v;
-		uint8 ld = 32 - ild(m2);
-		float32e8_t r(m2 << ld, -ld, false);
-
-		int i = 0;
-		while (i < LD_TBL_LEN && r.m != 0)
+		const float32e8_pair_t &p = get_pair(i);
+		if (p.r <= r)
 		{
-#ifdef DEBUG_COUT
-//			cout << "\t" << i << ") v.e = " << v.e << ", v = " << v << ", r = " << r << "\n"; cout.flush();
-#endif
-			const float32e8_pair_t &p = get_pair(i);
-			if (!r.ms)
-			{
-				v *= p.v;
-				r -= p.r;
-				if (r.ms) i++;
-			}
-			else
-			{
-				v /= p.v;
-				r += p.r;
-				if (!r.ms) i++;
-			}
+			r -= p.r;
+			v *= p.v;
 		}
-
-		if (ms)	return one / v;
 	}
+	// We do this last step to improve rounding and reduce bias:
+	const float32e8_pair_t &p = get_pair(LD_TBL_LEN-1);
+	if (p.r <= r * 2)
+	{
+		v *= p.v;
+	}
+
 	return v;
 }
 
@@ -219,68 +202,68 @@ const uint32 float32e8_t::max_mantissa = MAX_MANTISSA;
 class float32e8ini_t : public float32e8_t
 {
 public:
-	inline float32e8ini_t(const uint32 value) 
-	{ 
-		ms = false; 
-		e = ild(value); 
-		m = (value) << (32 - e); 
-	} 
+	inline float32e8ini_t(const uint32 value)
+	{
+		ms = false;
+		e = ild(value);
+		m = (value) << (32 - e);
+	}
 };
 
-const float32e8_t float32e8_t::integers[257] = 
+const float32e8_t float32e8_t::integers[257] =
 {
-	float32e8ini_t(  0), float32e8ini_t(  1), float32e8ini_t(  2), float32e8ini_t(  3),	float32e8ini_t(  4),	
-	float32e8ini_t(  5), float32e8ini_t(  6), float32e8ini_t(  7), float32e8ini_t(  8),	float32e8ini_t(  9),	
-	float32e8ini_t( 10), float32e8ini_t( 11), float32e8ini_t( 12), float32e8ini_t( 13), float32e8ini_t( 14), 
+	float32e8ini_t(  0), float32e8ini_t(  1), float32e8ini_t(  2), float32e8ini_t(  3),	float32e8ini_t(  4),
+	float32e8ini_t(  5), float32e8ini_t(  6), float32e8ini_t(  7), float32e8ini_t(  8),	float32e8ini_t(  9),
+	float32e8ini_t( 10), float32e8ini_t( 11), float32e8ini_t( 12), float32e8ini_t( 13), float32e8ini_t( 14),
 	float32e8ini_t( 15), float32e8ini_t( 16), float32e8ini_t( 17), float32e8ini_t( 18), float32e8ini_t( 19),
-	float32e8ini_t( 20), float32e8ini_t( 21), float32e8ini_t( 22), float32e8ini_t( 23), float32e8ini_t( 24), 
+	float32e8ini_t( 20), float32e8ini_t( 21), float32e8ini_t( 22), float32e8ini_t( 23), float32e8ini_t( 24),
 	float32e8ini_t( 25), float32e8ini_t( 26), float32e8ini_t( 27), float32e8ini_t( 28), float32e8ini_t( 29),
-	float32e8ini_t( 30), float32e8ini_t( 31), float32e8ini_t( 32), float32e8ini_t( 33), float32e8ini_t( 34), 
+	float32e8ini_t( 30), float32e8ini_t( 31), float32e8ini_t( 32), float32e8ini_t( 33), float32e8ini_t( 34),
 	float32e8ini_t( 35), float32e8ini_t( 36), float32e8ini_t( 37), float32e8ini_t( 38), float32e8ini_t( 39),
-	float32e8ini_t( 40), float32e8ini_t( 41), float32e8ini_t( 42), float32e8ini_t( 43), float32e8ini_t( 44), 
+	float32e8ini_t( 40), float32e8ini_t( 41), float32e8ini_t( 42), float32e8ini_t( 43), float32e8ini_t( 44),
 	float32e8ini_t( 45), float32e8ini_t( 46), float32e8ini_t( 47), float32e8ini_t( 48), float32e8ini_t( 49),
-	float32e8ini_t( 50), float32e8ini_t( 51), float32e8ini_t( 52), float32e8ini_t( 53), float32e8ini_t( 54), 
+	float32e8ini_t( 50), float32e8ini_t( 51), float32e8ini_t( 52), float32e8ini_t( 53), float32e8ini_t( 54),
 	float32e8ini_t( 55), float32e8ini_t( 56), float32e8ini_t( 57), float32e8ini_t( 58), float32e8ini_t( 59),
-	float32e8ini_t( 60), float32e8ini_t( 61), float32e8ini_t( 62), float32e8ini_t( 63), float32e8ini_t( 64), 
+	float32e8ini_t( 60), float32e8ini_t( 61), float32e8ini_t( 62), float32e8ini_t( 63), float32e8ini_t( 64),
 	float32e8ini_t( 65), float32e8ini_t( 66), float32e8ini_t( 67), float32e8ini_t( 68), float32e8ini_t( 69),
-	float32e8ini_t( 70), float32e8ini_t( 71), float32e8ini_t( 72), float32e8ini_t( 73), float32e8ini_t( 74), 
+	float32e8ini_t( 70), float32e8ini_t( 71), float32e8ini_t( 72), float32e8ini_t( 73), float32e8ini_t( 74),
 	float32e8ini_t( 75), float32e8ini_t( 76), float32e8ini_t( 77), float32e8ini_t( 78), float32e8ini_t( 79),
-	float32e8ini_t( 80), float32e8ini_t( 81), float32e8ini_t( 82), float32e8ini_t( 83), float32e8ini_t( 84), 
+	float32e8ini_t( 80), float32e8ini_t( 81), float32e8ini_t( 82), float32e8ini_t( 83), float32e8ini_t( 84),
 	float32e8ini_t( 85), float32e8ini_t( 86), float32e8ini_t( 87), float32e8ini_t( 88), float32e8ini_t( 89),
-	float32e8ini_t( 90), float32e8ini_t( 91), float32e8ini_t( 92), float32e8ini_t( 93), float32e8ini_t( 94), 
+	float32e8ini_t( 90), float32e8ini_t( 91), float32e8ini_t( 92), float32e8ini_t( 93), float32e8ini_t( 94),
 	float32e8ini_t( 95), float32e8ini_t( 96), float32e8ini_t( 97), float32e8ini_t( 98), float32e8ini_t( 99),
-	float32e8ini_t(100), float32e8ini_t(101), float32e8ini_t(102), float32e8ini_t(103), float32e8ini_t(104), 
-	float32e8ini_t(105), float32e8ini_t(106), float32e8ini_t(107), float32e8ini_t(108), float32e8ini_t(109),	
-	float32e8ini_t(110), float32e8ini_t(111), float32e8ini_t(112), float32e8ini_t(113), float32e8ini_t(114), 
+	float32e8ini_t(100), float32e8ini_t(101), float32e8ini_t(102), float32e8ini_t(103), float32e8ini_t(104),
+	float32e8ini_t(105), float32e8ini_t(106), float32e8ini_t(107), float32e8ini_t(108), float32e8ini_t(109),
+	float32e8ini_t(110), float32e8ini_t(111), float32e8ini_t(112), float32e8ini_t(113), float32e8ini_t(114),
 	float32e8ini_t(115), float32e8ini_t(116), float32e8ini_t(117), float32e8ini_t(118), float32e8ini_t(119),
-	float32e8ini_t(120), float32e8ini_t(121), float32e8ini_t(122), float32e8ini_t(123), float32e8ini_t(124), 
+	float32e8ini_t(120), float32e8ini_t(121), float32e8ini_t(122), float32e8ini_t(123), float32e8ini_t(124),
 	float32e8ini_t(125), float32e8ini_t(126), float32e8ini_t(127), float32e8ini_t(128), float32e8ini_t(129),
 	float32e8ini_t(130), float32e8ini_t(131), float32e8ini_t(132), float32e8ini_t(133), float32e8ini_t(134),
 	float32e8ini_t(135), float32e8ini_t(136), float32e8ini_t(137), float32e8ini_t(138), float32e8ini_t(139),
-	float32e8ini_t(140), float32e8ini_t(141), float32e8ini_t(142), float32e8ini_t(143), float32e8ini_t(144), 
+	float32e8ini_t(140), float32e8ini_t(141), float32e8ini_t(142), float32e8ini_t(143), float32e8ini_t(144),
 	float32e8ini_t(145), float32e8ini_t(146), float32e8ini_t(147), float32e8ini_t(148), float32e8ini_t(149),
-	float32e8ini_t(150), float32e8ini_t(151), float32e8ini_t(152), float32e8ini_t(153), float32e8ini_t(154), 
+	float32e8ini_t(150), float32e8ini_t(151), float32e8ini_t(152), float32e8ini_t(153), float32e8ini_t(154),
 	float32e8ini_t(155), float32e8ini_t(156), float32e8ini_t(157), float32e8ini_t(158), float32e8ini_t(159),
-	float32e8ini_t(160), float32e8ini_t(161), float32e8ini_t(162), float32e8ini_t(163), float32e8ini_t(164), 
+	float32e8ini_t(160), float32e8ini_t(161), float32e8ini_t(162), float32e8ini_t(163), float32e8ini_t(164),
 	float32e8ini_t(165), float32e8ini_t(166), float32e8ini_t(167), float32e8ini_t(168), float32e8ini_t(169),
-	float32e8ini_t(170), float32e8ini_t(171), float32e8ini_t(172), float32e8ini_t(173), float32e8ini_t(174), 
+	float32e8ini_t(170), float32e8ini_t(171), float32e8ini_t(172), float32e8ini_t(173), float32e8ini_t(174),
 	float32e8ini_t(175), float32e8ini_t(176), float32e8ini_t(177), float32e8ini_t(178), float32e8ini_t(179),
-	float32e8ini_t(180), float32e8ini_t(181), float32e8ini_t(182), float32e8ini_t(183), float32e8ini_t(184), 
+	float32e8ini_t(180), float32e8ini_t(181), float32e8ini_t(182), float32e8ini_t(183), float32e8ini_t(184),
 	float32e8ini_t(185), float32e8ini_t(186), float32e8ini_t(187), float32e8ini_t(188), float32e8ini_t(189),
-	float32e8ini_t(190), float32e8ini_t(191), float32e8ini_t(192), float32e8ini_t(193), float32e8ini_t(194), 
+	float32e8ini_t(190), float32e8ini_t(191), float32e8ini_t(192), float32e8ini_t(193), float32e8ini_t(194),
 	float32e8ini_t(195), float32e8ini_t(196), float32e8ini_t(197), float32e8ini_t(198), float32e8ini_t(199),
-	float32e8ini_t(200), float32e8ini_t(201), float32e8ini_t(202), float32e8ini_t(203), float32e8ini_t(204), 
-	float32e8ini_t(205), float32e8ini_t(206), float32e8ini_t(207), float32e8ini_t(208), float32e8ini_t(209),	
-	float32e8ini_t(210), float32e8ini_t(211), float32e8ini_t(212), float32e8ini_t(213), float32e8ini_t(214), 
+	float32e8ini_t(200), float32e8ini_t(201), float32e8ini_t(202), float32e8ini_t(203), float32e8ini_t(204),
+	float32e8ini_t(205), float32e8ini_t(206), float32e8ini_t(207), float32e8ini_t(208), float32e8ini_t(209),
+	float32e8ini_t(210), float32e8ini_t(211), float32e8ini_t(212), float32e8ini_t(213), float32e8ini_t(214),
 	float32e8ini_t(215), float32e8ini_t(216), float32e8ini_t(217), float32e8ini_t(218), float32e8ini_t(219),
-	float32e8ini_t(220), float32e8ini_t(221), float32e8ini_t(222), float32e8ini_t(223), float32e8ini_t(224), 
+	float32e8ini_t(220), float32e8ini_t(221), float32e8ini_t(222), float32e8ini_t(223), float32e8ini_t(224),
 	float32e8ini_t(225), float32e8ini_t(226), float32e8ini_t(227), float32e8ini_t(228), float32e8ini_t(229),
-	float32e8ini_t(230), float32e8ini_t(231), float32e8ini_t(232), float32e8ini_t(233), float32e8ini_t(234), 
+	float32e8ini_t(230), float32e8ini_t(231), float32e8ini_t(232), float32e8ini_t(233), float32e8ini_t(234),
 	float32e8ini_t(235), float32e8ini_t(236), float32e8ini_t(237), float32e8ini_t(238), float32e8ini_t(239),
-	float32e8ini_t(240), float32e8ini_t(241), float32e8ini_t(242), float32e8ini_t(243), float32e8ini_t(244), 
+	float32e8ini_t(240), float32e8ini_t(241), float32e8ini_t(242), float32e8ini_t(243), float32e8ini_t(244),
 	float32e8ini_t(245), float32e8ini_t(246), float32e8ini_t(247), float32e8ini_t(248), float32e8ini_t(249),
-	float32e8ini_t(250), float32e8ini_t(251), float32e8ini_t(252), float32e8ini_t(253), float32e8ini_t(254), 
-	float32e8ini_t(255), float32e8ini_t(256) 
+	float32e8ini_t(250), float32e8ini_t(251), float32e8ini_t(252), float32e8ini_t(253), float32e8ini_t(254),
+	float32e8ini_t(255), float32e8ini_t(256)
 };
 
 // some "integer" constants.
@@ -289,13 +272,19 @@ const float32e8_t float32e8_t::one((uint32) 1);
 const float32e8_t float32e8_t::two((uint32) 2);
 const float32e8_t float32e8_t::three((uint32) 3);
 const float32e8_t float32e8_t::four((uint32) 4);
+const float32e8_t float32e8_t::ten((uint32) 10);
+const float32e8_t float32e8_t::hundred((uint32) 100);
+const float32e8_t float32e8_t::thousand((uint32) 1000);
+const float32e8_t float32e8_t::tenthousand((uint32) 10000);
 
 // some "fractional" constants.
 const float32e8_t float32e8_t::tenth((uint32) 1, (uint32) 10);
 const float32e8_t float32e8_t::quarter((uint32) 1, (uint32)  4);
 const float32e8_t float32e8_t::third((uint32) 1, (uint32)  3);
 const float32e8_t float32e8_t::half((uint32) 1, (uint32) 2);
+const float32e8_t float32e8_t::centi((uint32) 1, (uint32) 100);
 const float32e8_t float32e8_t::milli((uint32) 1, (uint32) 1000);
+const float32e8_t float32e8_t::ten_thousandth((uint32) 1, (uint32) 10000);
 const float32e8_t float32e8_t::micro((uint32) 1, (uint32) 1000000);
 
 #ifdef USE_DOUBLE
@@ -513,7 +502,10 @@ const float32e8_t float32e8_t::operator / (const float32e8_t & x) const
 {
 	if (x.m == 0)
 	{
-		dbg->error("float32e8_t::operator / (const float32e8_t & x) const", "Division by zero in: %.9G / %.9G", this->to_double(), x.to_double());
+		if (dbg) {
+			dbg->error("float32e8_t::operator / (const float32e8_t & x) const", "Division by zero in: %.9G / %.9G", this->to_double(), x.to_double());
+		}
+
 		return *this; // Catch the error
 	}
 
@@ -546,11 +538,11 @@ const float32e8_t float32e8_t::operator / (const float32e8_t & x) const
 double float32e8_t::to_double() const
 {
 	double rm = ms ? -(double)m : m;
-	double re = exp((e - 32) * log_of_2);
+	double re = pow((double)2.0, e - 32);
 	return rm * re;
 }
 
-sint32 float32e8_t::to_sint32() const 
+sint32 float32e8_t::to_sint32() const
 {
 	// return trunc(*this):
 	if (e <= 0)
@@ -563,6 +555,8 @@ sint32 float32e8_t::to_sint32() const
 	uint32 rm = m >> (32 - e);
 	return ms ? -(sint32) rm : (sint32) rm;
 }
+
+
 
 //const string float32e8_t::to_string() const
 //{

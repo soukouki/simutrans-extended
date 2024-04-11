@@ -1,30 +1,27 @@
 /*
- * Copyright (c) 1997 - 2003 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#include "../simwin.h"
+#include "simwin.h"
+#include "message_frame_t.h"
+#include "message_option_t.h"
+#include "message_stats_t.h"
+
 #include "../simworld.h"
 #include "../simmenu.h"
+#include "../simmesg.h"
+#include "../sys/simsys.h"
 
 #include "../dataobj/scenario.h"
 #include "../dataobj/translator.h"
-#include "../dataobj/umgebung.h"
-#include "message_frame_t.h"
-#include "../simmesg.h"
-#include "message_option_t.h"
-#include "../dataobj/network_cmd_ingame.h"
+#include "../dataobj/environment.h"
+#include "../network/network_cmd_ingame.h"
 #include "../player/simplay.h"
-
-
-#include "components/action_listener.h"
 
 
 #define MAX_MESG_TABS (8)
 
-karte_t *message_frame_t::welt = NULL;
 
 static sint32 categories[MAX_MESG_TABS] =
 {
@@ -38,7 +35,7 @@ static sint32 categories[MAX_MESG_TABS] =
 	(1 << message_t::general) | (1 << message_t::new_vehicle)
 };
 
-static const char *tab_strings[]=
+static char const* const tab_strings[]=
 {
 	"Chat_msg",
 	"Scenario_msg",
@@ -52,22 +49,56 @@ static const char *tab_strings[]=
 
 
 
-message_frame_t::message_frame_t(karte_t *welt) :
+message_frame_t::message_frame_t() :
 	gui_frame_t( translator::translate("Mailbox") ),
-	stats(welt),
-	scrolly(&stats)
+	scrolly(gui_scrolled_list_t::windowskin, message_stats_t::compare)
 {
-	this->welt = welt;
+	ibuf[0] = 0;
+	last_count = 0;
+	message_type = -1;
 
-	scrolly.set_show_scroll_x(true);
-	scrolly.set_scroll_amount_y(LINESPACE+1);
+	set_table_layout(1,0);
 
-	// Knightly : add tabs for classifying messages
-	tabs.set_pos( koord(0, D_BUTTON_HEIGHT) );
+	add_table(4,0);
+	{
+		option_bt.init(button_t::roundbox, translator::translate("Optionen"));
+		option_bt.set_size(D_BUTTON_SIZE);
+		if (skinverwaltung_t::open_window) {
+			option_bt.set_image(skinverwaltung_t::open_window->get_image_id(0));
+			option_bt.set_image_position_right(true);
+		}
+		option_bt.add_listener(this);
+		add_component(&option_bt);
+
+		copy_bt.init(button_t::roundbox, translator::translate("Copy to clipboard"));
+		copy_bt.set_size(scr_size(max(proportional_string_width(translator::translate("Copy to clipboard"))+D_BUTTON_PADDINGS_X, D_BUTTON_WIDTH), D_BUTTON_HEIGHT));
+		copy_bt.add_listener(this);
+		add_component(&copy_bt);
+
+		if(  env_t::networkmode  && env_t::chat_window_transparency!=100  ) {
+			opaque_bt.init(button_t::square_state, translator::translate("transparent background"));
+			opaque_bt.add_listener(this);
+			add_component(&opaque_bt);
+
+			new_component<gui_fill_t>();
+		}
+		else {
+			new_component_span<gui_fill_t>(2);
+		}
+		if(  env_t::networkmode  ) {
+			input.set_text(ibuf, lengthof(ibuf) );
+			input.add_listener(this);
+			add_component(&input,4);
+			set_focus( &input );
+		}
+	}
+	end_table();
+
+	// add tabs for classifying messages
 	tabs.add_tab( &scrolly, translator::translate("All") );
 	tab_categories.append( -1 );
 
-	if (umgebung_t::networkmode) {
+	if (env_t::networkmode) {
 		tabs.add_tab( &scrolly, translator::translate(tab_strings[0]) );
 		tab_categories.append( categories[0] );
 	}
@@ -80,89 +111,141 @@ message_frame_t::message_frame_t(karte_t *welt) :
 		tab_categories.append( categories[i] );
 	}
 	tabs.add_listener(this);
-	add_komponente(&tabs);
-
-	option_bt.init(button_t::roundbox, translator::translate("Optionen"), koord(BUTTON1_X,0), koord(D_BUTTON_WIDTH,D_BUTTON_HEIGHT));
-	option_bt.add_listener(this);
-	add_komponente(&option_bt);
-
-	ibuf[0] = 0;
-	input.set_text(ibuf, lengthof(ibuf) );
-	input.add_listener(this);
-	input.set_pos(koord(BUTTON2_X,0));
-	if(  umgebung_t::networkmode  ) {
-		set_transparent( umgebung_t::chat_window_transparency, COL_WHITE );
-		add_komponente(&input);
-		set_focus( &input );
-	}
-
-	set_fenstergroesse(koord(D_DEFAULT_WIDTH, D_TITLEBAR_HEIGHT+D_BUTTON_HEIGHT+gui_tab_panel_t::HEADER_VSIZE+2+16*(LINESPACE+1)+scrollbar_t::BAR_SIZE));
-	set_min_windowsize(koord(BUTTON3_X, D_TITLEBAR_HEIGHT+D_BUTTON_HEIGHT+gui_tab_panel_t::HEADER_VSIZE+2+3*(LINESPACE+1)+scrollbar_t::BAR_SIZE));
+	add_component(&tabs);
 
 	set_resizemode(diagonal_resize);
-	resize(koord(0,0));
-}
-
-
-
-/**
- * resize window in response to a resize event
- * @author Hj. Malthaner
- * @date   16-Oct-2003
- */
-void message_frame_t::resize(const koord delta)
-{
-	gui_frame_t::resize(delta);
-	koord groesse = get_fenstergroesse()-koord(0,D_TITLEBAR_HEIGHT+D_BUTTON_HEIGHT);
-	input.set_groesse(koord(groesse.x-scrollbar_t::BAR_SIZE-BUTTON2_X, D_BUTTON_HEIGHT));
-	tabs.set_groesse(groesse);
-	scrolly.set_groesse(groesse-koord(0,D_BUTTON_HEIGHT+4+1));
-}
-
-
-/* triggered, when button clicked; only single button registered, so the action is clear ... */
-bool message_frame_t::action_triggered( gui_action_creator_t *komp, value_t v )
-{
-	if(  komp==&option_bt  ) {
-		create_win(320, 200, new message_option_t(welt), w_info, magic_message_options );
+	if(  env_t::networkmode  && env_t::chat_window_transparency!=100  &&  opaque_bt.pressed  ) {
+		set_transparent( 100-env_t::chat_window_transparency, gui_theme_t::gui_color_chat_window_network_transparency );
+		scrolly.set_skin_type(gui_scrolled_list_t::transparent);
 	}
-	else if(  komp==&input  &&  ibuf[0]!=0  ) {
+
+	fill_list();
+
+	reset_min_windowsize();
+	set_windowsize(scr_size(D_DEFAULT_WIDTH, D_DEFAULT_HEIGHT));
+}
+
+
+void message_frame_t::fill_list()
+{
+	uint32 id = 0;
+	scrolly.clear_elements();
+	FOR( slist_tpl<message_t::node*>, const i, welt->get_message()->get_list() ) {
+		scrolly.new_component<message_stats_t>(i, id++);
+	}
+
+	last_count = welt->get_message()->get_list().get_count();
+
+	// trigger filtering
+	sint32 t = message_type;
+	message_type = -1;
+	// filter & sort
+	filter_list(t);
+
+	scrolly.set_size( scrolly.get_size());
+}
+
+
+void message_frame_t::filter_list(sint32 type)
+{
+	if (type != message_type) {
+		for(int i=0, end=scrolly.get_count(); i<end; i++) {
+			message_stats_t *a = dynamic_cast<message_stats_t*>(scrolly.get_element(i));
+			// message type filtering controls visibility
+			if (a) {
+				a->set_visible(type == -1  ||  a->get_msg()->get_type_shifted() & type);
+			}
+		}
+		message_type = type;
+	}
+	scrolly.sort(0);
+	scrolly.set_size( scrolly.get_size());
+}
+
+
+bool message_frame_t::action_triggered( gui_action_creator_t *comp, value_t v )
+{
+	if(  comp==&option_bt  ) {
+		create_win(320, 200, new message_option_t(), w_info, magic_message_options );
+	}
+	else if(  comp==&opaque_bt  ) {
+		if(  !opaque_bt.pressed  &&  env_t::chat_window_transparency!=100  ) {
+			set_transparent( 100-env_t::chat_window_transparency, gui_theme_t::gui_color_chat_window_network_transparency );
+			scrolly.set_skin_type(gui_scrolled_list_t::transparent);
+
+		}
+		else {
+			set_transparent( 0, gui_theme_t::gui_color_chat_window_network_transparency );
+			scrolly.set_skin_type(gui_scrolled_list_t::transparent);
+		}
+		opaque_bt.pressed ^= 1;
+	}
+	else if(  comp==&copy_bt  ) {
+		cbuffer_t clipboard;
+		const sint32 message_type = tab_categories[ tabs.get_active_tab_index() ];
+		int count = 20; // just copy the last 20
+		FOR( slist_tpl<message_t::node*>, const i, welt->get_message()->get_list() ) {
+			if( i->get_type_shifted() & message_type ) {
+				// add them to clipboard
+				char msg_no_break[ 258 ];
+				for( int j = 0; j < 256; j++ ) {
+					msg_no_break[ j ] = i->msg[ j ] == '\n' ? ' ' : i->msg[ j ];
+					if( msg_no_break[ j ] == 0 ) {
+						msg_no_break[ j++ ] = '\n';
+						msg_no_break[ j ] = 0;
+						break;
+					}
+				}
+				clipboard.append( msg_no_break );
+				if( count-- < 0 ) {
+					break;
+				}
+			}
+		}
+		// copy, if there was anything ...
+		if( clipboard.len() > 0 ) {
+			dr_copy( clipboard, clipboard.len() );
+		}
+
+	}
+	else if(  comp==&input  &&  ibuf[0]!=0  ) {
 		// Send chat message to server for distribution
-		nwc_chat_t* nwchat = new nwc_chat_t( ibuf, welt->get_active_player()->get_player_nr(), umgebung_t::nickname.c_str() );
+		nwc_chat_t* nwchat = new nwc_chat_t( ibuf, welt->get_active_player()->get_player_nr(), env_t::nickname.c_str() );
 		network_send_server( nwchat );
 
 		ibuf[0] = 0;
 	}
-	else if(  komp==&tabs  ) {
-		// Knightly : filter messages by type where necessary
-		if(  stats.filter_messages( tab_categories[v.i] )  ) {
-			scrolly.set_scroll_position(0, 0);
-		}
+	else if(  comp==&tabs  ) {
+		// filter messages by type where necessary
+		filter_list(tab_categories[v.i]);
 	}
 	return true;
 }
 
 
+void message_frame_t::draw(scr_coord pos, scr_size size)
+{
+	if(  welt->get_message()->get_list().get_count() != last_count  ) {
+		fill_list();
+	}
+	gui_frame_t::draw(pos, size);
+}
+
+
 void message_frame_t::rdwr(loadsave_t *file)
 {
-	koord gr = get_fenstergroesse();
-	sint32 scroll_x = scrolly.get_scroll_x();
-	sint32 scroll_y = scrolly.get_scroll_y();
-	sint16 tabstate = tabs.get_active_tab_index();
+	// window size
+	scr_size size = get_windowsize();
+	size.rdwr( file );
 
-	gr.rdwr( file );
+	scrolly.rdwr(file);
+	tabs.rdwr(file);
 	file->rdwr_str( ibuf, lengthof(ibuf) );
-	file->rdwr_short( tabstate );
-	file->rdwr_long( scroll_x );
-	file->rdwr_long( scroll_y );
 
 	if(  file->is_loading()  ) {
-		if ( tabstate > 0  &&  (uint32)tabstate < tabs.get_count() ) {
-			tabs.set_active_tab_index( tabstate );
-			stats.filter_messages( tab_categories[tabstate] );
-		}
-		set_fenstergroesse( gr );
-		resize( koord(0,0) );
-		scrolly.set_scroll_position( scroll_x, scroll_y );
+		fill_list();
+
+		reset_min_windowsize();
+		set_windowsize(size);
 	}
 }

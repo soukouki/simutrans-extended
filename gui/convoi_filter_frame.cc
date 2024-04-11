@@ -1,62 +1,23 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- * written by Volker Meyer
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
- */
-
-/*
- * Displays a filter settings dialog for the convoi list
- *
- * @author V. Meyer
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include "convoi_filter_frame.h"
 #include "convoi_frame.h"
-#include "gui_convoiinfo.h"
+#include "components/gui_convoiinfo.h"
 #include "../simcolor.h"
 
-#include "../besch/ware_besch.h"
-#include "../bauer/warenbauer.h"
+#include "../descriptor/goods_desc.h"
+#include "../bauer/goods_manager.h"
 #include "../dataobj/translator.h"
 
-
-koord convoi_filter_frame_t::filter_buttons_pos[FILTER_BUTTONS] = {
-	koord(4, 2),
-	koord(125, 2),
-	koord(4, 2*D_BUTTON_HEIGHT+4),
-	koord(9, 3*D_BUTTON_HEIGHT+4),
-	koord(9, 4*D_BUTTON_HEIGHT+4),
-	koord(9, 5*D_BUTTON_HEIGHT+4),
-	koord(9, 6*D_BUTTON_HEIGHT+4),
-	koord(9, 7*D_BUTTON_HEIGHT+4),
-	koord(9, 8*D_BUTTON_HEIGHT+4),
-	koord(9, 9*D_BUTTON_HEIGHT+4),
-	koord(9, 10*D_BUTTON_HEIGHT+4),
-	koord(4, 11*D_BUTTON_HEIGHT+8),
-	koord(9, 12*D_BUTTON_HEIGHT+8),
-	koord(9, 13*D_BUTTON_HEIGHT+8),
-	koord(9, 14*D_BUTTON_HEIGHT+8),
-	koord(9, 15*D_BUTTON_HEIGHT+8),
-	koord(9, 16*D_BUTTON_HEIGHT+8),
-	koord(9, 17*D_BUTTON_HEIGHT+8),
-	koord(9, 18*D_BUTTON_HEIGHT+8)
-};
+#include "components/gui_image.h"
+#include "../simskin.h"
 
 const char *convoi_filter_frame_t::filter_buttons_text[FILTER_BUTTONS] = {
-	"clf_chk_name_filter",
-	"clf_chk_waren",
-	"clf_chk_type_filter",
-	"clf_chk_cars",
-	"clf_chk_trains",
-	"clf_chk_ships",
-	"clf_chk_aircrafts",
-	"clf_chk_monorail",
-	"clf_chk_maglev",
-	"clf_chk_narrowgauge",
-	"clf_chk_trams",
 	"clf_chk_spezial_filter",
+	"clf_chk_waren",
 	"clf_chk_noroute",
 	"clf_chk_stucked",
 	"clf_chk_noincome",
@@ -67,141 +28,173 @@ const char *convoi_filter_frame_t::filter_buttons_text[FILTER_BUTTONS] = {
 };
 
 convoi_filter_frame_t::filter_flag_t convoi_filter_frame_t::filter_buttons_types[FILTER_BUTTONS] = {
-	name_filter,
+	special_filter,
 	ware_filter,
-	typ_filter,
-	lkws_filter,
-	zuege_filter,
-	schiffe_filter,
-	aircraft_filter,
-	monorail_filter,
-	maglev_filter,
-	narrowgauge_filter,
-	tram_filter,
-	spezial_filter,
 	noroute_filter,
 	stucked_filter,
 	noincome_filter,
 	indepot_filter,
-	nofpl_filter,
+	noschedule_filter,
 	noline_filter,
 	obsolete_filter
 };
 
-slist_tpl<const ware_besch_t *>convoi_filter_frame_t::active_ware;
-char convoi_filter_frame_t::name_filter_text[] = "";
+slist_tpl<const goods_desc_t *>convoi_filter_frame_t::active_ware;
+uint32 convoi_filter_frame_t::filter_flags = 0;
 
-
-convoi_filter_frame_t::convoi_filter_frame_t(spieler_t *sp, convoi_frame_t *m, uint32 f ) :
-	gui_frame_t( translator::translate("clf_title"), sp),
-	filter_flags(f),
+convoi_filter_frame_t::convoi_filter_frame_t(player_t *player, convoi_frame_t *m) :
+	gui_frame_t( translator::translate("clf_title"), player),
 	main_frame(m),
 	ware_scrolly(&ware_cont)
 {
 	for(  int i=0; i < FILTER_BUTTONS; i++  ) {
-		filter_buttons[i].init(button_t::square_state, filter_buttons_text[i], filter_buttons_pos[i]);
+		filter_buttons[i].init(button_t::square_state, filter_buttons_text[i]);
 		filter_buttons[i].add_listener(this);
-		add_komponente(filter_buttons + i);
 		if(filter_buttons_types[i] < sub_filter) {
-			filter_buttons[i].foreground = COL_WHITE;
+			filter_buttons[i].background_color = color_idx_to_rgb(COL_WHITE);
 		}
 		filter_buttons[i].pressed = get_filter(filter_buttons_types[i]);
 	}
-	name_filter_input.set_text( name_filter_text, lengthof(name_filter_text) );
-	name_filter_input.set_groesse(koord(100, D_BUTTON_HEIGHT));
-	name_filter_input.set_pos(koord(5, D_BUTTON_HEIGHT));
-	name_filter_input.add_listener(this);
-	add_komponente(&name_filter_input);
 
-	ware_alle.init(button_t::roundbox, "clf_btn_alle", koord(125, D_BUTTON_HEIGHT), koord(41, D_BUTTON_HEIGHT));
-	ware_alle.add_listener(this);
-	add_komponente(&ware_alle);
-	ware_keine.init(button_t::roundbox, "clf_btn_keine", koord(167, D_BUTTON_HEIGHT), koord(41, D_BUTTON_HEIGHT));
-	ware_keine.add_listener(this);
-	add_komponente(&ware_keine);
-	ware_invers.init(button_t::roundbox, "clf_btn_invers", koord(209, D_BUTTON_HEIGHT), koord(41, D_BUTTON_HEIGHT));
-	ware_invers.add_listener(this);
-	add_komponente(&ware_invers);
+	set_table_layout(2,0);
+	set_alignment(ALIGN_TOP);
 
-	ware_scrolly.set_pos(koord(125, 2*D_BUTTON_HEIGHT+4));
-	ware_scrolly.set_scroll_amount_y(D_BUTTON_HEIGHT);
-	add_komponente(&ware_scrolly);
-
-	all_ware.clear();
-	int n=0;
-	for(  int i=0;  i < warenbauer_t::get_waren_anzahl();  i++  ) {
-		const ware_besch_t *ware = warenbauer_t::get_info(i);
-		if(  ware == warenbauer_t::nichts  ) {
-			continue;
-		}
-		if(  ware->get_catg() == 0  ) {
-			// Sonderfracht: Each good is special
-			ware_item_t *item = new ware_item_t(this, ware);
-			item->init(button_t::square_state, translator::translate(ware->get_name()), koord(5, D_BUTTON_HEIGHT*n++));
-			item->pressed = active_ware.is_contained(ware);
-			ware_cont.add_komponente(item);
-			all_ware.append(item);
+	// first column
+	add_table(1,0);
+	{
+		// type and special buttons
+		for(  int i=0;  i<FILTER_BUTTONS;  i++  ) {
+			if (i==0) {
+				add_component(filter_buttons + i, 2);
+			}
+			else if (i==1) {
+				;
+			}
+			else {
+				add_table(2,0);
+				{
+					new_component<gui_margin_t>(D_CHECKBOX_WIDTH);
+					add_component(filter_buttons + i);
+				}
+				end_table();
+			}
 		}
 	}
-	// now add other good categories
-	for(  int i=1;  i < warenbauer_t::get_max_catg_index();  i++  ) {
-		if(  warenbauer_t::get_info_catg(i)->get_catg() != 0  ) {
-			ware_item_t *item = new ware_item_t(this, warenbauer_t::get_info_catg(i));
-			item->init(button_t::square_state, translator::translate(warenbauer_t::get_info_catg(i)->get_catg_name()), koord(5, D_BUTTON_HEIGHT*n++));
-			item->pressed = active_ware.is_contained(warenbauer_t::get_info_catg(i));
-			ware_cont.add_komponente(item);
-			all_ware.append(item);
+	end_table();
+
+	// second columns: accepted cargo types
+	add_table(1,0);
+	{
+		add_component(filter_buttons + 1);
+		add_table(3,0);
+		{
+			ware_alle.init(button_t::roundbox, "clf_btn_alle");
+			ware_alle.set_size(scr_size(D_BUTTON_WIDTH * 3/5, D_BUTTON_HEIGHT));
+			ware_alle.add_listener(this);
+			add_component(&ware_alle);
+			ware_keine.init(button_t::roundbox, "clf_btn_keine");
+			ware_keine.set_size(scr_size(D_BUTTON_WIDTH * 3/5, D_BUTTON_HEIGHT));
+			ware_keine.add_listener(this);
+			add_component(&ware_keine);
+			ware_invers.init(button_t::roundbox, "clf_btn_invers");
+			ware_invers.set_size(scr_size(D_BUTTON_WIDTH * 3/5, D_BUTTON_HEIGHT));
+			ware_invers.add_listener(this);
+			add_component(&ware_invers);
+		}
+		end_table();
+
+		ware_scrolly.set_scroll_amount_y(D_BUTTON_HEIGHT);
+		add_component(&ware_scrolly);
+
+		ware_cont.set_table_layout(3,0);
+		all_ware.clear();
+		for(  int i=0;  i < goods_manager_t::get_count();  i++  ) {
+			const goods_desc_t *ware = goods_manager_t::get_info(i);
+			if(  ware == goods_manager_t::none  ) {
+				continue;
+			}
+			if(  ware->get_catg() == 0  ) {
+				// Special freight: Each good is special
+				ware_cont.new_component<gui_image_t>()->set_image(ware->get_catg_symbol(), true);
+				ware_item_t *item = ware_cont.new_component<ware_item_t>(this, ware);
+				item->init(button_t::square_state, translator::translate(ware->get_name()));
+				item->pressed = active_ware.is_contained(ware);
+				all_ware.append(item);
+				ware_cont.new_component<gui_fill_t>();
+			}
+		}
+		// now add other good categories
+		for(  int i=1;  i < goods_manager_t::get_max_catg_index();  i++  ) {
+			const goods_desc_t *ware = goods_manager_t::get_info_catg(i);
+			if(  ware->get_catg() != 0  ) {
+				ware_cont.new_component<gui_image_t>()->set_image(ware->get_catg_symbol(), true);
+				ware_item_t *item = ware_cont.new_component<ware_item_t>(this, ware);
+				item->init(button_t::square_state, translator::translate(ware->get_catg_name()));
+				item->pressed = active_ware.is_contained(ware);
+				all_ware.append(item);
+				ware_cont.new_component<gui_fill_t>();
+			}
 		}
 	}
+	end_table();
 
-	ware_cont.set_groesse(koord(100, n*D_BUTTON_HEIGHT));
-	ware_scrolly.set_groesse(koord(125, 13*D_BUTTON_HEIGHT));
+	set_resizemode(vertical_resize);
+	reset_min_windowsize();
+	set_windowsize(get_min_windowsize());
+}
 
-	set_fenstergroesse(koord(317, D_TITLEBAR_HEIGHT+((KOORD_VAL)FILTER_BUTTONS)*D_BUTTON_HEIGHT+8+10));
-	set_min_windowsize(koord(255, D_TITLEBAR_HEIGHT+((KOORD_VAL)FILTER_BUTTONS)*D_BUTTON_HEIGHT+8-2));
 
-
-	set_resizemode(diagonal_resize);
-	resize(koord(0,0));
+void convoi_filter_frame_t::init(uint32 filter_flags, const slist_tpl<const goods_desc_t*>* wares)
+{
+	for (int i = 0; i < FILTER_BUTTONS; i++) {
+		set_filter(filter_buttons_types[i], filter_flags & filter_buttons_types[i]);
+		filter_buttons[i].pressed = get_filter(filter_buttons_types[i]);
+	}
+	if (&active_ware != wares) {
+		active_ware.clear();
+		if (wares) {
+			FOR(slist_tpl<ware_item_t*>, wi, all_ware) {
+				wi->pressed = wares->is_contained(wi->ware);
+				if (wi->pressed) {
+					active_ware.append(wi->ware);
+				}
+			}
+		}
+	}
 }
 
 
 /**
  * This method is called if an action is triggered
- * @author V. Meyer
  */
-bool convoi_filter_frame_t::action_triggered( gui_action_creator_t *komp,value_t /* */)
+bool convoi_filter_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 {
 	for( int i = 0; i < FILTER_BUTTONS; i++) {
-		if(komp == filter_buttons + i) {
+		if(comp == filter_buttons + i) {
 			filter_buttons[i].pressed ^= 1;
 			set_filter( filter_buttons_types[i], !get_filter(filter_buttons_types[i]) );
 			sort_list();
 			return true;
 		}
 	}
-	if(komp == &ware_alle) {
+	if(comp == &ware_alle) {
 		FOR( slist_tpl<ware_item_t *>, wi, all_ware ) {
 			wi->pressed = true;
 		}
 		sort_list();
 		return true;
 	}
-	if(komp == &ware_keine) {
+	if(comp == &ware_keine) {
 		FOR( slist_tpl<ware_item_t *>, wi, all_ware ) {
 			wi->pressed = false;
 		}
 		sort_list();
 		return true;
 	}
-	if(  komp == &ware_invers  ) {
+	if(  comp == &ware_invers  ) {
 		FOR( slist_tpl<ware_item_t *>, wi, all_ware ) {
 			wi->pressed ^= true;
 		}
-		sort_list();
-		return true;
-	}
-	if(  komp == &name_filter_input  &&  filter_flags&name_filter  ) {
 		sort_list();
 		return true;
 	}
@@ -214,47 +207,22 @@ void convoi_filter_frame_t::sort_list()
 	active_ware.clear();
 	FOR( slist_tpl<ware_item_t *>, wi, all_ware ) {
 		if(  wi->pressed  ) {
-/*			uint8 catg = wi->ware->get_catg();
+/*
+			uint8 catg = wi->ware->get_catg();
 			if(  catg  ) {
 				// now all goods of this category
-				for(  int i=1;  i<warenbauer_t::get_max_catg_index();  i++   ) {
-					if(  warenbauer_t::get_info(i)->get_catg()==catg  ) {
-						active_ware.append( warenbauer_t::get_info(i) );
+				for(  int i=1;  i<goods_manager_t::get_max_catg_index();  i++   ) {
+					if(  goods_manager_t::get_info(i)->get_catg()==catg  ) {
+						active_ware.append( goods_manager_t::get_info(i) );
 					}
 				}
 			}
 			else {
 				active_ware.append( wi->ware );
 			}
-*/			active_ware.append( wi->ware );
+*/
+			active_ware.append( wi->ware );
 		}
 	}
-	main_frame->sort_list( filter_flags&name_filter ? name_filter_text : NULL, filter_flags, &active_ware );
-}
-
-
-void convoi_filter_frame_t::resize(const koord delta)
-{
-	gui_frame_t::resize(delta);
-
-	const koord gr = get_fenstergroesse()-koord(0, D_TITLEBAR_HEIGHT);
-
-	const KOORD_VAL w1 = gr.x/2-4;
-	const KOORD_VAL w2 = (gr.x+1)/2;
-	const KOORD_VAL pos2 = gr.x-w2;
-	const KOORD_VAL h = (gr.y-2-2*D_BUTTON_HEIGHT-4);
-
-	name_filter_input.set_groesse(koord(min(w1-14,142), D_BUTTON_HEIGHT));
-
-	// column 2
-	filter_buttons_pos[1] = koord(pos2, 2);
-	filter_buttons[1].set_pos(filter_buttons_pos[1]);
-	ware_alle.set_pos(koord(pos2, D_BUTTON_HEIGHT));
-	ware_alle.set_groesse(koord(w2/3-D_H_SPACE, D_BUTTON_HEIGHT));
-	ware_keine.set_pos(koord(pos2+(w2+0)/3, D_BUTTON_HEIGHT));
-	ware_keine.set_groesse(koord((w2+1)/3-D_H_SPACE, D_BUTTON_HEIGHT));
-	ware_invers.set_pos(koord(pos2+(w2+0)/3+(w2+1)/3, D_BUTTON_HEIGHT));
-	ware_invers.set_groesse(koord((w2+2)/3-D_H_SPACE, D_BUTTON_HEIGHT));
-	ware_scrolly.set_pos(koord(pos2, 2*D_BUTTON_HEIGHT+4));
-	ware_scrolly.set_groesse(koord(w2, h));
+	main_frame->sort_list( filter_flags, &active_ware );
 }

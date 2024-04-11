@@ -1,40 +1,34 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef boden_wege_runway_h
-#define boden_wege_runway_h
+#ifndef BODEN_WEGE_RUNWAY_H
+#define BODEN_WEGE_RUNWAY_H
 
 
 #include "schiene.h"
 
 
 /**
- * Klasse für runwayn in Simutrans.
+ * Class for aiport runaway in Simutrans.
  * speed >250 are for take of (maybe rather use system type in next release?)
- *
- * @author Hj. Malthaner
  */
 class runway_t : public schiene_t
 {
 public:
-	static const weg_besch_t *default_runway;
+	static const way_desc_t *default_runway;
 
 	/**
 	 * File loading constructor.
-	 *
-	 * @author Hj. Malthaner
 	 */
-	runway_t(karte_t *welt, loadsave_t *file);
+	runway_t(loadsave_t *file);
 
-	runway_t(karte_t *welt);
+	runway_t();
 
-	//inline waytype_t get_waytype() const {return air_wt;}
+	//inline waytype_t get_waytype() const OVERRIDE {return air_wt;}
 
-	void rdwr(loadsave_t *file);
+	void rdwr(loadsave_t *file) OVERRIDE;
 };
 
 #endif

@@ -1,14 +1,25 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include <string>
 #include <string.h>
+#include <stdlib.h>
 
-#ifndef _MSC_VER
-#include <dirent.h>
+#ifndef _WIN32
+#	include <dirent.h>
 #else
-#include <io.h>
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif
+#	include <windows.h>
+#	include <io.h>
 #endif
 
 #include "../simdebug.h"
 #include "../simmem.h"
+#include "../simtypes.h"
 #include "simstring.h"
 #include "searchfolder.h"
 
@@ -20,14 +31,10 @@
  *      If filepath does not end with a slash and it also doesn't contain
  *      a dot after the last slash, then append extension to filepath and
  *      search for it.
- *	Otherwise searches directly for filepath.
+ * Otherwise searches directly for filepath.
  *
- *	No wildcards please!
- *
- *  Return type:
- *      int			number of matching files.
-*/
-
+ * No wildcards please!
+ */
 void searchfolder_t::add_entry(const std::string &path, const char *entry, const bool prepend)
 {
 	const size_t entry_len = strlen(entry);
@@ -46,7 +53,7 @@ void searchfolder_t::add_entry(const std::string &path, const char *entry, const
 void searchfolder_t::clear_list()
 {
 	FOR(vector_tpl<char*>, const i, files) {
-		guarded_free(i);
+		free(i);
 	}
 	files.clear();
 }
@@ -65,6 +72,15 @@ int searchfolder_t::search_path(const std::string &filepath, const std::string &
 	std::string name;
 	std::string lookfor;
 	std::string ext;
+
+#ifdef _WIN32
+	// since we assume hardcoded path are using / we need to correct this for windows
+	for(  uint i=0;  i<path.size();  i++  ) {
+		if(  path[i]=='\\'  ) {
+			path[i] = '/';
+		}
+	}
+#endif
 
 	if(extension.empty()) {
 		//path=name;
@@ -93,26 +109,42 @@ int searchfolder_t::search_path(const std::string &filepath, const std::string &
 			path = path.substr(0, slash + 1);
 		}
 	}
-#ifdef _MSC_VER
+#ifdef _WIN32
 	lookfor = path + name + ext;
-	struct _finddata_t entry;
-	intptr_t hfind = _findfirst(lookfor.c_str(), &entry);
 
-	if(hfind != -1) {
-		lookfor = ext;
-		do {
-			size_t entry_len = strlen(entry.name);
-
-			if(  stricmp( entry.name + entry_len - lookfor.length(), lookfor.c_str() ) == 0  ) {
-				if(only_directories) {
-					if ((entry.attrib & _A_SUBDIR)==0) {
-						continue;
-					}
-				}
-				add_entry(path,entry.name,prepend_path);
-			}
-		} while(_findnext(hfind, &entry) == 0 );
+	WCHAR path_inW[MAX_PATH];
+	if(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, lookfor.c_str(), -1, path_inW, MAX_PATH) == 0) {
+		// Conversion failed so results will be nonsense anyway.
+		return files.get_count();
 	}
+
+	struct _wfinddata_t entry;
+	intptr_t const hfind = _wfindfirst(path_inW, &entry);
+	if(hfind == -1) {
+		// Search failed.
+		return files.get_count();
+	}
+
+	lookfor = ext;
+	do {
+		// Convert entry name.
+		int const entry_name_size = WideCharToMultiByte( CP_UTF8, 0, entry.name, -1, NULL, 0, NULL, NULL );
+		char *const entry_name = new char[entry_name_size];
+		WideCharToMultiByte( CP_UTF8, 0, entry.name, -1, entry_name, entry_name_size, NULL, NULL );
+
+		size_t entry_len = strlen(entry_name);
+		if(  lookfor.empty()  ||  stricmp( entry_name + entry_len - lookfor.length(), lookfor.c_str() ) == 0  ) {
+			if(only_directories) {
+				if ((entry.attrib & _A_SUBDIR)==0) {
+					delete[] entry_name;
+					continue;
+				}
+			}
+			add_entry(path,entry_name,prepend_path);
+		}
+		delete[] entry_name;
+	} while(_wfindnext(hfind, &entry) == 0 );
+	_findclose(hfind);
 #else
 	lookfor = path + ".";
 
@@ -134,8 +166,21 @@ int searchfolder_t::search_path(const std::string &filepath, const std::string &
 	return files.get_count();
 }
 
+
+#ifdef _WIN32
+std::string searchfolder_t::complete(const std::string &filepath_raw, const std::string &extension)
+{
+	std::string filepath(filepath_raw);
+	// since we assume hardcoded path are using / we need to correct this for windows
+	for(  uint i=0;  i<filepath.size();  i++  ) {
+		if(  filepath[i]=='\\'  ) {
+			filepath[i] = '/';
+		}
+	}
+#else
 std::string searchfolder_t::complete(const std::string &filepath, const std::string &extension)
 {
+#endif
 	if(filepath[filepath.size() - 1] != '/') {
 		int slash = filepath.rfind('/');
 		int dot = filepath.rfind('.');
@@ -154,7 +199,7 @@ std::string searchfolder_t::complete(const std::string &filepath, const std::str
 searchfolder_t::~searchfolder_t()
 {
 	FOR(vector_tpl<char*>, const i, files) {
-		guarded_free(i);
+		free(i);
 	}
 	files.clear();
 }

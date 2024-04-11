@@ -1,18 +1,23 @@
 /*
- * Dialogue to increase map size.
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef bigger_map_gui_h
-#define bigger_map_gui_h
+#ifndef GUI_ENLARGE_MAP_FRAME_T_H
+#define GUI_ENLARGE_MAP_FRAME_T_H
+
 
 #include "gui_frame.h"
 #include "components/gui_label.h"
 #include "components/action_listener.h"
 #include "components/gui_numberinput.h"
+#include "components/gui_map_preview.h"
 
 class settings_t;
-class karte_t;
 
+/*
+ * Dialogue to increase map size.
+ */
 class enlarge_map_frame_t  : public gui_frame_t, private action_listener_t
 {
 private:
@@ -28,33 +33,46 @@ private:
 
 	/**
 	* Mini Map-Preview
-	* @author Hj. Malthaner
 	*/
-	unsigned char karte[preview_size*preview_size];
+	array2d_tpl<PIXVAL> map;
+	gui_map_preview_t
+		map_preview;
 
 	bool changed_number_of_towns;
-	int old_lang;
 
-	gui_numberinput_t inp_x_size, inp_y_size, inp_number_of_towns, inp_number_of_big_cities;
-   	gui_numberinput_t inp_number_of_clusters, inp_cluster_size, inp_town_size;
+	gui_numberinput_t
+		inp_x_size,
+		inp_y_size,
+		inp_number_of_towns,
+		inp_number_of_big_cities,
+		inp_number_of_clusters,
+		inp_cluster_size,
+		inp_town_size;
 
-	button_t start_button;
+	/*
+	 * Label to display current map seed number.
+	 */
+	gui_label_buf_t map_number_label;
 
-	gui_label_t memory;// memory requirement
-	char memory_str[256];
+	button_t
+		start_button;
 
-	karte_t *welt;
+	gui_label_buf_t
+		info_x_size,
+		info_y_size,
+		cluster_size_label,
+		size_label; // memory requirement
+
 
 public:
 	static inline koord koord_from_rotation(settings_t const*, sint16 y, sint16 x, sint16 w, sint16 h);
 
-	enlarge_map_frame_t( spieler_t *spieler, karte_t *welt );
+	enlarge_map_frame_t();
 	~enlarge_map_frame_t();
 
 	/**
 	* Calculate the new Map-Preview. Initialize the new RNG!
 	* public, because also the climate dialog need it
-	* @author Hj. Malthaner
 	*/
 	void update_preview();
 
@@ -63,17 +81,15 @@ public:
 	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
-	 * @author Hj. Malthaner
 	 */
-	const char * get_hilfe_datei() const { return "enlarge_map.txt";}
+	const char * get_help_filename() const OVERRIDE { return "enlarge_map.txt";}
 
 	/**
 	 * Draw new component. The values to be passed refer to the window
 	 * i.e. It's the screen coordinates of the window where the
 	 * component is displayed.
-	 * @author Hj. Malthaner
 	 */
-	void zeichnen(koord pos, koord gr);
+	void draw(scr_coord pos, scr_size size) OVERRIDE;
 };
 
 #endif

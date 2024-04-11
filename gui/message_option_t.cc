@@ -1,89 +1,98 @@
 /*
- * Settings for player message options
- *
- * Copyright (c) 2006 prissi
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include "../simmesg.h"
 #include "../simskin.h"
 #include "../simworld.h"
 
-#include "../besch/skin_besch.h"
+#include "../descriptor/skin_desc.h"
 #include "../dataobj/translator.h"
-#include "../dataobj/umgebung.h"
+#include "../dataobj/environment.h"
 #include "message_option_t.h"
-
-#define BUTTON_ROW (110+D_MARGIN_LEFT+D_BUTTON_HEIGHT+D_H_SPACE)
-
-
-karte_t *message_option_t::welt = NULL;
+#include "components/gui_image.h"
 
 
-message_option_t::message_option_t(karte_t *welt) :
-	gui_frame_t( translator::translate("Mailbox Options") ),
-	text_label(&buf),
-	legend( skinverwaltung_t::message_options->get_bild_nr(0) )
+message_option_t::message_option_t() :
+	gui_frame_t( translator::translate("Mailbox Options") )
 {
-	this->welt = welt;
-	buf.clear();
-	buf.append(translator::translate("MessageOptionsText"));
-	text_label.set_pos( koord(D_MARGIN_LEFT+D_BUTTON_HEIGHT+D_H_SPACE,D_MARGIN_TOP+(D_BUTTON_HEIGHT-LINESPACE)/2) );
-	add_komponente( &text_label );
+	set_table_layout(5,0);
 
-	legend.set_pos( koord(BUTTON_ROW,0) );
-	add_komponente( &legend );
+	// first row images
+	new_component_span<gui_empty_t>(2);
+	if (skinverwaltung_t::message_options->get_count() >=3 ) {
+		// three single images
+		for(int i=0; i<3; i++) {
+			new_component<gui_image_t>(skinverwaltung_t::message_options->get_image_id(i), 0, 0, true);
+		}
+	}
+	else {
+		// one monolithic image
+		new_component_span<gui_image_t>(skinverwaltung_t::message_options->get_image_id(0), 0, 0, true, 3);
+	}
 
+	// The text is unfortunately a single text, which we have to chop into pieces.
+	const unsigned char *p = (const unsigned char *)translator::translate( "MessageOptionsText" );
 	welt->get_message()->get_message_flags( &ticker_msg, &window_msg, &auto_msg, &ignore_msg );
 
 	for(  int i=0;  i<message_t::MAX_MESSAGE_TYPE;  i++  ) {
-		buttons[i*4].set_pos( koord(D_MARGIN_LEFT,D_MARGIN_TOP+(i*2+1)*LINESPACE) );
+
 		buttons[i*4].set_typ(button_t::square_state);
 		buttons[i*4].pressed = ((ignore_msg>>i)&1)==0;
 		buttons[i*4].add_listener(this);
-		add_komponente( buttons+i*4 );
+		add_component( buttons+i*4 );
 
-		buttons[i*4+1].set_pos( koord(BUTTON_ROW+10,D_MARGIN_TOP+(i*2+1)*LINESPACE) );
+		// copy the next line of the option text
+		while(  *p < ' '  &&  *p  ) {
+			p++;
+		}
+		for(  int j=0;   *p>=' '; p++  ) {
+			if(  j < MAX_MESSAGE_OPTION_TEXTLEN-1  ) {
+				option_texts[i][j++] = *p;
+				option_texts[i][j] = 0;
+			}
+		}
+		text_lbl[i].set_text( option_texts[i] );
+		add_component( text_lbl+i );
+
 		buttons[i*4+1].set_typ(button_t::square_state);
 		buttons[i*4+1].set_tooltip("Show in the ticker");
 		buttons[i*4+1].pressed = (ticker_msg>>i)&1;
 		buttons[i*4+1].add_listener(this);
-		add_komponente( buttons+i*4+1 );
+		add_component( buttons+i*4+1 );
 
-		buttons[i*4+2].set_pos( koord(BUTTON_ROW+30,D_MARGIN_TOP+(i*2+1)*LINESPACE) );
 		buttons[i*4+2].set_typ(button_t::square_state);
 		buttons[i*4+2].pressed = (auto_msg>>i)&1;
 		buttons[i*4+2].set_tooltip("Show a transient dialogue box");
 		buttons[i*4+2].add_listener(this);
-		add_komponente( buttons+i*4+2 );
+		add_component( buttons+i*4+2 );
 
-		buttons[i*4+3].set_pos( koord(BUTTON_ROW+50,D_MARGIN_TOP+(i*2+1)*LINESPACE) );
 		buttons[i*4+3].set_typ(button_t::square_state);
 		buttons[i*4+3].set_tooltip("Show a non-transient dialogue box");
 		buttons[i*4+3].pressed = (window_msg>>i)&1;
 		buttons[i*4+3].add_listener(this);
-		add_komponente( buttons+i*4+3 );
+		add_component( buttons+i*4+3 );
 	}
-	set_fenstergroesse( koord(BUTTON_ROW+70, D_TITLEBAR_HEIGHT+D_MARGIN_TOP+(message_t::MAX_MESSAGE_TYPE*2-1)*LINESPACE+D_BUTTON_HEIGHT+D_MARGIN_BOTTOM ) );
+
+	reset_min_windowsize();
 }
 
 
-bool message_option_t::action_triggered( gui_action_creator_t *komp, value_t )
+bool message_option_t::action_triggered( gui_action_creator_t *comp, value_t )
 {
-	((button_t*)komp)->pressed ^= 1;
+	((button_t*)comp)->pressed ^= 1;
 	for(  int i=0;  i<message_t::MAX_MESSAGE_TYPE;  i++  ) {
-		if(&buttons[i*4+0]==komp) {
+		if(&buttons[i*4+0]==comp) {
 			ignore_msg ^= (1<<i);
 		}
-		if(&buttons[i*4+1]==komp) {
+		if(&buttons[i*4+1]==comp) {
 			ticker_msg ^= (1<<i);
 		}
-		if(&buttons[i*4+2]==komp) {
+		if(&buttons[i*4+2]==comp) {
 			auto_msg ^= (1<<i);
 		}
-		if(&buttons[i*4+3]==komp) {
+		if(&buttons[i*4+3]==comp) {
 			window_msg ^= (1<<i);
 		}
 	}

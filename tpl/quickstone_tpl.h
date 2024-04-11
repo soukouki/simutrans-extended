@@ -1,20 +1,24 @@
-#ifndef quickstone_tpl_h
-#define quickstone_tpl_h
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef TPL_QUICKSTONE_TPL_H
+#define TPL_QUICKSTONE_TPL_H
+
 
 #include "../simtypes.h"
 #include "../simdebug.h"
 
 /**
  * An implementation of the tombstone pointer checking method.
- * It uses an table of pointers and indizes into that table to
+ * It uses a table of pointers and indices into that table to
  * implement the tombstone system. Unlike real tombstones, this
- * template reuses entries from the tombstone tabel, but it tries
- * to leave free'd tombstones untouched as long as possible, to
+ * template reuses entries from the tombstone table, but it tries
+ * to leave freed  tombstones untouched as long as possible, to
  * detect most of the dangling pointers.
  *
  * This templates goal is to be efficient and fairly safe.
- *
- * @author Hj. Malthaner
  */
 template <class T> class quickstone_tpl
 {
@@ -35,6 +39,13 @@ private:
 	static uint16 size;
 
 	/**
+	 * The index in the table for this handle.
+	 * (only this variable is actually saved, since the rest is static!)
+	 */
+	uint16 entry;
+
+private:
+	/**
 	 * Retrieves next free tombstone index
 	 */
 	static uint16 find_next() {
@@ -46,6 +57,15 @@ private:
 				next = i+1;
 				return i;
 			}
+		}
+
+		if (size < 65535)
+		{
+			// Enlarge the array before searching old handles.
+			// This is slightly less efficient, but minimises handle
+			// duplication, which can cause problems when handles are
+			// used as indices.
+			return enlarge();
 		}
 
 		// scan whole array
@@ -86,25 +106,16 @@ private:
 		return next-1;
 	}
 
-	/**
-	 * The index in the table for this handle.
-	 * (only this variable is actially saved, since the rest is static!)
-	 */
-	uint16 entry;
-
 public:
 	/**
 	 * Initializes the tombstone table. Calling init() makes all existing
 	 * quickstones invalid.
 	 *
 	 * @param n number of elements
-	 * @author Hj. Malthaner
 	 */
 	static void init(const uint16 n)
 	{
-		if(data) {
-			delete [] data;
-		}
+		delete [] data;
 		size = n;
 		data = new T* [size];
 
@@ -179,13 +190,10 @@ public:
 			if(  id!=0  ) {
 				dbg->fatal("quickstone<T>::quickstone_tpl(T*,uint16)","wants to assign null pointer to non-null index");
 			}
-			assert(id==0);
 			// all NULL pointers are mapped to entry 0
 			entry = 0;
 		}
 	}
-
-	quickstone_tpl(const quickstone_tpl& r) : entry(r.entry) {}
 
 	// returns true, if no handles left
 	static bool is_exhausted()
@@ -198,10 +206,10 @@ public:
 					return false;
 				}
 			}
-			// no handles left => cannot extent
+			// no handles left => cannot extend
 			return true;
 		}
-		// can extent in any case => ok
+		// can extend in any case => ok
 		return false;
 	}
 
@@ -219,7 +227,6 @@ public:
 	/**
 	 * Removes the object from the tombstone table - this affects all
 	 * handles to the object!
-	 * @author Hj. Malthaner
 	 */
 	T* detach()
 	{
@@ -234,8 +241,6 @@ public:
 	 * that don't know about quickstones - but take care that such pointers
 	 * are never ever deleted or that by some means detach() is called
 	 * upon deletion, i.e. from the ~T() destructor!!!
-	 *
-	 * @author Hj. Malthaner
 	 */
 	T* get_rep() const { return data[entry]; }
 
@@ -243,14 +248,23 @@ public:
 	 * @return the index into the tombstone table. May be used as
 	 * an ID for the referenced object.
 	 */
-	uint16 get_id() const { return entry; }
+	inline uint16 get_id() const { return entry; }
 
 	/**
 	 * For read/write from/to any storage (file or memory) with the appropriate interface
 	 * @author Knightly
 	 */
 	template <class STORAGE>
-	void rdwr(STORAGE *store) { store->rdwr_short(entry); }
+	void rdwr(STORAGE *store)
+	{
+		store->rdwr_short(entry);
+		if (entry > next && next < 65534)
+		{
+			// This makes sure that "next" always searches to the end of the array
+			// before returning to the beginning again.
+			next = entry + 1;
+		}
+	}
 
 	/**
 	 * Sets the current id: Needed to recreate stuff via network.
@@ -261,8 +275,6 @@ public:
 	/**
 	 * Overloaded dereference operator. With this, quickstones can
 	 * be used as if they were pointers.
-	 *
-	 * @author Hj. Malthaner
 	 */
 	T* operator->() const { return data[entry]; }
 
@@ -284,7 +296,6 @@ public:
 	/**
 	 * For checking the consistency of handle allocation
 	 * among the server and the clients in network mode
-	 * @author Knightly
 	 */
 	static uint16 get_next_check() { return next; }
 };

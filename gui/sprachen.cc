@@ -1,32 +1,29 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
- */
-
-/*
- * Dialog for language change
- * Hj. Malthaner, 2000
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include <stdio.h>
 
 #include "../simdebug.h"
 #include "../pathes.h"
-#include "../simimg.h"
+#include "../display/simimg.h"
 #include "../simskin.h"
-#include "../besch/skin_besch.h"
+#include "../simmenu.h"
+#include "../descriptor/skin_desc.h"
 #include "sprachen.h"
+#include "simwin.h"
+#include "components/gui_image.h"
+#include "components/gui_divider.h"
 
-#include "../font.h"
+#include "../display/font.h"
 
-#include "../dataobj/umgebung.h"
+#include "../dataobj/environment.h"
 #include "../dataobj/translator.h"
-#include "../simsys.h"
+#include "../sys/simsys.h"
 #include "../utils/simstring.h"
+#include "../simworld.h"
 
-#define DIALOG_WIDTH (220)
 
 int sprachengui_t::cmp_language_button(sprachengui_t::language_button_t a, sprachengui_t::language_button_t b)
 {
@@ -36,25 +33,38 @@ int sprachengui_t::cmp_language_button(sprachengui_t::language_button_t a, sprac
 /**
  * Causes the required fonts for currently selected
  * language to be loaded
- * @author Hj. Malthaner
  */
 void sprachengui_t::init_font_from_lang()
 {
-	static const char *default_name = "PROP_FONT_FILE";
-	const char * prop_font_file = translator::translate(default_name);
+	bool reload_font = !has_character( translator::get_lang()->highest_character );
 
-	// Hajo: fallback if entry is missing
-	// -> use latin-1 font
-	if(prop_font_file == default_name) {
-		prop_font_file = "prop.fnt";
+	// the real fonts for the current language
+	std::string old_font = env_t::fontname;
+
+	static const char *default_name = "PROP_FONT_FILE";
+	const char *prop_font_file = translator::translate(default_name);
+
+	// fallback if entry is missing -> use latin-1 font
+	if(  prop_font_file == default_name  ) {
+		prop_font_file = "cyr.bdf";
 	}
 
-	// load large font
-	char prop_font_file_name [1024];
-	sprintf(prop_font_file_name, "%s%s", FONT_PATH_X, prop_font_file);
-	chdir(umgebung_t::program_dir);
-	display_load_font(prop_font_file_name);
-	chdir(umgebung_t::user_dir);
+	if(  reload_font  ) {
+		// load large font
+		dr_chdir( env_t::data_dir );
+		bool ok = false;
+		char prop_font_file_name[4096];
+		tstrncpy( prop_font_file_name, prop_font_file, lengthof(prop_font_file_name) );
+		char *f = strtok( prop_font_file_name, ";" );
+		do {
+			std::string fname = FONT_PATH_X;
+			fname += prop_font_file_name;
+			ok = display_load_font(fname.c_str());
+			f = strtok( NULL, ";" );
+		}
+		while(  !ok  &&  f  );
+		dr_chdir( env_t::user_dir );
+	}
 
 	const char * p = translator::translate("SEP_THOUSAND");
 	char c = ',';
@@ -79,31 +89,35 @@ void sprachengui_t::init_font_from_lang()
 		p = "";
 		v = 1e99;
 	}
-	set_large_amout(p,v);
+	set_large_amount(p,v);
 }
 
 
 sprachengui_t::sprachengui_t() :
 	gui_frame_t( translator::translate("Sprachen") ),
 	text_label(&buf),
-	flags(skinverwaltung_t::flaggensymbol?skinverwaltung_t::flaggensymbol->get_bild_nr(0):IMG_LEER),
 	buttons(translator::get_language_count())
 {
+	set_table_layout(2,0);
+
 	buf.clear();
 	buf.append(translator::translate("LANG_CHOOSE\n"));
-	text_label.set_pos( koord(D_MARGIN_LEFT,D_MARGIN_TOP) );
-	add_komponente( &text_label );
+	text_label.set_buf(&buf); // force recalculation of size
+	add_component( &text_label );
 
-	flags.set_pos( koord(DIALOG_WIDTH-D_MARGIN_RIGHT-flags.get_groesse().x,-3) );
-	add_komponente( &flags);
+	if (skinverwaltung_t::flaggensymbol) {
+		gui_image_t *flags = new_component<gui_image_t>(skinverwaltung_t::flaggensymbol->get_image_id(0));
+		flags->enable_offset_removal(true);
+	}
+	else {
+		new_component<gui_empty_t>();
+	}
 
-	seperator.set_pos( koord(D_MARGIN_LEFT, 37) );
-	seperator.set_groesse( koord(DIALOG_WIDTH-D_MARGIN_RIGHT-flags.get_groesse().x-D_MARGIN_LEFT-D_V_SPACE,0) );
-	add_komponente( &seperator );
-
-	sint16 y_size = max( seperator.get_pos().y + seperator.get_groesse().y, flags.get_pos().y + flags.get_groesse().y) + D_H_SPACE;
+	new_component_span<gui_divider_t>(2);
 
 	const translator::lang_info* lang = translator::get_langs();
+	dr_chdir( env_t::data_dir );
+
 	for (int i = 0; i < translator::get_language_count(); ++i, ++lang) {
 		button_t* b = new button_t();
 
@@ -112,29 +126,37 @@ sprachengui_t::sprachengui_t() :
 		b->set_no_translate(true);
 
 		// check, if font exists
-		chdir(umgebung_t::program_dir);
-		const char* fontname = lang->translate("PROP_FONT_FILE");
-		char prop_font_file_name [1024];
-		sprintf(prop_font_file_name, "%s%s", FONT_PATH_X, fontname);
-		bool ok = true;
-		font_type fnt;
-		fnt.screen_width = NULL;
-		fnt.char_data = NULL;
-		if(  *fontname==0  ||  !load_font(&fnt,prop_font_file_name)  ) {
-			ok = false;
-		}
-		else {
-			if(  lang->utf_encoded  &&  fnt.num_chars<=256  ) {
-				dbg->warning( "sprachengui_t::sprachengui_t()", "Unicode language %s needs BDF fonts with most likely more than 256 characters!", lang->name );
+		uint16 num_loaded = false;
+		char prop_font_file_name[1024];
+		tstrncpy( prop_font_file_name, lang->translate("PROP_FONT_FILE"), lengthof(prop_font_file_name) );
+		char *f = strtok( prop_font_file_name, ";" );
+		do {
+			std::string fname = FONT_PATH_X;
+			fname += prop_font_file_name;
+#if 1
+			// we are only checking the existence of the file
+			num_loaded = false;
+			if(  FILE *fnt = dr_fopen(fname.c_str(), "rb")  ) {
+				num_loaded = true;
+				fclose( fnt );
 			}
-			free(fnt.screen_width);
-			free(fnt.char_data);
+#else
+			//
+			num_loaded = display_load_font(fname.c_str());
+#endif
+			f = strtok( NULL, ";" );
 		}
+		while(  !num_loaded  &&  f  );
+
 		// now we know this combination is working
-		if(ok) {
+		if(num_loaded) {
 			// only listener for working languages ...
 			b->add_listener(this);
-		} else {
+			if(  num_loaded <= 256  ) {
+				dbg->warning( "sprachengui_t::sprachengui_t()", "Unicode language %s needs BDF fonts with most likely more than 256 characters!", lang->name );
+			}
+		}
+		else {
 			dbg->warning("sprachengui_t::sprachengui_t()", "no font found for %s", lang->name);
 			b->disable();
 		}
@@ -151,37 +173,49 @@ sprachengui_t::sprachengui_t() :
 		lb.id = id;
 		buttons.insert_ordered(lb, sprachengui_t::cmp_language_button);
 	}
+	dr_chdir(env_t::user_dir);
 
-	// now set position
+	// insert buttons such that language appears columnswise
 	const uint32 count = buttons.get_count();
-	for(uint32 i=0; i<count; i++)
-	{
-		const bool right = 2*i >= count;
-		const sint16 x = D_MARGIN_LEFT + (right  ? DIALOG_WIDTH/2 : 0);
-		const sint16 y = y_size + D_BUTTON_HEIGHT * (right ? i - (count+1)/2: i);
-		buttons[i].button->set_pos(koord(x,y));
-		add_komponente( buttons[i].button );
+	const uint32 half = (count+1)/2;
+	for(uint32 i=0; i < half; i++) {
+		add_component(buttons[i].button);
+		if (i+ half < count) {
+			add_component(buttons[i+half].button);
+		}
 	}
 
-	chdir(umgebung_t::user_dir);
-
-	set_fenstergroesse( koord(DIALOG_WIDTH, D_MARGIN_BOTTOM+y_size+( (buttons.get_count()+1)/2 + 1)*D_BUTTON_HEIGHT) );
+	reset_min_windowsize();
+	set_windowsize(get_min_windowsize() );
 }
 
 
-
-bool sprachengui_t::action_triggered( gui_action_creator_t *komp, value_t)
+bool sprachengui_t::action_triggered( gui_action_creator_t *comp, value_t)
 {
 	for(int i=0; i<translator::get_language_count(); i++) {
 		button_t *b = buttons[i].button;
-		if(b == komp) {
+
+		if(b == comp) {
 			b->pressed = true;
-			translator::set_language(buttons[i].id);
+
+			translator::set_language( buttons[i].id );
 			init_font_from_lang();
+			destroy_all_win( true );
+
+			event_t* ev = new event_t();
+			ev->ev_class = EVENT_SYSTEM;
+			ev->ev_code = SYSTEM_RELOAD_WINDOWS;
+			queue_event( ev );
+
+			if (world()) {
+				// must not update non-existent toolbars
+				tool_t::update_toolbars();
+			}
 		}
 		else {
 			b->pressed = false;
 		}
+
 	}
 	return true;
 }

@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 1997 - 2001 Hj. Malthaner
- *
- * This file is part of the Simutrans project under the artistic license.
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include <stdlib.h>
@@ -11,81 +10,44 @@
 
 #ifdef SYSLOG
 #include <syslog.h>
-#endif //SYSLOG
+#endif
 
 #include "log.h"
 #include "../simdebug.h"
-#include "../simsys.h"
+#include "../sys/simsys.h"
 
 
 #ifdef MAKEOBJ
-#define debuglevel (3)
+//debuglevel is global variable
+#define dr_fopen fopen
 #else
 #ifdef NETTOOL
 #define debuglevel (0)
+#define dr_fopen fopen
 
-#else
-#define debuglevel (umgebung_t::verbose_debug)
+#else // (not) NETTOOL
+#define debuglevel (env_t::verbose_debug)
 
 // for display ...
 #include "../gui/messagebox.h"
-#include "../simgraph.h"
-#include "../simwin.h"
+#include "../display/simgraph.h"
+#include "../gui/simwin.h"
 
-#include "../dataobj/umgebung.h"
-#endif
-#endif
-
-/**
- * writes important messages to stdout/logfile
- * use instead of printf()
- */
-void log_t::important(const char* format, ...)
-{
-	va_list argptr;
-
-	va_start( argptr, format );
-	if (  log  ) {
-		// If logfile, output there
-		vfprintf( log, format, argptr );
-		fprintf( log, "\n" );
-		if (  force_flush  ) { fflush( log ); }
-	}
-	va_end(argptr);
-
-#ifdef SYSLOG
-	va_start( argptr, format );
-	if (  syslog  ) {
-		// Send to syslog if available
-		vsyslog( LOG_NOTICE, format, argptr );
-	}
-	va_end(argptr);
-#endif //SYSLOG
-
-	va_start( argptr, format );
-
-	// Print to stdout for important messages
-	if (  log != stderr  ) {
-		vfprintf( stdout, format, argptr );
-		fprintf( stdout, "\n" );
-		if (  force_flush  ) { fflush( stdout ); }
-	}
-
-	va_end( argptr );
-}
+#include "../dataobj/environment.h"
+#endif // NETTOOL
+#endif // MAKEOBJ
 
 /**
  * writes a debug message into the log.
- * @author Hj. Malthaner
  */
 void log_t::debug(const char *who, const char *format, ...)
 {
-	if(log_debug  &&  debuglevel==4) {
+	if(log_debug  &&  debuglevel >= log_t::LEVEL_DEBUG) {
 		va_list argptr;
 		va_start(argptr, format);
 
-		if( log ) {                         /* nur loggen wenn schon ein log */
-			fprintf(log ,"Debug: %s:\t",who);      /* geoeffnet worden ist */
+		if( log ) {                           /* only log when a log */
+			fprintf(log ,"Debug: %s:\t",who); /* is already open */
 			vfprintf(log, format, argptr);
 			fprintf(log,"\n");
 
@@ -96,8 +58,8 @@ void log_t::debug(const char *who, const char *format, ...)
 		va_end(argptr);
 
 		va_start(argptr, format);
-		if( tee ) {                         /* nur loggen wenn schon ein log */
-			fprintf(tee, "Debug: %s:\t",who);      /* geoeffnet worden ist */
+		if( tee ) {                           /* only log when a log */
+			fprintf(tee, "Debug: %s:\t",who); /* is already open */
 			vfprintf(tee, format, argptr);
 			fprintf(tee,"\n");
 		}
@@ -107,28 +69,27 @@ void log_t::debug(const char *who, const char *format, ...)
 		va_start( argptr, format );
 		if (  syslog  ) {
 			// Replace with dynamic memory allocation
-			char buffer[256];
+			char buffer[4096];
 			sprintf( buffer, "Debug: %s\t%s", who, format );
 			vsyslog( LOG_DEBUG, buffer, argptr );
 		}
 		va_end( argptr );
-#endif //SYSLOG
+#endif
 	}
 }
 
 
 /**
  * writes a message into the log.
- * @author Hj. Malthaner
  */
 void log_t::message(const char *who, const char *format, ...)
 {
-	if(debuglevel>2) {
+	if(debuglevel >= log_t::LEVEL_MSG) {
 		va_list argptr;
 		va_start(argptr, format);
 
-		if( log ) {                         /* nur loggen wenn schon ein log */
-			fprintf(log ,"Message: %s:\t",who);      /* geoeffnet worden ist */
+		if( log ) {                             /* only log when a log */
+			fprintf(log ,"Message: %s:\t",who); /* is already open */
 			vfprintf(log, format, argptr);
 			fprintf(log,"\n");
 
@@ -139,8 +100,8 @@ void log_t::message(const char *who, const char *format, ...)
 		va_end(argptr);
 
 		va_start(argptr, format);
-		if( tee ) {                         /* nur loggen wenn schon ein log */
-			fprintf(tee, "Message: %s:\t",who);      /* geoeffnet worden ist */
+		if( tee ) {                             /* only log when a log */
+			fprintf(tee, "Message: %s:\t",who); /* is already open */
 			vfprintf(tee, format, argptr);
 			fprintf(tee,"\n");
 		}
@@ -150,28 +111,27 @@ void log_t::message(const char *who, const char *format, ...)
 		va_start( argptr, format );
 		if (  syslog  ) {
 			// Replace with dynamic memory allocation
-			char buffer[256];
+			char buffer[4096];
 			sprintf( buffer, "Message: %s\t%s", who, format );
 			vsyslog( LOG_INFO, buffer, argptr );
 		}
 		va_end( argptr );
-#endif //SYSLOG
+#endif
 	}
 }
 
 
 /**
  * writes a warning into the log.
- * @author Hj. Malthaner
  */
 void log_t::warning(const char *who, const char *format, ...)
 {
-	if(debuglevel>1) {
+	if(debuglevel >= log_t::LEVEL_WARN) {
 		va_list argptr;
 		va_start(argptr, format);
 
-		if( log ) {                         /* nur loggen wenn schon ein log */
-			fprintf(log ,"Warning: %s:\t",who);      /* geoeffnet worden ist */
+		if( log ) {                             /* only log when a log */
+			fprintf(log ,"Warning: %s:\t",who); /* is already open */
 			vfprintf(log, format, argptr);
 			fprintf(log,"\n");
 
@@ -182,8 +142,8 @@ void log_t::warning(const char *who, const char *format, ...)
 		va_end(argptr);
 
 		va_start(argptr, format);
-		if( tee ) {                         /* nur loggen wenn schon ein log */
-			fprintf(tee, "Warning: %s:\t",who);      /* geoeffnet worden ist */
+		if( tee ) {                             /* only log when a log */
+			fprintf(tee, "Warning: %s:\t",who); /* is already open */
 			vfprintf(tee, format, argptr);
 			fprintf(tee,"\n");
 		}
@@ -193,28 +153,27 @@ void log_t::warning(const char *who, const char *format, ...)
 		va_start( argptr, format );
 		if (  syslog  ) {
 			// Replace with dynamic memory allocation
-			char buffer[256];
+			char buffer[4096];
 			sprintf( buffer, "Warning: %s\t%s", who, format );
 			vsyslog( LOG_WARNING, buffer, argptr );
 		}
 		va_end( argptr );
-#endif //SYSLOG
+#endif
 	}
 }
 
 
 /**
  * writes an error into the log.
- * @author Hj. Malthaner
  */
 void log_t::error(const char *who, const char *format, ...)
 {
-	if(debuglevel>0) {
+	if(debuglevel >= log_t::LEVEL_ERROR) {
 		va_list argptr;
 		va_start(argptr, format);
 
-		if( log ) {                         /* nur loggen wenn schon ein log */
-			fprintf(log ,"ERROR: %s:\t",who);      /* geoeffnet worden ist */
+		if( log ) {                           /* only log when a log */
+			fprintf(log ,"ERROR: %s:\t",who); /* is already open */
 			vfprintf(log, format, argptr);
 			fprintf(log,"\n");
 
@@ -223,18 +182,18 @@ void log_t::error(const char *who, const char *format, ...)
 			}
 
 			fprintf(log ,"For help with this error or to file a bug report please see the Simutrans forum:\n");
-			fprintf(log ,"http://forum.simutrans.com\n");
+			fprintf(log ,"https://forum.simutrans.com\n");
 		}
 		va_end(argptr);
 
 		va_start(argptr, format);
-		if( tee ) {                         /* nur loggen wenn schon ein log */
-			fprintf(tee, "ERROR: %s:\t",who);      /* geoeffnet worden ist */
+		if( tee ) {                           /* only log when a log */
+			fprintf(tee, "ERROR: %s:\t",who); /* is already open */
 			vfprintf(tee, format, argptr);
 			fprintf(tee,"\n");
 
 			fprintf(tee ,"For help with this error or to file a bug report please see the Simutrans forum:\n");
-			fprintf(tee ,"http://forum.simutrans.com\n");
+			fprintf(tee ,"https://forum.simutrans.com\n");
 		}
 		va_end(argptr);
 
@@ -243,19 +202,48 @@ void log_t::error(const char *who, const char *format, ...)
 		if (  syslog  ) {
 
 			// Replace with dynamic memory allocation
-			char buffer[256];
+			char buffer[4096];
 			sprintf( buffer, "ERROR: %s\t%s", who, format );
 			vsyslog( LOG_ERR, buffer, argptr );
 		}
 		va_end( argptr );
-#endif //SYSLOG
+#endif
 	}
 }
 
 
+
+/**
+ * writes a warning into the log.
+ */
+void log_t::doubled(const char *what, const char *name )
+{
+	if(debuglevel >= log_t::LEVEL_WARN) {
+
+		if( log ) {                             /* only log when a log */
+			fprintf(log ,"Warning: object %s::%s is overlaid!\n",what,name); /* is already open */
+			if( force_flush ) {
+				fflush(log);
+			}
+		}
+
+		if( tee ) {
+			fprintf(tee, "Warning: object %s::%s is overlaid!\n",what,name);
+		}
+
+#ifdef SYSLOG
+		if(  syslog  ) {
+			::syslog( LOG_WARNING, "Warning: object %s::%s is overlaid!", what, name );
+		}
+#endif
+	}
+	doublettes.append( (std::string)what+"::"+name+"<br/>" );
+}
+
+
+
 /**
  * writes an error into the log, aborts the program.
- * @author Hj. Malthaner
  */
 void log_t::fatal(const char *who, const char *format, ...)
 {
@@ -263,19 +251,25 @@ void log_t::fatal(const char *who, const char *format, ...)
 	va_start(argptr, format);
 
 	static char formatbuffer[512];
-	sprintf( formatbuffer, "FATAL ERROR: %s - %s\nAborting program execution ...\n\nFor help with this error or to file a bug report please see the Simutrans forum:\nhttp://forum.simutrans.com\n", who, format );
+	sprintf( formatbuffer,
+		"FATAL ERROR: %s - %s\n"
+		"Aborting program execution ...\n"
+		"\n"
+		"For help with this error or to file a bug report please see the Simutrans forum at\n"
+		"https://forum.simutrans.com\n",
+		who, format );
 
 	static char buffer[8192];
 	int n = vsprintf( buffer, formatbuffer, argptr );
 
-	if (  log  ) {
+	if(  log  ) {
 		fputs( buffer, log );
 		if (  force_flush  ) {
 			fflush( log );
 		}
 	}
 
-	if (  tee  ) {
+	if(  tee  &&  log!=tee  ) {
 		fputs( buffer, tee );
 	}
 
@@ -283,7 +277,7 @@ void log_t::fatal(const char *who, const char *format, ...)
 	if (  syslog  ) {
 		::syslog( LOG_ERR, buffer );
 	}
-#endif //SYSLOG
+#endif
 
 	if (  tee == NULL  &&  log == NULL  &&  tag == NULL  ) {
 		fputs( buffer, stderr );
@@ -291,23 +285,25 @@ void log_t::fatal(const char *who, const char *format, ...)
 
 	va_end(argptr);
 
-#if defined MAKEOBJ  ||  defined NETTOOL
+#if defined MAKEOBJ
+	(void)n;
+	exit(EXIT_FAILURE);
+#elif defined NETTOOL
 	// no display available
+	(void)n;
 	puts( buffer );
 #else
-#  ifdef DEBUG
-	int old_level = umgebung_t::verbose_debug;
-#  endif
-	umgebung_t::verbose_debug = 0;	// no more window concerning messages
+	// not MAKEOBJ/NETTOOL
+	env_t::verbose_debug = log_t::LEVEL_FATAL; // no more window concerning messages
+
 	if(is_display_init()) {
 		// show notification
 		destroy_all_win( true );
 
 		strcpy( buffer+n+1, "PRESS ANY KEY\n" );
-		news_img* sel = new news_img(buffer,IMG_LEER);
-		sel->extend_window_with_component( NULL, koord(display_get_width()/2,120) );
+		fatal_news* sel = new fatal_news(buffer);
 
-		koord xy( display_get_width()/2 - sel->get_fenstergroesse().x/2, display_get_height()/2 - sel->get_fenstergroesse().y/2 );
+		scr_coord xy( display_get_width()/2 - sel->get_windowsize().w/2, display_get_height()/2 - sel->get_windowsize().h/2 );
 		event_t ev;
 
 		create_win( xy.x, xy.y, sel, w_info, magic_none );
@@ -316,7 +312,7 @@ void log_t::fatal(const char *who, const char *format, ...)
 			// do not move, do not close it!
 			dr_sleep(50);
 			dr_prepare_flush();
-			sel->zeichnen( xy, sel->get_fenstergroesse() );
+			sel->draw( xy, sel->get_windowsize() );
 			dr_flush();
 			display_poll_event(&ev);
 			// main window resized
@@ -331,33 +327,27 @@ void log_t::fatal(const char *who, const char *format, ...)
 		dr_fatal_notify(buffer);
 	}
 
-#ifdef DEBUG
-	if (old_level > 4) {
-		// generate a division be zero error, if the user request it
-		static int make_this_a_division_by_zero = 0;
-		printf("%i", 15 / make_this_a_division_by_zero);
-		make_this_a_division_by_zero &= 0xFF;
-	}
 #endif
-#endif
-
 	abort();
 }
 
 
 
+#ifdef NETTOOL
+void log_t::vmessage(const char *, const char *, const char *, va_list )
+{
+}
+
+#else
+
 void log_t::vmessage(const char *what, const char *who, const char *format, va_list args )
 {
-	if(debuglevel>0) {
+	if(debuglevel >= LEVEL_ERROR) {
 		va_list args2;
-#ifdef __va_copy
-		__va_copy(args2, args);
-#else
-		// HACK: this is undefined behavior but should work ... hopefully ...
-		args2 = args;
-#endif
-		if( log ) {                         /* nur loggen wenn schon ein log */
-			fprintf(log ,"%s: %s:\t", what, who);      /* geoeffnet worden ist */
+
+		va_copy(args2, args);
+		if( log ) {                               /* only log when a log */
+			fprintf(log ,"%s: %s:\t", what, who); /* is already open */
 			vfprintf(log, format, args);
 			fprintf(log,"\n");
 
@@ -365,8 +355,8 @@ void log_t::vmessage(const char *what, const char *who, const char *format, va_l
 				fflush(log);
 			}
 		}
-		if( tee ) {                         /* nur loggen wenn schon ein log */
-			fprintf(tee,"%s: %s:\t", what, who);      /* geoeffnet worden ist */;
+		if( tee ) {                              /* only log when a log */
+			fprintf(tee,"%s: %s:\t", what, who); /* is already open */
 			vfprintf(tee, format, args2);
 			fprintf(tee,"\n");
 		}
@@ -374,27 +364,34 @@ void log_t::vmessage(const char *what, const char *who, const char *format, va_l
 	}
 }
 
+#endif
+
 
 // create a logfile for log_debug=true
-log_t::log_t( const char *logfilename, bool force_flush, bool log_debug, bool log_console, const char *greeting, const char* syslogtag )
+log_t::log_t( const char *logfilename, bool force_flush, bool log_debug, bool log_console, const char *greeting, const char* syslogtag ) :
+	log(NULL),
+	tee(NULL),
+	force_flush(force_flush), // if true will always flush when an entry is written to the log
+	log_debug(log_debug),
+	tag(NULL)
+#ifdef SYSLOG
+	, syslog(false)
+#endif
 {
-	log = NULL;
-	syslog = false;
-	this->force_flush = force_flush; /* wenn true wird jedesmal geflusht */
-					 /* wenn ein Eintrag ins log geschrieben wurde */
-	this->log_debug = log_debug;
-
 	if(logfilename == NULL) {
-		log = NULL;                       /* kein log */
+		log = NULL;                       /* not a log */
 		tee = NULL;
-	} else if(strcmp(logfilename,"stdio") == 0) {
+	}
+	else if(strcmp(logfilename,"stdio") == 0) {
 		log = stdout;
 		tee = NULL;
-	} else if(strcmp(logfilename,"stderr") == 0) {
+	}
+	else if(strcmp(logfilename,"stderr") == 0) {
 		log = stderr;
 		tee = NULL;
 #ifdef SYSLOG
-	} else if(  strcmp( logfilename, "syslog" ) == 0  ) {
+	}
+	else if(  strcmp( logfilename, "syslog" ) == 0  ) {
 		syslog = true;
 		if (  syslogtag  ) {
 			tag = syslogtag;
@@ -403,9 +400,10 @@ log_t::log_t( const char *logfilename, bool force_flush, bool log_debug, bool lo
 		}
 		log = NULL;
 		tee = NULL;
-#endif //SYSLOG
-	} else {
-		log = fopen(logfilename,"wb");
+#endif
+	}
+	else {
+		log = dr_fopen(logfilename,"wb");
 
 		if(log == NULL) {
 			fprintf(stderr,"log_t::log_t: can't open file '%s' for writing\n", logfilename);
@@ -428,7 +426,9 @@ log_t::log_t( const char *logfilename, bool force_flush, bool log_debug, bool lo
 		if (  syslog  ) {
 			::syslog( LOG_NOTICE, greeting );
 		}
-#endif //SYSLOG
+#else
+		(void)syslogtag;
+#endif
 	}
 }
 

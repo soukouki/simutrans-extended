@@ -1,3 +1,8 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -22,8 +27,8 @@ struct nodelist_node_t
 	nodelist_node_t* next;
 };
 
-#if MULTI_THREAD>1
-#include <pthread.h>
+#ifdef MULTI_THREAD
+#include "../utils/simthread.h"
 static pthread_mutex_t freelist_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
@@ -78,8 +83,10 @@ void *freelist_t::gimme_node(size_t size)
 	size = (size+3)>>2;
 	size <<= 2;
 
-#if MULTI_THREAD>1
-	pthread_mutex_lock( &freelist_mutex );
+#ifdef MULTI_THREAD
+	int error = pthread_mutex_lock( &freelist_mutex );
+	assert(error == 0);
+	(void)error;
 #endif
 
 	// hold return value
@@ -87,8 +94,9 @@ void *freelist_t::gimme_node(size_t size)
 	if(  size > MAX_LIST_INDEX  ) {
 		// too large: just use malloc anyway
 		tmp = (nodelist_node_t *)xmalloc(size);
-#if MULTI_THREAD>1
-		pthread_mutex_unlock( &freelist_mutex );
+#ifdef MULTI_THREAD
+		error = pthread_mutex_unlock( &freelist_mutex );
+		assert(error == 0);
 #endif
 #ifdef DEBUG_FREELIST
 		tmp->magic = 0xAA;
@@ -108,7 +116,7 @@ void *freelist_t::gimme_node(size_t size)
 #ifdef USE_VALGRIND_MEMCHECK
 		// tell valgrind that we still cannot access the pool p
 		VALGRIND_MAKE_MEM_NOACCESS(p, num_elements * size + sizeof(p));
-#endif // valgrind
+#endif
 
 		// put the memory into the chunklist for free it
 		nodelist_node_t *chunk = (nodelist_node_t *)p;
@@ -118,7 +126,7 @@ void *freelist_t::gimme_node(size_t size)
 		VALGRIND_CREATE_MEMPOOL(chunk, 0, false);
 		VALGRIND_MEMPOOL_ALLOC(chunk, chunk, sizeof(*chunk));
 		VALGRIND_MAKE_MEM_UNDEFINED(chunk, sizeof(*chunk));
-#endif // valgrind
+#endif
 
 		chunk->next = chunk_list;
 		chunk_list = chunk;
@@ -131,7 +139,7 @@ void *freelist_t::gimme_node(size_t size)
 			VALGRIND_CREATE_MEMPOOL(tmp, 0, false);
 			VALGRIND_MEMPOOL_ALLOC(tmp, tmp, sizeof(*tmp));
 			VALGRIND_MAKE_MEM_UNDEFINED(tmp, sizeof(*tmp));
-#endif // valgrind
+#endif
 			tmp->next = *list;
 			*list = tmp;
 		}
@@ -145,10 +153,11 @@ void *freelist_t::gimme_node(size_t size)
 	// tell valgrind that we now have access to a chunk of size bytes
 	VALGRIND_MEMPOOL_CHANGE(tmp, tmp, tmp, size);
 	VALGRIND_MAKE_MEM_UNDEFINED(tmp, size);
-#endif // valgrind
+#endif
 
-#if MULTI_THREAD>1
-	pthread_mutex_unlock( &freelist_mutex );
+#ifdef MULTI_THREAD
+	error = pthread_mutex_unlock( &freelist_mutex );
+	assert(error == 0);
 #endif
 
 #ifdef DEBUG_FREELIST
@@ -167,18 +176,6 @@ void freelist_t::putback_node( size_t size, void *p )
 		return;
 	}
 
-//#ifdef _64BIT
-//	// all sizes should be divisible by 8
-//	size = ((size+3)>>2);
-//	if(size == 1)
-//	{
-//		size = 2;
-//	}
-//#else
-//	// all sizes should be divisible by 4
-//	size = ((size+3)>>2);
-//#endif
-	
 	// all sizes should be dividable by 4
 #ifdef DEBUG_FREELIST
 	size = max( min_size, size + min_size );
@@ -188,14 +185,18 @@ void freelist_t::putback_node( size_t size, void *p )
 	size = ((size+3)>>2);
 	size <<= 2;
 
-#if MULTI_THREAD>1
-	pthread_mutex_lock( &freelist_mutex );
+#ifdef MULTI_THREAD
+	int error = pthread_mutex_lock( &freelist_mutex );
+	assert(error == 0);
+	(void)error;
 #endif
 
 	if(  size > MAX_LIST_INDEX  ) {
 		free(p);
-#if MULTI_THREAD>1
-		pthread_mutex_unlock( &freelist_mutex );
+#ifdef MULTI_THREAD
+		int error = pthread_mutex_unlock( &freelist_mutex );
+		assert(error == 0);
+		(void)error;
 #endif
 		return;
 	}
@@ -207,7 +208,7 @@ void freelist_t::putback_node( size_t size, void *p )
 	VALGRIND_MEMPOOL_CHANGE(p, p, p, sizeof(nodelist_node_t));
 	VALGRIND_MAKE_MEM_NOACCESS(p, size);
 	VALGRIND_MAKE_MEM_UNDEFINED(p, sizeof(nodelist_node_t));
-#endif // valgrind
+#endif
 
 	// putback to first node
 	nodelist_node_t *tmp = (nodelist_node_t *)p;
@@ -219,8 +220,9 @@ void freelist_t::putback_node( size_t size, void *p )
 	tmp->next = *list;
 	*list = tmp;
 
-#if MULTI_THREAD>1
-	pthread_mutex_unlock( &freelist_mutex );
+#ifdef MULTI_THREAD
+	error = pthread_mutex_unlock( &freelist_mutex );
+	assert(error == 0);
 #endif
 }
 
@@ -231,18 +233,18 @@ void freelist_t::free_all_nodes()
 	printf("freelist_t::free_all_nodes(): frees all list memory\n" );
 	while(chunk_list) {
 		nodelist_node_t *p = chunk_list;
-		printf("freelist_t::free_all_nodes(): free node %p (next %p)\n",p,chunk_list->next);
+		printf("freelist_t::free_all_nodes(): free node %p (next %p)\n", (void *)p, (void *)chunk_list->next);
 		chunk_list = chunk_list->next;
 
 		// now release memory
 #ifdef USE_VALGRIND_MEMCHECK
 		VALGRIND_DESTROY_MEMPOOL( p );
-#endif // valgrind
-		guarded_free( p );
+#endif
+		free( p );
 	}
 	printf("freelist_t::free_all_nodes(): zeroing\n");
 	for( int i=0;  i<NUM_LIST;  i++  ) {
-		all_lists[i] = NULL;
+		all_lists[i] = nullptr;
 	}
 	printf("freelist_t::free_all_nodes(): ok\n");
 }

@@ -1,224 +1,317 @@
 /*
- * Copyright (c) 1997 - 2002 Hj. Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef dataobj_ribi_t_h
-#define dataobj_ribi_t_h
+#ifndef DATAOBJ_RIBI_H
+#define DATAOBJ_RIBI_H
+
 
 #include "../simtypes.h"
+#include "../simconst.h"
+#include "../simdebug.h"
 
 class koord;
 class koord3d;
 
 /**
- * slopes
+ * Slopes of tiles.
  */
-class hang_t {
-#ifndef DOUBLE_GROUNDS
-	static const int flags[16];
-#else
-	static const int flags[81];
-#endif
+class slope_t {
 
-	enum { wegbar_ns = 1, wegbar_ow = 2, einfach = 4 };
+	/// Static lookup table
+	static const int flags[81];
+
+	/// Named constants for the flags table
+	enum {
+		doubles = 1 << 0, ///< two-height difference slopes
+		way_ns  = 1 << 1, ///< way possible in north-south direction
+		way_ew  = 1 << 2, ///< way possible in east-west direction
+		single  = 1 << 3, ///< way possible
+		all_up  = 1 << 4  ///< all corners raised
+	};
 
 public:
+
+	typedef sint8 type;
+
+
+	/**
+	 * Named constants for special cases.
+	 */
+	enum _type {
+		flat = 0,
+
+		northwest = 27, ///< NW corner
+		northeast = 9,  ///< NE corner
+		southeast = 3,  ///< SE corner
+		southwest = 1,  ///< SW corner
+
+		north = slope_t::southeast+slope_t::southwest,	///< North slope
+		west  = slope_t::northeast+slope_t::southeast,  ///< West slope
+		east  = slope_t::northwest+slope_t::southwest,  ///< East slope
+		south = slope_t::northwest+slope_t::northeast,  ///< South slope
+
+		all_up_one = slope_t::southwest+slope_t::southeast+slope_t::northeast+slope_t::northwest, ///all corners 1 high
+		all_up_two = slope_t::all_up_one * 2,                                                     ///all corners 2 high
+
+		raised = all_up_two,    ///< special meaning: used as slope of bridgeheads and in terraforming tools (keep for compatibility)
+
+		max_number = all_up_two
+	};
+
 	/*
-	 * Bitfield
+	 * Macros to access the height of the 4 corners:
+	 */
+#define corner_sw(i)  ((i)%slope_t::southeast)                      // sw corner
+#define corner_se(i) (((i)/slope_t::southeast)%slope_t::southeast)  // se corner
+#define corner_ne(i) (((i)/slope_t::northeast)%slope_t::southeast)  // ne corner
+#define corner_nw(i)  ((i)/slope_t::northwest)                      // nw corner
+
+#define encode_corners(sw, se, ne, nw) ( (sw) * slope_t::southwest + (se) * slope_t::southeast + (ne) * slope_t::northeast + (nw) * slope_t::northwest )
+
+#define is_one_high(i)   (i & 7)  // quick method to know whether a slope is one high - relies on two high slopes being divisible by 8 -> i&7=0 (only works for slopes with flag single)
+
+	/// Compute the slope opposite to @p x. Returns flat if @p x does not allow ways on it.
+	static type opposite(type x) { return is_single(x) ? (is_one_high(x) ? (slope_t::all_up_one - x) : (slope_t::all_up_two - x)) : flat; }
+
+	/// Rotate.
+	static type rotate90(type x) { return ( ( (x % slope_t::southeast) * slope_t::northwest ) + ( ( x - (x % slope_t::southeast) ) / slope_t::southeast ) ); }
+	static type rotate180(type x) { return ( ( (x % slope_t::northeast) * slope_t::northeast ) + ( ( x - (x % slope_t::northeast) ) / slope_t::northeast ) ); }
+	static type rotate270(type x) { return ( ( (x % slope_t::northwest) * slope_t::southeast ) + ( ( x - (x % slope_t::northwest) ) / slope_t::northwest ) ); }
+
+	/// Returns true if @p x has all corners raised.
+	static bool is_all_up(type x) { return (flags[x] & all_up)>0; }
+	/// Returns maximal height difference between the corners of this slope.
+	static uint8 max_diff(type x) { return (x!=0)+(flags[x]&doubles); }
+	/// Computes minimum height differnce between corners of  @p high and @p low.
+	static sint8 min_diff(type high, type low) { return min( min( corner_sw(high) - corner_sw(low), corner_se(high)-corner_se(low) ), min( corner_ne(high) - corner_ne(low), corner_nw(high) - corner_nw(low) ) ); }
+
+	/// Returns if slope prefers certain way directions (either n/s or e/w).
+	static bool is_single(type x) { return (flags[x] & single) != 0; }
+
+	static bool is_doubles(type x) { return (flags[x] & doubles) != 0; }
+	/// Returns if way can be build on this slope.
+	static bool is_way(type x)  { return (flags[x] & (way_ns | way_ew)) != 0; }
+	/// Returns if way in n/s direction can be build on this slope.
+	static bool is_way_ns(type x)  { return (flags[x] & way_ns) != 0; }
+	/// Returns if way in e/w direction can be build on this slope.
+	static bool is_way_ew(type x) { return (flags[x] & way_ew) != 0; }
+
+	/**
+	* Check if the slope is upwards, relative to the previous tile.
+	* @returns 1 for single upwards and 2 for double upwards
+	*/
+	static sint16 get_sloping_upwards(const type slope, const sint16 relative_pos_x, const sint16 relative_pos_y);
+};
+
+
+/**
+ * Old implementation of slopes: one bit per corner.
+ * Used as bitfield to refer to specific corners of a tile
+ * as well as for compatibility.
+ */
+struct slope4_t {
+	/* bit-field:
 	 * Bit 0 is set if southwest corner is raised
 	 * Bit 1 is set if southeast corner is raised
 	 * Bit 2 is set if northeast corner is raised
 	 * Bit 3 is set if northwest corner is raised
 	 *
-	 * Dont get confused - the southern/southward slope has its northern corners raised
+	 * Don't get confused - the southern/southward slope has its northern corners raised
+	 *
+	 * Macros to access the height of the 4 corners for single slope:
+	 * One bit per corner
 	 */
-	typedef sint8 typ;
-	/*
-	 * Macros to access the height of the 4 corners
-	 */
-#ifndef DOUBLE_GROUNDS
-#define corner1(i) (i%2)    	// sw corner
-#define corner2(i) ((i/2)%2)	// se corner
-#define corner3(i) ((i/4)%2)	// ne corner
-#define corner4(i) (i/8)    	// nw corner
+	typedef sint8 type;
 
-#else
-
-#define corner1(i) (i%3)    	// sw corner
-#define corner2(i) ((i/3)%3)	// se corner
-#define corner3(i) ((i/9)%9)	// ne corner
-#define corner4(i) (i/27)   	// nw corner
-#endif
-
-#ifndef DOUBLE_GROUNDS
+	#define scorner_sw(i) (i%2)     // sw corner
+	#define scorner_se(i) ((i/2)%2) // se corner
+	#define scorner_ne(i) ((i/4)%2) // ne corner
+	#define scorner_nw(i) (i/8)     // nw corner
 	enum _corners {
-		corner_SW = 1,
-		corner_SE = 2,
-		corner_NE = 4,
-		corner_NW = 8
+		corner_SW = 1 << 0,
+		corner_SE = 1 << 1,
+		corner_NE = 1 << 2,
+		corner_NW = 1 << 3
 	};
-
-	enum _typ {
-		flach=0,
-		nord = 3, 	    // Nordhang
-		west = 6, 	    // Westhang
-		ost = 9,	    // Osthang
-		sued = 12,	    // Suedhang
-		erhoben = 15	// all corners raised (not allowed as value in grund_t::slope)
-	};
-
-	static const hang_t::typ hang_from_ribi[16];
-
-	// Ein bischen tricky implementiert:
-	static bool ist_gegenueber(typ x, typ y) { return ist_einfach(x) && ist_einfach(y) && x + y == erhoben; }
-	static typ gegenueber(typ x) { return ist_einfach(x) ? erhoben - x : flach; }
-	static typ rotate90(typ x) { return ( (x&1) ? 8|(x>>1) : x>>1); }
-
-#else
-	enum _typ {
-		flach=0,
-		nord = 3+1, 	    // Nordhang
-		west = 9+3, 	    // Westhang
-		ost = 27+1,	    // Osthang
-		sued = 27+9,	    // Suedhang
-		erhoben = 80	    // Speziell für Brückenanfänge  (prissi: unsued, I think)
-	};
-
-	// Ein bischen tricky implementiert:
-	static bool ist_gegenueber(typ x, typ y) { return ist_einfach(x) && ist_einfach(y) && x + y == 40; }
-	static typ gegenueber(typ x) { return ist_einfach(x) ? 40 - x : flach; }
-	static bool ist_doppelt(typ x) { return (flags[x] == einfach); }
-#endif
-
-	//
-	// Ranges werden nicht geprüft!
-	//
-	static bool ist_einfach(typ x) { return (flags[x] & einfach) != 0; }
-	static bool ist_wegbar(typ x)  { return (flags[x] & (wegbar_ns | wegbar_ow)) != 0; }
-	static bool ist_wegbar_ns(typ x)  { return (flags[x] & wegbar_ns) != 0; }
-	static bool ist_wegbar_ow(typ x)  { return (flags[x] & wegbar_ow) != 0; }
-	static int get_flags(typ x) {return flags[x]; }
-	static bool is_sloping_upwards(const typ slope, const sint16 relative_pos_x, const sint16 relative_pos_y)
-	{
-		// Knightly : check if the slope is upwards, relative to the previous tile
-		return (	( slope==nord  &&  relative_pos_y<0 )  ||
-					( slope==west  &&  relative_pos_x<0 )  ||
-					( slope==ost   &&  relative_pos_x>0 )  ||
-					( slope==sued  &&  relative_pos_y>0 )		);
-	}
 };
 
 
-
 /**
- * Directions in simutrans
+ * Directions in simutrans.
  * ribi_t = Richtungs-Bit = Directions-Bitfield
- * @author Hj. Malthaner
  */
 class ribi_t {
+	/// Static lookup table
 	static const int flags[16];
 
-	enum { einfach = 1, gerade_ns = 2, gerade_ow = 4, kurve = 8, twoway=16, threeway=32 };
+	/// Named constants for properties of directions
+	enum {
+		single      = 1 << 0, ///< only one bit set, way ends here
+		straight_ns = 1 << 1, ///< contains straight n/s connection
+		straight_ew = 1 << 2, ///< contains straight e/w connection
+		bend        = 1 << 3, ///< is a bend
+		twoway      = 1 << 4, ///< two bits set
+		threeway    = 1 << 5  ///< three bits set
+	};
 
 public:
-	/* das enum richtung ist eine verallgemeinerung der richtungsbits auf
-	 * benannte Konstanten; die Werte sind wie folgt zugeordnet
-	 * 1=Nord, 2=Ost, 4=Sued, 8=West
-	 *
-	 * richtungsbits (ribi) koennen 16 Komb. darstellen.
-	 *
-	 * the enum direction is a generalization of the 
-	 * direction bits to designated constants, the 
-	 * values are as follows 1 = North, 2 = East, 4 = South, 8 = West
-	 *
-	 * direction bits (ribi) can 16 Komb. represent.
+	/**
+	 * Named constants for all possible directions.
+	 * 1=North, 2=East, 4=South, 8=West
 	 */
 	enum _ribi {
-		keine = 0, //None
-		nord = 1, //North
-		ost = 2, //East
-		nordost = 3, //North-East
-		sued = 4, // South
-		nordsued = 5, 
-		suedost = 6, //South-East
-		nordsuedost = 7, 
-		west = 8, //West
-		nordwest = 9, //North-West
-		ostwest = 10, 
-		nordostwest = 11,
-		suedwest = 12, //South-West
-		nordsuedwest = 13, 
-		suedostwest = 14, 
-		alle = 15 //"Everything".
+		none           = 0,
+		north          = 1,
+		east           = 2,
+		northeast      = 3,
+		south          = 4,
+		northsouth     = 5,
+		southeast      = 6,
+		northsoutheast = 7,
+		west           = 8,
+		northwest      = 9,
+		eastwest       = 10,
+		northeastwest  = 11,
+		southwest      = 12,
+		northsouthwest = 13,
+		southeastwest  = 14,
+		all            = 15
 	};
 	typedef uint8 ribi;
 
+	/**
+	 * Named constants to translate direction to image number for vehicles, signs.
+	 */
 	enum _dir {
-		dir_invalid = 0,
-		dir_sued = 0,
-		dir_west = 1,
-		dir_suedwest = 2,
-		dir_suedost = 3,
-		dir_nord = 4,
-		dir_ost = 5,
-		dir_nordost = 6,
-		dir_nordwest = 7
+		dir_invalid   = 0,
+		dir_south     = 0,
+		dir_west      = 1,
+		dir_southwest = 2,
+		dir_southeast = 3,
+		dir_north     = 4,
+		dir_east      = 5,
+		dir_northeast = 6,
+		dir_northwest = 7
 	};
 	typedef uint8 dir;
 
 private:
-	static const ribi fwrd[16];
-	static const ribi rwr[16];
+	/// Lookup table to compute backward direction
+	static const ribi backwards[16];
+	/// Lookup table ...
 	static const ribi doppelr[16];
+	/// Lookup table to convert ribi to dir.
 	static const dir  dirs[16];
 
+#ifdef USE_GCC_POPCOUNT
+	static uint8 get_numways(ribi x) { return (__builtin_popcount(x));}
+#endif
+
 public:
-	static const ribi nsow[4];
-	static const ribi layout_to_ribi[4];	// building layout to ribi (for four rotations, for two use doppelt()!
-	//
-	// Alle Abfragen über statische Tabellen wg. Performance
-	// Ranges werden nicht geprüft!
-	//
-	static bool is_twoway(ribi x) { return (flags[x]&twoway)!=0; }
-	static bool is_threeway(ribi x) { return (flags[x]&threeway)!=0; }
 
-	static bool ist_exakt_orthogonal(ribi x, ribi y);
-	static bool ist_orthogonal(ribi x, ribi y) { return (doppelr[x] | doppelr[y]) == alle; }
-	static bool ist_einfach(ribi x) { return (flags[x] & einfach) != 0; }
-	static bool ist_kurve(ribi x) { return (flags[x] & kurve) != 0; }
-	static bool ist_gerade(ribi x) { return (flags[x] & (gerade_ns | gerade_ow)) != 0; }
-	static bool ist_gerade_ns(ribi x) { return (flags[x] & gerade_ns) != 0; }
-	static bool ist_gerade_ow(ribi x) { return (flags[x] & gerade_ow) != 0; }
+	/// Table containing the four compass directions (now as function)
+	struct _nesw {
+		ribi operator [] ( const uint8 i ) const { return 1<<i; }
+	};
+	static const _nesw nesw;
 
-	static ribi doppelt(ribi x) { return doppelr[x]; }
-	static ribi rueckwaerts(ribi x) { return rwr[x]; }
-	static ribi get_forward(ribi x) { return fwrd[x]; }	// all ribis, that are in front of this thing
-	static ribi rotate90(ribi x) { return ((x&8) ? 1|((x<<1)&0x0E) : x<<1); } // 90 to the right
-	static ribi rotate90l(ribi x) { return ((x&1) ? 8|(x>>1) : x>>1); } // 90 to the left
-	static ribi rotate45(ribi x) { return (ist_einfach(x) ? x|rotate90(x) : x&rotate90(x)); } // 45 to the right
-	static ribi rotate45l(ribi x) { return (ist_einfach(x) ? x|rotate90l(x) : x&rotate90l(x)); } // 45 to the left
+	/// Convert building layout to ribi (four rotations), use doppelt in case of two rotations
+	static const ribi layout_to_ribi[4]; // building layout to ribi (for four rotations, for two use doppelt()!
 
+#ifdef USE_GCC_POPCOUNT
+	static bool is_twoway(ribi x) { return get_numways(x)==2; }
+	static bool is_threeway(ribi x) { return get_numways(x)>2; }
+#else
+	static bool is_twoway(ribi x) { return (0x1668>>x)&1; }
+	static bool is_threeway(ribi x) { return (0xE880>>x)&1; }
+#endif
+
+	static bool is_perpendicular(ribi x, ribi y);
+#ifdef USE_GCC_POPCOUNT
+	static bool is_single(ribi x) { return get_numways(x)==1; }
+#else
+	static bool is_single(ribi x) { return (0x0116>>x)&1; }
+#endif
+	static bool is_bend(ribi x) { return (0x1248>>x)&1; }
+	static bool is_straight(ribi x) { return (0x0536>>x)&1; }
+	static bool is_straight_ns(ribi x) { return (0x0032>>x)&1; }
+	static bool is_straight_ew(ribi x) { return (0x0504>>x)&1; }
+
+	/// Convert single/straight direction into their doubled form (n, ns -> ns), map all others to zero
+#ifdef HAS_64_BIT_SYSTEM
+	static ribi doubles(ribi x) {return (INT64_C(0x00000A0A00550A50)>>(x*4))&0xf; }
+#else
+	static ribi doubles(ribi x) { return doppelr[x]; }
+#endif
+	/// Backward direction for single (or straight) ribi's, bitwise-NOT for all others
+#ifdef HAS_64_BIT_SYSTEM
+	static ribi backward(ribi x) {return (INT64_C(0x01234A628951C84F)>>(x*4))&0xF; }
+#else
+	static ribi backward(ribi x) { return backwards[x]; }
+#endif
+
+	/**
+	 * Same as backward, but for single directions only.
+	 * Effectively does bit rotation. Avoids lookup table backwards.
+	 * @returns backward(x) for single ribis, 0 for x==0.
+	 */
+	static inline ribi reverse_single(ribi x) {
+		return ((x  |  x<<4) >> 2) & 0xf;
+	}
+
+	/// Rotate 90 degrees to the right. Does bit rotation.
+	static ribi rotate90(ribi x) { return ((x  |  x<<4) >> 3) & 0xf; }
+	/// Rotate 90 degrees to the left. Does bit rotation.
+	static ribi rotate90l(ribi x) { return ((x  |  x<<4) >> 1) & 0xf; }
+	static ribi rotate45(ribi x) { return (is_single(x) ? x|rotate90(x) : x&rotate90(x)); } // 45 to the right
+	static ribi rotate45l(ribi x) { return (is_single(x) ? x|rotate90l(x) : x&rotate90l(x)); } // 45 to the left
+
+	/// Convert ribi to dir
+#ifdef HAS_64_BIT_SYSTEM
+	static dir get_dir(ribi x) {return (INT64_C(0x0002007103006540)>>(x*4))&0x7; }
+#else
 	static dir get_dir(ribi x) { return dirs[x]; }
-
+#endif
 };
 
-//
-// Umrechnungen zwische koord, ribi_t und hang_t:
-//
-//	ribi_t::nord entspricht koord::nord entspricht hang_t::sued !!!
-//	-> ich denke aufwaerts, also geht es auf einem Suedhang nach Norden!
-// I think upwards, so it goes on a southern slope to the north! (Google)
-//
-hang_t::typ  hang_typ(koord dir);   // dir:nord -> hang:sued, ...
-hang_t::typ  hang_typ(ribi_t::ribi);
+/**
+ * Calculate slope from directions.
+ * Go upward on the slope: going north translates to slope_t::south.
+ */
+slope_t::type slope_type(koord dir);
 
-ribi_t::ribi ribi_typ(koord dir);
-ribi_t::ribi ribi_typ(koord from, koord to);
-ribi_t::ribi ribi_typ(koord3d dir);
-ribi_t::ribi ribi_typ(koord3d from, koord3d to);
-ribi_t::ribi ribi_typ(hang_t::typ hang);  // nordhang -> sued, ... !
+/**
+ * Calculate slope from directions.
+ * Go upward on the slope: going north translates to slope_t::south.
+ */
+slope_t::type slope_type(ribi_t::ribi);
+
+/**
+ * Calculate direction bit from coordinate differences.
+ */
+ribi_t::ribi ribi_typ_intern(sint16 dx, sint16 dy);
+
+/**
+ * Calculate direction bit from direction.
+ */
+ribi_t::ribi ribi_type(const koord& dir);
+ribi_t::ribi ribi_type(const koord3d& dir);
+
+/**
+ * Calculate direction bit from slope.
+ * Note: slope_t::north (slope north) will be translated to ribi_t::south (direction south).
+ */
+ribi_t::ribi ribi_type(slope_t::type slope);
+
+/**
+ * Calculate direction bit for travel from @p from to @p to.
+ */
+template<class K1, class K2>
+ribi_t::ribi ribi_type(const K1&from, const K2& to)
+{
+	return ribi_typ_intern(to.x - from.x, to.y - from.y);
+}
 
 #endif

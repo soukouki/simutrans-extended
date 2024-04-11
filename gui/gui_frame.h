@@ -1,134 +1,63 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/*
- * The window frame all dialogs are based
- * [Mathew Hounsell] Min Size Button On Map Window 20030313
- */
+#ifndef GUI_GUI_FRAME_H
+#define GUI_GUI_FRAME_H
 
-#ifndef gui_gui_frame_h
-#define gui_gui_frame_h
 
-#include "../dataobj/koord.h"
-#include "../simgraph.h"
-#include "gui_container.h"
+#include "../display/scr_coord.h"
+#include "../display/simgraph.h"
 #include "../simcolor.h"
 #include "../dataobj/koord3d.h"
 #include "../dataobj/translator.h"
+#include "components/gui_aligned_container.h"
+#include "components/gui_button.h"
+
+#include "gui_theme.h"
 
 class loadsave_t;
-class spieler_t;
-
-
-/*
- * The following gives positioning aids for elements in dialogues
- * Only those, LINESPACE, and dimensions of elements itself must be
- * exclusively used to calculate positions in dialogues to have a
- * scalable interface
- */
-
-// default button width (may change with language and font)
-#define D_BUTTON_WIDTH (gui_frame_t::gui_button_width)
-#define D_BUTTON_HEIGHT (gui_frame_t::gui_button_height)
-
-// titlebar height
-#define D_TITLEBAR_HEIGHT (gui_frame_t::gui_titlebar_height)
-
-// dialog borders
-#define D_MARGIN_LEFT (gui_frame_t::gui_frame_left)
-#define D_MARGIN_TOP (gui_frame_t::gui_frame_top)
-#define D_MARGIN_RIGHT (gui_frame_t::gui_frame_right)
-#define D_MARGIN_BOTTOM (gui_frame_t::gui_frame_bottom)
-
-// space between two elements
-#define D_H_SPACE (gui_frame_t::gui_hspace)
-#define D_V_SPACE (gui_frame_t::gui_vspace)
-
-#define BUTTON1_X (D_MARGIN_LEFT)
-#define BUTTON2_X (D_MARGIN_LEFT+1*(D_BUTTON_WIDTH+D_H_SPACE))
-#define BUTTON3_X (D_MARGIN_LEFT+2*(D_BUTTON_WIDTH+D_H_SPACE))
-#define BUTTON4_X (D_MARGIN_LEFT+3*(D_BUTTON_WIDTH+D_H_SPACE))
-
-#define BUTTON_X(col) (D_MARGIN_LEFT+(col)*(D_BUTTON_WIDTH+D_H_SPACE))
-#define BUTTON_Y(row) ((row)*(D_BUTTON_HEIGHT+D_V_SPACE))
-
-// The width of a typical dialogue (either list/covoi/factory) and initial width when it makes sense
-#define D_DEFAULT_WIDTH (D_MARGIN_LEFT+4*D_BUTTON_WIDTH+3*D_H_SPACE+D_MARGIN_RIGHT)
-
-// dimensions of indicator bars (not yet a gui element ...)
-#define D_INDICATOR_WIDTH (gui_frame_t::gui_indicator_width)
-#define D_INDICATOR_HEIGHT (gui_frame_t::gui_indicator_height)
-
-
-
+class karte_ptr_t;
+class player_t;
 
 /**
  * A Class for window with Component.
  * Unlike other Window Classes in Simutrans, this is
  * a true component-oriented window that all actions
  * delegates to its component.
- *
- * @author Hj. Malthaner
  */
-class gui_frame_t
+class gui_frame_t : protected gui_aligned_container_t
 {
 public:
 	/**
 	 * Resize modes
-	 * @author Markus Weber
-	 * @date   11-May-2002
 	 */
 	enum resize_modes {
-		no_resize = 0, vertical_resize = 1, horizonal_resize = 2, diagonal_resize = 3
+		no_resize         = 0,
+		vertical_resize   = 1,
+		horizontal_resize = 2,
+		diagonal_resize   = 3
 	};
 
-	// default button sizes
-	static KOORD_VAL gui_button_width;
-	static KOORD_VAL gui_button_height;
-
-	// titlebar height
-	static KOORD_VAL gui_titlebar_height;
-
-	// dialog borders
-	static KOORD_VAL gui_frame_left;
-	static KOORD_VAL gui_frame_top;
-	static KOORD_VAL gui_frame_right;
-	static KOORD_VAL gui_frame_bottom;
-
-	// space between two elements
-	static KOORD_VAL gui_hspace;
-	static KOORD_VAL gui_vspace;
-
-	// and the indicator box dimension
-	static KOORD_VAL gui_indicator_width;
-	static KOORD_VAL gui_indicator_height;
-
 private:
-	gui_container_t container;
 
-	const char * name;
-	koord groesse;
+	const char *name;
+	scr_size windowsize; ///< Size of the whole window (possibly with title bar)
+	scr_size min_windowsize; ///< min size of the whole window
 
-	/**
-	 * Min. size of the window
-	 * @author Markus Weber
-	 * @date   11-May-2002
-	 */
-	koord min_windowsize;
-
-	resize_modes resize_mode; // 25-may-02  markus weber added
-	const spieler_t *owner;
+	resize_modes resize_mode;
+	const player_t *owner;
 
 	// set true for total redraw
 	bool dirty:1;
 	bool opaque:1;
 
 	uint8 percent_transparent;
-	COLOR_VAL color_transparent;
+	PIXVAL color_transparent;
+
+	using gui_aligned_container_t::draw;
+	using gui_aligned_container_t::set_size;
 
 protected:
 	void set_dirty() { dirty=true; }
@@ -137,128 +66,110 @@ protected:
 
 	/**
 	 * resize window in response to a resize event
-	 * @author Markus Weber, Hj. Malthaner
-	 * @date   11-May-2002
 	 */
-	virtual void resize(const koord delta);
+	virtual void resize(const scr_coord delta);
 
-	void set_owner( const spieler_t *sp ) { owner = sp; }
+	void set_owner( const player_t *player ) { owner = player; }
 
-	void set_transparent( uint8 percent, COLOR_VAL col ) { opaque = percent==0; percent_transparent = percent; color_transparent = col; }
+	void set_transparent( uint8 percent, PIXVAL col ) { opaque = percent==0; percent_transparent = percent; color_transparent = col; }
+
+	static karte_ptr_t welt;
 
 public:
 	/**
-	 * @param name, Window title
-	 * @param sp, owner for color
-	 * @author Hj. Malthaner
+	 * @param name Window title
+	 * @param player owner for color
 	 */
-	gui_frame_t(const char *name, const spieler_t *sp=NULL);
+	gui_frame_t(const char *name, const player_t *player=NULL);
 
 	virtual ~gui_frame_t() {}
 
 	/**
-	 * Adds the component to the window
-	 * @author Hj. Malthaner
-	 */
-	void add_komponente(gui_komponente_t *komp) { container.add_komponente(komp); }
-
-	/**
-	 * Removes the component from the container.
-	 * @author Hj. Malthaner
-	 */
-	void remove_komponente(gui_komponente_t *komp) { container.remove_komponente(komp); }
-
-	/**
 	 * The name is displayed in the titlebar
 	 * @return the non-translated name of the Component
-	 * @author Hj. Malthaner
 	 */
 	const char *get_name() const { return name; }
 
 	/**
 	 * sets the Name (Window title)
-	 * @author Hj. Malthaner
 	 */
-	void set_name(const char *name);
+	void set_name(const char *name) { this->name=name; }
 
-	/* this returns an unique id, if the dialogue can be saved
-	 * if this is defined, you better define a matching constructor with karte_t * and loadsave_t *
+	/**
+	 * This returns an unique id (different from magic_reserved), if the dialogue can be saved.
 	 */
-	virtual uint32 get_rdwr_id() { return 0; }
+	virtual uint32 get_rdwr_id();
 
 	virtual void rdwr( loadsave_t * ) {}
 
 	/**
 	 * get color information for the window title
 	 * -borders and -body background
-	 * @author Hj. Malthaner
 	 */
-	virtual PLAYER_COLOR_VAL get_titelcolor() const;
+	virtual FLAGGED_PIXVAL get_titlecolor() const;
 
 	/**
 	 * @return gets the window sizes
-	 * @author Hj. Malthaner
 	 */
-	koord get_fenstergroesse() const { return groesse; }
+	scr_size get_windowsize() const { return windowsize; }
 
+protected:
 	/**
 	 * Sets the window sizes
-	 * @author Hj. Malthaner
 	 */
-	virtual void set_fenstergroesse(koord groesse);
+	virtual void set_windowsize(scr_size size);
 
 	/**
 	 * Set minimum size of the window
-	 * @author Markus Weber
-	 * @date   11-May-2002
 	 */
-	void set_min_windowsize(koord size) { min_windowsize = size; }
+	void set_min_windowsize(scr_size new_size) { min_windowsize = new_size; }
 
 	/**
-	 * Set minimum size of the window
-	 * @author Markus Weber
-	 * @date   11-May-2002
+	 * Set minimum window size to minimum size of container.
 	 */
-	koord get_min_windowsize() { return min_windowsize; }
+	void reset_min_windowsize();
+public:
+	/**
+	 * Get minimum size of the window
+	 */
+	scr_size get_min_windowsize() { return min_windowsize; }
 
 	/**
-	 * @return returns the usable width and height of the window
-	 * @author Markus Weber
-	 * @date   11-May-2002
+	 * Max Kielland 2013: Client size auto calculation with title bar and margins.
+	 * @return the usable width and height of the window
 	*/
-	koord get_client_windowsize() const {return groesse-koord(0,D_TITLEBAR_HEIGHT); }
+	scr_size get_client_windowsize() const {
+		return windowsize - scr_size(0, ( has_title()*D_TITLEBAR_HEIGHT ) );
+	}
 
 	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
-	 * @author Hj. Malthaner
 	 */
-	virtual const char * get_hilfe_datei() const {return NULL;}
-
-	/**
-	 * Does this window need a min size button in the title bar?
-	 * @return true if such a button is needed
-	 * @author Hj. Malthaner
-	 */
-	virtual bool has_min_sizer() const {return false;}
+	virtual const char * get_help_filename() const {return NULL;}
 
 	/**
 	 * Does this window need a next button in the title bar?
 	 * @return true if such a button is needed
-	 * @author Volker Meyer
 	 */
 	virtual bool has_next() const {return false;}
 
 	/**
 	 * Does this window need a prev button in the title bar?
 	 * @return true if such a button is needed
-	 * @author Volker Meyer
 	 */
 	virtual bool has_prev() const {return has_next();}
 
+	/**
+	 * Does this window need a sticky in the title bar?
+	 * @return true if such a button is needed
+	 */
 	virtual bool has_sticky() const { return true; }
 
-	// if false, title and all gadgets will be not drawn
+	/**
+	 * Does this window need its title to be shown?
+	 * @return if false title and all gadgets will be not drawn
+	 */
 	virtual bool has_title() const { return true; }
 
 	// position of a connected thing on the map
@@ -272,41 +183,34 @@ public:
 
 	/**
 	 * Set resize mode
-	 * @author Markus Weber
-	 * @date   11-May-2002
 	 */
 	void set_resizemode(resize_modes mode) { resize_mode = mode; }
 
 	/**
 	 * Get resize mode
-	 * @author Markus Weber
-	 * @date   25-May-2002
 	 */
-	resize_modes get_resizemode(void) { return resize_mode; }
+	resize_modes get_resizemode() const { return resize_mode; }
 
 	/**
 	 * Returns true, if inside window area.
 	 */
-	virtual bool getroffen(int x, int y)
+	virtual bool is_hit(int x, int y)
 	{
-		koord groesse = get_fenstergroesse();
-		return (  x>=0  &&  y>=0  &&  x<groesse.x  &&  y<groesse.y  );
+		scr_size size = get_windowsize();
+		return (  x>=0  &&  y>=0  &&  x<size.w  &&  y<size.h  );
 	}
 
 	/**
-	 * Events werden hiermit an die GUI-Komponenten
-	 * gemeldet
-	 * @author Hj. Malthaner
+	 * Events are notified to GUI components via this method.
 	 */
-	virtual bool infowin_event(const event_t *ev);
+	bool infowin_event(const event_t *ev) OVERRIDE;
 
 	/**
 	 * Draw new component. The values to be passed refer to the window
 	 * i.e. It's the screen coordinates of the window where the
 	 * component is displayed.
-	 * @author Hj. Malthaner
 	 */
-	virtual void zeichnen(koord pos, koord gr);
+	virtual void draw(scr_coord pos, scr_size size);
 
 	// called, when the map is rotated
 	virtual void map_rotate90( sint16 /*new_ysize*/ ) { }
@@ -319,9 +223,9 @@ public:
 	 * gui_container_t::infowin_event (e.g. in action_triggered)
 	 * will have NO effect.
 	 */
-	void set_focus( gui_komponente_t *k ) { container.set_focus(k); }
+	void set_focus( gui_component_t *c ) { gui_aligned_container_t::set_focus(c); }
 
-	virtual gui_komponente_t *get_focus() { return container.get_focus(); }
+	gui_component_t *get_focus() OVERRIDE { return gui_aligned_container_t::get_focus(); }
 };
 
 #endif

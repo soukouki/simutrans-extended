@@ -1,5 +1,11 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #ifndef TPL_ORDERED_VECTOR_TPL_H
 #define TPL_ORDERED_VECTOR_TPL_H
+
 
 #ifndef ITERATE
 #define ITERATE(collection,enumerator) for(uint32 enumerator = 0; enumerator < (collection).get_count(); enumerator++)
@@ -7,7 +13,7 @@
 
 #ifndef ITERATE_PTR
 #define ITERATE_PTR(collection,enumerator) for(uint32 enumerator = 0; enumerator < (collection)->get_count(); enumerator++)
-#endif 
+#endif
 
 #include "../simtypes.h"
 #include "../simdebug.h"
@@ -99,7 +105,7 @@ template<class T, class inttype> class ordered_vector_tpl
 		 * Insert only if elem isn't yet contained.
 		 * Returns false if elem already contained.
 		 */
-		bool insert_unique(T elem, inttype i = 1)
+		bool insert_unique(T elem, inttype i = 0)
 		{
 			if(  count == size  ) {
 				if(  i == 0  ) {
@@ -133,7 +139,7 @@ template<class T, class inttype> class ordered_vector_tpl
 		//Removes the element at the given pos.
 		void remove_at(inttype pos)
 		{
-			move_data(pos+1, count, -1); 
+			move_data(pos+1, count, -1);
 			count--;
 		}
 
@@ -147,7 +153,8 @@ template<class T, class inttype> class ordered_vector_tpl
 			T* old_data = data;
 			inttype old_count = count;
 
-			data = new T[ count + vT.count ];
+			size = count + vT.count;
+			data = new T[ size ];
 			count = 0;
 
 			inttype i,j;
@@ -177,6 +184,7 @@ template<class T, class inttype> class ordered_vector_tpl
 				data[ count++ ] = vT.data[j];
 				j++;
 			}
+			delete [] old_data;
 		};
 
 		void set_diff(const ordered_vector_tpl<T, inttype> vT)

@@ -1,184 +1,115 @@
 /*
- * Copyright (c) 1997 - 2002 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include <algorithm>
-#include "../vehicle/simvehikel.h"
 #include "../player/simplay.h"
 #include "../simdebug.h"
-#include "../simtools.h"  // for simrand
+#include "../utils/simrandom.h"
 #include "../simtypes.h"
 
-#include "../dataobj/umgebung.h"
+#include "../simconvoi.h"
+
+#include "../dataobj/environment.h"
 #include "../dataobj/tabfile.h"
 #include "../dataobj/loadsave.h"
+#include "../dataobj/translator.h"
 #include "../dataobj/livery_scheme.h"
 
-#include "../besch/vehikel_besch.h"
+#include "../descriptor/vehicle_desc.h"
 
-#include "../bauer/vehikelbauer.h"
+#include "vehikelbauer.h"
 
 #include "../tpl/stringhashtable_tpl.h"
+#include "../vehicle/air_vehicle.h"
+#include "../vehicle/rail_vehicle.h"
+#include "../vehicle/road_vehicle.h"
+#include "../vehicle/water_vehicle.h"
 
-static stringhashtable_tpl< vehikel_besch_t*> name_fahrzeuge;
+#include "../simline.h"
+
+const char* vehicle_builder_t::engine_type_names[11] =
+{
+  "unknown",
+  "steam",
+  "diesel",
+  "electric",
+  "bio",
+  "sail",
+  "fuel_cell",
+  "hydrogene",
+  "battery",
+  "petrol",
+  "turbine"
+};
+
+const char *vehicle_builder_t::vehicle_sort_by[vehicle_builder_t::sb_length] =
+{
+	"Unsorted",
+	"Name",
+	"Price",
+	"Maintenance:",
+	"Capacity:",
+	"Max. speed:",
+	"Range",
+	"Power:",
+	"Tractive Force:",
+	"curb_weight",
+	"Axle load:",
+	"Intro. date:",
+	"Retire. date:",
+	"Comfort"
+	//,"hd_category"
+	//,"engine_type"
+	//,"role"
+};
+
+static stringhashtable_tpl< vehicle_desc_t*, N_BAGS_SMALL> name_fahrzeuge;
 
 // index 0 aur, 1...8 at normal waytype index
 #define GET_WAYTYPE_INDEX(wt) ((int)(wt)>8 ? 0 : (wt))
-static slist_tpl<vehikel_besch_t*> typ_fahrzeuge[9];
+static slist_tpl<vehicle_desc_t*> typ_fahrzeuge[vehicle_builder_t::sb_length][9];
+static uint8 tmp_sort_idx;
 
-class bonus_record_t {
-public:
-	sint64 year;
-	sint32 speed;
-	bonus_record_t( sint64 y=0, sint32 kmh=0 ) {
-		year = y*12;
-		speed = kmh;
-	};
-	void rdwr(loadsave_t *file) {
-		file->rdwr_longlong(year);
-		file->rdwr_long(speed);
-	}
-};
 
-// speed boni
-static vector_tpl<bonus_record_t>speedbonus[8];
-
-static sint32 default_speedbonus[8] =
+void vehicle_builder_t::rdwr_speedbonus(loadsave_t *file)
 {
-	80,	// road
-	80,	// track
-	35,	// water
-	80,	// air
-	80,	// monorail
-	80,	// maglev
-	80,	// tram
-	80	// narrowgauge
-};
-
-bool vehikelbauer_t::speedbonus_init(const std::string &objfilename)
-{
-	tabfile_t bonusconf;
-	// first take user data, then user global data
-	if (!bonusconf.open((objfilename+"config/speedbonus.tab").c_str())) {
-		dbg->warning("vehikelbauer_t::speedbonus_init()", "Can't read speedbonus.tab" );
-		return false;
-	}
-
-	tabfileobj_t contents;
-	bonusconf.read(contents);
-
-	/* init the values from line with the form year, speed, year, speed
-	 * must be increasing order!
-	 */
-	for(  int j=0;  j<8;  j++  ) {
-		int *tracks = contents.get_ints(weg_t::waytype_to_string(j==3?air_wt:(waytype_t)(j+1)));
-		if((tracks[0]&1)==1) {
-			dbg->warning( "vehikelbauer_t::speedbonus_init()", "Ill formed line in speedbonus.tab\nFormat is year,speed[,year,speed]!" );
-			tracks[0]--;
-		}
-		speedbonus[j].resize( tracks[0]/2 );
-		for(  int i=1;  i<tracks[0];  i+=2  ) {
-			bonus_record_t b( tracks[i], tracks[i+1] );
-			speedbonus[j].append( b );
-		}
-		delete [] tracks;
-	}
-
-	return true;
-}
-
-
-sint32 vehikelbauer_t::get_speedbonus( sint32 monthyear, waytype_t wt )
-{
-	const int typ = wt==air_wt ? 3 : (wt-1)&7;
-
-	if(  monthyear==0  ) {
-		return default_speedbonus[typ];
-	}
-
-	// ok, now lets see if we have data for this
-	vector_tpl<bonus_record_t> const& b = speedbonus[typ];
-	if (!b.empty()) {
-		uint i=0;
-		while (i < b.get_count() && monthyear >= b[i].year) {
-			i++;
-		}
-		if (i == b.get_count()) {
-			// maxspeed already?
-			return b[i - 1].speed;
-		}
-		else if(i==0) {
-			// minspeed below
-			return b[0].speed;
-		}
-		else {
-			// interpolate linear
-			sint32 const delta_speed = b[i].speed - b[i - 1].speed;
-			sint32 const delta_years = b[i].year  - b[i - 1].year;
-			return delta_speed * (monthyear - b[i - 1].year) / delta_years + b[i - 1].speed;
-		}
-	}
-	else {
-		sint32 speed_sum = 0;
-		sint32 num_averages = 0;
-		// needs to do it the old way => iterate over all vehicles with this type ...
-		const int wtidx = GET_WAYTYPE_INDEX(wt);
-		if(  !typ_fahrzeuge[wtidx].empty()  ) {
-			FOR(slist_tpl<vehikel_besch_t *>, info, typ_fahrzeuge[GET_WAYTYPE_INDEX(wt)]) 
-			{
-				if(info->get_leistung()>0  &&  !info->is_future(monthyear)  &&  !info->is_retired(monthyear)) {
-					speed_sum += info->get_geschw();
-					num_averages ++;
-				}
-			}
-		}
-		if(  num_averages>0  ) {
-			return speed_sum / num_averages;
-		}
-	}
-
-	// no vehicles => return default
-	return default_speedbonus[typ];
-}
-
-
-void vehikelbauer_t::rdwr_speedbonus(loadsave_t *file)
-{
-	for(  int j=0;  j<8;  j++  ) {
-		uint32 count = speedbonus[j].get_count();
+	// Former speed bonus settings, now deprecated.
+	// This is necessary to load old saved games that
+	// contained speed bonus data.
+	for(uint32 j = 0; j < 8; j++)
+	{
+		uint32 count = 1;
 		file->rdwr_long(count);
-		if (file->is_loading()) {
-			speedbonus[j].clear();
-			speedbonus[j].resize(count);
-		}
-		for(uint32 i=0; i<count; i++) {
-			if (file->is_loading()) {
-				speedbonus[j].append(bonus_record_t());
-			}
-			speedbonus[j][i].rdwr(file);
+
+		for(uint32 i=0; i<count; i++)
+		{
+			sint64 dummy = 0;
+			uint32 dummy_2 = 0;
+			file->rdwr_longlong(dummy);
+			file->rdwr_long(dummy_2);
 		}
 	}
 }
 
 
-vehikel_t* vehikelbauer_t::baue(koord3d k, spieler_t* sp, convoi_t* cnv, const vehikel_besch_t* vb, bool upgrade, uint16 livery_scheme_index )
+vehicle_t* vehicle_builder_t::build(koord3d k, player_t* player, convoi_t* cnv, const vehicle_desc_t* vb, bool upgrade, uint16 livery_scheme_index )
 {
-	vehikel_t* v;
+	vehicle_t* v;
+	static karte_ptr_t welt;
 	switch (vb->get_waytype()) {
-		case road_wt:     v = new automobil_t(      k, vb, sp, cnv); break;
-		case monorail_wt: v = new monorail_waggon_t(k, vb, sp, cnv); break;
+		case road_wt:     v = new road_vehicle_t(      k, vb, player, cnv); break;
+		case monorail_wt: v = new monorail_rail_vehicle_t(k, vb, player, cnv); break;
 		case track_wt:
-		case tram_wt:     v = new waggon_t(         k, vb, sp, cnv); break;
-		case water_wt:    v = new schiff_t(         k, vb, sp, cnv); break;
-		case air_wt:      v = new aircraft_t(       k, vb, sp, cnv); break;
-		case maglev_wt:   v = new maglev_waggon_t(  k, vb, sp, cnv); break;
-		case narrowgauge_wt:v = new narrowgauge_waggon_t(k, vb, sp, cnv); break;
+		case tram_wt:     v = new rail_vehicle_t(         k, vb, player, cnv); break;
+		case water_wt:    v = new water_vehicle_t(         k, vb, player, cnv); break;
+		case air_wt:      v = new air_vehicle_t(       k, vb, player, cnv); break;
+		case maglev_wt:   v = new maglev_rail_vehicle_t(  k, vb, player, cnv); break;
+		case narrowgauge_wt:v = new narrowgauge_rail_vehicle_t(k, vb, player, cnv); break;
 
 		default:
-			dbg->fatal("vehikelbauer_t::baue()", "cannot built a vehicle with waytype %i", vb->get_waytype());
+			dbg->fatal("vehicle_builder_t::build()", "cannot built a vehicle with waytype %i", vb->get_waytype());
 	}
 
 	if(cnv)
@@ -186,27 +117,28 @@ vehikel_t* vehikelbauer_t::baue(koord3d k, spieler_t* sp, convoi_t* cnv, const v
 		livery_scheme_index = cnv->get_livery_scheme_index();
 	}
 
-	if(livery_scheme_index >= sp->get_welt()->get_settings().get_livery_schemes()->get_count())
+	if(livery_scheme_index >= welt->get_settings().get_livery_schemes()->get_count())
 	{
 		// To prevent errors when loading a game with fewer livery schemes than that just played.
 		livery_scheme_index = 0;
 	}
 
-	const livery_scheme_t* const scheme = sp->get_welt()->get_settings().get_livery_scheme(livery_scheme_index);
-	uint16 date = sp->get_welt()->get_timeline_year_month();
+	const livery_scheme_t* const scheme = welt->get_settings().get_livery_scheme(livery_scheme_index);
+	uint16 date = welt->get_timeline_year_month();
 	if(scheme)
 	{
 		const char* livery = scheme->get_latest_available_livery(date, vb);
 		if(livery)
 		{
 			v->set_current_livery(livery);
+			player->set_favorite_livery_scheme_index((uint8)simline_t::waytype_to_linetype(vb->get_waytype()), livery_scheme_index);
 		}
 		else
 		{
 			bool found = false;
-			for(int j = 0; j < sp->get_welt()->get_settings().get_livery_schemes()->get_count(); j ++)
+			for(uint32 j = 0; j < welt->get_settings().get_livery_schemes()->get_count(); j ++)
 			{
-				const livery_scheme_t* const new_scheme = sp->get_welt()->get_settings().get_livery_scheme(j);
+				const livery_scheme_t* const new_scheme = welt->get_settings().get_livery_scheme(j);
 				const char* new_livery = new_scheme->get_latest_available_livery(date, vb);
 				if(new_livery)
 				{
@@ -225,7 +157,7 @@ vehikel_t* vehikelbauer_t::baue(koord3d k, spieler_t* sp, convoi_t* cnv, const v
 	{
 		v->set_current_livery("default");
 	}
-	
+
 	sint64 price = 0;
 
 	if(upgrade)
@@ -234,33 +166,189 @@ vehikel_t* vehikelbauer_t::baue(koord3d k, spieler_t* sp, convoi_t* cnv, const v
 	}
 	else
 	{
-		price = vb->get_preis();
+		price = vb->get_value();
 	}
-	sp->book_new_vehicle(-price, k.get_2d(), vb->get_waytype() );
+	player->book_new_vehicle(-price, k.get_2d(), vb->get_waytype() );
 
 	return v;
 }
 
 
 
-bool vehikelbauer_t::register_besch(vehikel_besch_t *besch)
+bool vehicle_builder_t::register_desc(vehicle_desc_t *desc)
 {
-	// register waytype liste
-	const int idx = GET_WAYTYPE_INDEX( besch->get_waytype() );
-	vehikel_besch_t *old_besch = name_fahrzeuge.get( besch->get_name() );
-	if(  old_besch  ) {
-		dbg->warning( "vehikelbauer_t::register_besch()", "Object %s was overlaid by addon!", besch->get_name() );
-		name_fahrzeuge.remove( besch->get_name() );
-		typ_fahrzeuge[idx].remove(old_besch);
+	// register waytype list
+	const int wt_idx = GET_WAYTYPE_INDEX( desc->get_waytype() );
+
+	// first hashtable
+	vehicle_desc_t *old_desc = name_fahrzeuge.get( desc->get_name() );
+	if(  old_desc  ) {
+		dbg->doubled("vehicle", desc->get_name());
+		name_fahrzeuge.remove( desc->get_name() );
 	}
-	name_fahrzeuge.put(besch->get_name(), besch);
-	typ_fahrzeuge[idx].append(besch);
+	name_fahrzeuge.put(desc->get_name(), desc);
+
+	// now add it to sorter (may be more than once!)
+	for(  int sort_idx = 0;  sort_idx < vehicle_builder_t::sb_length;  sort_idx++  ) {
+		if(  old_desc  ) {
+			typ_fahrzeuge[sort_idx][wt_idx].remove(old_desc);
+		}
+		typ_fahrzeuge[sort_idx][wt_idx].append(desc);
+	}
+	// we cannot delete old_desc, since then xref-resolving will crash
+
 	return true;
 }
 
 
-static bool compare_vehikel_besch(const vehikel_besch_t* a, const vehikel_besch_t* b)
+// compare funcions to sort vehicle in the list
+static int compare_freight(const vehicle_desc_t* a, const vehicle_desc_t* b)
 {
+	int cmp = (int)a->get_freight_type()->get_catg() - (int)b->get_freight_type()->get_catg();
+	if (cmp != 0) return cmp;
+	if (a->get_freight_type()->get_catg() == 0) {
+		cmp = (int)a->get_freight_type()->get_index() - (int)b->get_freight_type()->get_index();
+	}
+	if (cmp==0) {
+		cmp = (int)a->get_min_accommodation_class() - (int)b->get_min_accommodation_class();
+	}
+	if (cmp==0) {
+		cmp = (int)a->get_max_accommodation_class() - (int)b->get_max_accommodation_class();
+	}
+	return cmp;
+}
+static int compare_capacity(const vehicle_desc_t* a, const vehicle_desc_t* b) { return (int)a->get_capacity() - (int)b->get_capacity(); }
+static int compare_engine(const vehicle_desc_t* a, const vehicle_desc_t* b) {
+	const vehicle_desc_t::engine_t a_engine = (a->get_capacity() + a->get_power() == 0) ? vehicle_desc_t::steam : a->get_engine_type();
+	const vehicle_desc_t::engine_t b_engine = (b->get_capacity() + b->get_power() == 0) ? vehicle_desc_t::steam : b->get_engine_type();
+	return (int)a_engine - (int)b_engine;
+}
+static int compare_price(const vehicle_desc_t* a, const vehicle_desc_t* b) { return a->get_base_price() - b->get_base_price(); }
+static int compare_topspeed(const vehicle_desc_t* a, const vehicle_desc_t* b) { return a->get_topspeed() - b->get_topspeed(); }
+static int compare_power(const vehicle_desc_t* a, const vehicle_desc_t* b) {return (a->get_power() == 0 ? 0x7FFFFFF : (int)a->get_power()) - (b->get_power() == 0 ? 0x7FFFFFF : (int)b->get_power());}
+static int compare_tractive_effort(const vehicle_desc_t* a, const vehicle_desc_t* b) { return (a->get_power() == 0 ? 0x7FFFFFF : (int)a->get_tractive_effort()) - (b->get_power() == 0 ? 0x7FFFFFF : (int)b->get_tractive_effort()); }
+static int compare_intro_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return (int)a->get_intro_year_month() - (int)b->get_intro_year_month();}
+static int compare_retire_year_month(const vehicle_desc_t* a, const vehicle_desc_t* b) {return (int)a->get_retire_year_month() - (int)b->get_retire_year_month();}
+
+
+// default compare function with mode parameter
+bool vehicle_builder_t::compare_vehicles(const vehicle_desc_t* a, const vehicle_desc_t* b, sort_mode_t mode)
+{
+	int cmp = 0;
+	switch(mode) {
+		case sb_name:
+			cmp = strcmp(translator::translate(a->get_name()), translator::translate(b->get_name()));
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_intro_date:
+			cmp = compare_intro_year_month(a, b);
+			if (cmp != 0) return cmp < 0;
+			/* FALLTHROUGH */
+		case sb_retire_date:
+			cmp = compare_retire_year_month(a, b);
+			if (cmp != 0) return cmp < 0;
+			cmp = compare_intro_year_month(a, b);
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_value:
+			cmp = compare_price(a, b);
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_running_cost:
+			cmp = a->get_running_cost() - b->get_running_cost();
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_speed:
+			cmp = compare_topspeed(a, b);
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_range:
+		{
+			const uint16 a_range = a->get_range()==0 ? 65535 : a->get_range();
+			const uint16 b_range = b->get_range()==0 ? 65535 : b->get_range();
+			cmp = (int)a_range - (int)b_range;
+			if (cmp != 0) return cmp < 0;
+			break;
+		}
+		case sb_enigine_type:
+			cmp = (int)a->get_engine_type() - (int)b->get_engine_type();
+			if (cmp != 0) return cmp < 0;
+			/* FALLTHROUGH */
+		case sb_role:
+			cmp = (int)a->get_basic_constraint_prev() - (int)b->get_basic_constraint_prev();
+			if (cmp != 0) return cmp < 0;
+			cmp = (int)a->get_basic_constraint_next() - (int)b->get_basic_constraint_next();
+			if (cmp != 0) return cmp < 0;
+			cmp = (int)a->is_bidirectional() - (int)b->is_bidirectional();
+			if (cmp != 0) return cmp < 0;
+			/* FALLTHROUGH */
+		case sb_power:
+			cmp = compare_power(a, b);
+			if (cmp != 0) return cmp < 0;
+			/* FALLTHROUGH */
+		case sb_tractive_force:
+			cmp = compare_tractive_effort(a, b);
+			if (cmp == 0) {
+				cmp = compare_power(a, b);
+			}
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_axle_load:
+		{
+			const uint16 a_axle_load = a->get_waytype() == water_wt ? 0 : a->get_axle_load();
+			const uint16 b_axle_load = b->get_waytype() == water_wt ? 0 : b->get_axle_load();
+			cmp = (int)a_axle_load - (int)b_axle_load;
+			if (cmp != 0) return cmp < 0;
+		}
+		/* FALLTHROUGH */
+		case sb_weight:
+		{
+			cmp = (int)a->get_weight() - (int)b->get_weight();
+			if (cmp != 0) return cmp < 0;
+			break;
+		}
+		case sb_freight:
+			cmp = compare_freight(a, b);
+			if (cmp != 0) return cmp < 0;
+		/* FALLTHROUGH */
+		case sb_capacity:
+			cmp = (int)a->get_total_capacity() - (int)b->get_total_capacity();
+			if (cmp == 0) {
+				cmp = (int)a->get_overcrowded_capacity() - (int)b->get_overcrowded_capacity();
+			}
+			if (cmp != 0) return cmp < 0;
+			break;
+		case sb_min_comfort:
+		{
+			uint16 a_comfort = 65535;
+			uint16 b_comfort = 65535;
+			if (a->get_freight_type() == goods_manager_t::passengers) {
+				for (uint8 i = 0; i < a->get_number_of_classes(); i++) {
+					if (a->get_capacity(i)>0) {
+						a_comfort = a->get_comfort(i);
+						break;
+					}
+				}
+			}
+			if (b->get_freight_type() == goods_manager_t::passengers) {
+				for (uint8 i = 0; i < b->get_number_of_classes(); i++) {
+					if (b->get_capacity(i) > 0) {
+						b_comfort = b->get_comfort(i);
+						break;
+					}
+				}
+			}
+			cmp = (int)a_comfort - (int)b_comfort;
+			if( cmp == 0) {
+				cmp = (int)a->get_catering_level() - (int)b->get_catering_level();
+			}
+			if (cmp != 0) return cmp < 0;
+			break;
+		}
+		default:
+		case best:
+			break;
+	}
 	// Sort by:
 	//  1. cargo category
 	//  2. cargo (if special freight)
@@ -269,331 +357,317 @@ static bool compare_vehikel_besch(const vehikel_besch_t* a, const vehikel_besch_
 	//  5. power
 	//  6. intro date
 	//  7. name
-	int cmp = a->get_ware()->get_catg() - b->get_ware()->get_catg();
-	if (cmp == 0) {
-		if (a->get_ware()->get_catg() == 0) {
-			cmp = a->get_ware()->get_index() - b->get_ware()->get_index();
-		}
-		if (cmp == 0) {
-			cmp = a->get_zuladung() - b->get_zuladung();
-			if (cmp == 0) {
-				// to handle tender correctly
-				uint8 b_engine = (a->get_zuladung() + a->get_leistung() == 0 ? (uint8)vehikel_besch_t::steam : a->get_engine_type());
-				uint8 a_engine = (b->get_zuladung() + b->get_leistung() == 0 ? (uint8)vehikel_besch_t::steam : b->get_engine_type());
-				cmp = b_engine - a_engine;
-				if (cmp == 0) {
-					cmp = a->get_geschw() - b->get_geschw();
-					if (cmp == 0) {
-						// put tender at the end of the list ...
-						int b_leistung = (a->get_leistung() == 0 ? 0x7FFFFFF : a->get_leistung());
-						int a_leistung = (b->get_leistung() == 0 ? 0x7FFFFFF : b->get_leistung());
-						cmp = b_leistung - a_leistung;
-						if (cmp == 0) {
-							cmp = a->get_intro_year_month() - b->get_intro_year_month();
-							if (cmp == 0) {
-								cmp = strcmp(a->get_name(), b->get_name());
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	cmp = compare_freight(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_capacity(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_engine(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_topspeed(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_power(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_tractive_effort(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = compare_intro_year_month(a, b);
+	if (cmp != 0) return cmp < 0;
+	cmp = strcmp(translator::translate(a->get_name()), translator::translate(b->get_name()));
 	return cmp < 0;
 }
 
 
-bool vehikelbauer_t::alles_geladen()
+static bool compare( const vehicle_desc_t* a, const vehicle_desc_t* b )
+{
+	return vehicle_builder_t::compare_vehicles( a, b, (vehicle_builder_t::sort_mode_t)tmp_sort_idx );
+}
+
+
+bool vehicle_builder_t::successfully_loaded()
 {
 	// first: check for bonus tables
-	DBG_MESSAGE("vehikelbauer_t::sort_lists()","called");
-	for(  int wt_idx=0;  wt_idx<9;  wt_idx++  ) {
-		slist_tpl<vehikel_besch_t*>& typ_liste = typ_fahrzeuge[wt_idx];
-		uint count = typ_liste.get_count();
-		if (count == 0) {
-			continue;
+	DBG_MESSAGE("vehicle_builder_t::sort_lists()","called");
+	for (  int sort_idx = 0; sort_idx < vehicle_builder_t::sb_length; sort_idx++  ) {
+		for(  int wt_idx=0;  wt_idx<9;  wt_idx++  ) {
+			tmp_sort_idx = sort_idx;
+			slist_tpl<vehicle_desc_t*>& typ_liste = typ_fahrzeuge[sort_idx][wt_idx];
+			uint count = typ_liste.get_count();
+			if (count == 0) {
+				continue;
+			}
+			vehicle_desc_t** const tmp     = new vehicle_desc_t*[count];
+			vehicle_desc_t** const tmp_end = tmp + count;
+			for(  vehicle_desc_t** tmpptr = tmp;  tmpptr != tmp_end;  tmpptr++  ) {
+				*tmpptr = typ_liste.remove_first();
+				(*tmpptr)->fix_number_of_classes();
+			}
+
+			std::sort(tmp, tmp_end, compare);
+
+			for(  vehicle_desc_t** tmpptr = tmp;  tmpptr != tmp_end;  tmpptr++  ) {
+				typ_liste.append(*tmpptr);
+			}
+			delete [] tmp;
 		}
-		vehikel_besch_t** const tmp     = new vehikel_besch_t*[count];
-		vehikel_besch_t** const tmp_end = tmp + count;
-		for(  vehikel_besch_t** tmpptr = tmp;  tmpptr != tmp_end;  tmpptr++  ) {
-			*tmpptr = typ_liste.remove_first();
-		}
-		std::sort(tmp, tmp_end, compare_vehikel_besch);
-		for(  vehikel_besch_t** tmpptr = tmp;  tmpptr != tmp_end;  tmpptr++  ) {
-			typ_liste.append(*tmpptr);
-		}
-		delete [] tmp;
 	}
 	return true;
 }
 
 
 
-const vehikel_besch_t *vehikelbauer_t::get_info(const char *name)
+const vehicle_desc_t *vehicle_builder_t::get_info(const char *name)
 {
 	return name_fahrzeuge.get(name);
 }
 
-slist_tpl<vehikel_besch_t*>& vehikelbauer_t::get_info(waytype_t typ)
+slist_tpl<vehicle_desc_t*> const & vehicle_builder_t::get_info(waytype_t typ, uint8 sortkey)
 {
-	return typ_fahrzeuge[GET_WAYTYPE_INDEX(typ)];
+	return typ_fahrzeuge[sortkey][GET_WAYTYPE_INDEX(typ)];
 }
 
-//slist_tpl<vehikel_besch_t*>* vehikelbauer_t::get_modifiable_info(waytype_t typ)
-//{
-//	return &typ_fahrzeuge[GET_WAYTYPE_INDEX(typ)];
-//}
 
-/* extended sreach for vehicles for KI *
- * checks also timeline and contraits
+/**
+ * extended search for vehicles for AI
+ * checks also timeline and constraints
  * tries to get best with but adds a little random action
- * @author prissi
  */
-const vehikel_besch_t *vehikelbauer_t::vehikel_search( waytype_t wt, const uint16 month_now, const uint32 target_weight, const sint32 target_speed, const ware_besch_t * target_freight, bool include_electric, bool not_obsolete )
+const vehicle_desc_t *vehicle_builder_t::vehicle_search( waytype_t wt, const uint16 month_now, const uint32 target_weight, const sint32 target_speed, const goods_desc_t * target_freight, bool include_electric, bool not_obsolete )
 {
-	const vehikel_besch_t *besch = NULL;
-	long besch_index=-100000;
-
-	if(  target_freight==NULL  &&  target_weight==0  )
+	if(  (target_freight!=NULL  ||  target_weight!=0)  &&  !typ_fahrzeuge[0][GET_WAYTYPE_INDEX(wt)].empty()  )
 	{
-		// no power, no freight => no vehikel to search
-		return NULL;
-	}
+		struct best_t {
+			uint32 power;
+			uint16 payload_per_maintenance;
+			long index;
+		} best, test;
 
-	if(  !typ_fahrzeuge[GET_WAYTYPE_INDEX(wt)].empty()  ) 
-	{
-		FOR(slist_tpl<vehikel_besch_t *>, const test_besch, typ_fahrzeuge[GET_WAYTYPE_INDEX(wt)]) 
-		{
+		best.power = 0;
+		best.payload_per_maintenance = 0;
+		best.index = -100000;
+
+		const vehicle_desc_t *desc = NULL;
+		for (vehicle_desc_t const* const test_desc : typ_fahrzeuge[0][GET_WAYTYPE_INDEX(wt)]) {
 			// no constricts allow for rail vehicles concerning following engines
-			if(wt==track_wt  &&  !test_besch->can_follow_any()  ) 
-			{
+			if(wt==track_wt  &&  !test_desc->can_follow_any()  ) {
 				continue;
 			}
 			// do not buy incomplete vehicles
-			if(wt==road_wt && !test_besch->can_lead(NULL))
-			{
+			if(wt==road_wt && !test_desc->can_lead(NULL)) {
 				continue;
 			}
 
 			// engine, but not allowed to lead a convoi, or no power at all or no electrics allowed
-			if(target_weight) 
-			{
-				if(test_besch->get_leistung()==0  ||  !test_besch->can_follow(NULL)  ||  (!include_electric  &&  test_besch->get_engine_type()==vehikel_besch_t::electric) ) 
-				{
+			if(target_weight) {
+				if(test_desc->get_power()==0  ||  !test_desc->can_follow(NULL)  ||  (!include_electric  &&  test_desc->get_engine_type()==vehicle_desc_t::electric) ) {
 					continue;
 				}
 			}
 
 			// check for wegetype/too new
-			if(test_besch->get_waytype()!=wt  ||  test_besch->is_future(month_now)  )
-			{
+			if(test_desc->get_waytype()!=wt  ||  test_desc->is_future(month_now)  ) {
 				continue;
 			}
 
-			if(  not_obsolete  &&  test_besch->is_retired(month_now)  ) 
-			{
+			if(  not_obsolete  &&  test_desc->is_retired(month_now)  ) {
 				// not using vintage cars here!
 				continue;
 			}
 
-			const uint32 power = (test_besch->get_leistung()*test_besch->get_gear())/64;
-			const uint16 maintenance = test_besch->get_running_cost() > 0 ? test_besch->get_running_cost() : 1;
-			if(target_freight) 
-			{
+			test.power = (test_desc->get_power()*test_desc->get_gear())/64;
+			if(target_freight) {
 				// this is either a railcar/trailer or a truck/boat/plane
-				if(  test_besch->get_zuladung()==0  ||  !test_besch->get_ware()->is_interchangeable(target_freight)  ) 
-				{
+				if(  test_desc->get_total_capacity()==0  ||  !test_desc->get_freight_type()->is_interchangeable(target_freight)  ) {
 					continue;
 				}
 
-					sint32 difference=0;	// smaller is better
-					// assign this vehicle, if we have none found one yet, or we found only a too week one
-				
-					if(  besch!=NULL  ) {
-						// it is cheaper to run? (this is most important)
-						difference += (besch->get_zuladung()*1000)/1+maintenance < (test_besch->get_zuladung()*1000)/1+maintenance ? -20 : 20;
-						if(  target_weight>0  ) {
-							// it is strongerer?
-							difference += (besch->get_leistung()*besch->get_gear())/64 < power ? -10 : 10;
-						}
-						// it is faster? (although we support only up to 120km/h for goods)
-						difference += (besch->get_geschw() < test_besch->get_geschw())? -10 : 10;
-						// it is cheaper? (not so important)
-						difference += (besch->get_preis() > test_besch->get_preis())? -5 : 5;
-						// add some malus for obsolete vehicles
-						if(test_besch->is_retired(month_now)) {
-							difference += 5;
-						}
-					}
-					// ok, final check
-					if(  besch==NULL  ||  difference<(int)simrand(25, "vehikelbauer_t::vehikel_search")    ) {
-						// then we want this vehicle!
-						besch = test_besch;
-						DBG_MESSAGE( "vehikelbauer_t::vehikel_search","Found car %s",besch->get_name());
-					}
+				test.index = -100000;
+				test.payload_per_maintenance = test_desc->get_total_capacity() / max(test_desc->get_running_cost(), 1);
 
-				else {
-					// engine/tugboat/truck for trailer
-					if(  test_besch->get_zuladung()!=0  ||  !test_besch->can_follow(NULL)  ) {
-						continue;
+				sint32 difference=0;	// smaller is better
+				// assign this vehicle if we have not found one yet, or we only found one too weak
+				if(  desc!=NULL  ) {
+					// is it cheaper to run? (this is most important)
+					difference += best.payload_per_maintenance < test.payload_per_maintenance ? -20 : 20;
+					if(  target_weight>0  ) {
+						// is it strongerer?
+						difference += best.power < test.power ? -10 : 10;
 					}
-					// finally, we might be able to use this vehicle
-					sint32 speed = test_besch->get_geschw();
-					uint32 max_weight = power/( (speed*speed)/2500 + 1 );
+					// it is faster? (although we support only up to 120km/h for goods)
+					difference += (desc->get_topspeed() < test_desc->get_topspeed())? -10 : 10;
+					// it is cheaper? (not so important)
+					difference += (desc->get_value() > test_desc->get_value())? -5 : 5;
+					// add some malus for obsolete vehicles
+					if(test_desc->is_retired(month_now)) {
+						difference += 5;
+					}
+				}
+				// ok, final check
+				if(  desc==NULL  ||  difference<(int)simrand(25, "vehicle_builder_t::vehicle_search")    ) {
+					// then we want this vehicle!
+					desc = test_desc;
+					best = test;
+					DBG_MESSAGE( "vehicle_builder_t::vehicle_search","Found car %s", desc ? desc->get_name() : "null");
+				}
+			}
+			else {
+				// engine/tugboat/truck for trailer
+				if(  test_desc->get_total_capacity()!=0  ||  !test_desc->can_follow(NULL)  ) {
+					continue;
+				}
+				// finally, we might be able to use this vehicle
+				sint32 speed = test_desc->get_topspeed();
+				uint32 max_weight = test.power/( (speed*speed)/2500 + 1 );
 
-					// we found a useful engine
-					long current_index = (power*100)/1+maintenance + test_besch->get_geschw() - (sint16)test_besch->get_gewicht() - (sint32)(test_besch->get_preis()/25000);
-					// too slow?
-					if(speed < target_speed) {
-						current_index -= 250;
-					}
-					// too weak to to reach full speed?
-					if(  max_weight < target_weight+test_besch->get_gewicht()  ) {
-						current_index += max_weight - (sint32)(target_weight+test_besch->get_gewicht());
-					}
-					current_index += simrand(100, "vehikelbauer_t::vehikel_search");
-					if(  current_index > besch_index  ) {
-						// then we want this vehicle!
-						besch = test_besch;
-						besch_index = current_index;
-						DBG_MESSAGE( "vehikelbauer_t::vehikel_search","Found engine %s",besch->get_name());
-					}
+				// we found a useful engine
+				test.index = (test.power*100)/max(test_desc->get_running_cost(), 1) + test_desc->get_topspeed() - (sint16)test_desc->get_weight() - (sint32)(test_desc->get_value()/25000);
+				// too slow?
+				if(speed < target_speed) {
+					test.index -= 250;
+				}
+				// too weak to to reach full speed?
+				if(  max_weight < target_weight+test_desc->get_weight()  ) {
+					test.index += max_weight - (sint32)(target_weight+test_desc->get_weight());
+				}
+				test.index += simrand(100, "vehicle_builder_t::vehicle_search");
+				if(  test.index > best.index  ) {
+					// then we want this vehicle!
+					desc = test_desc;
+					best = test;
+					DBG_MESSAGE( "vehicle_builder_t::vehicle_search","Found engine %s",desc->get_name());
 				}
 			}
 		}
+		if (desc)
+		{
+			return desc;
+		}
 	}
 	// no vehicle found!
-	if(  besch==NULL  ) {
-		DBG_MESSAGE( "vehikelbauer_t::vehikel_search()","could not find a suitable vehicle! (speed %i, weight %i)",target_speed,target_weight);
-	}
-	return besch;
+	DBG_MESSAGE( "vehicle_builder_t::vehicle_search()","could not find a suitable vehicle! (speed %i, weight %i)",target_speed,target_weight);
+	return NULL;
 }
 
 
 
-/* extended search for vehicles for replacement on load time
+/**
+ * extended search for vehicles for replacement on load time
  * tries to get best match (no random action)
- * if prev_besch==NULL, then the convoi must be able to lead a convoi
- * @author prissi
+ * if prev_desc==NULL, then the convoi must be able to lead a convoi
  */
-const vehikel_besch_t *vehikelbauer_t::get_best_matching( waytype_t wt, const uint16 month_now, const uint32 target_weight, const uint32 target_power, const sint32 target_speed, const ware_besch_t * target_freight, bool not_obsolete, const vehikel_besch_t *prev_veh, bool is_last )
+const vehicle_desc_t *vehicle_builder_t::get_best_matching( waytype_t wt, const uint16 month_now, const uint32 target_weight, const uint32 target_power, const sint32 target_speed, const goods_desc_t * target_freight, bool not_obsolete, const vehicle_desc_t *prev_veh, bool is_last )
 {
-	const vehikel_besch_t *besch = NULL;
-	long besch_index=-100000;
+	const vehicle_desc_t *desc = NULL;
+	sint32 desc_index =- 100000;
 
-	if(  !typ_fahrzeuge[GET_WAYTYPE_INDEX(wt)].empty()  ) 
+	if(  !typ_fahrzeuge[0][GET_WAYTYPE_INDEX(wt)].empty()  )
 	{
-		FOR(slist_tpl<vehikel_besch_t *>, const test_besch, typ_fahrzeuge[GET_WAYTYPE_INDEX(wt)])
-		{
-			if(target_power>0  &&  test_besch->get_leistung()==0) 
-			{
+		for(vehicle_desc_t const* const test_desc : typ_fahrzeuge[0][GET_WAYTYPE_INDEX(wt)]) {
+			if(target_power>0  &&  test_desc->get_power()==0) {
 				continue;
 			}
 
 			// will test for first (prev_veh==NULL) or matching following vehicle
-			if(!test_besch->can_follow(prev_veh)) {
+			if(!test_desc->can_follow(prev_veh)) {
 				continue;
 			}
 
 			// not allowed as last vehicle
-			if(is_last  &&  test_besch->get_nachfolger_count()>0  &&  test_besch->get_nachfolger(0)!=NULL  ) {
+			if(is_last  &&  test_desc->get_trailer_count()>0  &&  test_desc->get_trailer(0)!=NULL  ) {
 				continue;
 			}
 
 			// not allowed as non-last vehicle
-			if(!is_last  &&  test_besch->get_nachfolger_count()==1  &&  test_besch->get_nachfolger(0)==NULL  ) {
+			if(!is_last  &&  test_desc->get_trailer_count()==1  &&  test_desc->get_trailer(0)==NULL  ) {
 				continue;
 			}
 
-			// check for wegetype/too new
-			if(test_besch->get_waytype()!=wt  ||  test_besch->is_future(month_now)  ) {
+			// check for waytype too
+			if(test_desc->get_waytype()!=wt  ||  test_desc->is_future(month_now)  ) {
 				continue;
 			}
 
 			// ignore vehicles that need electrification
-			if(test_besch->get_leistung()>0  &&  test_besch->get_engine_type()==vehikel_besch_t::electric) {
+			if(test_desc->get_power()>0  &&  test_desc->get_engine_type()==vehicle_desc_t::electric) {
 				continue;
 			}
 
 			// likely tender => replace with some engine ...
 			if(target_freight==0  &&  target_weight==0) {
-				if(  test_besch->get_zuladung()!=0  ) {
+				if(  test_desc->get_total_capacity()!=0  ) {
 					continue;
 				}
 			}
 
-			if(  not_obsolete  &&  test_besch->is_retired(month_now)  ) {
+			if(  not_obsolete  &&  test_desc->is_retired(month_now)  ) {
 				// not using vintage cars here!
 				continue;
 			}
 
-			uint32 power = (test_besch->get_leistung()*test_besch->get_gear())/64;
-			if(target_freight) 
+			uint32 power = (test_desc->get_power()*test_desc->get_gear())/64;
+			if(target_freight)
 			{
 				// this is either a railcar/trailer or a truck/boat/plane
-				if(  test_besch->get_zuladung()==0  ||  !test_besch->get_ware()->is_interchangeable(target_freight)  ) {
+				if(  test_desc->get_total_capacity()==0  ||  !test_desc->get_freight_type()->is_interchangeable(target_freight)  ) {
 					continue;
 				}
 
 				sint32 difference=0;	// smaller is better
 				// assign this vehicle, if we have none found one yet, or we found only a too week one
-				if(  besch!=NULL  ) 
+				if(  desc!=NULL  )
 				{
 					// it is cheaper to run? (this is most important)
-					difference += (besch->get_zuladung()*1000)/(1+besch->get_running_cost()) < (test_besch->get_zuladung()*1000)/(1+test_besch->get_running_cost()) ? -20 : 20;
-					if(  target_weight>0  ) 
+					difference += (desc->get_total_capacity()*1000)/(1+desc->get_running_cost()) < (test_desc->get_total_capacity()*1000)/(1+test_desc->get_running_cost()) ? -20 : 20;
+					if(  target_weight>0  )
 					{
 						// it is strongere?
-						difference += (besch->get_leistung()*besch->get_gear())/64 < power ? -10 : 10;
+						difference += (desc->get_power()*desc->get_gear())/64 < power ? -10 : 10;
 					}
 
-					sint32 difference=0;	// smaller is better
 					// it is faster? (although we support only up to 120km/h for goods)
-					difference += (besch->get_geschw() < test_besch->get_geschw())? -10 : 10;
+					difference += (desc->get_topspeed() < test_desc->get_topspeed())? -10 : 10;
 					// it is cheaper? (not so important)
-					difference += (besch->get_preis() > test_besch->get_preis())? -5 : 5;
+					difference += (desc->get_value() > test_desc->get_value())? -5 : 5;
 					// add some malus for obsolete vehicles
-					if(test_besch->is_retired(month_now))
+					if(test_desc->is_retired(month_now))
 					{
 						difference += 5;
 					}
 				}
 				// ok, final check
-				if(  besch==NULL  ||  difference<12    ) 
+				if(  desc==NULL  ||  difference<12    )
 				{
 					// then we want this vehicle!
-					besch = test_besch;
-					DBG_MESSAGE( "vehikelbauer_t::get_best_matching","Found car %s",besch->get_name());
+					desc = test_desc;
+					DBG_MESSAGE( "vehicle_builder_t::get_best_matching","Found car %s", desc ? desc->get_name() : "null");
 				}
 			}
 			else {
 				// finally, we might be able to use this vehicle
-				sint32 speed = test_besch->get_geschw();
+				sint32 speed = test_desc->get_topspeed();
 				uint32 max_weight = power/( (speed*speed)/2500 + 1 );
 
 				// we found a useful engine
-				long current_index = (power*100)/(1+test_besch->get_running_cost()) + test_besch->get_geschw() - (sint16)test_besch->get_gewicht() - (sint32)(test_besch->get_preis()/25000);
+				sint32 current_index = (power * 100) / (1 + test_desc->get_running_cost()) + test_desc->get_topspeed() - (sint16)test_desc->get_weight() - (sint32)(test_desc->get_value()/25000);
 				// too slow?
 				if(speed < target_speed) {
 					current_index -= 250;
 				}
 				// too weak to to reach full speed?
-				if(  max_weight < target_weight+test_besch->get_gewicht()  ) {
-					current_index += max_weight - (sint32)(target_weight+test_besch->get_gewicht());
+				if(  max_weight < target_weight+test_desc->get_weight()  ) {
+					current_index += max_weight - (sint32)(target_weight+test_desc->get_weight());
 				}
 				current_index += 50;
-				if(  current_index > besch_index  ) {
+				if(  current_index > desc_index  ) {
 					// then we want this vehicle!
-					besch = test_besch;
-					besch_index = current_index;
-					DBG_MESSAGE( "vehikelbauer_t::get_best_matching","Found engine %s",besch->get_name());
+					desc = test_desc;
+					desc_index = current_index;
+					DBG_MESSAGE( "vehicle_builder_t::get_best_matching","Found engine %s",desc->get_name());
 				}
 			}
 		}
 	}
 	// no vehicle found!
-	if(  besch==NULL  ) {
-		DBG_MESSAGE( "vehikelbauer_t::get_best_matching()","could not find a suitable vehicle! (speed %i, weight %i)",target_speed,target_weight);
+	if(  desc==NULL  ) {
+		DBG_MESSAGE( "vehicle_builder_t::get_best_matching()","could not find a suitable vehicle! (speed %i, weight %i)",target_speed,target_weight);
 	}
-	return besch;
+	return desc;
 }

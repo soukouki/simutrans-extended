@@ -1,29 +1,38 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include "api_param.h"
 #include "api_class.h"
 
 #include "../simcity.h"
 #include "../simfab.h"
-#include "../bauer/warenbauer.h"
-#include "../dataobj/fahrplan.h"
+#include "../bauer/goods_manager.h"
+#include "../dataobj/schedule.h"
 #include "../dataobj/scenario.h"
 #include "../player/simplay.h"
 #include "../utils/plainstring.h"
 
 
-template<typename T> T clamp(T v, T l, T u) { return v < l ? l : (v > u ? u :v); }
-
 namespace script_api {
-	karte_t *welt;
 
-	SQInteger param<void_t>::push(HSQUIRRELVM, void_t const&)
+	karte_ptr_t welt;
+
+	SQInteger param<script_api::void_t>::push(HSQUIRRELVM, script_api::void_t const&)
 	{
 		return 0;
+	}
+
+	script_api::void_t param<script_api::void_t>::get(HSQUIRRELVM, SQInteger)
+	{
+		return script_api::void_t();
 	}
 
 // integer arguments
 	uint8 param<uint8>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQInteger i;
+		SQInteger i = 0;
 		sq_getinteger(vm, index, &i);
 		return clamp<uint8>(i, 0, 255);
 	}
@@ -35,7 +44,7 @@ namespace script_api {
 
 	sint8 param<sint8>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQInteger i;
+		SQInteger i = 0;
 		sq_getinteger(vm, index, &i);
 		return clamp<sint8>(i, -128, 127);
 	}
@@ -47,7 +56,7 @@ namespace script_api {
 
 	uint16 param<uint16>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQInteger i;
+		SQInteger i = 0;
 		sq_getinteger(vm, index, &i);
 		return clamp<uint16>(i, 0, 0xffff);
 	}
@@ -59,7 +68,7 @@ namespace script_api {
 
 	sint16 param<sint16>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQInteger i;
+		SQInteger i = 0;
 		sq_getinteger(vm, index, &i);
 		return clamp<sint16>(i, -32768, 0x7fff);
 	}
@@ -71,7 +80,7 @@ namespace script_api {
 
 	uint32 param<uint32>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQInteger i;
+		SQInteger i = 0;
 		sq_getinteger(vm, index, &i);
 		return i>=0 ? i : 0;
 	}
@@ -83,7 +92,7 @@ namespace script_api {
 
 	sint32 param<sint32>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQInteger i;
+		SQInteger i = 0;
 		sq_getinteger(vm, index, &i);
 		return i;
 	}
@@ -95,25 +104,25 @@ namespace script_api {
 
 	uint64 param<uint64>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQInteger i;
+		SQInteger i = 0;
 		sq_getinteger(vm, index, &i);
 		return i>=0 ? i : 0;
 	}
 	SQInteger param<uint64>::push(HSQUIRRELVM vm, uint64 const& v)
 	{
-		sq_pushinteger(vm, v);
+		sq_pushinteger(vm, (SQInteger)v);
 		return 1;
 	}
 
 	sint64 param<sint64>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQInteger i;
+		SQInteger i = 0;
 		sq_getinteger(vm, index, &i);
 		return i;
 	}
 	SQInteger param<sint64>::push(HSQUIRRELVM vm, sint64 const& v)
 	{
-		sq_pushinteger(vm, v);
+		sq_pushinteger(vm, (SQInteger)v);
 		return 1;
 	}
 
@@ -128,24 +137,24 @@ namespace script_api {
 	}
 
 
-	ding_t::typ param<ding_t::typ>::get(HSQUIRRELVM vm, SQInteger index)
+	obj_t::typ param<obj_t::typ>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		return (ding_t::typ)(param<uint8>::get(vm, index));
+		return (obj_t::typ)(param<uint8>::get(vm, index));
 	}
-	SQInteger param<ding_t::typ>::push(HSQUIRRELVM vm, ding_t::typ const& v)
+	SQInteger param<obj_t::typ>::push(HSQUIRRELVM vm, obj_t::typ const& v)
 	{
 		return param<uint8>::push(vm, v);
 	}
 // floats
 	double param<double>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQFloat d;
+		SQFloat d = 0.0;
 		sq_getfloat(vm, index, &d);
 		return d;
 	}
 	SQInteger param<double>::push(HSQUIRRELVM vm, double  const& v)
 	{
-		sq_pushfloat(vm, v);
+		sq_pushfloat(vm, (SQFloat)v);
 		return 1;
 	}
 
@@ -199,7 +208,7 @@ namespace script_api {
 // bool
 	bool param<bool>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		SQBool b;
+		SQBool b = false;
 		sq_tobool(vm, index, &b);
 		return b;
 	}
@@ -212,18 +221,10 @@ namespace script_api {
 // coordinates
 	koord param<koord>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		koord k(koord::invalid);
-		SQInteger new_index = index > 0 ? index : index-1;
-		sq_pushstring(vm, "x", -1);
-		if (SQ_SUCCEEDED(sq_get(vm, new_index))) {
-			k.x = param<sint16>::get(vm, -1);
-			sq_pop(vm, 1);
-		}
-		sq_pushstring(vm, "y", -1);
-		if (SQ_SUCCEEDED(sq_get(vm, new_index))) {
-			k.y = param<sint16>::get(vm, -1);
-			sq_pop(vm, 1);
-		}
+		sint16 x=-1, y=-1;
+		get_slot(vm, "x", x, index);
+		get_slot(vm, "y", y, index);
+		koord k(x,y);
 		if (k.x != -1  &&  k.y != -1) {
 			// transform coordinates
 			welt->get_scenario()->koord_sq2w(k);
@@ -239,24 +240,24 @@ namespace script_api {
 	SQInteger param<koord>::push(HSQUIRRELVM vm, koord const& v)
 	{
 		koord k(v);
-		// transform coordinates
-		welt->get_scenario()->koord_w2sq(k);
+		if (k.x != -1  &&  k.y != -1) {
+			// transform coordinates
+			welt->get_scenario()->koord_w2sq(k);
+		}
+		else {
+			k = koord::invalid;
+		}
+
 		sq_newtable(vm);
-		param<sint16>::create_slot(vm, "x", k.x);
-		param<sint16>::create_slot(vm, "y", k.y);
+		create_slot<sint16>(vm, "x", k.x);
+		create_slot<sint16>(vm, "y", k.y);
 		return 1;
 	}
 
 	koord3d param<koord3d>::get(HSQUIRRELVM vm, SQInteger index)
 	{
 		sint8 z = -1;
-		SQInteger new_index = index > 0 ? index : index-1;
-		sq_pushstring(vm, "z", -1);
-		if (SQ_SUCCEEDED(sq_get(vm, new_index))) {
-			z = param<sint8>::get(vm, -1);
-			sq_pop(vm, 1);
-		}
-		else {
+		if (!SQ_SUCCEEDED(get_slot(vm, "z", z, index))) {
 			return koord3d::invalid;
 		}
 		koord k = param<koord>::get(vm, index);
@@ -267,25 +268,17 @@ namespace script_api {
 	SQInteger param<koord3d>::push(HSQUIRRELVM vm, koord3d const& v)
 	{
 		param<koord>::push(vm, v.get_2d());
-		param<sint8>::create_slot(vm, "z", v.z);
+		create_slot<sint8>(vm, "z", v.z);
 		return 1;
 	}
 
 // pointers to classes
+
 	convoi_t* param<convoi_t*>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		uint16 id = 0;
-		SQInteger new_index = index > 0 ? index : index-1;
-		sq_pushstring(vm, "id", -1);
-		if (SQ_SUCCEEDED(sq_get(vm, new_index))) {
-			id = param<uint16>::get(vm, -1);
-			sq_pop(vm, 1);
-		}
-		convoihandle_t cnv;
-		cnv.set_id(id);
+		convoihandle_t cnv = param<convoihandle_t>::get(vm, index);
 		if (!cnv.is_bound()) {
-			sq_raise_error(vm, "Invalid convoi id %d", id);
-			return NULL;
+			sq_raise_error(vm, "Invalid convoi id %d", cnv.get_id());
 		}
 		return cnv.get_rep();
 	}
@@ -293,7 +286,7 @@ namespace script_api {
 	fabrik_t* param<fabrik_t*>::get(HSQUIRRELVM vm, SQInteger index)
 	{
 		koord pos = param<koord>::get(vm, index);
-		fabrik_t* fab = fabrik_t::get_fab(welt, pos);
+		fabrik_t* fab = fabrik_t::get_fab(pos);
 		if (fab==NULL) {
 			sq_raise_error(vm, "no factory at position (%s)", pos.get_str());
 		}
@@ -318,20 +311,16 @@ namespace script_api {
 			return NULL;
 		}
 		// obtain index into wareproduction_t arrays
-		SQInteger new_index = index > 0 ? index : index-1;
-		sq_pushstring(vm, "index", -1);
 		SQInteger i = -1;
-		if (SQ_SUCCEEDED(sq_get(vm, new_index))) {
-			i = param<sint16>::get(vm, -1);
-			sq_pop(vm, 1);
+		if (SQ_SUCCEEDED(get_slot(vm, "index", i, index))) {
 			if (i>=0) {
-				if ( (uint32)i<fab->get_eingang().get_count()) {
-					return &fab->get_eingang()[i];
+				if ( (uint32)i<fab->get_input().get_count()) {
+					return &fab->get_input()[i];
 				}
 				else {
-					i -= fab->get_eingang().get_count();
-					if ( (uint32)i<fab->get_ausgang().get_count()) {
-						return &fab->get_ausgang()[i];
+					i -= fab->get_input().get_count();
+					if ( (uint32)i<fab->get_output().get_count()) {
+						return &fab->get_output()[i];
 					}
 				}
 			}
@@ -340,17 +329,12 @@ namespace script_api {
 		return NULL;
 	}
 
-	spieler_t* param<spieler_t*>::get(HSQUIRRELVM vm, SQInteger index)
+	player_t* param<player_t*>::get(HSQUIRRELVM vm, SQInteger index)
 	{
-		uint16 plnr = 0;
-		SQInteger new_index = index > 0 ? index : index-1;
-		sq_pushstring(vm, "nr", -1);
-		if (SQ_SUCCEEDED(sq_get(vm, new_index))) {
-			plnr = param<uint16>::get(vm, -1);
-			sq_pop(vm, 1);
-		}
+		uint8 plnr = 0;
+		get_slot(vm, "nr", plnr, index);
 		if (plnr < 15) {
-			return welt->get_spieler(plnr);
+			return welt->get_player(plnr);
 		}
 		else {
 			sq_raise_error(vm, "Invalid player index %d", plnr);
@@ -359,45 +343,19 @@ namespace script_api {
 	}
 
 
-	SQInteger param<spieler_t*>::push(HSQUIRRELVM vm, spieler_t* const& sp)
+	SQInteger param<player_t*>::push(HSQUIRRELVM vm, player_t* const& player)
 	{
-		return push_instance(vm, "player_x", sp ? sp->get_player_nr() : 16);
-	}
-
-
-	halthandle_t param<halthandle_t>::get(HSQUIRRELVM vm, SQInteger index)
-	{
-		uint16 id = 0;
-		SQInteger new_index = index > 0 ? index : index-1;
-		sq_pushstring(vm, "id", -1);
-		if (SQ_SUCCEEDED(sq_get(vm, new_index))) {
-			id = param<uint16>::get(vm, -1);
-			sq_pop(vm, 1);
-		}
-		halthandle_t halt;
-		halt.set_id(id);
-		if (!halt.is_bound()) {
-			sq_raise_error(vm, "Invalid halt id %d", id);
-		}
-		return halt;
+		return push_instance(vm, "player_x", player ? player->get_player_nr() : 16);
 	}
 
 
 	const haltestelle_t* param<const haltestelle_t*>::get(HSQUIRRELVM vm, SQInteger index)
 	{
 		halthandle_t halt = param<halthandle_t>::get(vm, index);
-		return halt.is_bound() ? halt.get_rep() : NULL;
-	}
-
-
-	SQInteger param<halthandle_t>::push(HSQUIRRELVM vm, halthandle_t const& v)
-	{
-		if (v.is_bound()) {
-			return push_instance(vm, "halt_x", v.get_id());
+		if (!halt.is_bound()) {
+			sq_raise_error(vm, "Invalid halt id %d", halt.get_id());
 		}
-		else {
-			sq_pushnull(vm); return 1;
-		}
+		return halt.get_rep();
 	}
 
 
@@ -439,15 +397,6 @@ namespace script_api {
 		}
 	}
 
-	const ware_besch_t* param<const ware_besch_t*>::get(HSQUIRRELVM vm, SQInteger index)
-	{
-		void* besch = NULL;
-		const ware_besch_t* (*F)(const char*) = &warenbauer_t::get_info;
-		if(!SQ_SUCCEEDED(sq_getinstanceup(vm, index, &besch, (void*)F))) {
-			return NULL;
-		}
-		return (ware_besch_t*)besch;
-	}
 
 	scenario_t* param<scenario_t*>::get(HSQUIRRELVM, SQInteger)
 	{
@@ -455,16 +404,22 @@ namespace script_api {
 	}
 
 
-	SQInteger param<linieneintrag_t>::push(HSQUIRRELVM vm, linieneintrag_t const& v)
+	SQInteger param<schedule_entry_t>::push(HSQUIRRELVM vm, schedule_entry_t const& v)
 	{
-		return push_instance(vm, "schedule_entry_x", v.pos, v.ladegrad, v.waiting_time_shift);
+		return push_instance(vm, "schedule_entry_x", v.pos, v.minimum_loading, v.waiting_time_shift);
 	}
 
 
 	SQInteger param<schedule_t*>::push(HSQUIRRELVM vm, schedule_t* const& v)
 	{
+		return param<const schedule_t*>::push(vm, v);
+	}
+
+
+	SQInteger param<const schedule_t*>::push(HSQUIRRELVM vm, const schedule_t* const& v)
+	{
 		if (v) {
-			return push_instance(vm, "schedule_x", v->get_waytype(), v->eintrag);
+			return push_instance(vm, "schedule_x", v->get_waytype(), v->entries);
 		}
 		else {
 			sq_pushnull(vm); return 1;
@@ -477,10 +432,21 @@ namespace script_api {
 		return &welt->get_settings();
 	}
 
+
+	simline_t* param<simline_t*>::get(HSQUIRRELVM vm, SQInteger index)
+	{
+		linehandle_t line = param<linehandle_t>::get(vm, index);
+		if (!line.is_bound()) {
+			sq_raise_error(vm, "Invalid line id %d", line.get_id());
+		}
+		return line.get_rep();
+	}
+
+
 	stadt_t* param<stadt_t*>::get(HSQUIRRELVM vm, SQInteger index)
 	{
 		koord pos = param<koord>::get(vm, index);
-		return welt->suche_naechste_stadt(pos);
+		return welt->find_nearest_city(pos);
 	}
 
 	SQInteger param<stadt_t*>::push(HSQUIRRELVM vm, stadt_t* const& v)
@@ -499,6 +465,11 @@ namespace script_api {
 	karte_t* param<karte_t*>::get(HSQUIRRELVM, SQInteger)
 	{
 		return welt;
+	}
+
+	SQInteger param<karte_t*>::push(HSQUIRRELVM vm, karte_t* const&)
+	{
+		sq_pushnull(vm); return 1;
 	}
 
 };

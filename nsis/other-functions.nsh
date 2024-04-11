@@ -1,3 +1,8 @@
+;
+; This file is part of the Simutrans-Extended project under the Artistic License.
+; (see LICENSE.txt)
+;
+
 ;***************************************************** from here on come licence *****************************************
 
 !include "TextFunc.nsh"
@@ -154,7 +159,6 @@ Function componentsPre
   Push ${pak32comic}
   Call EnableSectionIfThere
 FunctionEnd
-
 
 ; Some packs have not opene source license, so we have to show additional licences
 Function CheckForClosedSource

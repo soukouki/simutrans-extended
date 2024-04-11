@@ -1,30 +1,23 @@
 /*
- * Copyright (c) 2006 prissi
- *
- * This file is part of the Simutrans project under the artistic license.
- * (see license.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef tpl_binary_heap_tpl_h
-#define tpl_binary_heap_tpl_h
+#ifndef TPL_BINARY_HEAP_TPL_H
+#define TPL_BINARY_HEAP_TPL_H
+
 
 #include "../simmem.h"
+#include "../simtypes.h"
 
 
 /**
- *
- * my try on a binary heap template
+ * my try on a binary heap template,
  * inspired by the pathfinder of OTTD written by kuDr
  *
- * For information about Binary Heap algotithm,
- *   see: http://www.policyalmanac.org/games/binaryHeaps.htm *
- *
- * @date September 2006
- * @author prissi
+ * For information about Binary Heap algorithm,
+ *   see: https://en.wikipedia.org/wiki/Binary_heap
  */
-
-#include "../simtypes.h"
-
 template <class T>
 class binary_heap_tpl
 {
@@ -37,7 +30,6 @@ public:
 
 	binary_heap_tpl()
 	{
-		DBG_MESSAGE("binary_heap_tpl()","initialized");
 		nodes = MALLOCN(T, 4096);
 		node_size = 4096;
 		node_count = 0;
@@ -91,7 +83,7 @@ public:
 
 
 	/**
-	* unfourtunately, the removing is as much effort as the insertion ...
+	* unfortunately, the removing is as much effort as the insertion ...
 	*/
 	T pop() {
 		assert(!empty());
@@ -139,7 +131,6 @@ public:
 	/**
 	* Recycles all nodes. Doesn't delete the objects.
 	* Leaves the list empty.
-	* @author Hj. Malthaner
 	*/
 	void clear()
 	{

@@ -1,66 +1,60 @@
-/**
- * Curiosity list window
- * @author Hj. Malthaner
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef curiositylist_frame_t_h
-#define curiositylist_frame_t_h
+#ifndef GUI_CURIOSITYLIST_FRAME_T_H
+#define GUI_CURIOSITYLIST_FRAME_T_H
 
-#include "../gui/gui_frame.h"
-#include "../gui/curiositylist_stats_t.h"
+
+#include "simwin.h"
+#include "../simcity.h"
+#include "gui_frame.h"
 #include "components/action_listener.h"
-#include "components/gui_label.h"
-#include "components/gui_scrollpane.h"
+#include "components/gui_combobox.h"
+#include "components/gui_scrolled_list.h"
+#include "components/gui_button.h"
+#include "components/gui_combobox.h"
 
-class karte_t;
 
+/**
+ * Curiosity list window
+ */
 class curiositylist_frame_t : public gui_frame_t, private action_listener_t
 {
- private:
-	static const char *sort_text[curiositylist::SORT_MODES];
+private:
+	gui_combobox_t sortedby, region_selector;
+	button_t sort_order;
+	button_t filter_within_network, bt_cancel_cityfilter;
+	gui_scrolled_list_t scrolly;
+	gui_aligned_container_t list;
+	gui_label_buf_t lb_target_city;
 
-	gui_label_t sort_label;
-	button_t	sortedby;
-	button_t	sorteddir;
-	curiositylist_stats_t stats;
-	gui_scrollpane_t scrolly;
+	stadt_t *filter_city;
+	uint32 attraction_count;
 
-	/*
-	 * All filter settings are static, so they are not reset each
-	 * time the window closes.
-	 */
-	static curiositylist::sort_mode_t sortby;
-	static bool sortreverse;
+	void fill_list();
 
- public:
-	curiositylist_frame_t(karte_t * welt);
+	static char name_filter[256];
+	char last_name_filter[256];
+	gui_textinput_t name_filter_input;
 
-	/**
-	 * resize window in response to a resize event
-	 * @author Hj. Malthaner
-	 */
-	void resize(const koord delta);
+public:
+	curiositylist_frame_t(stadt_t *filter_city = NULL);
 
-	/**
-	 * Set the window associated helptext
-	 * @return the filename for the helptext, or NULL
-	 * @author V. Meyer
-	 */
-	const char * get_hilfe_datei() const {return "curiositylist_filter.txt"; }
+	const char *get_help_filename() const OVERRIDE {return "curiositylist_filter.txt"; }
 
-	 /**
-	 * This function refreshes the station-list
-	 * @author Markus Weber
-	 */
-	void display_list();
+	bool action_triggered(gui_action_creator_t*, value_t v) OVERRIDE;
 
-	static curiositylist::sort_mode_t get_sortierung() { return sortby; }
-	static void set_sortierung(const curiositylist::sort_mode_t sm) { sortby = sm; }
+	void draw(scr_coord pos, scr_size size) OVERRIDE;
 
-	static bool get_reverse() { return sortreverse; }
-	static void set_reverse(const bool& reverse) { sortreverse = reverse; }
+	void map_rotate90( sint16 ) OVERRIDE { fill_list(); }
 
-	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
+	void rdwr(loadsave_t* file) OVERRIDE;
+
+	uint32 get_rdwr_id() OVERRIDE { return magic_curiositylist; }
+
+	void set_cityfilter(stadt_t *city);
 };
 
 #endif

@@ -1,57 +1,74 @@
-#ifndef gui_messagebox_h
-#define gui_messagebox_h
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
 
-#include "gui_frame.h"
+#ifndef GUI_MESSAGEBOX_H
+#define GUI_MESSAGEBOX_H
+
+
+#include "base_info.h"
 #include "components/gui_location_view_t.h"
 #include "components/gui_image.h"
-#include "components/gui_fixedwidth_textarea.h"
 #include "../simcolor.h"
-#include "../utils/cbuffer_t.h"
+#include "../dataobj/environment.h"
 
 /**
- * Eine Klasse für Nachrichtenfenster.
- * @author Hj. Malthaner
+ * A class for Message/news window.
  */
-class news_window : public gui_frame_t
+class news_window : public base_infowin_t
 {
 public:
-	virtual PLAYER_COLOR_VAL get_titelcolor() const { return color; }
-
-	// Knightly : to extend the window with an extra component in the upper right corner
-	void extend_window_with_component(gui_komponente_t *const component, const koord size, const koord offset = koord(0,0));
+	FLAGGED_PIXVAL get_titlecolor() const OVERRIDE { return color; }
 
 protected:
-	news_window(const char* text, PLAYER_COLOR_VAL color);
+	news_window(const char* text, FLAGGED_PIXVAL color);
 
 private:
-	cbuffer_t buf;
-	gui_fixedwidth_textarea_t textarea;
-	PLAYER_COLOR_VAL color;
+	FLAGGED_PIXVAL color;
+};
+
+/**
+ * Displays fatal error message.
+ */
+class fatal_news : public news_window, private action_listener_t
+{
+	button_t copy_to_clipboard;
+
+public:
+	fatal_news(const char* text);
+
+private:
+	bool action_triggered(gui_action_creator_t *comp, value_t extra) OVERRIDE;
 };
 
 
-/* Shows a news window with an image */
+/**
+ * Shows a news window with an image
+ */
 class news_img : public news_window
 {
 public:
 	news_img(const char* text);
-	news_img(const char* text, image_id bild, PLAYER_COLOR_VAL color=WIN_TITEL);
+	news_img(const char* text, image_id image, FLAGGED_PIXVAL color = env_t::default_window_title_color);
 
 private:
-	void init(image_id bild);
-	gui_image_t bild;
+	void init(image_id image);
+	gui_image_t image;
 };
 
 
-/* Shows a news window with a view on some location */
+/**
+ * Shows a news window with a view on some location
+ */
 class news_loc : public news_window
 {
 public:
-	news_loc(karte_t* welt, const char* text, koord k, PLAYER_COLOR_VAL color = WIN_TITEL);
+	news_loc(const char* text, koord k, FLAGGED_PIXVAL color = env_t::default_window_title_color);
 
-	void map_rotate90( sint16 new_ysize );
+	void map_rotate90( sint16 new_ysize ) OVERRIDE;
 
-	virtual koord3d get_weltpos(bool);
+	koord3d get_weltpos(bool) OVERRIDE;
 
 private:
 	location_view_t view;

@@ -1,17 +1,15 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef gui_password_frame_h
-#define gui_password_frame_t_h
+#ifndef GUI_PASSWORD_FRAME_H
+#define GUI_PASSWORD_FRAME_H
 
 
 #include "components/action_listener.h"
 #include "gui_frame.h"
-#include "gui_container.h"
+#include "components/gui_container.h"
 #include "components/gui_textinput.h"
 #include "components/gui_label.h"
 
@@ -22,16 +20,16 @@ private:
 	char ibuf[256], player_name_str[256];
 
 protected:
-	spieler_t *sp;
+	player_t *player;
 
 	gui_textinput_t player_name;
 	gui_hidden_textinput_t password;
 	gui_label_t fnlabel, const_player_name;
 
 public:
-	password_frame_t( spieler_t *sp );
+	password_frame_t( player_t *player );
 
-	const char * get_hilfe_datei() const {return "password.txt";}
+	const char * get_help_filename() const OVERRIDE {return "password.txt";}
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 };

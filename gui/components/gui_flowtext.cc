@@ -1,22 +1,119 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include <string>
 #include <string.h>
 #include "../../simcolor.h"
 #include "../../simevent.h"
-#include "../../simgraph.h"
-#include "../../dataobj/translator.h"
+#include "../../display/simgraph.h"
 #include "../../utils/simstring.h"
+#include "../gui_theme.h"
 
 #include "gui_flowtext.h"
 
-gui_flowtext_t::gui_flowtext_t()
+
+/**
+ * A component for floating text.
+ * Original implementation.
+ */
+class gui_flowtext_intern_t :
+	public gui_action_creator_t,
+	public gui_component_t
+{
+public:
+	gui_flowtext_intern_t();
+
+	/**
+	 * Sets the text to display.
+	 */
+	void set_text(const char* text);
+
+	const char* get_title() const;
+
+	/**
+	 * Updates size and preferred_size.
+	 */
+	void set_size(scr_size size_par) OVERRIDE;
+
+	/**
+	 * Computes and returns preferred size.
+	 * Depends on current width.
+	 */
+	scr_size get_preferred_size();
+
+	scr_size get_text_size();
+
+	scr_coord_val get_required_text_width() { return required_width; }
+
+	/**
+	 * Paints the component
+	 */
+	void draw(scr_coord offset) OVERRIDE;
+
+	bool infowin_event(event_t const*) OVERRIDE;
+
+	/// min-width zero, to trick gui_scrollpane_t::set_size
+	scr_size get_min_size() const OVERRIDE { return scr_size(0, scr_size::inf.h); }
+
+private:
+	scr_size output(scr_coord pos, bool doit, bool return_max_width=true);
+
+	scr_size preferred_size; ///< set by set_text
+	scr_coord_val required_width; ///< set by set_text
+
+	enum attributes
+	{
+		ATT_NONE,
+		ATT_NO_SPACE, // same as none, but no trailing space
+		ATT_NEWLINE,
+		ATT_A_START,      ATT_A_END,
+		ATT_H1_START,     ATT_H1_END,
+		ATT_EM_START,     ATT_EM_END,
+		ATT_IT_START,     ATT_IT_END,
+		ATT_STRONG_START, ATT_STRONG_END,
+		ATT_UNKNOWN
+	};
+
+	struct node_t
+	{
+		node_t(const std::string &text_, attributes att_) : text(text_), att(att_) {}
+
+		std::string text;
+		attributes att;
+	};
+
+	/**
+	 * Hyperlink position container
+	 */
+	struct hyperlink_t
+	{
+		hyperlink_t(const std::string &param_) : param(param_) {}
+
+		scr_coord    tl;    // top left display position
+		scr_coord    br;    // bottom right display position
+		std::string  param;
+	};
+
+	slist_tpl<node_t>      nodes;
+	slist_tpl<hyperlink_t> links;
+	char title[128];
+
+	bool dirty;
+	scr_coord last_offset;
+};
+
+
+gui_flowtext_intern_t::gui_flowtext_intern_t()
 {
 	title[0] = '\0';
-	last_offset = koord::invalid;
+	last_offset = scr_coord::invalid;
 	dirty = true;
 }
 
 
-void gui_flowtext_t::set_text(const char *text)
+void gui_flowtext_intern_t::set_text(const char *text)
 {
 	if (text == NULL) {
 		text = "(null)";
@@ -25,8 +122,7 @@ void gui_flowtext_t::set_text(const char *text)
 	nodes.clear();
 	links.clear();
 
-	// Hajo: danger here, longest word in text
-	// must not exceed 511 chars!
+	// danger here, longest word in text must not exceed stoarge space!
 	char word[512];
 	attributes att = ATT_NONE;
 
@@ -35,6 +131,7 @@ void gui_flowtext_t::set_text(const char *text)
 
 	// hyperref param
 	std::string param;
+	bool link_it = false; // behind opening <a> tag
 
 	while (*tail) {
 		if (*lead == '<') {
@@ -45,8 +142,8 @@ void gui_flowtext_t::set_text(const char *text)
 				tail++;
 			}
 
-			// parse a tag (not allowed to exeec 511 letters)
-			for (int i = 0; *lead != '>' && *lead > 0 && i < 511; i++) {
+			// parse a tag (not allowed to exceed sizeof(word) letters)
+			for (uint i = 0; *lead != '>' && *lead > 0 && i+2 < sizeof(word); i++) {
 				lead++;
 			}
 
@@ -55,6 +152,7 @@ void gui_flowtext_t::set_text(const char *text)
 			lead++;
 
 			if (word[0] == 'p' || (word[0] == 'b' && word[1] == 'r')) {
+				// unlike http, we can have as many newlines as we like
 				att = ATT_NEWLINE;
 			}
 			else if (word[0] == 'a') {
@@ -79,10 +177,18 @@ void gui_flowtext_t::set_text(const char *text)
 					else {
 						param = "";
 					}
+					link_it = true;
 				}
 				else {
-					att = ATT_A_END;
-					links.append(hyperlink_t(param));
+					if (link_it) {
+						att = ATT_A_END;
+						links.append(hyperlink_t(param));
+						link_it = false;
+					}
+					else {
+						// ignore closing </a> without opening <a>
+						att = ATT_UNKNOWN;
+					}
 				}
 			}
 			else if (word[0] == 'h' && word[1] == '1') {
@@ -148,19 +254,19 @@ void gui_flowtext_t::set_text(const char *text)
 
 			// parse a word (and obey limits)
 			att = ATT_NONE;
-			for(  int i = 0;  *lead != '<'  &&  (*lead > 32  ||  (i==0  &&  *lead==32))  &&  i < 511  &&  *lead != '&'; i++) {
-				if(  *lead>128  &&  translator::get_lang()->utf_encoded  ) {
-					size_t skip = 0;
-					utf16 symbol = utf8_to_utf16( lead, &skip );
+			for(  uint i = 0;  *lead != '<'  &&  (*lead > 32  ||  (i==0  &&  *lead==32))  &&  i+1 < sizeof(word)  &&  *lead != '&'; i++) {
+				if(  *lead>128  ) {
+					size_t len = 0;
+					utf32 symbol = utf8_decoder_t::decode(lead, len);
 					if(  symbol == 0x3000  ) {
 						// space ...
 						break;
 					}
-					lead += skip;
-					i += skip;
+					lead += len;
+					i += len;
 					if(  symbol == 0x3001  ||  symbol == 0x3002  ) {
 						att = ATT_NO_SPACE;
-						// CJK full stop, komma, space
+						// CJK full stop, comma, space
 						break;
 					}
 					// every CJK symbol could be used to break, so break after 10 characters
@@ -194,37 +300,52 @@ void gui_flowtext_t::set_text(const char *text)
 				lead++;
 			}
 			// skip wide spaces
-			if(  translator::get_lang()->utf_encoded  ) {
-				size_t skip = 0;
-				while(  utf8_to_utf16( lead, &skip )==0x3000  ) {
-					lead += skip;
-					skip = 0;
-				}
+			utf8 const *lead_search = lead;
+			while( utf8_decoder_t::decode(lead_search) == 0x3000 ){
+				lead = lead_search;
 			}
 		}
 		tail = lead;
 	}
 	dirty = true;
+	// save size
+	preferred_size = output(scr_size(0, 0), false, true);
 }
 
 
-const char* gui_flowtext_t::get_title() const
+const char* gui_flowtext_intern_t::get_title() const
 {
 	return title;
 }
 
-
-koord gui_flowtext_t::get_preferred_size()
+void gui_flowtext_intern_t::set_size(scr_size size_par)
 {
-	return output(koord(0, 0), false);
+	gui_component_t::set_size(size_par);
+	// update preferred_size
+	preferred_size = output(scr_size(0, 0), false, true);
 }
 
-koord gui_flowtext_t::get_text_size()
+/**
+ * preferred size of text:
+ *
+ * get_preferred_size().w = max(width, maximal word length)
+ * get_preferred_size().h = displayed height
+ */
+scr_size gui_flowtext_intern_t::get_preferred_size()
 {
-	return output(koord(0, 0), false, false);
+	return preferred_size;
+	// cached result of output(scr_size(0, 0), false, true);
 }
 
-void gui_flowtext_t::zeichnen(koord offset)
+/**
+ * wider than current width
+ */
+scr_size gui_flowtext_intern_t::get_text_size()
+{
+	return output(scr_size(0, 0), false, false);
+}
+
+void gui_flowtext_intern_t::draw(scr_coord offset)
 {
 	offset += pos;
 	if(offset!=last_offset) {
@@ -235,65 +356,70 @@ void gui_flowtext_t::zeichnen(koord offset)
 }
 
 
-koord gui_flowtext_t::output(koord offset, bool doit, bool return_max_width)
+scr_size gui_flowtext_intern_t::output(scr_coord offset, bool doit, bool return_max_width)
 {
-	const int width = groesse.x;
+	const int width = size.w-D_MARGINS_X;
 
 	slist_tpl<hyperlink_t>::iterator link = links.begin();
 
-	int xpos         = 0;
-	int ypos         = 0;
-	int color        = COL_BLACK;
-	int double_color = COL_BLACK;
-	bool double_it   = false;
-	bool link_it     = false;	// true, if currently underlining for a link
-	int extra_pixel  = 0;		// extra pixel before next line
-	int last_link_x  = 0;		// at this position ye need to continue underline drawing
+	int xpos            = 0;
+	int ypos            = 0;
+	PIXVAL color        = SYSCOL_TEXT;
+	PIXVAL double_color = SYSCOL_TEXT_SHADOW;
+	bool double_it      = false;
+	bool link_it        = false; // true, if currently underlining for a link
+	int extra_pixel     = 0;     // extra pixel before next line
+	int last_link_x     = 0;     // at this position ye need to continue underline drawing
 	int max_width    = width;
 	int text_width   = width;
 	const int space_width = proportional_string_width(" ");
 
+	required_width = 0;
 	FOR(slist_tpl<node_t>, const& i, nodes) {
 		switch (i.att) {
 			case ATT_NONE:
 			case ATT_NO_SPACE: {
 				int nxpos = xpos + proportional_string_width(i.text.c_str());
+				required_width = max(nxpos, required_width);
+
+				if (nxpos >= text_width) {
+					text_width = nxpos;
+				}
+				// too wide
+				if(  nxpos >= width  ) {
+					if (nxpos - xpos > max_width) {
+						// word too long
+						max_width = nxpos-xpos;
+					}
+					nxpos -= xpos; // now word length, new xpos after linebreak
+
+					if (xpos > 0) {
+						if(  xpos!=last_link_x  &&  link_it  ) {
+							if(  doit  ) {
+								// close the link
+								display_fillbox_wh_clip_rgb( offset.x + last_link_x + D_MARGIN_LEFT, ypos + offset.y + LINESPACE-1, xpos-last_link_x, 1, color, false);
+							}
+							extra_pixel = 1;
+						}
+						xpos = 0;
+						last_link_x = 0;
+						ypos += LINESPACE+extra_pixel;
+						extra_pixel = 0;
+					}
+				}
 				if(  i.att ==  ATT_NONE  ) {
 					// add trailing space
 					nxpos += space_width;
 				}
 
-				// too wide, but only single character at left border ...
-				if(  nxpos >= width  &&  xpos>LINESPACE  ) {
-					if (nxpos - xpos > max_width) {
-						// word too long
-						max_width = nxpos;
-					}
-					nxpos -= xpos;
-					if(  xpos!=last_link_x  &&  link_it  ) {
-						if(  doit  ) {
-							// close the link
-							display_fillbox_wh_clip( offset.x + last_link_x, ypos + offset.y + LINESPACE-1, xpos-last_link_x, 1, color, false);
-						}
-						extra_pixel = 1;
-					}
-					xpos = 0;
-					last_link_x = 0;
-					ypos += LINESPACE+extra_pixel;
-					extra_pixel = 0;
-				}
-				if (nxpos >= text_width) {
-					text_width = nxpos;
-				}
-
 				if (doit) {
 					if (double_it) {
-						display_proportional_clip(offset.x + xpos + 1, offset.y + ypos + 1, i.text.c_str(), 0, double_color, false);
+						display_proportional_clip_rgb(offset.x + xpos + 1 + D_MARGIN_LEFT, offset.y + ypos + 1, i.text.c_str(), 0, double_color, false);
 						extra_pixel |= 1;
 					}
-					KOORD_VAL width = display_proportional_clip(offset.x + xpos, offset.y + ypos, i.text.c_str(), 0, color, false);
+					scr_coord_val width = display_proportional_clip_rgb(offset.x + xpos + D_MARGIN_LEFT, offset.y + ypos, i.text.c_str(), 0, color, false);
 					if(  link_it  ) {
-						display_fillbox_wh_clip( offset.x + last_link_x, ypos + offset.y + LINESPACE-1, (xpos+width)-last_link_x, 1, color, false);
+						display_fillbox_wh_clip_rgb( offset.x + last_link_x + D_MARGIN_LEFT, ypos + offset.y + LINESPACE-1, (xpos+width)-last_link_x, 1, color, false);
 						last_link_x = xpos+width;
 					}
 				}
@@ -309,7 +435,7 @@ koord gui_flowtext_t::output(koord offset, bool doit, bool return_max_width)
 				if(  last_link_x<xpos  &&  link_it  ) {
 					if(  doit  ) {
 						// close the link
-						display_fillbox_wh_clip( offset.x + last_link_x, ypos + offset.y + LINESPACE-1, xpos-last_link_x, 1, color, false);
+						display_fillbox_wh_clip_rgb( offset.x + last_link_x + D_MARGIN_LEFT, ypos + offset.y + LINESPACE-1, xpos-last_link_x, 1, color, false);
 					}
 					extra_pixel = 1;
 				}
@@ -319,7 +445,7 @@ koord gui_flowtext_t::output(koord offset, bool doit, bool return_max_width)
 				break;
 
 			case ATT_A_START:
-				color = COL_BLUE;
+				color = SYSCOL_TEXT_TITLE;
 				// link == links.end() if there is an endtag </a> is missing
 				if (link!=links.end()) {
 					link->tl.x = xpos;
@@ -334,100 +460,158 @@ koord gui_flowtext_t::output(koord offset, bool doit, bool return_max_width)
 				link->br.y = ypos + LINESPACE;
 				++link;
 				link_it = false;
-				color = COL_BLACK;
+				color = SYSCOL_TEXT;
 				break;
 
 			case ATT_H1_START:
-				color        = COL_WHITE;
-				double_color = COL_BLACK;
+				color        = SYSCOL_TEXT_TITLE;
 				double_it    = true;
 				break;
 
 			case ATT_H1_END:
-				color     = COL_BLACK;
 				double_it = false;
 				if(doit) {
-					display_fillbox_wh_clip(offset.x + 1, offset.y + ypos + LINESPACE, xpos, 1, COL_WHITE, false);
-					display_fillbox_wh_clip(offset.x,     offset.y + ypos + LINESPACE-1,     xpos, 1, color, false);
+					display_fillbox_wh_clip_rgb(offset.x + 1 + D_MARGIN_LEFT, offset.y + ypos + LINESPACE,   xpos, 1, color,        false);
+					display_fillbox_wh_clip_rgb(offset.x + D_MARGIN_LEFT,     offset.y + ypos + LINESPACE-1, xpos, 1, double_color, false);
 				}
 				xpos = 0;
 				extra_pixel = 0;
 				ypos += LINESPACE+2;
+				color = SYSCOL_TEXT;
 				break;
 
 			case ATT_EM_START:
-				color = COL_WHITE;
+				color = SYSCOL_TEXT_HIGHLIGHT;
 				break;
 
 			case ATT_EM_END:
-				color = COL_BLACK;
+				color = SYSCOL_TEXT;
 				break;
 
 			case ATT_IT_START:
-				color        = COL_BLACK;
-				double_color = COL_YELLOW;
-				double_it    = true;
+				color     = SYSCOL_TEXT_HIGHLIGHT;
+				double_it = true;
 				break;
 
 			case ATT_IT_END:
+				color     = SYSCOL_TEXT;
 				double_it = false;
 				break;
 
 			case ATT_STRONG_START:
 				if(  !double_it  ) {
-					color = COL_RED;
+					color = SYSCOL_TEXT_STRONG;
 				}
 				break;
 
 			case ATT_STRONG_END:
 				if(  !double_it  ) {
-					color = COL_BLACK;
+					color = SYSCOL_TEXT;
 				}
 				break;
 
 			default: break;
 		}
 	}
+	ypos += LINESPACE;
 	if(dirty) {
-		mark_rect_dirty_wc( offset.x, offset.y, offset.x+max_width, offset.y+ypos+LINESPACE );
+		mark_rect_dirty_wc( offset.x + D_MARGIN_LEFT, offset.y, offset.x+max_width + D_MARGIN_LEFT, offset.y+ypos );
 		dirty = false;
 	}
-	return koord( return_max_width ? max_width : text_width, ypos + LINESPACE);
+	return scr_size( (return_max_width ? max_width : text_width)+D_MARGINS_X, ypos);
 }
 
 
-bool gui_flowtext_t::infowin_event(const event_t* ev)
+bool gui_flowtext_intern_t::infowin_event(const event_t* ev)
 {
 	if (IS_LEFTCLICK(ev)) {
 		// scan links for hit
-		koord evpos = koord( ev->cx, ev->cy ) - get_pos();
+		scr_coord evpos = scr_coord( ev->cx, ev->cy ); // - get_pos();
 		FOR(slist_tpl<hyperlink_t>, const& link, links) {
 			if(  link.tl.y+LINESPACE == link.br.y  ) {
 				if(  link.tl.x <= evpos.x  &&  evpos.x < link.br.x  &&  link.tl.y <= evpos.y  &&  evpos.y < link.br.y  ) {
 					call_listeners((void const*)link.param.c_str());
-					break;
+					return true;
 				}
 			}
 			else {
 				//  multi lined box => more difficult
-				if(  link.tl.x <= evpos.x  &&  evpos.x < get_groesse().x  &&  link.tl.y <= evpos.y  &&  evpos.y < link.tl.y+LINESPACE  ) {
+				if(  link.tl.x <= evpos.x  &&  evpos.x < get_size().w  &&  link.tl.y <= evpos.y  &&  evpos.y < link.tl.y+LINESPACE  ) {
 					// in top line
 					call_listeners((void const*)link.param.c_str());
-					break;
+					return true;
 				}
 				else if(  0 <= evpos.x  &&  evpos.x < link.br.x  &&  link.br.y-LINESPACE <= evpos.y  &&  evpos.y < link.br.y  ) {
 					// in last line
 					call_listeners((void const*)link.param.c_str());
-					break;
+					return true;
 				}
-				else if(  0 <= evpos.x  &&  evpos.x < get_groesse().x  &&  link.tl.y+LINESPACE <= evpos.y  &&  evpos.y < link.br.y-LINESPACE  ) {
+				else if(  0 <= evpos.x  &&  evpos.x < get_size().w  &&  link.tl.y+LINESPACE <= evpos.y  &&  evpos.y < link.br.y-LINESPACE  ) {
 					// line in between
 					call_listeners((void const*)link.param.c_str());
-					break;
+					return true;
 				}
 
 			}
 		}
 	}
+	return false;
+}
+
+
+/** Implementation of the wrapping class **/
+
+gui_flowtext_t::gui_flowtext_t() : gui_scrollpane_t(NULL, true, true)
+{
+	flowtext = new gui_flowtext_intern_t();
+	set_component(flowtext);
+	flowtext->add_listener(this);
+}
+
+gui_flowtext_t::~gui_flowtext_t()
+{
+	delete flowtext;
+	flowtext = NULL;
+}
+
+
+void gui_flowtext_t::set_text(const char* text)
+{
+	flowtext->set_text(text);
+}
+
+
+const char* gui_flowtext_t::get_title() const
+{
+	return flowtext->get_title();
+}
+
+
+void gui_flowtext_t::set_size(scr_size size_par)
+{
+	gui_scrollpane_t::set_size(size_par);
+	// compute and set height
+	flowtext->set_size( flowtext->get_preferred_size() );
+
+	// recalc twice to get correct scrollbar visibility
+	recalc_sliders(get_size());
+	recalc_sliders(get_size());
+}
+
+
+scr_size gui_flowtext_t::get_preferred_size()
+{
+	return flowtext->get_preferred_size();
+}
+
+scr_coord_val gui_flowtext_t::get_required_text_width()
+{
+	return flowtext->get_required_text_width()+D_MARGINS_X;
+}
+
+
+bool gui_flowtext_t::action_triggered(gui_action_creator_t*, value_t extra)
+{
+	call_listeners(extra);
 	return true;
 }

@@ -1,102 +1,337 @@
 /*
- * just displays a text, will be auto-translated
- *
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#include <stdio.h>
-#include <string.h>
-
-#include "../../simdebug.h"
 #include "gui_label.h"
-#include "../../simgraph.h"
-#include "../../simcolor.h"
+#include "../gui_frame.h"
 #include "../../dataobj/translator.h"
 #include "../../utils/simstring.h"
-#include "../../simwin.h"
+#include "../simwin.h"
 
+#include "../../display/simgraph.h"
 
-gui_label_t::gui_label_t(const char* text, COLOR_VAL color_, align_t align_) :
-	align(align_),
-	color(color_),
-	tooltip(NULL)
+/*
+ * just displays a text, will be auto-translated
+ */
+
+static scr_coord_val separator_width = 0;
+static scr_coord_val large_money_width = 0;
+
+gui_label_t::gui_label_t(const char* text, PIXVAL color_, align_t align_) :
+	align(align_), tooltip(NULL)
 {
-	set_text( text );
+	separator_width = proportional_string_width( ",00$" );
+
+	if (get_large_money_string()) {
+		cbuffer_t buf;
+		buf.printf("%s$", get_large_money_string());
+		large_money_width = proportional_string_width((const char*) buf);
+	}
+	else {
+		large_money_width = 0;
+	}
+
+	set_size( scr_size( D_BUTTON_WIDTH, D_LABEL_HEIGHT ) );
+	init( text, scr_coord (0,0), color_, align_);
+	shadowed = false;
+	min_size = scr_size(0, 0);
 }
 
 
-void gui_label_t::set_text(const char *text)
+void gui_label_t::set_min_size(scr_size s)
 {
-	set_text_pointer(translator::translate(text));
+	min_size = s+padding+padding;
 }
 
 
-void gui_label_t::set_text_pointer(const char *text)
+void gui_label_t::set_fixed_width(const scr_coord_val width)
 {
-	this->text = text;
+	set_min_size(scr_size(width+padding.w*2, size.h));
+	fixed_width = width + padding.w*2;
+}
 
-	if (text) {
-		koord groesse;
-		groesse.x = display_calc_proportional_string_len_width(text,strlen(text));
-		groesse.y = large_font_total_height;
-		set_groesse(groesse);
+
+scr_size gui_label_t::get_min_size() const
+{
+	if (fixed_width) {
+		return scr_size(fixed_width, D_LABEL_HEIGHT + padding.h*2);
+	}
+	return scr_size( max(min_size.w, (text ? display_calc_proportional_string_len_width(text,strlen(text)) : D_BUTTON_WIDTH)+padding.w*2), D_LABEL_HEIGHT+padding.h*2);
+}
+
+scr_size gui_label_t::get_max_size() const
+{
+	if (fixed_width) {
+		return get_min_size();
+	}
+	return align == left  ? scr_size(max(get_min_size().w, size.w), get_min_size().h) : scr_size(scr_size::inf.w, get_min_size().h);
+}
+
+
+void gui_label_t::set_text(const char *text, bool autosize)
+{
+	if (text != NULL) {
+		set_text_pointer(translator::translate(text), autosize);
+	}
+	else {
+		set_text_pointer(NULL, false);
 	}
 }
 
 
-void gui_label_t::zeichnen(koord offset)
+void gui_label_t::set_text_pointer(const char *text_par, bool autosize)
 {
-	if(align == money) {
+	text = text_par;
+
+	if (autosize && text && *text != '\0') {
+		set_size( scr_size( display_calc_proportional_string_len_width(text,strlen(text))+padding.w*2,size.h ) );
+	}
+}
+
+
+void gui_label_t::draw(scr_coord offset)
+{
+	if(  align == money_right) {
 		if(text) {
-			const char *seperator = NULL;
-			if(  strrchr(text, '$')!=NULL  ) {
-				seperator = strrchr(text, get_fraction_sep());
-				if(seperator==NULL  &&  get_large_money_string()!=NULL) {
-					seperator = strrchr(text, *(get_large_money_string()) );
+			const char *separator = NULL;
+			const bool not_a_number = atol(text)==0  &&  !isdigit(*text)  &&  *text != '-';
+
+			scr_coord right = pos + offset - padding;
+
+			if(  !not_a_number  ) {
+				// find first letter of large_money_width in text
+				if (get_large_money_string()!=NULL) {
+					separator = strrchr(text, *(get_large_money_string()) );
+					if (separator) {
+						right.x += get_size().w - large_money_width;
+					}
+				}
+				// look for fraction_sep (e.g., comma)
+				if (separator==NULL) {
+					// everything else align at decimal separator
+					right.x += get_size().w - separator_width;
+					separator = strrchr(text, get_fraction_sep());
 				}
 			}
-			if(seperator) {
-				display_proportional_clip(pos.x+offset.x, pos.y+offset.y, seperator, DT_DIRTY|ALIGN_LEFT, color, true);
-				if(  seperator!=text  ) {
-					display_text_proportional_len_clip(pos.x+offset.x, pos.y+offset.y, text, DT_DIRTY|ALIGN_RIGHT, color, seperator-text );
+
+			if(separator) {
+				display_proportional_clip_rgb(right.x, right.y, separator, ALIGN_LEFT, color, true);
+				if(  separator!=text  ) {
+					if (shadowed) {
+						display_text_proportional_len_clip_rgb(right.x+1, right.y+1, text, ALIGN_RIGHT | DT_CLIP, color_shadow, true, separator - text);
+					}
+					display_text_proportional_len_clip_rgb(right.x, right.y, text, ALIGN_RIGHT | DT_CLIP, color, true, separator-text );
+				}
+				if (underlined) {
+					display_fillbox_wh_clip_rgb(right.x, right.y + LINEASCENT - 1, proportional_string_width(separator)+2, 1, color, true);
 				}
 			}
 			else {
-				display_proportional_clip(pos.x+offset.x, pos.y+offset.y, text, ALIGN_RIGHT, color, true);
+				// integer or normal text
+				if (shadowed) {
+					display_proportional_clip_rgb(right.x + 1, right.y + 1, text, ALIGN_RIGHT | DT_CLIP, color_shadow, true);
+				}
+				display_proportional_clip_rgb(right.x, right.y, text, ALIGN_RIGHT, color, true);
+				if (underlined) {
+					display_fillbox_wh_clip_rgb(right.x, right.y + LINEASCENT - 1, proportional_string_width(text)+2, 1, color, true);
+				}
 			}
 		}
 	}
-	else if(text) {
-		int al;
 
-		switch(align) {
-			case left:
-				al = ALIGN_LEFT;
-				break;
-			case centered:
-				al = ALIGN_MIDDLE;
-				break;
-			case right:
-				al = ALIGN_RIGHT;
-				break;
-			default:
-				al = ALIGN_LEFT;
-		}
-		display_proportional_clip(pos.x+offset.x, pos.y+offset.y, text, al, color, true);
+	else if(text) {
+		const scr_coord offset_left = scr_coord((align==left) ? padding.w:0, 0);
+		const scr_rect area( offset+pos+offset_left, size );
+		int a = align == left ? ALIGN_LEFT : ( align == right ? ALIGN_RIGHT : ALIGN_CENTER_H);
+		display_proportional_ellipsis_rgb( area, text,  a | DT_CLIP| ALIGN_CENTER_V, color, true, shadowed, color_shadow, underlined );
 	}
 
-	if ( tooltip  &&  getroffen(get_maus_x()-offset.x, get_maus_y()-offset.y) ) {
+	if ( tooltip  &&  getroffen(get_mouse_x()-offset.x, get_mouse_y()-offset.y) ) {
+		const scr_coord_val by = offset.y + pos.y;
+		const scr_coord_val bh = size.h;
 
-		const KOORD_VAL by = offset.y + pos.y;
-		const KOORD_VAL bh = groesse.y;
-
-		win_set_tooltip(get_maus_x() + 16, by + bh + 12, tooltip, this);
+		win_set_tooltip(get_mouse_x() + TOOLTIP_MOUSE_OFFSET_X, by + bh + TOOLTIP_MOUSE_OFFSET_Y, tooltip, this);
 	}
 }
 
 void gui_label_t::set_tooltip(const char * t)
 {
 	tooltip = t;
+}
+
+
+void gui_label_buf_t::init(PIXVAL color_par, align_t align_par)
+{
+	gui_label_t::init(NULL, get_pos(), color_par, align_par);
+	buf_changed = false;
+}
+
+
+void gui_label_buf_t::update()
+{
+	buffer_read = buffer_write;
+	buffer_write.clear();
+	gui_label_t::set_text_pointer( (const char*)buffer_read, false /*no autoresize*/ );
+	buf_changed = false;
+}
+
+
+void gui_label_buf_t::draw(scr_coord offset)
+{
+	if (buf_changed) {
+		update();
+	}
+	gui_label_t::draw(offset);
+}
+
+
+void gui_label_buf_t::append_money(double money)
+{
+	buffer_write.append_money(money);
+	set_color(money >= 0 ? MONEY_PLUS : MONEY_MINUS);
+}
+
+
+void gui_label_updown_t::draw(scr_coord offset)
+{
+	cbuffer_t text;
+	text.clear();
+	if (!show_border_value && value == border) {
+		text.append("-");
+	}
+	else{
+		text.append(abs(value), align == money_right ? 2 : 0);
+	}
+
+	if (align == money_right) {
+		const char *separator = NULL;
+
+		// position of separator
+		scr_coord right = pos + offset;
+		if (align == money_right) {
+			right.x += get_size().w - separator_width;
+		}
+
+		separator = strrchr(text, get_fraction_sep());
+		if (separator == NULL && get_large_money_string() != NULL) {
+			separator = strrchr(text, *(get_large_money_string()));
+		}
+
+		if (separator) {
+			display_proportional_clip_rgb(right.x, right.y, separator, ALIGN_LEFT, color, true);
+			if (separator != text) {
+				display_text_proportional_len_clip_rgb(right.x, right.y, text, ALIGN_RIGHT | DT_CLIP, color, true, separator - text);
+			}
+		}
+		else {
+			// integer numbers without decimals, align at decimal separator
+			display_proportional_clip_rgb(right.x, right.y, text, ALIGN_RIGHT, color, true);
+		}
+
+		display_fluctuation_triangle_rgb(right.x - LINEASCENT + 3, right.y + LINESPACE/6, LINEASCENT*2/3, true, value);
+	}
+	else {
+		display_fluctuation_triangle_rgb(pos.x + offset.x, pos.y + offset.y + LINESPACE/6, LINEASCENT*2/3, true, value);
+		const scr_rect area(offset + pos + scr_coord(LINEASCENT,0), size);
+		int a = align == left ? ALIGN_LEFT : (align == right ? ALIGN_RIGHT : ALIGN_CENTER_H);
+		display_proportional_ellipsis_rgb(area, text, a | DT_CLIP, color, true);
+	}
+
+	if (tooltip  &&  getroffen(get_mouse_x() - offset.x, get_mouse_y() - offset.y)) {
+		const scr_coord_val by = offset.y + pos.y;
+		const scr_coord_val bh = size.h;
+
+		win_set_tooltip(get_mouse_x() + TOOLTIP_MOUSE_OFFSET_X, by + bh + TOOLTIP_MOUSE_OFFSET_Y, tooltip, this);
+	}
+}
+
+
+void gui_data_bar_t::draw(scr_coord offset)
+{
+	if (max == 0) { return; }
+	size.w = fixed_width;
+	cbuffer_t text;
+	text.clear();
+	uint32 tmp = 10000 * value / max;
+	if (show_value) {
+		text.append(value);
+	}
+	if (show_percentage) {
+		if (show_value) {
+			text.append(" (");
+		}
+		text.printf(show_digit ? "%4.1f%%" : "%3.0f%%", tmp/100.0);
+		if (show_value) {
+			text.append(")");
+		}
+	}
+	const scr_coord_val color_bar_width = (tmp+99)*size.w/10000;
+	display_linear_gradient_wh_rgb(pos.x + offset.x, pos.y + offset.y, color_bar_width, size.h, bar_color, 70, 15);
+	const scr_rect area(offset + pos, size);
+	display_proportional_ellipsis_rgb(area, text, ALIGN_RIGHT | DT_CLIP, color, true);
+
+	if (tooltip  &&  getroffen(get_mouse_x() - offset.x, get_mouse_y() - offset.y)) {
+		const scr_coord_val by = offset.y + pos.y;
+		const scr_coord_val bh = size.h;
+
+		win_set_tooltip(get_mouse_x() + TOOLTIP_MOUSE_OFFSET_X, by + bh + TOOLTIP_MOUSE_OFFSET_Y, tooltip, this);
+	}
+}
+
+
+gui_heading_t::gui_heading_t(const char* text, PIXVAL color_, PIXVAL frame_color_, uint8 style_) :
+	tooltip(NULL)
+{
+	set_size(scr_size(D_DEFAULT_WIDTH - D_MARGINS_X, D_HEADING_HEIGHT+(style_==0)*4));
+	init(text, scr_coord(0, 0), color_, frame_color_, style_);
+}
+
+void gui_heading_t::draw(scr_coord offset)
+{
+	if (text) {
+		display_heading_rgb(pos.x + offset.x, pos.y + offset.y, get_size().w, get_size().h, text_color, frame_color, text, true, style);
+	}
+	if (tooltip  &&  getroffen(get_mouse_x() - offset.x, get_mouse_y() - offset.y)) {
+		const scr_coord_val by = offset.y + pos.y;
+		const scr_coord_val bh = size.h;
+
+		win_set_tooltip(get_mouse_x() + TOOLTIP_MOUSE_OFFSET_X, by + bh + TOOLTIP_MOUSE_OFFSET_Y, tooltip, this);
+	}
+}
+
+void gui_heading_t::set_text(const char *text)
+{
+	if(text != NULL){
+		this->text = translator::translate(text);
+	}
+	else {
+		this->text = NULL;
+	}
+}
+
+scr_size gui_heading_t::get_min_size() const
+{
+	return scr_size(min(D_DEFAULT_WIDTH, get_size().w), get_size().h);
+}
+
+
+void gui_label_with_symbol_t::draw(scr_coord offset)
+{
+	display_color_img(imageid, pos.x+offset.x, pos.y+offset.y + D_GET_CENTER_ALIGN_OFFSET(10,D_LABEL_HEIGHT), 0, false, false);
+	offset.x += 14;
+	gui_label_buf_t::draw(offset);
+}
+
+scr_size gui_label_with_symbol_t::get_min_size() const
+{
+	return scr_size(gui_label_buf_t::get_min_size().w+14, D_LABEL_HEIGHT);
+}
+
+scr_size gui_label_with_symbol_t::get_max_size() const
+{
+	if (fixed_width) {
+		return get_min_size();
+	}
+	return align == left ? scr_size(max(get_min_size().w, size.w), get_min_size().h) : scr_size(scr_size::inf.w, get_min_size().h);
 }

@@ -1,7 +1,7 @@
 /*
  * Apple OSX Core Audio MIDI routine added by Leopard
  *
- * This file is part of the Simutrans project under the artistic licence.
+ * This file is part of the Simutrans-Extended project under the artistic licence.
  *
  */
 
@@ -51,14 +51,19 @@ void dr_play_midi(int const key)
 
 void dr_stop_midi()
 {
-	// We assume the 'nowPlaying' key holds the most recently started track.
-	QTMovie* const m = [movies objectAtIndex: nowPlaying];
-	[m stop];
+	if(  nowPlaying!= -1  ) {
+		// We assume the 'nowPlaying' key holds the most recently started track.
+		QTMovie* const m = [movies objectAtIndex: nowPlaying];
+		[m stop];
+	}
 }
 
 
-long dr_midi_pos()
+sint32 dr_midi_pos()
 {
+	if (nowPlaying == -1) {
+		return -1;
+	}
 	float const rate = [[movies objectAtIndex: nowPlaying] rate];
 	return rate > 0 ? 0 : -1;
 }

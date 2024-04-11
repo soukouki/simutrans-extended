@@ -1,35 +1,33 @@
 /*
- * Copyright (c) 1997 - 2003 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/** @file powernet.h Data structure to manage a net of powerlines - a powernet */
+#ifndef DATAOBJ_POWERNET_H
+#define DATAOBJ_POWERNET_H
 
-#ifndef powernet_t_h
-#define powernet_t_h
 
 #include "../simtypes.h"
 #include "../tpl/slist_tpl.h"
 
 
+/** @file powernet.h Data structure to manage a net of powerlines - a powernet */
+
+
 /**
  * Data class for power networks. A two phase queue to store
  * and hand out power.
- * @author Hj. Malthaner
  */
 class powernet_t
 {
 public:
 	/**
 	 * Must be called when a new map is started or loaded. Clears the table of networks.
-	 * @author Hj. Malthaner
 	 */
-	static void neue_karte();
+	static void new_world();
 
 	/// Steps all powernets
-	static void step_all(long delta_t);
+	static void step_all(uint32 delta_t);
 
 private:
 	static slist_tpl<powernet_t *> powernet_list;
@@ -46,8 +44,8 @@ private:
 	/// Power demand in current step
 	uint64 this_demand;
 
-	/// Just transfers power demand and supply to current step
-	void step(long delta_t);
+	// Just transfers power demand and supply to current step
+	void step(uint32 delta_t);
 
 public:
 	powernet_t();

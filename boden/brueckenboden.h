@@ -1,33 +1,49 @@
-#ifndef brueckenboden_h
-#define brueckenboden_h
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef BODEN_BRUECKENBODEN_H
+#define BODEN_BRUECKENBODEN_H
+
 
 #include "grund.h"
+
 
 class brueckenboden_t : public grund_t
 {
 private:
-	uint8 weg_hang;
+	uint8 weg_hang; ///< for e.g. ramps
 
 protected:
-	void calc_bild_internal();
+	/// @copydoc grund_t::calc_image_internal
+	void calc_image_internal(const bool calc_only_snowline_change) OVERRIDE;
 
 public:
-	brueckenboden_t(karte_t *welt, loadsave_t *file, koord pos ) : grund_t( welt, koord3d(pos,0) ) { rdwr(file); }
-	brueckenboden_t(karte_t *welt, koord3d pos, int grund_hang, int weg_hang);
+	brueckenboden_t(loadsave_t *file, koord pos ) : grund_t(koord3d(pos,0) ) { rdwr(file); }
+	brueckenboden_t(koord3d pos, int grund_hang, int weg_hang);
 
-	virtual void rdwr(loadsave_t *file);
+public:
+	/// @copydoc grund_t::rdwr
+	virtual void rdwr(loadsave_t *file) OVERRIDE;
 
-	// map rotation
-	virtual void rotate90();
+	/// @copydoc grund_t::rotate90
+	virtual void rotate90() OVERRIDE;
 
-	virtual sint8 get_weg_yoff() const;
+	/// @copydoc grund_t::get_weg_yoff
+	virtual sint8 get_weg_yoff() const OVERRIDE;
 
-	hang_t::typ get_weg_hang() const { return weg_hang; }
+	/// @copydoc grund_t::get_weg_hang
+	slope_t::type get_weg_hang() const OVERRIDE { return weg_hang; }
 
-	const char *get_name() const {return "Brueckenboden";}
-	typ get_typ() const { return brueckenboden; }
+	/// @copydoc grund_t::get_name
+	const char *get_name() const OVERRIDE { return "Brueckenboden"; }
 
-	void info(cbuffer_t & buf, bool dummy = false) const;
+	/// @copydoc grund_t::get_typ
+	typ get_typ() const OVERRIDE { return brueckenboden; }
+
+	/// @copydoc grund_t::info
+	void info(cbuffer_t & buf) const OVERRIDE;
 };
 
 #endif

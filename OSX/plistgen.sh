@@ -1,11 +1,16 @@
 #!/bin/sh
 
+#
+# This file is part of the Simutrans-Extended project under the Artistic License.
+# (see LICENSE.txt)
+#
+
 date=`date +%Y`
 
 PROG="$2"
 COPYRIGHT="Copyright 1997-${date} by the simutrans team"
 if [ -z "$3" ]; then
- VERSION="`OSX/getversion`"
+ VERSION="`../OSX/getversion`"
 else
  VERSION=$3
 fi
@@ -15,7 +20,7 @@ echo "$VERSION"
 
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\"
-\"http://www.apple.com/DTDs/Prop$
+\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
 <plist version=\"1.0\">
 <dict>
         <key>CFBundleDevelopmentRegion</key>

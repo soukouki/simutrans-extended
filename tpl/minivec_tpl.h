@@ -1,5 +1,11 @@
-#ifndef TPL_MINIVEC_H
-#define TPL_MINIVEC_H
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef TPL_MINIVEC_TPL_H
+#define TPL_MINIVEC_TPL_H
+
 
 #include "../simdebug.h"
 #include "../simtypes.h"
@@ -82,7 +88,7 @@ public:
 
 	/**
 	 * Checks if element is contained. Appends only new elements.
-	 * extend vector if nessesary
+	 * extend vector if necessary
 	 */
 	bool append_unique(T elem, uint8 extend)
 	{

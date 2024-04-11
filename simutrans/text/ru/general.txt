@@ -1,0 +1,23 @@
+<title>Справка - о переводе</title>
+
+<h1>О переводе</h1>
+
+<p>
+Данный перевод игры Simutrans выполнил <strong>Семиченков Александр</strong>.<br>
+Перевод Simutrans-Extended продолжил и доработал <strong>Григорьев Владимир</strong> основываясь на верси перевода для Standart-версии.<br>
+Все комментарии, замечания, предложения и сообщения об ошибках направляйте по адресу электронной почты grivlad0@gmail.com
+</p>
+
+<p>
+Официальная страница Simutrans находится по адресу <strong>http://simutrans.de</strong>.<br>
+Русскоязычный форум <strong>http://forum.simutrans.com/index.php?board=79.0</strong>.
+</p>
+
+<p>
+Дата обновления данного перевода: 22.08.2017 г.<br>
+Актуально для версии Simutrans 120.2.1 Extended<br>
+</p>
+
+<p>
+<strong>Simutrans (c) Hj. Malthaner</strong>
+</p>

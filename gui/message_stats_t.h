@@ -1,58 +1,36 @@
 /*
- * Copyright (c) 1997 - 2003 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef message_stats_t_h
-#define message_stats_t_h
+#ifndef GUI_MESSAGE_STATS_T_H
+#define GUI_MESSAGE_STATS_T_H
 
-#include "components/gui_komponente.h"
-#include "../simimg.h"
+
+#include "components/gui_aligned_container.h"
+#include "components/gui_scrolled_list.h"
 #include "../simmesg.h"
-#include "../tpl/slist_tpl.h"
 
-class karte_t;
 
 /**
- * City list stats display
- * @author Hj. Malthaner
+ * Message display
  */
-class message_stats_t : public gui_komponente_t
+class message_stats_t : public gui_aligned_container_t, public gui_scrolled_list_t::scrollitem_t
 {
 private:
-	karte_t *welt;
-	message_t *msg;
-	sint32 message_type;								// Knightly : message type for filtering; -1 indicates no filtering
-	uint32 last_count;
-	sint32 message_selected;
-	const slist_tpl<message_t::node *> *message_list;	// Knightly : points to the active message list (original or filtered)
-	slist_tpl<message_t::node *> filtered_messages;		// Knightly : cache the list of messages belonging to a certain type
+	const message_t::node *msg;
+	uint32 sortid; // sortid reflects the order in message_t
 
 public:
-	message_stats_t(karte_t *welt);
-	virtual ~message_stats_t() { filtered_messages.clear(); }
+	message_stats_t(const message_t::node *m, uint32 sid);
 
-	/**
-	 * Filter messages by type
-	 * @return whether there is a change in message filtering
-	 * @author Knightly
-	 */
-	bool filter_messages(const sint32 msg_type);
+	const message_t::node* get_msg() const { return msg; }
 
-	bool infowin_event(event_t const*) OVERRIDE;
+	char const* get_text() const OVERRIDE { return msg->msg; }
 
-	/**
-	* Recalc the current size required to display everything, and set komponente groesse
-	*/
-	void recalc_size();
+	bool infowin_event(const event_t * ev) OVERRIDE;
 
-	/**
-	 * Zeichnet die Komponente
-	 * @author Hj. Malthaner
-	 */
-	void zeichnen(koord offset);
+	static bool compare(const gui_component_t *a, const gui_component_t *b );
 };
 
 #endif

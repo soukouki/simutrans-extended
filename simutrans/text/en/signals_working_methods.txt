@@ -1,0 +1,20 @@
+<title>Signals working methods</title>
+
+<h1>Signals working methods</h1><br><br>
+
+<em>Since the dawn of railways,</em> the biggest problem has always been to ensure that two trains are not running into each other. This has resulted in the development of various safety systems, rules, technical safety instruments etc.<br>
+Signals in Simutrans Extended are working with so called "working methods", which are corresponding to specigic real life techniques of rail signalling. The working methods will determine how the signal behaves and which rules the train will follow when passing the signal. The working method is the most essential parameter of the signal, as all other functionallity will depend on it. Different working methods represents different real life rail systems, and there are different signals available to the various working methods.<br><br>
+
+The working methods available are these:<br><br>
+<a href="signals_wm_drive_by_sight.txt"><em>Drive by sight</em></a><br>
+<a href="signals_wm_one_train_staff.txt"><em>One train staff</em></a><br>
+<a href="signals_wm_time_interval.txt"><em>Time interval</em></a><br>
+<a href="signals_wm_time_interval_with_telegraph.txt"><em>Time interval with telegraph</em></a><br>
+<a href="signals_wm_token_block.txt"><em>Token block</em></a><br>
+<a href="signals_wm_absolute_block.txt"><em>Absolute block</em></a><br>
+<a href="signals_wm_track_circuit_block.txt"><em>Track circuit block</em></a><br>
+<a href="signals_wm_cab_signalling.txt"><em>Cab signalling</em></a><br>
+<a href="signals_wm_moving_block.txt"><em>Moving block</em></a><br>
+<br><br>
+
+Dependent on the pakset there will be a different amount of working methods available at any given time, from the first inventions to the latest technology. Some of the working methods are more suited for double tracks than for single tracks, some are suited for dead end tracks, some are suited for high capacity lines. Click on each working method to learn more about how a particular working method is working and is best used.

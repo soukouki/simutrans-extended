@@ -1,6 +1,6 @@
 /*
- * Dialogue to set the signal spacing, when CTRL+clicking a signal on toolbar
- * Used by wkz_roadsign_t
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include "gui_frame.h"
@@ -10,63 +10,77 @@
 #include "components/gui_numberinput.h"
 
 #include "signal_spacing.h"
-#include "../simwerkz.h"
+#include "../simworld.h"
+#include "../simtool.h"
 
-uint8 signal_spacing_frame_t::signal_spacing = 2;
+
+uint16 signal_spacing_frame_t::signal_spacing = 16;
 bool signal_spacing_frame_t::remove = true;
 bool signal_spacing_frame_t::replace = true;
+bool signal_spacing_frame_t::backward = false;
+koord3d signal_spacing_frame_t::signalbox = koord3d::invalid;
 
-signal_spacing_frame_t::signal_spacing_frame_t(spieler_t *sp_, wkz_roadsign_t* tool_) :
-	gui_frame_t( translator::translate("set signal spacing") ),
-	signal_label("signal spacing")
+signal_spacing_frame_t::signal_spacing_frame_t(player_t *player_, tool_build_roadsign_t* tool_) :
+	gui_frame_t( translator::translate("set signal spacing") )
 {
-	sp = sp_;
+	player = player_;
 	tool = tool_;
-	tool->get_values(sp, signal_spacing, remove, replace);
+	tool->get_values(player, signal_spacing, remove, replace, backward, signalbox);
 
-	int intTopOfButton = 12;
+	set_table_layout(3,0);
 
-	signal_label.set_pos( koord(10, intTopOfButton+2) );
-	signal_label.set_groesse(koord(10, 50));
-	add_komponente( &signal_label );
+	new_component<gui_label_t>("signal spacing");
+	new_component<gui_fill_t>();
 
-	signal_spacing_inp.set_pos( koord(140,intTopOfButton) );
-	signal_spacing_inp.set_groesse(koord(50,12));
+	add_table(2,1);
 	signal_spacing_inp.add_listener(this);
-	signal_spacing_inp.set_limits(1,50);
-	signal_spacing_inp.set_value(signal_spacing);
-	signal_spacing_inp.set_increment_mode(1);
-	add_komponente( &signal_spacing_inp );
-	intTopOfButton += 12+4;
+	signal_spacing_meter = signal_spacing * welt->get_settings().get_meters_per_tile();
+	signal_spacing_inp.init(signal_spacing_meter, 1*welt->get_settings().get_meters_per_tile(), 128*welt->get_settings().get_meters_per_tile(), welt->get_settings().get_meters_per_tile(), true, 4);
+	add_component( &signal_spacing_inp );
+	new_component<gui_label_t>("m");
+	end_table();
 
-	remove_button.init(button_t::square_state,"remove interm. signals", koord(10,intTopOfButton), koord(100,10));
+	remove_button.init( button_t::square_state, "remove interm. signals");
 	remove_button.add_listener(this);
 	remove_button.pressed = remove;
-	add_komponente( &remove_button );
-	intTopOfButton += 12;
+	add_component( &remove_button, 3);
 
-	replace_button.init(button_t::square_state,"replace other signals", koord(10,intTopOfButton), koord(100,10));
+	replace_button.init( button_t::square_state, "replace other signals");
 	replace_button.add_listener(this);
 	replace_button.pressed = replace;
-	add_komponente( &replace_button );
-	intTopOfButton += 12+4;
+	add_component( &replace_button, 3);
 
-	set_fenstergroesse( koord(110+80+10, intTopOfButton+38) );
+	backward_button.init( button_t::square_state, "place signals backward");
+	backward_button.add_listener(this);
+	backward_button.pressed = backward;
+	add_component( &backward_button, 3);
+
+	reset_min_windowsize();
+	set_windowsize(get_min_windowsize() );
 }
 
-bool signal_spacing_frame_t::action_triggered( gui_action_creator_t *komp, value_t)
+bool signal_spacing_frame_t::action_triggered( gui_action_creator_t *comp, value_t)
 {
-	if( komp == &signal_spacing_inp ) {
-		signal_spacing = signal_spacing_inp.get_value();
+	if( comp == &signal_spacing_inp ) {
+		signal_spacing = signal_spacing_inp.get_value() / (welt->get_settings().get_meters_per_tile());
 	}
-	else if( komp == &remove_button ) {
+	else if( comp == &remove_button ) {
 		remove = !remove;
 		remove_button.pressed = remove;
 	}
-	else if( komp == &replace_button ) {
+	else if( comp == &replace_button ) {
 		replace = !replace;
 		replace_button.pressed = replace;
 	}
-	tool->set_values(sp, signal_spacing, remove, replace);
+	else if( comp == &backward_button ) {
+		backward = !backward;
+		backward_button.pressed = backward;
+		replace = !backward;
+		replace_button.pressed = !backward;
+		remove  = !backward;
+		remove_button.pressed = !backward;
+
+	}
+	tool->set_values(player, signal_spacing, remove, replace, backward, signalbox);
 	return true;
 }

@@ -1,39 +1,36 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
- *
- * @author Dwachs
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/*
- * An input field for integer numbers (with arrow buttons for dec/inc)
- * @author Dwachs
- */
+#ifndef GUI_COMPONENTS_GUI_NUMBERINPUT_H
+#define GUI_COMPONENTS_GUI_NUMBERINPUT_H
 
-#ifndef gui_components_gui_numberinput_h
-#define gui_components_gui_numberinput_h
 
+#include "../../simtypes.h"
+#include "../../display/scr_coord.h"
+#include "action_listener.h"
 #include "gui_action_creator.h"
 #include "gui_textinput.h"
 #include "gui_button.h"
-#include "../../simtypes.h"
-#include "../../dataobj/koord.h"
-#include "action_listener.h"
+#include "../gui_theme.h"
 
-#define NUM_PERCENT (8)
 
+/**
+ * An input field for integer numbers (with arrow buttons for dec/inc)
+ */
 class gui_numberinput_t :
 	public gui_action_creator_t,
-	public gui_komponente_t,
+	public gui_component_t,
 	public action_listener_t
 {
 private:
 	bool check_value(sint32 _value);
 
+	scr_coord_val max_numbertext_width;
+
 	// more sophisticated increase routines
-	static sint8 percent[NUM_PERCENT];
+	static sint8 percent[7];
 	sint32 get_prev_value();
 	sint32 get_next_value();
 
@@ -50,24 +47,28 @@ private:
 
 	sint32 min_value, max_value;
 
+	// number of digits,
+	// used to determine min size
+	uint16 digits;
+
 	char textbuffer[20];
 
 	sint32 step_mode;
 
-	bool wrapping:1;
-	bool b_enabled:1;
+	bool wrapping : 1;
+	bool b_enabled : 1;
+	bool no_tooltip : 1;
 
 	// since only the last will prevail
 	static char tooltip[256];
 
 public:
 	gui_numberinput_t();
-	virtual ~gui_numberinput_t() {}
 
-	void set_groesse(koord groesse) OVERRIDE;
+	void set_size(scr_size size) OVERRIDE;
 
 	// all init in one ...
-	void init( sint32 value, sint32 min, sint32 max, sint32 mode, bool wrap );
+	void init( sint32 value, sint32 min, sint32 max, sint32 mode = 1, bool wrap = true, uint16 digits = 5, bool tooltip=true);
 
 	/**
 	 * sets and get the current value.
@@ -81,12 +82,18 @@ public:
 	 */
 	void set_limits(sint32 _min, sint32 _max);
 
-	enum { AUTOLINEAR=0, POWER2=-1, PROGRESS=-2 };
+	enum {
+		AUTOLINEAR = 0,
+		PLAIN      = 1,
+		POWER2     = -1,
+		PROGRESS   = -2
+	};
+
 	/**
 	 * AUTOLINEAR: linear increment, scroll wheel 1% range
 	 * POWER2: 16, 32, 64, ...
 	 * PROGRESS: 0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100% of range
-	 * any other mode value: actual step size
+	 * PLAIN: actual step size
 	 */
 
 	void set_increment_mode( sint32 m ) { step_mode = m; }
@@ -102,16 +109,29 @@ public:
 
 	/**
 	 * Draw the component
-	 * @author Dwachs
 	 */
-	void zeichnen(koord offset);
+	void draw(scr_coord offset) OVERRIDE;
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
-	void enable() { b_enabled = true; set_focusable(true); bt_left.enable(); bt_right.enable(); }
-	void disable() { b_enabled = false; set_focusable(false); bt_left.disable(); bt_right.disable(); }
+	void enable() { b_enabled = true; set_focusable(true); bt_left.enable(); bt_right.enable(); set_value(value); }
+	void disable() { b_enabled = false; set_focusable(false); bt_left.disable(); bt_right.disable(); set_value(value); }
 	bool enabled() const { return b_enabled; }
-	virtual bool is_focusable() { return b_enabled && gui_komponente_t::is_focusable(); }
+	bool is_focusable() OVERRIDE { return b_enabled && gui_component_t::is_focusable(); }
+	void enable( bool yesno ) {
+		if( yesno && !gui_component_t::is_focusable() ) {
+			enable();
+		}
+		else if( !yesno  &&  gui_component_t::is_focusable() ) {
+			disable();
+		}
+	}
+
+	void allow_tooltip(bool b) { no_tooltip = !b; }
+
+	scr_size get_max_size() const OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE;
 };
 
 #endif

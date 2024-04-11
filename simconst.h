@@ -1,24 +1,30 @@
 /*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef SIMCONST_H
+#define SIMCONST_H
+
+
+/*
  * all defines that can change the compiling
  */
 
-#ifndef simconst_h
-#define simconst_h
+// color depth (default assumes RGB565), undefine only for rgb555 builds!
+//#define RGB555
 
 // number of player
 #define MAX_PLAYER_COUNT (16)
 #define PLAYER_UNOWNED (15)
 
-/* Flag for Intel byte order
+/* Flag for non Intel byte order
  * SET THIS IN YOUR COMPILER COMMAND LINE!
  */
-//#define LITTLE_ENDIAN
+//#define SIM_BIG_ENDIAN
 
 /* crossconnect industry and half heights like openTTD */
 //#define OTTD_LIKE
-
-/* two inclinations per pixel */
-//#define DOUBLE_GROUNDS
 
 /* single height is only 8 pixel (default 16) */
 //#define HALF_HEIGHT
@@ -29,35 +35,32 @@
 /* construct automatic tunnels also as active player */
 //#define AUTOMATIC_TUNNELS
 
-/* citycars have a destination; if they could get near, they dissolve */
-#define DESTINATION_CITYCARS
-
 /* need to emulate the mouse pointer with a graphic */
 //#define USE_SOFTPOINTER
 
-/* Use C implementation of image drawing routines
- * needed i.e. for MSVC and PowerPC */
-//#define USE_C
+/* Use assembly imepmentation of routines if available
+* Some routines, eg for drawing, can have assembly implementations for certaint platforms that may perform better */
+#define USE_ASSEMBLER
 
-// maximum distance to look ahead for tiles (if undefined, it is unlimited)
-#define MAX_CHOOSE_BLOCK_TILES (64)
+/* Use low level C/C++ implementations of routines
+ * Some routines, eg for drawing, can have low level C++ implementations that might perform better on certain platforms */
+#define LOW_LEVEL
 
 // The wind (i.e. approach direction) is random all over the map (not recommended, since it confuses players)
 //#define USE_DIFFERENT_WIND
 
-// define this for automaticcally joining stations next to a public stop with it
+// define this for automatically joining stations next to a public stop with it
 //#define AUTOJOIN_PUBLIC
-
-// vector_tpl can be faster for sync_lists
-#define SYNC_VECTOR
 
 // allow minspeed and private way signs on waterways (imho pointless)
 //#define ENABLE_WATERWAY_SIGNS
 
+// Maximum number of threads
+#define MAX_THREADS (12)
 
 /*********************** Useful things for debugging ... ********************/
 
-/* will highlite marked areas and convoi will leave traces */
+/* will highlight marked areas and convoi will leave traces */
 //#define DEBUG_ROUTES
 
 /* shows which tiles are drawn as dings (used in boden/grund.cc) */
@@ -80,17 +83,13 @@
 
 
 // inclination types
-#ifndef DOUBLE_GROUNDS
-// constants used in tools wkz_setslope / wkz_restoreslope_t
-#define ALL_UP_SLOPE (16)
-#define ALL_DOWN_SLOPE (17)
-#define RESTORE_SLOPE (18)
-#else
-// double height (two slopes per tile) definitions
+// constants used in tools tool_setslope / tool_restoreslope_t
 #define ALL_UP_SLOPE (82)
 #define ALL_DOWN_SLOPE (83)
 #define RESTORE_SLOPE (84)
-#endif
+#define ALL_UP_SLOPE_SINGLE (16)
+#define ALL_DOWN_SLOPE_SINGLE (17)
+#define RESTORE_SLOPE_SINGLE (18)
 
 
 // 16 internal pixels per tile, for purposes of object visual offsets.
@@ -104,11 +103,5 @@
 // offsets for mouse pointer
 #define Z_PLAN (4)
 #define Z_GRID (0)
-
-
-// sanity check: USE_C if not GCC and not intel 32bit
-#if !defined USE_C && (!defined __GNUC__ || !defined __i386__)
-#	define USE_C
-#endif
 
 #endif

@@ -1,8 +1,6 @@
-/* csv.cc
- *
- * CSV encoding/decoding class
- * Feb 2012
- * by Timothy Baldock <tb@entropy.me.uk>
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include <cstring>
@@ -124,7 +122,7 @@ void CSV_t::add_field (const char *newfield)
 		// If we don't do this after a call to add_field()
 		// the next call to get_next_field() would always
 		// return an empty string, as offset would point to
-		// the comma preceeding the last field, rather than
+		// the comma preceding the last field, rather than
 		// the last field itself
 		if (  offset == strlen( contents.get_str() )  ) {
 			offset++;
@@ -156,7 +154,7 @@ int CSV_t::encode( const char *text, cbuffer_t& output )
 
 	// not empty?
 	if(  *text  ) {
-		// If text contains a comma, quote, or a linebrak, needs to be wrapped in quote marks
+		// If text contains a comma, quote, or a line break, needs to be wrapped in quote marks
 		wrap = strpbrk( text, ",\"\r\n" )!=0;
 
 		// If text has leading or trailing spaces, must be wrapped in quotes

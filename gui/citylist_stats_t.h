@@ -1,55 +1,117 @@
 /*
- * Copyright (c) 1997 - 2003 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/*
- * Where the citylist status are calculated (for graphs and statistics)
- */
-
-#ifndef CITYLIST_STATS_T_H
-#define CITYLIST_STATS_T_H
-
-#include "components/gui_komponente.h"
-#include "../tpl/vector_tpl.h"
+#ifndef GUI_CITYLIST_STATS_T_H
+#define GUI_CITYLIST_STATS_T_H
 
 
-class karte_t;
+#include "components/gui_aligned_container.h"
+#include "components/gui_label.h"
+#include "components/gui_scrolled_list.h"
+#include "../simcity.h"
+
+#include "components/gui_image.h"
+
 class stadt_t;
 
 
-namespace citylist {
-	enum sort_mode_t { by_name=0, by_size, by_growth, SORT_MODES };
+#include "components/gui_speedbar.h"
+/**
+ * Helper class to show a panel whose contents are switched according to the mode
+ */
+class gui_city_stats_t : public gui_aligned_container_t
+{
+	stadt_t* city;
+	cbuffer_t buf;
+
+	sint32 update_seed = 0;
+	uint8 mode = 255;
+	gui_bandgraph_t bandgraph;
+
+	int num[4];
+
+public:
+	gui_city_stats_t(stadt_t *c);
+
+	void update_table();
+
+	void draw(scr_coord offset) OVERRIDE;
 };
 
 
 // City list stats display
-class citylist_stats_t : public gui_komponente_t
+class citylist_stats_t : public gui_aligned_container_t, public gui_scrolled_list_t::scrollitem_t
 {
 private:
-	karte_t *welt;
-	vector_tpl<stadt_t*> city_list;
-	uint32 line_selected;
+	stadt_t* city;
 
-	citylist::sort_mode_t sortby;
-	bool sortreverse;
+	gui_label_buf_t lb_name;
+	gui_image_t electricity;
+	void update_label();
 
 public:
-	static char total_bev_string[128];
+	enum sort_mode_t {
+		SORT_BY_NAME = 0,
+		SORT_BY_SIZE,
+		SORT_BY_GROWTH,
+		SORT_BY_JOBS,
+		SORT_BY_VISITOR_DEMANDS,
+		SORT_BY_TRANSPORTED,
+		SORT_BY_RATIO_PAX,
+		SORT_BY_SENT,
+		SORT_BY_RATIO_MAIL,
+		SORT_BY_GOODS_DEMAND,
+		SORT_BY_GOODS_RECEIVED,
+		SORT_BY_RATIO_GOODS,
+		SORT_BY_LAND_AREA,
+		SORT_BY_POPULATION_DENSITY,
+		SORT_BY_REGION,
+#ifdef DEBUG
+		SORT_BY_JOB_DEMAND,
+		SORT_BY_RES_DEMAND,
+#endif // DEBUG
+		SORT_MODES
+	};
 
-	citylist_stats_t(karte_t* welt, citylist::sort_mode_t sortby, bool sortreverse);
+	enum stats_mode_t {
+		cl_general,
+		cl_population,
+		cl_jobs,
+		cl_visitor_demand,
+		pax_traffic,
+		mail_traffic,
+		goods_traffic,
+		goods_demand,
+		goods_product,
+#ifdef DEBUG
+		dbg_demands,
+#endif // DEBUG
+		CITYLIST_MODES
+	};
 
-	void sort(citylist::sort_mode_t sortby, bool sortreverse);
+	gui_city_stats_t *swichable_info;
 
-	bool infowin_event(event_t const*) OVERRIDE;
+	static uint8 sort_mode, region_filter, display_mode;
+	static bool sortreverse, filter_own_network;
+	static uint16 name_width;
 
-	// Recalc the current size required to display everything, and set component size
-	void recalc_size();
+	// Used to adjust the graph scale
+	static uint32 world_max_value;
+	static void recalc_wold_max();
 
-	// Draw the component
-	void zeichnen(koord offset);
+public:
+	citylist_stats_t(stadt_t *);
+
+	void draw( scr_coord pos) OVERRIDE;
+
+	char const* get_text() const OVERRIDE { return city->get_name(); }
+	bool is_valid() const OVERRIDE;
+	bool infowin_event(const event_t *) OVERRIDE;
+	void set_size(scr_size size) OVERRIDE;
+
+	static bool compare(const gui_component_t *a, const gui_component_t *b);
 };
 
 #endif

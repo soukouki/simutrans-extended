@@ -1,14 +1,15 @@
 /*
- * This file is part of the Simutrans project under the artistic license.
- * (see license.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include <stdio.h>
 #include <assert.h>
+#include <algorithm>
 
 #include "../utils/float32e8_t.h"
 #include "../simworld.h"
-#include "../besch/haus_besch.h"
+#include "../descriptor/building_desc.h"
 #include "../dataobj/loadsave.h"
 #include "../dataobj/scenario.h"
 #include "simplay.h"
@@ -18,9 +19,8 @@
 
 /**
  * initialize finance history arrays
- * @author Jan Korbel
  */
-finance_t::finance_t(spieler_t * _player, karte_t * _world) :
+finance_t::finance_t(player_t * _player, karte_t * _world) :
 	player(_player),
 	world(_world)
 {
@@ -144,7 +144,7 @@ void finance_t::calc_finance_history()
 	for( int j=0; j< ATV_MAX; ++j ) {
 		veh_month[TT_ALL][0][j] =0;
 		for( int tt=1; tt<TT_MAX; ++tt ) {
-			// do not add poverline revenue to vehicles revenue
+			// do not add powerline revenue to vehicles revenue
 			if ( ( tt != TT_POWERLINE ) || ( j >= ATV_REVENUE )) {
 				veh_month[TT_ALL][0][j] += veh_month[tt][0][j];
 			}
@@ -153,7 +153,7 @@ void finance_t::calc_finance_history()
 	for( int j=0; j< ATV_MAX; ++j ) {
 		veh_year[TT_ALL][0][j] =0;
 		for( int tt=1; tt<TT_MAX; ++tt ) {
-			// do not add poverline revenue to vehicles revenue
+			// do not add powerline revenue to vehicles revenue
 			if ( ( tt != TT_POWERLINE ) || ( j >= ATV_REVENUE )) {
 				veh_year[TT_ALL][0][j] += veh_year[tt][0][j];
 			}
@@ -178,25 +178,8 @@ void finance_t::calc_finance_history()
 sint64 finance_t::get_maintenance_with_bits(transport_type tt) const
 {
 	assert(tt<TT_MAX);
-	return world->calc_adjusted_monthly_figure( (sint64)maintenance[tt] );
+	return world->calc_adjusted_monthly_figure( maintenance[tt] );
 }
-
-
-/**
- * Simworld.cc will shut down and remove any player except #1 and #2 who
- * satisfies these conditions
- */
-bool finance_t::is_bankrupted() const
-{
-	// Must have no convois and no infrastructure as well as being "bust"
-	return (
-		account_balance < ( com_month[0][ATC_HARD_CREDIT_LIMIT] )  &&
-		veh_year[TT_ALL][0][ATV_INFRASTRUCTURE_MAINTENANCE] == 0  &&
-		maintenance[TT_ALL] == 0  &&
-		com_year[0][ATC_ALL_CONVOIS] == 0
-	);
-}
-
 
 void finance_t::new_month()
 {
@@ -222,7 +205,8 @@ void finance_t::new_month()
 /**
  * Books interest expense or profit.
  */
-void finance_t::book_interest_monthly() {
+void finance_t::book_interest_monthly()
+{
 	// This handles both interest on cash balance and interest on loans.
 	// Rate is yearly rate for debt; rate for credit is 1/4 of that.  (Fix this.)
 	const sint64 interest_rate = (sint64)world->get_settings().get_interest_rate_percent();
@@ -235,21 +219,22 @@ void finance_t::book_interest_monthly() {
 			// Credit interest rate is 1/4 of debt interest rate.
 			interest /= (float32e8_t)4;
 		}
-		// Apply to the current account balance, positive or negative
+		// Apply to the current account balance, only if in debt.
+		// Credit interest, which applied in earlier versions, unbalanced the game.
 		interest *= (float32e8_t)get_account_balance();
 		// Due to the limitations of float32e8, interest can only go up to +-2^31 per month.
 		// Hopefully this won't be an issue.  It will report errors if it is.
 		// This would require an account balance of over +-257 billion.
 		sint32 booked_interest = interest;*/
 
-		sint64 interest; 
+		sint64 interest;
 		if(get_account_balance() < 0)
 		{
 			interest = (interest_rate * get_account_balance()) / 1200ll;
 		}
 		else
 		{
-			interest = (interest_rate * get_account_balance()) / 4800ll;
+			interest = 0;
 		}
 
 		com_year[0][ATC_INTEREST] += interest;
@@ -258,12 +243,13 @@ void finance_t::book_interest_monthly() {
 	}
 }
 
-void finance_t::calc_credit_limits() {
+void finance_t::calc_credit_limits()
+{
 	sint64 hard_limit_by_profits = credit_limit_by_profits();
 	sint64 hard_limit_by_assets = credit_limit_by_assets();
 
 	// The player gets the better of the two credit limits.  Remember that they are negative.
-	sint64 hard_credit_limit = min(hard_limit_by_profits, hard_limit_by_assets);
+	sint64 hard_credit_limit = std::min(hard_limit_by_profits, hard_limit_by_assets);
 	assert(hard_credit_limit <= 0);
 
 	// Soft credit limit is a percentage of the hard credit limit
@@ -289,7 +275,8 @@ void finance_t::calc_credit_limits() {
  * Calculates a credit limit based on past year's profitability
  * (ability to cover interest costs).
  */
-sint64 finance_t::credit_limit_by_profits() const {
+sint64 finance_t::credit_limit_by_profits() const
+{
 	// The idea is that yearly profits should cover yearly interest
 	// Look back 12 months (full year's profit)
 	sint64 profit_total=0;
@@ -326,7 +313,8 @@ sint64 finance_t::credit_limit_by_profits() const {
  * Calculates an asset-based credit limit.
  * Secured borrowing against assets.
  */
-sint64 finance_t::credit_limit_by_assets() const {
+sint64 finance_t::credit_limit_by_assets() const
+{
 	// Can borrow against potentially all assets.
 	sint64 hard_limit_by_assets = - get_history_veh_month(TT_ALL, 0, ATV_NON_FINANCIAL_ASSETS);
 	// The following deals with potential bugs.
@@ -340,10 +328,10 @@ sint64 finance_t::credit_limit_by_assets() const {
 void finance_t::rdwr(loadsave_t *file)
 {
 	// detailed statistic were introduced in this version
-	if( file->get_version() < 112005 ) {
+	if( file->is_version_less(112, 5) ) {
 		rdwr_compatibility(file);
 		if ( file->is_loading() ) {
-			// Loaded hard credit limit will be wrong, fix it quick to avoid bankruptcies
+			// Loaded hard credit limit will be wrong, fix it quick to avoid spurious insolvency
 			calc_credit_limits();
 		}
 		return;
@@ -351,11 +339,11 @@ void finance_t::rdwr(loadsave_t *file)
 
 	/* following lines enables FORWARD compatibility
 	/ you will be still able to load future versions of games with:
-	* 	longer history
-	*	more transport_types
-	*	and new items in ATC_ or ATV_
-	* Warning: experimental adds three lines to ATC_ immediately, with version 112005.
-	* If Standard adds lines to ATC_, we must make adjustments by pushing the experimental lines "down".
+	*   longer history
+	*   more transport_types
+	*   and new items in ATC_ or ATV_
+	* Warning: extended adds three lines to ATC_ immediately, with version 112005.
+	* If Standard adds lines to ATC_, we must make adjustments by pushing the extended lines "down".
 	*/
 	sint8 max_years  = MAX_PLAYER_HISTORY_YEARS;
 	sint8 max_months = MAX_PLAYER_HISTORY_MONTHS;
@@ -518,6 +506,24 @@ transport_type finance_t::translate_waytype_to_tt(const waytype_t wt)
 	}
 }
 
+waytype_t finance_t::translate_tt_to_waytype(const transport_type tt)
+{
+	switch (tt)
+	{
+		case TT_ROAD:			return road_wt;
+		case TT_RAILWAY:		return track_wt;
+		case TT_SHIP:			return water_wt;
+		case TT_MONORAIL:		return monorail_wt;
+		case TT_MAGLEV:			return maglev_wt;
+		case  TT_TRAM:			return tram_wt;
+		case TT_NARROWGAUGE:	return narrowgauge_wt;
+		case  TT_AIR:			return air_wt;
+		case TT_POWERLINE:		return powerline_wt;
+		case TT_OTHER:			return overheadlines_wt;
+		default:				return ignore_wt;
+	}
+}
+
 
 /** compatibility code follows **/
 
@@ -525,92 +531,29 @@ transport_type finance_t::translate_waytype_to_tt(const waytype_t wt)
 #define OLD_MAX_PLAYER_HISTORY_MONTHS  (12) // number of months to keep history
 
 enum player_cost {
-	COST_CONSTRUCTION=0,// Construction
-	COST_VEHICLE_RUN,   // Vehicle running costs
-	COST_NEW_VEHICLE,   // New vehicles
-	COST_INCOME,        // Income
-	COST_MAINTENANCE,   // Upkeep
-	COST_ASSETS,        // value of all vehicles and buildings
-	COST_CASH,          // Cash
-	COST_NETWEALTH,     // Total Cash + Assets
-	COST_PROFIT,        // COST_POWERLINES+COST_INCOME-(COST_CONSTRUCTION+COST_VEHICLE_RUN+COST_NEW_VEHICLE+COST_MAINTENANCE)
-	COST_OPERATING_PROFIT, // COST_POWERLINES+COST_INCOME-(COST_VEHICLE_RUN+COST_MAINTENANCE)+COST_INTEREST
-	COST_MARGIN,        // COST_OPERATING_PROFIT/COST_INCOME
-	COST_ALL_TRANSPORTED, // all transported goods
-	COST_POWERLINES,	  // revenue from the power grid
-	COST_TRANSPORTED_PAS,	// number of passengers that actually reached destination
+	COST_CONSTRUCTION=0,     // Construction
+	COST_VEHICLE_RUN,        // Vehicle running costs
+	COST_NEW_VEHICLE,        // New vehicles
+	COST_INCOME,             // Income
+	COST_MAINTENANCE,        // Upkeep
+	COST_ASSETS,             // value of all vehicles and buildings
+	COST_CASH,               // Cash
+	COST_NETWEALTH,          // Total Cash + Assets
+	COST_PROFIT,             // COST_POWERLINES+COST_INCOME-(COST_CONSTRUCTION+COST_VEHICLE_RUN+COST_NEW_VEHICLE+COST_MAINTENANCE)
+	COST_OPERATING_PROFIT,   // COST_POWERLINES+COST_INCOME-(COST_VEHICLE_RUN+COST_MAINTENANCE)+COST_INTEREST
+	COST_MARGIN,             // COST_OPERATING_PROFIT/COST_INCOME
+	COST_ALL_TRANSPORTED,    // all transported goods
+	COST_POWERLINES,         // revenue from the power grid
+	COST_TRANSPORTED_PAS,    // number of passengers that actually reached destination
 	COST_TRANSPORTED_MAIL,
 	COST_TRANSPORTED_GOOD,
-	COST_ALL_CONVOIS,		// number of convois
-	COST_SCENARIO_COMPLETED,// scenario success (only useful if there is one ... )
+	COST_ALL_CONVOIS,        // number of convois
+	COST_SCENARIO_COMPLETED, // scenario success (only useful if there is one ... )
 	COST_WAY_TOLLS,
-	COST_INTEREST,		// From experimental
-	COST_CREDIT_LIMIT	// From experimental
+	COST_INTEREST,		// From extended
+	COST_CREDIT_LIMIT	// From extended
 	// OLD_MAX_PLAYER_COST = 21
 };
-
-
-int finance_t::translate_index_cost_to_atc(const int cost_index)
-{
-	static int cost_to_atc_indices[] = {
-		-1,		// COST_CONSTRUCTION
-		-1,		// COST_VEHICLE_RUN
-		-1,		// COST_NEW_VEHICLE
-		-1,		// COST_INCOME
-		-1,		// COST_MAINTENANCE
-		-1,		// COST_ASSETS
-		ATC_CASH,	// COST_CASH - cash can not be assigned to transport type
-		ATC_NETWEALTH,	// COST_NETWEALTH -||-
-		-1,		// COST_PROFIT
-		-1,		// COST_OPERATING_PROFIT
-		-1,		// COST_MARGIN
-		-1,	        // COST_ALL_TRANSPORTED
-		-1,		// ATV_COST_POWERLINES
-		-1,		// COST_TRANSPORTED_PAS
-		-1,		// COST_TRANSPORTED_MAIL
-		-1,		// COST_TRANSPORTED_GOOD
-		ATC_ALL_CONVOIS,        // COST_ALL_CONVOIS
-		ATC_SCENARIO_COMPLETED, // COST_SCENARIO_COMPLETED,// scenario success (only useful if there is one ... )
-		-1,		// COST_WAY_TOLLS,
-		ATC_INTEREST,		// COST_INTEREST
-		ATC_SOFT_CREDIT_LIMIT,		// COST_CREDIT_LIMIT
-		ATC_MAX		// OLD_MAX_PLAYER_COST
-	};
-
-	return (cost_index < OLD_MAX_PLAYER_COST) ? cost_to_atc_indices[cost_index] :  -1;
-}
-
-
-// returns -1 or -2 if not found !!
-// -1 --> set this value to 0, -2 -->use value from old statistic
-int finance_t::translate_index_cost_to_at(int cost_index) {
-	static int indices[] = {
-		ATV_CONSTRUCTION_COST,  // COST_CONSTRUCTION
-		ATV_RUNNING_COST,       // COST_VEHICLE_RUN
-		ATV_NEW_VEHICLE,        // COST_NEW_VEHICLE
-		ATV_REVENUE_TRANSPORT,  // COST_INCOME
-		ATV_INFRASTRUCTURE_MAINTENANCE, // COST_MAINTENANCE
-		ATV_NON_FINANCIAL_ASSETS,// COST_ASSETS
-		-2,                     // COST_CASH - cash can not be assigned to transport type
-		-2,                     // COST_NETWEALTH -||-
-		ATV_PROFIT,             // COST_PROFIT
-		ATV_OPERATING_PROFIT,   // COST_OPERATING_PROFIT
-		ATV_PROFIT_MARGIN,      // COST_MARGIN
-		ATV_TRANSPORTED,        // COST_ALL_TRANSPORTED
-		-1,                     // ATV_COST_POWERLINES
-		ATV_DELIVERED_PASSENGER, // COST_TRANSPORTED_PAS
-		ATV_DELIVERED_MAIL,     // COST_TRANSPORTED_MAIL
-		ATV_DELIVERED_GOOD,     // COST_TRANSPORTED_GOOD
-		-2,                     // COST_ALL_CONVOIS
-		-2,                     // COST_SCENARIO_COMPLETED,// scenario success (only useful if there is one ... )
-		ATV_WAY_TOLL,           // COST_WAY_TOLLS,
-		-2,						// COST_INTEREST,
-		-2,						// COST_CREDIT_LIMIT
-		ATV_MAX                 // OLD_MAX_PLAYER_COST
-	};
-
-	return (cost_index < OLD_MAX_PLAYER_COST) ? indices[cost_index] :  -2;
-}
 
 
 void finance_t::export_to_cost_month(sint64 finance_history_month[][OLD_MAX_PLAYER_COST])
@@ -754,7 +697,7 @@ void finance_t::import_from_cost_year( const sint64 finance_history_year[][OLD_M
 		veh_year[TT_OTHER][i][ATV_TRANSPORTED_GOOD]  = finance_history_year[i][COST_ALL_TRANSPORTED];
 		veh_year[TT_ALL  ][i][ATV_TRANSPORTED_GOOD]  = finance_history_year[i][COST_ALL_TRANSPORTED];
 		veh_year[TT_OTHER][i][ATV_TRANSPORTED]       = finance_history_year[i][COST_ALL_TRANSPORTED];
-		veh_year[TT_ALL  ][i][ATV_TRANSPORTED]       = finance_history_year[i][COST_ALL_TRANSPORTED]; 
+		veh_year[TT_ALL  ][i][ATV_TRANSPORTED]       = finance_history_year[i][COST_ALL_TRANSPORTED];
 		veh_year[TT_POWERLINE][i][ATV_REVENUE]       = finance_history_year[i][COST_POWERLINES];
 		veh_year[TT_OTHER][i][ATV_DELIVERED_PASSENGER] = finance_history_year[i][COST_TRANSPORTED_PAS];
 		veh_year[TT_ALL  ][i][ATV_DELIVERED_PASSENGER] = finance_history_year[i][COST_TRANSPORTED_PAS];
@@ -804,15 +747,15 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 		}
 	}
 
-	if( ( file->get_version() < 112005 ) && ( ! file->is_loading() ) ) { // for saving of game in old format
+	if( ( file->is_version_less(112, 5) ) && ( ! file->is_loading() ) ) { // for saving of game in old format
 		export_to_cost_month( finance_history_month );
 		export_to_cost_year( finance_history_year );
 	}
-	if (file->get_version() < 84008) {
+	if (file->is_version_less(84, 8)) {
 		// not so old save game
 		for (int year = 0;year<OLD_MAX_PLAYER_HISTORY_YEARS;year++) {
 			for (int cost_type = 0; cost_type<OLD_MAX_PLAYER_COST; cost_type++) {
-				if (file->get_version() < 84007) {
+				if (file->get_version_int() < 84007) {
 					// a cost_type has has been added. For old savegames we only have 9 cost_types, now we have 10.
 					// for old savegames only load 9 types and calculate the 10th; for new savegames load all 10 values
 					if (cost_type < 9) {
@@ -826,7 +769,7 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if (file->get_version() < 86000) {
+	else if (file->is_version_less(86, 0)) {
 		for (int year = 0;year<OLD_MAX_PLAYER_HISTORY_YEARS;year++) {
 			for (int cost_type = 0; cost_type<10; cost_type++) {
 				file->rdwr_longlong(finance_history_year[year][cost_type]);
@@ -839,7 +782,7 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if (file->get_version() < 99011) {
+	else if (file->is_version_less(99, 11)) {
 		// powerline category missing
 		for (int year = 0;year<OLD_MAX_PLAYER_HISTORY_YEARS;year++) {
 			for (int cost_type = 0; cost_type<12; cost_type++) {
@@ -852,7 +795,7 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if (file->get_version() < 99017) {
+	else if (file->is_version_less(99, 17)) {
 		// without detailed goo statistics
 		for (int year = 0;year<OLD_MAX_PLAYER_HISTORY_YEARS;year++) {
 			for (int cost_type = 0; cost_type<13; cost_type++) {
@@ -865,7 +808,7 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if(  file->get_version()<=102002 && file->get_experimental_version() <= 1 ) {
+	else if(  file->is_version_less(102, 3) && file->get_extended_version() <= 1  ) {
 		// saved everything
 		for (int year = 0;year<OLD_MAX_PLAYER_HISTORY_YEARS;year++) {
 			for (int cost_type = 0; cost_type<18; cost_type++) {
@@ -878,9 +821,9 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if(  file->get_version()<=102002  ) {
+	else if(  file->get_version_int()<=102002  ) {
 		// saved everything
-		// Experimental had INTEREST, CREDIT_LIMIT
+		// Extended had INTEREST, CREDIT_LIMIT
 		for (int year = 0;year<OLD_MAX_PLAYER_HISTORY_YEARS;year++) {
 			for (int cost_type = 0; cost_type<21; cost_type++) {
 				if (cost_type != COST_WAY_TOLLS) {
@@ -896,7 +839,7 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if(  file->get_version()<=110006  && file->get_experimental_version()==0  ) {
+	else if(  file->is_version_less(110, 7)  && file->get_extended_version()==0  ) {
 		// only save what is needed
 		// no way tolls
 		for(int year = 0;  year<OLD_MAX_PLAYER_HISTORY_YEARS;  year++  ) {
@@ -914,11 +857,11 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	/* Note that experimental did not adopt way tolls until version 11
-	 * As a result the logic for version <=110006 for experimental can fall through to the
+	/* Note that extended did not adopt way tolls until version 11
+	 * As a result the logic for version <=110006 for extended can fall through to the
 	 * logic for version <= 112004
 	 */
-	else if (  file->get_version() <= 112004  && file->get_experimental_version() == 0  ) {
+	else if (  file->is_version_less(112, 5)  && file->get_extended_version() == 0  ) {
 		// savegame version: now with toll
 		for(int year = 0;  year<OLD_MAX_PLAYER_HISTORY_YEARS;  year++  ) {
 			for(  int cost_type = 0;   cost_type<19;   cost_type++  ) {
@@ -935,10 +878,10 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if (  file->get_version() <= 112004  && file->get_experimental_version() == 1  ) {
+	else if (  file->get_version_int() <= 112004  && file->get_extended_version() == 1  ) {
 		// is this combination even possible?  I doubt it
-		// no way tolls in experimental despite being in standard
-		// no interest or credit limit in experimental
+		// no way tolls in extended despite being in standard
+		// no interest or credit limit in extended
 		for(int year = 0;  year<OLD_MAX_PLAYER_HISTORY_YEARS;  year++  ) {
 			for(  int cost_type = 0;   cost_type<18;   cost_type++  ) {
 				if(  cost_type<COST_NETWEALTH  ||  cost_type>COST_MARGIN  ) {
@@ -954,9 +897,9 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if (  file->get_version() <= 112004 && file->get_experimental_version() <= 10  ) {
-		// Standard had way tolls, experimental still didn't
-		// Experimental also had INTEREST, CREDIT_LIMIT
+	else if (  file->get_version_int() <= 112004 && file->get_extended_version() <= 10  ) {
+		// Standard had way tolls, extended still didn't
+		// Extended also had INTEREST, CREDIT_LIMIT
 		for(int year = 0;  year<OLD_MAX_PLAYER_HISTORY_YEARS;  year++  ) {
 			for(  int cost_type = 0;   cost_type<21;   cost_type++  ) {
 				if(  cost_type<COST_NETWEALTH  ||  cost_type>COST_MARGIN  ) {
@@ -976,10 +919,10 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if (  file->get_version() <= 112004  ) {
-		// Experimental version 11 with old save file format
+	else if (  file->get_version_int() <= 112004  ) {
+		// Extended version 11 with old save file format
 		// May happen in files saved with some development versions
-		// Experimental has WAY_TOLLS, INTEREST, CREDIT_LIMIT
+		// Extended has WAY_TOLLS, INTEREST, CREDIT_LIMIT
 		for(int year = 0;  year<OLD_MAX_PLAYER_HISTORY_YEARS;  year++  ) {
 			for(  int cost_type = 0;   cost_type<21;   cost_type++  ) {
 				if(  cost_type<COST_NETWEALTH  ||  cost_type>COST_MARGIN  ) {
@@ -995,17 +938,17 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 			}
 		}
 	}
-	else if (  file->get_version() >= 112005  ) {
+	else if (  file->get_version_int() >= 112005  ) {
 		// We should not get here in compatibility loading mode
 		assert(false);
 	}
 
-	if(  file->get_version()>102002  && file->get_experimental_version() != 7  ) {
+	if(  file->is_version_atleast(102, 3) && file->get_extended_version() != 7  ) {
 		file->rdwr_longlong(starting_money);
 	}
 
 	// we have to pay maintenance at the beginning of a month
-	if(file->get_version()<99018  &&  file->is_loading()) {
+	if(file->is_version_less(99, 18)  &&  file->is_loading()) {
 		finance_history_month[0][COST_MAINTENANCE] -= finance_history_month[1][COST_MAINTENANCE];
 		finance_history_year [0][COST_MAINTENANCE] -= finance_history_month[1][COST_MAINTENANCE];
 		set_account_balance(get_account_balance() - finance_history_month[1][COST_MAINTENANCE]);
@@ -1020,10 +963,10 @@ void finance_t::rdwr_compatibility(loadsave_t *file)
 		 */
 		for(  int year=0;  year<OLD_MAX_PLAYER_HISTORY_YEARS;  year++  ) {
 			finance_history_year[year][COST_NETWEALTH] = finance_history_year[year][COST_CASH]+finance_history_year[year][COST_ASSETS];
-			// only revnue minus running costs
+			// only revenue minus running costs
 			finance_history_year[year][COST_OPERATING_PROFIT] = finance_history_year[year][COST_INCOME] + finance_history_year[year][COST_POWERLINES] + finance_history_year[year][COST_VEHICLE_RUN] + finance_history_year[year][COST_MAINTENANCE] + finance_history_year[year][COST_WAY_TOLLS];
 
-			// including also investements into vehicles/infrastructure
+			// including also investments into vehicles/infrastructure
 			finance_history_year[year][COST_PROFIT] = finance_history_year[year][COST_OPERATING_PROFIT]+finance_history_year[year][COST_CONSTRUCTION]+finance_history_year[year][COST_NEW_VEHICLE]+finance_history_year[year][COST_INTEREST];
 			finance_history_year[year][COST_MARGIN] = calc_margin(finance_history_year[year][COST_OPERATING_PROFIT], finance_history_year[year][COST_INCOME]);
 		}

@@ -1,12 +1,11 @@
 /*
-  * @author: jamespetts, April 2011
-  * This file is part of the Simutrans project under the artistic licence.
-  * (see licence.txt)
-  */
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
 
 #include "livery_scheme.h"
 #include "loadsave.h"
-#include "../besch/vehikel_besch.h"
+#include "../descriptor/vehicle_desc.h"
 
 livery_scheme_t::livery_scheme_t(const char* n, const uint16 date)
 {
@@ -15,7 +14,7 @@ livery_scheme_t::livery_scheme_t(const char* n, const uint16 date)
 }
 
 
-const char* livery_scheme_t::get_latest_available_livery(uint16 date, const vehikel_besch_t* besch) const
+const char* livery_scheme_t::get_latest_available_livery(uint16 date, const vehicle_desc_t* desc) const
 {
 	if(liveries.empty())
 	{
@@ -26,7 +25,10 @@ const char* livery_scheme_t::get_latest_available_livery(uint16 date, const vehi
 	uint16 latest_valid_intro_date = 0;
 	ITERATE(liveries, i)
 	{
-		if(date >= liveries.get_element(i).intro_date && besch->check_livery(liveries.get_element(i).name.c_str()) && liveries.get_element(i).intro_date > latest_valid_intro_date)
+		if (!date && desc->check_livery(liveries.get_element(i).name.c_str())) {
+			return liveries.get_element(i).name.c_str();
+		}
+		else if(date >= liveries.get_element(i).intro_date && desc->check_livery(liveries.get_element(i).name.c_str()) && liveries.get_element(i).intro_date > latest_valid_intro_date)
 		{
 			// This returns the most recent livery available for this vehicle that is not in the future.
 			latest_valid_intro_date = liveries.get_element(i).intro_date;
@@ -35,6 +37,7 @@ const char* livery_scheme_t::get_latest_available_livery(uint16 date, const vehi
 	}
 	return livery;
 }
+
 
 void livery_scheme_t::rdwr(loadsave_t *file)
 {
@@ -52,7 +55,7 @@ void livery_scheme_t::rdwr(loadsave_t *file)
 
 	file->rdwr_short(count);
 
-	std::string n; 
+	std::string n;
 	uint16 date;
 
 	for(int i = 0; i < count; i ++)
@@ -67,7 +70,7 @@ void livery_scheme_t::rdwr(loadsave_t *file)
 			n = '\0';
 			date = 0;
 		}
-		
+
 		file->rdwr_string(n);
 		file->rdwr_short(date);
 
@@ -77,6 +80,6 @@ void livery_scheme_t::rdwr(loadsave_t *file)
 			liv.name = n;
 			liv.intro_date = date;
 			liveries.append(liv);
-		}	
+		}
 	}
 }

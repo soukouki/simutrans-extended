@@ -1,16 +1,11 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/*
- * Displays an information window for a convoi
- *
- * @author Hj. Malthaner
- * @date 22-Aug-01
- */
+#ifndef GUI_CONVOI_INFO_T_H
+#define GUI_CONVOI_INFO_T_H
+
 
 #include "gui_frame.h"
 #include "components/gui_scrollpane.h"
@@ -20,63 +15,79 @@
 #include "components/gui_button.h"
 #include "components/gui_label.h"
 #include "components/gui_chart.h"
-#include "components/gui_ding_view_t.h"
+#include "components/gui_obj_view_t.h"
 #include "components/action_listener.h"
+#include "components/gui_tab_panel.h"
+#include "components/gui_button_to_chart.h"
+#include "components/gui_combobox.h"
+#include "components/gui_image.h"
 #include "../convoihandle_t.h"
-#include "../linehandle_t.h"
-#include "../simconvoi.h"
-#include "../simwin.h"
+#include "simwin.h"
 
 #include "../utils/cbuffer_t.h"
+#include "components/gui_convoy_payloadinfo.h"
+#include "components/gui_schedule_item.h"
 
-//Bernd Gabriel, Dec, 03 2009: acceleration curve. 
-// define ACCELERATION_BUTTON to show it and the graph.
-// do not define it and there are neither button nor graph.
-#define ACCELERATION_BUTTON convoi_t::MAX_CONVOI_COST
-#ifdef ACCELERATION_BUTTON
-#define BUTTON_COUNT (ACCELERATION_BUTTON + 1)
-#else
-#define BUTTON_COUNT MAX_CONVOI_COST
-#endif
+#include "times_history_container.h"
+#include "components/gui_colorbox.h"
+#include "components/gui_line_lettercode.h"
+#include "components/gui_line_network.h"
+#include "components/gui_vehicle_cargoinfo.h"
 
+
+#define BUTTON_COUNT convoi_t::MAX_CONVOI_COST
+
+
+/**
+ * Displays an information window for a convoi
+ */
 class convoi_info_t : public gui_frame_t, private action_listener_t
 {
-public:
-	enum sort_mode_t { by_destination = 0, by_via = 1, by_amount_via = 2, by_amount = 3, by_origin = 4, by_origin_sum = 5, SORT_MODES = 6 };
-
-private:
-	static karte_t *welt;
-
-	/**
-	* Buffer for freight info text string.
-	* @author Hj. Malthaner
-	*/
-	cbuffer_t freight_info;
-
-	gui_scrollpane_t scrolly;
-	gui_textarea_t text;
-	ding_view_t view;
-	gui_label_t sort_label;
+	obj_view_t view;
+	gui_label_buf_t speed_label, profit_label, running_cost_label, weight_label, target_label, line_label;
+	gui_label_buf_t distance_label, lb_working_method;
 	gui_textinput_t input;
-	gui_speedbar_t filled_bar;
+	gui_loadingbar_t loading_bar;
 	gui_speedbar_t speed_bar;
-	gui_speedbar_t route_bar;
+	gui_routebar_t route_bar;
+	sint32 next_reservation_index;
 	gui_chart_t chart;
+	gui_image_t img_reverse_route;
+
 	button_t button;
 	button_t follow_button;
 	button_t go_home_button;
 	button_t no_load_button;
 	button_t replace_button;
-	button_t filterButtons[BUTTON_COUNT];
-	int statistics_height;
 
-	button_t sort_button;
 	button_t details_button;
-	button_t toggler;
 	button_t reverse_button;
 
-	button_t line_button;	// goto line ...
+	// new cargo detail
+	uint8 cargo_info_depth_from=0;
+	uint8 cargo_info_depth_to=1;
+	bool divide_by_wealth = false;
+	bool separate_by_fare = true;
+	gui_combobox_t selector_ci_depth_from, selector_ci_depth_to, freight_sort_selector;
+	button_t bt_divide_by_wealth, bt_separate_by_fare, sort_order;
+	gui_aligned_container_t cont_tab_cargo_info;
+	void init_cargo_info_controller(); // build cont_tab_cargo_info table
+	gui_convoy_cargo_info_t cargo_info;
+
+	gui_aligned_container_t next_halt_cells;
+	gui_schedule_entry_number_t next_halt_number;
+
+	gui_times_history_t cont_times_history;
+	gui_line_network_t cont_line_network;
+
+	static sint16 tabstate;
+	gui_tab_panel_t switch_mode;
+	gui_aligned_container_t container_freight, container_stats, container_line, *container_top;
+	gui_scrollpane_t scroll_freight, scroll_times_history;
+
+	button_t line_button; // goto line ...
 	bool line_bound;
+	gui_line_lettercode_t lc_preview;
 
 	convoihandle_t cnv;
 	sint32 mean_convoi_speed;
@@ -85,12 +96,9 @@ private:
 	// current pointer to route ...
 	sint32 cnv_route_index;
 
-#ifdef ACCELERATION_BUTTON
-	//Bernd Gabriel, Sep, 24 2009: acceleration curve:
-	sint64 physics_curves[MAX_MONTHS][1];
-#endif
-
 	char cnv_name[256],old_cnv_name[256];
+
+	void update_labels();
 
 	// resets textinput to current convoi name
 	// necessary after convoi was renamed
@@ -100,42 +108,37 @@ private:
 	// checks if possible / necessary
 	void rename_cnv();
 
-	static bool route_search_in_progress;
+	//static bool route_search_in_progress;
 
-	static const char *sort_text[SORT_MODES];
+	static const char *sort_text[gui_cargo_info_t::SORT_MODES];
 
-	void show_hide_statistics( bool show );
+	gui_button_to_chart_array_t button_to_chart;
+
+	void init(convoihandle_t cnv);
+
+	void set_tab_opened();
 
 public:
-	//static bool route_search_in_progress;
-	convoi_info_t(convoihandle_t cnv);
+	convoi_info_t(convoihandle_t cnv = convoihandle_t());
 
 	virtual ~convoi_info_t();
 
 	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
-	 * @author V. Meyer
 	 */
-	const char * get_hilfe_datei() const { return "convoiinfo.txt"; }
+	const char * get_help_filename() const OVERRIDE { return "convoiinfo.txt"; }
 
 	/**
 	 * Draw new component. The values to be passed refer to the window
 	 * i.e. It's the screen coordinates of the window where the
 	 * component is displayed.
-	 * @author Hj. Malthaner
 	 */
-	void zeichnen(koord pos, koord gr);
+	void draw(scr_coord pos, scr_size size) OVERRIDE;
 
-	/**
-	 * Set window size and adjust component sizes and/or positions accordingly
-	 * @author Hj. Malthaner
-	 */
-	virtual void set_fenstergroesse(koord groesse);
+	bool is_weltpos() OVERRIDE;
 
-	virtual bool is_weltpos();
-
-	virtual koord3d get_weltpos( bool set );
+	koord3d get_weltpos( bool set ) OVERRIDE;
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
@@ -144,10 +147,14 @@ public:
 	 */
 	void update_data() { reset_cnv_name(); set_dirty(); }
 
-	// this constructor is only used during loading
-	convoi_info_t(karte_t *welt);
+	// called when fare class was changed
+	void update_cargo_info() { cargo_info.update(); }
 
-	void rdwr( loadsave_t *file );
+	bool infowin_event(const event_t *ev) OVERRIDE;
 
-	uint32 get_rdwr_id() { return magic_convoi_info; }
+	void rdwr( loadsave_t *file ) OVERRIDE;
+
+	uint32 get_rdwr_id() OVERRIDE { return magic_convoi_info+cnv.get_id(); }
 };
+
+#endif

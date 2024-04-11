@@ -1,3 +1,8 @@
+#
+# This file is part of the Simutrans-Extended project under the Artistic License.
+# (see LICENSE.txt)
+#
+
 OBJS := $(patsubst %, $(BUILDDIR)/%.o, $(basename $(SOURCES)))
 DEPS := $(OBJS:%.o=%.d)
 DIRS := $(sort $(dir $(OBJS)))
@@ -52,5 +57,5 @@ $(BUILDDIR)/%.o: %.cc
 
 $(BUILDDIR)/%.o: %.rc
 	@echo "===> RES $<"
-	$(Q)$(WINDRES) --preprocessor="$(CXX) -E -xc -DRC_INVOKED -MMD -MT $@" -O COFF $< $@
 #	$(Q)$(WINDRES) --preprocessor "$(CXX) -E -xc -DRC_INVOKED -MMD -MF $(@:%.o=%.d) -MT $@" -O COFF $< $@
+	$(Q)$(WINDRES) --preprocessor "$(CXX) -E -xc -DRC_INVOKED -MMD -MT $@" -O COFF $< $@

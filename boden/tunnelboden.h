@@ -1,5 +1,11 @@
-#ifndef tunnelboden_h
-#define tunnelboden_h
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef BODEN_TUNNELBODEN_H
+#define BODEN_TUNNELBODEN_H
+
 
 #include "boden.h"
 
@@ -7,20 +13,28 @@
 class tunnelboden_t : public boden_t
 {
 protected:
-	void calc_bild_internal();
+	/// @copydoc boden_t::calc_image_internal
+	void calc_image_internal(const bool calc_only_snowline_change) OVERRIDE;
 
 public:
-	tunnelboden_t(karte_t *welt, loadsave_t *file, koord pos );
-	tunnelboden_t(karte_t *welt, koord3d pos, hang_t::typ hang_typ) : boden_t(welt, pos, hang_typ) {}
+	tunnelboden_t(loadsave_t *file, koord pos );
+	tunnelboden_t(koord3d pos, slope_t::type slope_type) : boden_t(pos, slope_type) {}
 
-	virtual void rdwr(loadsave_t *file);
+public:
+	/// @copydoc boden_t::rdwr
+	virtual void rdwr(loadsave_t *file) OVERRIDE;
 
-	hang_t::typ get_weg_hang() const { return ist_karten_boden() ? (hang_t::typ)hang_t::flach : get_grund_hang(); }
+	/// @copydoc boden_t::get_weg_hang
+	slope_t::type get_weg_hang() const OVERRIDE { return ist_karten_boden() ? (slope_t::type)slope_t::flat : get_grund_hang(); }
 
-	const char *get_name() const {return "Tunnelboden";}
-	typ get_typ() const { return tunnelboden; }
+	/// @copydoc boden_t::get_name
+	const char *get_name() const OVERRIDE { return "Tunnelboden"; }
 
-	void info(cbuffer_t & buf, bool dummy = false) const;
+	/// @copydoc boden_t::get_typ
+	typ get_typ() const OVERRIDE { return tunnelboden; }
+
+	/// @copydoc boden_t::info
+	void info(cbuffer_t & buf) const OVERRIDE;
 };
 
 #endif

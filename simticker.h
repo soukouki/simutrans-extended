@@ -1,25 +1,23 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic license.
- * (see license.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #ifndef SIMTICKER_H
 #define SIMTICKER_H
 
-#include "simcolor.h"
 
-// ticker height
-#define TICKER_HEIGHT      15
-// ticker vertical position from bottom of screen
-#define TICKER_YPOS_BOTTOM 32
+#include "simcolor.h"
+#include "display/simgraph.h"
+
+#define TICKER_V_SPACE (2) // Vertical offset of ticker text
+#define TICKER_HEIGHT  (LINESPACE+2*TICKER_V_SPACE)
+
 
 class koord;
 
 /**
- * A very simple news ticker.
- * The news are displayed by karte_vollansicht_t
+ * A very simple scrolling news ticker.
  */
 namespace ticker
 {
@@ -28,31 +26,40 @@ namespace ticker
 	/**
 	 * Add a message to the message list
 	 * @param pos    position of the event
-	 * @param color  message color 
+	 * @param color  message color
 	 */
-	void add_msg(const char*, koord pos, int color = COL_BLACK);
+	void add_msg(const char*, koord pos, FLAGGED_PIXVAL color);
 
 	/**
-	 * Ticker infowin pops up
+	 * Remove all messages and mark for redraw
+	 */
+	void clear_messages();
+
+	/**
+	 * @returns the 2D world position of the most recent visible message
 	 */
 	koord get_welt_pos();
 
 	/**
-	 * Ticker redraw
+	 * Update message positions and remove old messages
 	 */
-	void zeichnen();
+	void update();
 
 	/**
-	 * Set true if ticker has to be redrawn
+	 * Redraw the ticker partially or fully (if set_redraw_all() was called)
 	 */
-	void set_redraw_all(const bool);
+	void draw();
 
 	/**
-	 * Ticker text redraw after resize
+	 * Set true if ticker has to be redrawn fully
+	 * @sa redraw
 	 */
-	void redraw_ticker();
+	void set_redraw_all(bool redraw);
 
-	void clear_ticker();
+	/**
+	 * Force a ticker redraw (e.g. after a window resize)
+	 */
+	void redraw();
 };
 
 #endif

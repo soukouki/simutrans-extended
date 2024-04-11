@@ -1,18 +1,26 @@
 /*
- * a template class which implements a hashtable with string keys
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef stringhashtable_tpl_h
-#define stringhashtable_tpl_h
+#ifndef TPL_STRINGHASHTABLE_TPL_H
+#define TPL_STRINGHASHTABLE_TPL_H
+
 
 #include "hashtable_tpl.h"
 #include <string.h>
 
 /*
- * Define the key characteristica for hashing "const char *".
+ * a template class which implements a hashtable with string keys
+ */
+
+/*
+ * Define the key characteristics for hashing "const char *".
  */
 class stringhash_t {
 public:
+	typedef int diff_type;
+
 	static uint32 hash(const char *key)
 	{
 		uint32 hash = 0;
@@ -28,12 +36,7 @@ public:
 		return hash;
 	}
 
-	static void dump(const char *key)
-	{
-		printf("%s", key);
-	}
-
-	static int comp(const char *key1, const char *key2)
+	static diff_type comp(const char *key1, const char *key2)
 	{
 		return strcmp(key1, key2);
 	}
@@ -43,11 +46,11 @@ public:
 /*
  * Ready to use class for hashing strings.
  */
-template <class value_t>class stringhashtable_tpl :
-	public hashtable_tpl<const char *, value_t, stringhash_t>
+template <class value_t, size_t n_bags>class stringhashtable_tpl :
+	public hashtable_tpl<const char *, value_t, stringhash_t, n_bags>
 {
 public:
-	stringhashtable_tpl() : hashtable_tpl<const char *, value_t, stringhash_t>() {}
+	stringhashtable_tpl() : hashtable_tpl<const char *, value_t, stringhash_t, n_bags>() {}
 private:
 	stringhashtable_tpl(const stringhashtable_tpl&);
 	stringhashtable_tpl& operator=( stringhashtable_tpl const&);

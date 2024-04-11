@@ -1,23 +1,21 @@
 /*
- * native win32 midi playing routines
- *
- * author: Owen Rudge, Hj. Malthaner
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include <stdio.h>
-// windows.h includes min and max macros which we don't want
-#define NOMINMAX 1
+#include <stdlib.h>
 #include <windows.h>
 #include <mmsystem.h>
 
 #include "../utils/plainstring.h"
 #include "music.h"
 #include "../simsound.h"
+#include "../simdebug.h"
 
 
-/*
- * MIDI: Owen Rudge
- */
+// native win32 midi playing routines
+
 static int         midi_number = -1;
 static plainstring midi_filenames[MAX_MIDI];
 
@@ -34,7 +32,6 @@ void __win32_set_midi_volume(int type, int left, int right);
 
 /**
  * sets midi playback volume
- * @author Owen Rudge
  */
 void dr_set_midi_volume(int vol)
 {
@@ -44,12 +41,10 @@ void dr_set_midi_volume(int vol)
 
 /**
  * Loads a MIDI file
- * @author Owen Rudge, changes by Hj. Malthaner
  */
 
 int dr_load_midi(const char *filename)
 {
-		//   printf("dr_load_midi(%s)\n", filename);
 	if(midi_number < MAX_MIDI-1) {
 		const int i = midi_number + 1;
 
@@ -60,7 +55,7 @@ int dr_load_midi(const char *filename)
 			// already absolute path
 			midi_filenames[i] = filename;
 
-			// need to make dos path seperators
+			// need to make dos path separators
 			for (char* j = midi_filenames[i]; *j != '\0'; ++j) {
 				if (*j == '/') {
 					*j = '\\';
@@ -77,7 +72,6 @@ int dr_load_midi(const char *filename)
 /**
  * Plays a MIDI file
  * Key: The index of the MIDI file to be played
- * By Owen Rudge
  */
 void dr_play_midi(int key)
 {
@@ -87,18 +81,17 @@ void dr_play_midi(int key)
 
 		if (key >= 0 && key <= midi_number) {
 			sprintf(str, "open \"%s\" type sequencer alias SimuMIDI", midi_filenames[key].c_str());
-			printf("MCI string: %s\n", str);
+			dbg->debug("dr_play_midi(w32)", "MCI string: %s", str);
 
 			if (mciSendStringA(str, NULL, 0, NULL) != 0) {
-				printf("\nMessage: MIDI: Unable to load MIDI %d\n", key);
+				dbg->warning("dr_play_midi(w32)", "Unable to load MIDI %d", key);
 			}
-			else {
-				if (mciSendStringA("play SimuMIDI", retstr, 200, NULL) != 0)
-					printf("\nMessage: MIDI: Unable to play MIDI %d - %s\n", key, retstr);
-				}
+			else if (mciSendStringA("play SimuMIDI", retstr, 200, NULL) != 0) {
+				dbg->warning("dr_play_midi(w32)", "Unable to play MIDI %d - %s\n", key, retstr);
 			}
+		}
 		else {
-				printf("\nMessage: MIDI: Unable to play MIDI %d\n", key);
+			dbg->warning("dr_play_midi(w32)", "Unable to play MIDI %d", key);
 		}
 	}
 }
@@ -107,9 +100,8 @@ void dr_play_midi(int key)
 
 /**
  * Stops playing MIDI file
- * By Owen Rudge
  */
-void dr_stop_midi(void)
+void dr_stop_midi()
 {
 	//   stop_midi();
 	char retstr[200];
@@ -121,9 +113,8 @@ void dr_stop_midi(void)
 
 /**
  * Returns the midi_pos variable
- * By Owen Rudge
  */
-long dr_midi_pos(void)
+sint32 dr_midi_pos()
 {
 	char retstr[200];
 	long length;
@@ -149,9 +140,8 @@ long dr_midi_pos(void)
 
 /**
  * Midi shutdown/cleanup
- * By Owen Rudge
  */
-void dr_destroy_midi(void)
+void dr_destroy_midi()
 {
 	__win32_set_midi_volume(__MIDI_VOL_WIN32, OldMIDIVol[0], OldMIDIVol[1]);
 	midi_number = -1;
@@ -160,9 +150,8 @@ void dr_destroy_midi(void)
 
 /**
  * MIDI initialisation routines
- * @author Owen Rudge
  */
-bool dr_init_midi(void)
+bool dr_init_midi()
 {
  #ifdef MIXER_VOLUME
 	UINT nMIDIDevices;
@@ -231,7 +220,7 @@ bool dr_init_midi(void)
 	OldMIDIVol[0] = old_volume>>24;
 	OldMIDIVol[1] = (old_volume&0x0000FF00)>>8;
 #endif
-	// Hajo: assuming if we got here, all is set up to work properly
+	// assuming if we got here, all is set up to work properly
 	return true;
 }
 
@@ -308,8 +297,8 @@ void __win32_set_midi_volume(int type, int left, int right)
 // Sets the MIDI volume - internal routine
 void __win32_set_midi_volume(int , int left, int right)
 {
-	// prissis short version
-	long vol = (left<<24)|(right<<8);
+	// short version
+	DWORD vol = (left<<24)|(right<<8);
 
 	if( midiOutGetNumDevs()== 0 ) {
 		return;

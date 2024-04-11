@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 1997 - 2004 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 /*
@@ -12,261 +10,342 @@
 #include <algorithm>
 #include <stdio.h>
 
-#include "../simtools.h"
 #include "../simworld.h"
-#include "../simwerkz.h"
+#include "../simtool.h"
 
 #include "../bauer/hausbauer.h"
 
-#include "../besch/grund_besch.h"
-#include "../besch/intro_dates.h"
+#include "../descriptor/ground_desc.h"
+#include "../descriptor/intro_dates.h"
 
 #include "../dataobj/translator.h"
 
-#include "../utils/cbuffer_t.h"
-#include "../utils/simstring.h"
-
 #include "citybuilding_edit.h"
+#include "components/gui_label.h"
 
 
 // new tool definition
-wkz_build_haus_t citybuilding_edit_frame_t::haus_tool=wkz_build_haus_t();
-char citybuilding_edit_frame_t::param_str[256];
+tool_build_house_t citybuilding_edit_frame_t::haus_tool=tool_build_house_t();
+cbuffer_t citybuilding_edit_frame_t::param_str;
+bool citybuilding_edit_frame_t::sortreverse = false;
 
 
-
-static bool compare_haus_besch(const haus_besch_t* a, const haus_besch_t* b)
+static bool compare_building_desc(const building_desc_t* a, const building_desc_t* b)
 {
-	int diff = a->get_level()-b->get_level();
+	int diff = strcmp( a->get_name(), b->get_name() );
+	return citybuilding_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
+}
+static bool compare_building_desc_name(const building_desc_t* a, const building_desc_t* b)
+{
+	int diff = strcmp( translator::translate(a->get_name()), translator::translate(b->get_name()) );
 	if(  diff==0  ) {
-		diff = a->get_typ()-b->get_typ();
+		diff = strcmp(a->get_name(), b->get_name());
+	}
+	return citybuilding_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
+}
+static bool compare_building_desc_level_pax(const building_desc_t* a, const building_desc_t* b)
+{
+	int diff = a->get_level() - b->get_level();
+	if(  diff==0  ) {
+		diff = strcmp(a->get_name(), b->get_name());
+	}
+	return citybuilding_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
+}
+static bool compare_building_desc_population(const building_desc_t* a, const building_desc_t* b)
+{
+	int diff = a->get_population_and_visitor_demand_capacity() - b->get_population_and_visitor_demand_capacity();
+	if (diff == 0) {
+		diff = strcmp(a->get_name(), b->get_name());
+	}
+	return citybuilding_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
+}
+static bool compare_building_desc_jobs(const building_desc_t* a, const building_desc_t* b)
+{
+	int diff = a->get_employment_capacity() - b->get_employment_capacity();
+	if (diff == 0) {
+		diff = strcmp(a->get_name(), b->get_name());
+	}
+	return citybuilding_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
+}
+static bool compare_building_desc_level_mail(const building_desc_t* a, const building_desc_t* b)
+{
+	int diff = (a->get_mail_demand_and_production_capacity() != 65535 ? a->get_mail_demand_and_production_capacity() : 0)
+		     - (b->get_mail_demand_and_production_capacity() != 65535 ? b->get_mail_demand_and_production_capacity() : 0);
+	if(  diff==0  ) {
+		diff = strcmp(a->get_name(), b->get_name());
+	}
+	return citybuilding_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
+}
+static bool compare_building_desc_date_intro(const building_desc_t* a, const building_desc_t* b)
+{
+	int diff = a->get_intro_year_month() - b->get_intro_year_month();
+	if(  diff==0  ) {
+		diff = strcmp(a->get_name(), b->get_name());
+	}
+	return citybuilding_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
+}
+static bool compare_building_desc_date_retire(const building_desc_t* a, const building_desc_t* b)
+{
+	int diff = a->get_retire_year_month() - b->get_retire_year_month();
+	if(  diff==0  ) {
+		diff = strcmp(a->get_name(), b->get_name());
+	}
+	return citybuilding_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
+}
+static bool compare_building_desc_size(const building_desc_t* a, const building_desc_t* b)
+{
+	koord a_koord = a->get_size();
+	koord b_koord = b->get_size();
+	int diff = a_koord.x * a_koord.y - b_koord.x * b_koord.y;
+	if(  diff==0  ) {
+		//same area - sort by side to seperate different shapes
+		diff = a_koord.x - b_koord.x;
 	}
 	if(  diff==0  ) {
 		diff = strcmp(a->get_name(), b->get_name());
 	}
-	return diff < 0;
+	return citybuilding_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
 }
 
 
-
-citybuilding_edit_frame_t::citybuilding_edit_frame_t(spieler_t* sp_, karte_t* welt) :
-	extend_edit_gui_t(translator::translate("citybuilding builder"), sp_, welt),
-	hauslist(16),
-	lb_rotation( rot_str, COL_WHITE, gui_label_t::right ),
-	lb_rotation_info( translator::translate("Rotation"), COL_BLACK, gui_label_t::left )
+citybuilding_edit_frame_t::citybuilding_edit_frame_t(player_t* player_) :
+	extend_edit_gui_t(translator::translate("citybuilding builder"), player_),
+	building_list(16)
 {
-	rot_str[0] = 0;
-	besch = NULL;
+	desc = NULL;
 	haus_tool.set_default_param(NULL);
-	haus_tool.cursor = werkzeug_t::general_tool[WKZ_BUILD_HAUS]->cursor;
-	haus_tool.id = werkzeug_t::general_tool[WKZ_BUILD_HAUS]->id;
+	haus_tool.cursor = tool_t::general_tool[TOOL_BUILD_HOUSE]->cursor;
+	haus_tool.id = tool_t::general_tool[TOOL_BUILD_HOUSE]->id;
 
-	bt_res.init( button_t::square_state, "residential house", koord(get_tab_panel_width()+2*MARGIN, offset_of_comp-4 ) );
+	bt_res.init( button_t::square_state, "residential house");
 	bt_res.add_listener(this);
 	bt_res.pressed = true;
-	add_komponente(&bt_res);
-	offset_of_comp += D_BUTTON_HEIGHT;
+	cont_filter.add_component(&bt_res,3);
 
-	bt_com.init( button_t::square_state, "shops and stores", koord(get_tab_panel_width()+2*MARGIN, offset_of_comp-4 ) );
+	bt_com.init( button_t::square_state, "shops and stores");
 	bt_com.add_listener(this);
 	bt_com.pressed = true;
-	add_komponente(&bt_com);
-	offset_of_comp += D_BUTTON_HEIGHT;
+	cont_filter.add_component(&bt_com,3);
 
-	bt_ind.init( button_t::square_state, "industrial building", koord(get_tab_panel_width()+2*MARGIN, offset_of_comp-4 ) );
+	bt_ind.init( button_t::square_state, "industrial building");
 	bt_ind.add_listener(this);
-	add_komponente(&bt_ind);
-	bt_com.pressed = true;
-	offset_of_comp += D_BUTTON_HEIGHT;
+	bt_ind.pressed = true;
+	cont_filter.add_component(&bt_ind,3);
 
-	lb_rotation_info.set_pos( koord( get_tab_panel_width()+2*MARGIN, offset_of_comp-4 ) );
-	add_komponente(&lb_rotation_info);
+	// add to sorting selection
+	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_LEVEL_PAX);
+	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_VISITOR_DEMANDS);
+	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_JOBS);
+	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_LEVEL_MAIL);
+	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_DATE_INTRO);
+	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_DATE_RETIRE);
+	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_SIZE);
+	cb_sortedby.set_selection(2);
 
-	bt_left_rotate.init( button_t::repeatarrowleft, NULL, koord(get_tab_panel_width()+2*MARGIN+COLUMN_WIDTH/2-16,	offset_of_comp-4 ) );
-	bt_left_rotate.add_listener(this);
-	add_komponente(&bt_left_rotate);
+	// rotation
+	gui_aligned_container_t *tbl = cont_options.add_table(2,0);
+	tbl->new_component<gui_label_t>("Rotation");
+	tbl->add_component(&cb_rotation);
+	cb_rotation.add_listener(this);
+	cb_rotation.new_component<gui_rotation_item_t>(gui_rotation_item_t::random);
+	cont_options.end_table();
 
-	bt_right_rotate.init( button_t::repeatarrowright, NULL, koord(get_tab_panel_width()+2*MARGIN+COLUMN_WIDTH/2+50, offset_of_comp-4 ) );
-	bt_right_rotate.add_listener(this);
-	add_komponente(&bt_right_rotate);
+	fill_list();
 
-	lb_rotation.set_pos( koord( get_tab_panel_width()+2*MARGIN+COLUMN_WIDTH/2+44, offset_of_comp-4 ) );
-	add_komponente(&lb_rotation);
-	offset_of_comp += D_BUTTON_HEIGHT;
-
-	fill_list( is_show_trans_name );
-
-	resize(koord(0,0));
+	reset_min_windowsize();
+}
+// put item in list according to filter/sorter
+void citybuilding_edit_frame_t::put_item_in_list( const building_desc_t* desc )
+{
+	const bool allow_obsolete = bt_obsolete.pressed;
+	const bool use_timeline = bt_timeline.pressed | bt_timeline_custom.pressed;
+	const sint32 month_now = bt_timeline.pressed ? welt->get_current_month() : bt_timeline_custom.pressed ? ni_timeline_year.get_value()*12 + ni_timeline_month.get_value()-1 : 0;
+	const uint8 chosen_climate = get_climate();
+	const uint8 sortedby = get_sortedby();
+	sortreverse = sort_order.pressed;
+	if( (!use_timeline  ||  (!desc->is_future(month_now)  &&  (!desc->is_retired(month_now)  ||  allow_obsolete)) )
+		&&  ( desc->get_allowed_climate_bits() & chosen_climate) ) {
+		// timeline allows for this, and so does climates setting
+		switch(sortedby) {
+			case gui_sorting_item_t::BY_NAME_TRANSLATED:     building_list.insert_ordered( desc, compare_building_desc_name );           break;
+			case gui_sorting_item_t::BY_LEVEL_PAX:           building_list.insert_ordered( desc, compare_building_desc_level_pax );      break;
+			case gui_sorting_item_t::BY_VISITOR_DEMANDS:     building_list.insert_ordered( desc, compare_building_desc_population );     break;
+			case gui_sorting_item_t::BY_JOBS:                building_list.insert_ordered( desc, compare_building_desc_jobs );           break;
+			case gui_sorting_item_t::BY_LEVEL_MAIL:          building_list.insert_ordered( desc, compare_building_desc_level_mail );     break;
+			case gui_sorting_item_t::BY_DATE_INTRO:          building_list.insert_ordered( desc, compare_building_desc_date_intro );     break;
+			case gui_sorting_item_t::BY_DATE_RETIRE:         building_list.insert_ordered( desc, compare_building_desc_date_retire );    break;
+			case gui_sorting_item_t::BY_SIZE:                building_list.insert_ordered( desc, compare_building_desc_size );           break;
+			default:                                         building_list.insert_ordered( desc, compare_building_desc );
+		}
+	}
 }
 
 
-
-// fill the current hauslist
-void citybuilding_edit_frame_t::fill_list( bool translate )
+// fill the current building_list
+void citybuilding_edit_frame_t::fill_list()
 {
-	const bool allow_obsolete = bt_obsolete.pressed;
-	const bool use_timeline = bt_timeline.pressed;
-	const sint32 month_now = bt_timeline.pressed ? welt->get_current_month() : 0;
-
-	hauslist.clear();
+	building_list.clear();
 
 	if(bt_res.pressed) {
-		FOR(vector_tpl<haus_besch_t const*>, const besch, *hausbauer_t::get_citybuilding_list(gebaeude_t::wohnung)) {
-			if(!use_timeline  ||  (!besch->is_future(month_now)  &&  (!besch->is_retired(month_now)  ||  allow_obsolete))  ) {
-				// timeline allows for this
-				hauslist.insert_ordered(besch, compare_haus_besch);
-			}
+		FOR(vector_tpl<building_desc_t const*>, const desc, *hausbauer_t::get_citybuilding_list(building_desc_t::city_res)) {
+			put_item_in_list(desc);
 		}
 	}
 
 	if(bt_com.pressed) {
-		FOR(vector_tpl<haus_besch_t const*>, const besch, *hausbauer_t::get_citybuilding_list(gebaeude_t::gewerbe)) {
-			if(!use_timeline  ||  (!besch->is_future(month_now)  &&  (!besch->is_retired(month_now)  ||  allow_obsolete))  ) {
-				// timeline allows for this
-				hauslist.insert_ordered(besch, compare_haus_besch);
-			}
+		FOR(vector_tpl<building_desc_t const*>, const desc, *hausbauer_t::get_citybuilding_list(building_desc_t::city_com)) {
+			put_item_in_list(desc);
 		}
 	}
 
 	if(bt_ind.pressed) {
-		FOR(vector_tpl<haus_besch_t const*>, const besch, *hausbauer_t::get_citybuilding_list(gebaeude_t::industrie)) {
-			if(!use_timeline  ||  (!besch->is_future(month_now)  &&  (!besch->is_retired(month_now)  ||  allow_obsolete))  ) {
-				// timeline allows for this
-				hauslist.insert_ordered(besch, compare_haus_besch);
-			}
+		FOR(vector_tpl<building_desc_t const*>, const desc, *hausbauer_t::get_citybuilding_list(building_desc_t::city_ind)) {
+			put_item_in_list(desc);
 		}
 	}
 
 	// now build scrolled list
 	scl.clear_elements();
 	scl.set_selection(-1);
-	FOR(vector_tpl<haus_besch_t const*>, const i, hauslist) {
+	FOR(vector_tpl<building_desc_t const*>, const i, building_list) {
 		// color code for objects: BLACK: normal, YELLOW: consumer only, GREEN: source only
-		COLOR_VAL color;
-		switch (i->get_typ()) {
-			case gebaeude_t::wohnung: color = COL_BLUE;       break;
-			case gebaeude_t::gewerbe: color = COL_DARK_GREEN; break;
-			default:                  color = COL_BLACK;      break;
+		PIXVAL color;
+		switch (i->get_type()) {
+			case building_desc_t::city_res: color = color_idx_to_rgb(COL_DARK_BLUE + env_t::gui_player_color_dark); break;
+			case building_desc_t::city_com: color = color_idx_to_rgb(40 + env_t::gui_player_color_dark);            break;
+			default:                        color = SYSCOL_TEXT;                                                    break;
 		}
-		char const* const name = translate ? translator::translate(i->get_name()) : i->get_name();
-		scl.append_element(new gui_scrolled_list_t::const_text_scrollitem_t(name, color));
-		if (i == besch) {
+		char const* const name = get_sortedby()==gui_sorting_item_t::BY_NAME_OBJECT ?  i->get_name() : translator::translate(i->get_name());
+		scl.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(name, color);
+		if (i == desc) {
 			scl.set_selection(scl.get_count()-1);
 		}
 	}
 	// always update current selection (since the tool may depend on it)
 	change_item_info( scl.get_selection() );
+
+	reset_min_windowsize();
 }
 
 
 
-bool citybuilding_edit_frame_t::action_triggered( gui_action_creator_t *komp,value_t e)
+bool citybuilding_edit_frame_t::action_triggered( gui_action_creator_t *comp,value_t e)
 {
 	// only one chain can be shown
-	if(  komp==&bt_res  ) {
+	if(  comp==&bt_res  ) {
 		bt_res.pressed ^= 1;
-		fill_list( is_show_trans_name );
+		fill_list();
 	}
-	else if(  komp==&bt_com  ) {
+	else if(  comp==&bt_com  ) {
 		bt_com.pressed ^= 1;
-		fill_list( is_show_trans_name );
+		fill_list();
 	}
-	else if(  komp==&bt_ind  ) {
+	else if(  comp==&bt_ind  ) {
 		bt_ind.pressed ^= 1;
-		fill_list( is_show_trans_name );
+		fill_list();
 	}
-	else if(besch) {
-		if(  komp==&bt_left_rotate  &&  rotation!=255) {
-			if(rotation==0) {
-				rotation = 255;
-			}
-			else {
-				rotation --;
-			}
-		}
-		else if(  komp==&bt_right_rotate  &&  rotation!=besch->get_all_layouts()-1) {
-			rotation ++;
-		}
-		// update info ...
+	else if( comp == &cb_rotation) {
 		change_item_info( scl.get_selection() );
 	}
-	return extend_edit_gui_t::action_triggered(komp,e);
+	return extend_edit_gui_t::action_triggered(comp,e);
 }
 
 
 
 void citybuilding_edit_frame_t::change_item_info(sint32 entry)
 {
-	if(entry>=0  &&  entry<(sint32)hauslist.get_count()) {
+	if(entry>=0  &&  entry<(sint32)building_list.get_count()) {
 
-		const haus_besch_t *new_besch = hauslist[entry];
-		if(new_besch!=besch) {
+		const building_desc_t *new_desc = building_list[entry];
+		if(new_desc!=desc) {
 
 			buf.clear();
-			besch = new_besch;
-			if(besch->get_typ()==gebaeude_t::wohnung) {
+			desc = new_desc;
+			if(desc->get_type()==building_desc_t::city_res) {
 				buf.append( translator::translate( "residential house" ) );
 			}
-			else if(besch->get_typ()==gebaeude_t::gewerbe) {
+			else if(desc->get_type()==building_desc_t::city_com) {
 				buf.append( translator::translate( "shops and stores" ) );
 			}
-			else if(besch->get_typ()==gebaeude_t::industrie) {
+			else if(desc->get_type()==building_desc_t::city_ind) {
 				buf.append( translator::translate( "industrial building" ) );
 			}
 			buf.append("\n\n");
-			buf.append( translator::translate( besch->get_name() ) );
+			buf.append( translator::translate( desc->get_name() ) );
 
-			buf.printf("\n\n%s: %i\n",translator::translate("Passagierrate"),besch->get_level());
-			buf.printf("%s: %i\n",translator::translate("Postrate"),besch->get_post_level());
+			buf.printf("\n%s: %d\n", translator::translate("Level"), desc->get_level());
+			buf.printf("%s: %d\n", translator::translate("Population"), desc->get_type() == building_desc_t::city_res ? desc->get_population_and_visitor_demand_capacity() : 0);
+			buf.printf("%s: %d\n", translator::translate("Visitor demand"), desc->get_type() == building_desc_t::city_res ? 0 : desc->get_population_and_visitor_demand_capacity());
+			buf.printf("%s: %d\n", translator::translate("Jobs"), desc->get_employment_capacity() == 65535 ? 0 : desc->get_employment_capacity());
+			buf.printf("%s: %d\n", translator::translate("Mail demand/output"), desc->get_mail_demand_and_production_capacity() == 65535 ? 0 : desc->get_mail_demand_and_production_capacity());
 
-			buf.printf("%s%u", translator::translate("\nBauzeit von"), besch->get_intro_year_month() / 12);
-			if(besch->get_retire_year_month()!=DEFAULT_RETIRE_DATE*12) {
-				buf.printf("%s%u", translator::translate("\nBauzeit bis"), besch->get_retire_year_month() / 12);
+			// region
+			if (!welt->get_settings().regions.empty()) {
+				buf.append("\n");
+				buf.append(translator::translate("Allowed regions:"));
+				buf.append("\n");
+				const uint16 allowed_region_bits = desc->get_allowed_region_bits();
+				if (allowed_region_bits < 65535) {
+					uint32 region_idx = 0;
+					FORX(vector_tpl<region_definition_t>, region, welt->get_settings().regions, region_idx++) {
+						if (allowed_region_bits & (1 << region_idx))
+						{
+							buf.printf(" - %s\n", translator::translate(region.name.c_str()));
+						}
+					}
+				}
+				else {
+					buf.printf(" - %s\n", translator::translate("All"));
+				}
+			}
+
+			buf.printf("%s%u", translator::translate("\nBauzeit von"), desc->get_intro_year_month() / 12);
+			if(desc->get_retire_year_month()!=DEFAULT_RETIRE_DATE*12) {
+				buf.printf("%s%u", translator::translate("\nBauzeit bis"), desc->get_retire_year_month() / 12);
 			}
 			buf.append("\n");
 
-			if (char const* const maker = besch->get_copyright()) {
+			if (char const* const maker = desc->get_copyright()) {
 				buf.append("\n");
 				buf.printf(translator::translate("Constructed by %s"), maker);
 				buf.append("\n");
 			}
 
-			info_text.recalc_size();
-			cont.set_groesse( info_text.get_groesse() + koord(0, 20) );
-
-			// orientation (255=random)
-			if(besch->get_all_layouts()>1) {
-				rotation = 255; // no definition yet
+			// reset combobox
+			cb_rotation.clear_elements();
+			cb_rotation.new_component<gui_rotation_item_t>(gui_rotation_item_t::random);
+			cb_rotation.new_component<gui_rotation_item_t>(gui_rotation_item_t::automatic);
+			for(uint8 i = 0; i<desc->get_all_layouts(); i++) {
+				cb_rotation.new_component<gui_rotation_item_t>(i);
+			}
+			if(desc->get_all_layouts()>1) {
+				cb_rotation.set_selection(1);
 			}
 			else {
-				rotation = 0;
+				cb_rotation.set_selection(2);
 			}
 		}
 
-		// change label numbers
-		if(rotation == 255) {
-			tstrncpy(rot_str, translator::translate("random"), lengthof(rot_str));
-		}
-		else {
-			sprintf( rot_str, "%i", rotation );
-		}
-
-		// now the images (maximum is 2x2 size)
-		// since these may be affected by rotation, we do this every time ...
-		for(int i=0;  i<3;  i++  ) {
-			img[i].set_image( IMG_LEER );
-		}
-
-		uint8 rot = (rotation==255) ? 0 : rotation;
-		img[3].set_image( besch->get_tile(rot,0,0)->get_hintergrund(0,0,0) );
+		uint8 rotation = get_rotation();
+		uint8 rot = (rotation>253) ? 0 : rotation;
+		building_image.init(desc, rot);
 
 		// the tools will be always updated, even though the data up there might be still current
-		sprintf( param_str, "%i%c%s", bt_climates.pressed, rotation==255 ? '#' : '0'+rotation, besch->get_name() );
+		param_str.clear();
+		param_str.printf("%i%i%c%s", bt_climates.pressed, bt_ignore_regions.pressed, rotation>253 ? (rotation==254 ? 'A' : '#') : '0'+rotation, desc->get_name() );
 		haus_tool.set_default_param(param_str);
-		welt->set_werkzeug( &haus_tool, sp );
+		welt->set_tool( &haus_tool, player );
 	}
-	else if(welt->get_werkzeug(sp->get_player_nr())==&haus_tool) {
-		besch = NULL;
-		welt->set_werkzeug( werkzeug_t::general_tool[WKZ_ABFRAGE], sp );
+	else {
+		desc = NULL;
+		if(welt->get_tool(player->get_player_nr())==&haus_tool) {
+			welt->set_tool( tool_t::general_tool[TOOL_QUERY], player );
+		}
+		buf.clear();
+		building_image.init(NULL, 0);
+		cb_rotation.clear_elements();
+		cb_rotation.new_component<gui_rotation_item_t>(gui_rotation_item_t::random);
 	}
+	info_text.recalc_size();
+	reset_min_windowsize();
 }

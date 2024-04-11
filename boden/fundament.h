@@ -1,37 +1,34 @@
-#ifndef boden_fundament_h
-#define boden_fundament_h
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef BODEN_FUNDAMENT_H
+#define BODEN_FUNDAMENT_H
+
 
 #include "grund.h"
 
 
 /**
- * Das Fundament dient als Untergrund fuer alle Bauwerke in Simutrans.
- *
- * @author Hj. Malthaner
+ * The foundation serves as base ground for all buildings in Simutrans.
  */
 class fundament_t : public grund_t
 {
 protected:
-	/**
-	* Das Fundament hat immer das gleiche Bild.
-	* @author Hj. Malthaner
-	*/
-	void calc_bild_internal();
+	/// The foundation always has the same image.
+	void calc_image_internal(const bool calc_only_snowline_change) OVERRIDE;
 
 public:
-	fundament_t(karte_t *welt, loadsave_t *file, koord pos );
-	fundament_t(karte_t *welt, koord3d pos,hang_t::typ hang, bool build_up = true);
+	fundament_t(loadsave_t *file, koord pos );
+	fundament_t(koord3d pos,slope_t::type hang, bool build_up = true);
 
-	/**
-	* Das Fundament heisst 'Fundament'.
-	* @return gibt 'Fundament' zurueck.
-	* @author Hj. Malthaner
-	*/
-	const char *get_name() const {return "Fundament";}
+public:
+	/// @copydoc grund_t::get_name
+	const char *get_name() const OVERRIDE { return "Fundament"; }
 
-	typ get_typ() const { return fundament; }
-
-	bool set_slope(hang_t::typ) { slope = 0; return false; }
+	/// @copydoc grund_t::get_typ
+	typ get_typ() const OVERRIDE { return fundament; }
 };
 
 #endif

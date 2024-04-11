@@ -1,10 +1,16 @@
-#ifndef tpl_hashtable_tpl_h
-#define tpl_hashtable_tpl_h
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef TPL_HASHTABLE_TPL_H
+#define TPL_HASHTABLE_TPL_H
+
 
 #include "slist_tpl.h"
 #include "../macros.h"
 
-#define STHT_BAGSIZE 101
+#define STHT_BAGSIZE 3
 #define STHT_BAG_COUNTER_T uint8
 
 
@@ -13,20 +19,20 @@
  * like the hash generation is implemented by the third template parameter
  * hash_t (see ifc/hash_tpl.h)
  */
-template<class key_t, class value_t, class hash_t>
+template<class key_t, class value_t, class hash_t, size_t n_bags>
 class hashtable_tpl
 {
 protected:
 	struct node_t {
 	public:
-		key_t	  key;
-		value_t	value;
+		key_t   key;
+		value_t value;
 
 		int operator == (const node_t &x) const { return key == x.key; }
 	};
 
 	// the entires in the lists are sorted according to their keys
-	slist_tpl <node_t> bags[STHT_BAGSIZE];
+	slist_tpl <node_t> bags[n_bags];
 	uint32 count;
 
 /*
@@ -42,7 +48,7 @@ public:
 public:
 	STHT_BAG_COUNTER_T get_hash(const key_t key) const
 	{
-		return (STHT_BAG_COUNTER_T)(hash_t::hash(key) % STHT_BAGSIZE);
+		return (STHT_BAG_COUNTER_T)(hash_t::hash(key) % n_bags);
 	}
 
 	class iterator
@@ -195,19 +201,19 @@ public:
 
 	void clear()
 	{
-		for(STHT_BAG_COUNTER_T i=0; i<STHT_BAGSIZE; i++) {
+		for(STHT_BAG_COUNTER_T i=0; i<n_bags; i++) {
 			bags[i].clear();
 		}
 		count = 0;
 	}
 
 	// the elements are inserted with increasing key
-	// => faster retrivial (we only have to check half of the lists)
+	// => faster retrieval (we only have to check half of the lists)
 	const value_t &get(const key_t key) const
 	{
 		static value_t nix;
 		FORT(slist_tpl<node_t>, const& node, bags[get_hash(key)]) {
-			const int diff = hash_t::comp(node.key, key);
+			typename hash_t::diff_type diff = hash_t::comp(node.key, key);
 			if(  diff == 0  ) {
 				return node.value;
 			}
@@ -225,7 +231,7 @@ public:
 	{
 		slist_tpl<node_t>& bag = bags[get_hash(key)];
 		FORT(slist_tpl<node_t>, & node, bag) {
-			const int diff = hash_t::comp(node.key, key);
+			typename hash_t::diff_type diff = hash_t::comp(node.key, key);
 			if(  diff == 0  ) {
 				return &node.value;
 			}
@@ -237,10 +243,7 @@ public:
 		return NULL;
 	}
 
-	//
-	// Inserts a new value - failure, if key exists in table
-	// V. Meyer
-	//
+	/// Inserts a new value - failure if key exists in table
 	bool put(const key_t key, value_t object)
 	{
 		slist_tpl<node_t>& bag = bags[get_hash(key)];
@@ -249,7 +252,7 @@ public:
 		 * we also enter it sorted, saving lookout time for large lists ...
 		 */
 		for(  typename slist_tpl<node_t>::iterator iter = bag.begin(), end = bag.end();  iter != end;  ++iter  ) {
-			const int diff = hash_t::comp(iter->key, key);
+			typename hash_t::diff_type diff = hash_t::comp(iter->key, key);
 			if(  diff>0  ) {
 				node_t n;
 				n.key   = key;
@@ -259,7 +262,7 @@ public:
 				return true;
 			}
 			if(  diff == 0  ) {
-				dbg->message( "hashtable_tpl::put", "Duplicate hash!" );
+				//dbg->message( "hashtable_tpl::put", "Duplicate hash!" );
 				return false;
 			}
 		}
@@ -281,7 +284,7 @@ public:
 	{
 		const slist_tpl<node_t>& bag = bags[get_hash(key)];
 		FORT(slist_tpl<node_t>, const& node, bag) {
-			const int diff = hash_t::comp(node.key, key);
+			typename hash_t::diff_type diff = hash_t::comp(node.key, key);
 			if(  diff == 0  ) {
 				return true;
 			}
@@ -304,7 +307,7 @@ public:
 		 * we also enter it sorted, saving lookout time for large lists ...
 		 */
 		for(  typename slist_tpl<node_t>::iterator iter = bag.begin(), end = bag.end();  iter != end;  ++iter  ) {
-			const int diff = hash_t::comp(iter->key, key);
+			typename hash_t::diff_type diff = hash_t::comp(iter->key, key);
 			if(  diff>0  ) {
 				iter = bag.insert( iter );
 				iter->key = key;
@@ -325,15 +328,14 @@ public:
 
 	//
 	// Insert or replace a value - if a value is replaced, the old value is
-	// returned, otherwise a nullvalue. This may be useful, if you need to delete it
+	// returned, otherwise a nullvalue. This may be useful if you need to delete it
 	// afterwards.
-	// V. Meyer
 	//
 	value_t set(const key_t key, value_t object)
 	{
 		slist_tpl<node_t>& bag = bags[get_hash(key)];
 		for(  typename slist_tpl<node_t>::iterator iter = bag.begin(), end = bag.end();  iter != end;  ++iter  ) {
-			const int diff = hash_t::comp(iter->key, key);
+			typename hash_t::diff_type diff = hash_t::comp(iter->key, key);
 			if(  diff == 0  ) {
 				value_t value = iter->value;
 				iter->value = object;
@@ -363,7 +365,7 @@ public:
 	{
 		slist_tpl<node_t>& bag = bags[get_hash(key)];
 		for(  typename slist_tpl<node_t>::iterator iter = bag.begin(), end = bag.end();  iter != end;  ++iter  ) {
-			const int diff = hash_t::comp(iter->key, key);
+			typename hash_t::diff_type diff = hash_t::comp(iter->key, key);
 			if(  diff == 0  ) {
 				value_t v = iter->value;
 				bag.erase(iter);
@@ -380,7 +382,7 @@ public:
 
 	value_t remove_first()
 	{
-		for(STHT_BAG_COUNTER_T i = 0; i < STHT_BAGSIZE; i++) {
+		for(STHT_BAG_COUNTER_T i = 0; i < n_bags; i++) {
 			if(  !bags[i].empty()  ) {
 				count --;
 				return bags[i].remove_first().value;
@@ -388,19 +390,6 @@ public:
 		}
 		dbg->fatal( "hashtable_tpl::remove_first()", "Hashtable already empty!" );
 		return value_t();
-	}
-
-	void dump_stats()
-	{
-		for(STHT_BAG_COUNTER_T i = 0; i < STHT_BAGSIZE; i++) {
-			printf("Bag %d contains %ud elements\n", i, bags[i].get_count());
-
-			FORT(slist_tpl<node_t>, const& node, bags[i]) {
-				printf(" ");
-				hash_t::dump(node.key);
-				printf("\n");
-			}
-		}
 	}
 
 	uint32 get_count() const

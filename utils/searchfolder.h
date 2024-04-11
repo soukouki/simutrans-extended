@@ -1,13 +1,10 @@
 /*
- *  Copyright (c) 1997 - 2002 by Volker Meyer & Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic license.
- *
- *  Functionality:
- *      Searches a disk folder for files matching certain restrictions.
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
-#ifndef __SEARCHFOLDER_H
-#define __SEARCHFOLDER_H
+
+#ifndef UTILS_SEARCHFOLDER_H
+#define UTILS_SEARCHFOLDER_H
 
 
 #include <string>
@@ -15,8 +12,7 @@
 
 
 /**
- * @author Volker Meyer
- * @author Markohs
+ * Searches a disk folder for files matching certain restrictions.
  */
 class searchfolder_t {
 public:
@@ -27,6 +23,7 @@ public:
 	 * @param extension Extension of files to search for. Input a empty string to not enforce the restriction.
 	 * @param only_directories Extra restriction, will only consider directory entries.
 	 * @param prepend_path Will force prepending the base path to the output on each entry.
+	 * @returns Number files that matched the search parameters.
 	 */
 	int search(const std::string &filepath, const std::string &extension, const bool only_directories = false, const bool prepend_path = true);
 
@@ -38,7 +35,7 @@ public:
 	static std::string complete(const std::string &filepath, const std::string &extension);
 
 	/**
-	 * Function results will be accesible only in a const interator fashion.
+	 * Function results will be accessible only in a const iterator fashion.
 	 */
 	typedef vector_tpl<char*>::const_iterator const_iterator;
 	/**
@@ -66,12 +63,12 @@ private:
 	/**
 	 * Adds one entry to the list.
 	 * @param path Qualified path to the directory of the entry.
-	 * @param filename Filename of the file to add.
+	 * @param entry Filename of the file to add.
 	 * @param prepend Add the full path to the file or just the file name.
 	 */
 	void add_entry(const std::string &path, const char *entry, const bool prepend );
 	/**
-	 * Clears the seach results.
+	 * Clears the search results.
 	 */
 	void clear_list();
 };

@@ -1,160 +1,236 @@
 /*
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
- *
- * Intro and everything else
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include "../simcolor.h"
 #include "../simevent.h"
-#include "../simimg.h"
+#include "../display/simimg.h"
 #include "../simworld.h"
 #include "../simskin.h"
-#include "../simwin.h"
-#include "../simsys.h"
+#include "../sys/simsys.h"
 #include "../simversion.h"
-#include "../simgraph.h"
+#include "../display/simgraph.h"
 #include "../macros.h"
-#include "../besch/skin_besch.h"
-#include "../dataobj/umgebung.h"
+#include "../descriptor/skin_desc.h"
+#include "../dataobj/environment.h"
 
-
+#include "simwin.h"
 #include "banner.h"
 #include "loadsave_frame.h"
 #include "scenario_frame.h"
 #include "server_frame.h"
+#include "components/gui_image.h"
+#include "optionen.h"
 
 
-banner_t::banner_t( karte_t *w) : gui_frame_t(""),
-	logo( skinverwaltung_t::logosymbol->get_bild_nr(0), 0 ),
-	welt(w)
+// Local adjustments
+#define L_BANNER_ROWS        ( 5 )                             // Rows of scroll text
+#define L_BANNER_TEXT_INDENT ( 4 )                             // Scroll text padding (left/right)
+#define L_BANNER_HEIGHT      ( L_BANNER_ROWS * LINESPACE + 2 ) // Banner control height in pixels
+
+#ifdef _OPTIMIZED
+	#define L_DEBUG_TEXT " (optimized)"
+#elif defined DEBUG
+#	define L_DEBUG_TEXT " (debug)"
+#else
+#	define L_DEBUG_TEXT
+#endif
+
+// colors
+#define COLOR_RAMP_SIZE ( 5 ) // Number or fade colors + normal color at index 0
+
+// Banner color ramp
+// Index 0 is the normal text color
+static const uint8 colors[COLOR_RAMP_SIZE] = { COL_WHITE, COL_GREY3, COL_GREY4, COL_GREY5, COL_GREY6 };
+
+class banner_text_t : public gui_component_t
 {
-	last_ms = dr_time();
-	line = 0;
-	const koord size( D_MARGIN_LEFT+3*D_BUTTON_WIDTH+2*D_H_SPACE+D_MARGIN_RIGHT, 16+113+11*LINESPACE+2*D_BUTTON_HEIGHT+10 );
-	set_fenstergroesse( size );
-	logo.set_pos( koord( size.x-D_MARGIN_RIGHT-skinverwaltung_t::logosymbol->get_bild(0)->get_pic()->w, 40 ) );
-	add_komponente( &logo );
-	new_map.init( button_t::roundbox, "Neue Karte", koord( BUTTON1_X, size.y-16-2*D_BUTTON_HEIGHT-12 ), koord( D_BUTTON_WIDTH, D_BUTTON_HEIGHT ) );
-	new_map.add_listener( this );
-	add_komponente( &new_map );
-	load_map.init( button_t::roundbox, "Load game", koord( BUTTON2_X, size.y-16-2*D_BUTTON_HEIGHT-12 ), koord( D_BUTTON_WIDTH, D_BUTTON_HEIGHT ) );
-	load_map.add_listener( this );
-	add_komponente( &load_map );
-	load_scenario.init( button_t::roundbox, "Load scenario", koord( BUTTON2_X, size.y-16-D_BUTTON_HEIGHT-7 ), koord( D_BUTTON_WIDTH, D_BUTTON_HEIGHT ) );
-	load_scenario.add_listener( this );
-	add_komponente( &load_scenario );
-	join_map.init( button_t::roundbox, "join game", koord( BUTTON3_X, size.y-16-2*D_BUTTON_HEIGHT-12 ), koord( D_BUTTON_WIDTH, D_BUTTON_HEIGHT ) );
-	join_map.add_listener( this );
-	add_komponente( &join_map );
-	quit.init( button_t::roundbox, "Beenden", koord( BUTTON3_X, size.y-16-D_BUTTON_HEIGHT-7 ), koord( D_BUTTON_WIDTH, D_BUTTON_HEIGHT ) );
-	quit.add_listener( this );
-	add_komponente( &quit );
-}
+	sint32 last_ms;
+	int line;
+public:
+	banner_text_t() : last_ms(dr_time() - 70), line(0) {}
 
+	scr_size get_min_size() const OVERRIDE
+	{
+		return scr_size(0, L_BANNER_HEIGHT);
+	}
+
+	void draw(scr_coord offset) OVERRIDE;
+};
+
+banner_t::banner_t() : gui_frame_t("")
+{
+	set_table_layout(1,0);
+
+	new_component<gui_label_t>("This is an extended version of Simutrans", SYSCOL_TEXT_TITLE, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+
+#ifdef REVISION
+	new_component<gui_label_t>("Version " VERSION_NUMBER " " EXTENDED_VERSION " ", SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+	new_component<gui_label_t>(VERSION_DATE " #" QUOTEME(REVISION), SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+#else
+	new_component<gui_label_t>("Version " VERSION_NUMBER " " EXTENDED_VERSION " " VERSION_DATE, SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+#endif
+
+	add_table(5,0);
+	{
+		new_component_span<gui_label_t>("Simutrans-Extended is developed", SYSCOL_TEXT_TITLE, gui_label_t::left, 5)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+		new_component<gui_fill_t>();
+
+		add_table(1,0);
+		new_component<gui_label_t>("by the Simutrans community", SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+		new_component<gui_label_t>("under the Artistic Licence; forked", SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+		new_component<gui_label_t>("from Simutrans-Standard " QUOTEME(SIM_VERSION_MAJOR), SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+		end_table();
+
+		new_component<gui_fill_t>();
+		new_component<gui_image_t>()->set_image(skinverwaltung_t::logosymbol->get_image_id(0), true);
+		new_component<gui_fill_t>();
+	}
+	end_table();
+
+	new_component<gui_label_t>("Selling of the program is forbidden.", color_idx_to_rgb(COL_ORANGE), gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+	new_component<gui_label_t>("For questions and support please visit:", SYSCOL_TEXT_TITLE, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+
+	add_table(3,0);
+	{
+		new_component<gui_fill_t>();
+		add_table(1,0);
+		new_component<gui_label_t>("www.simutrans.com", SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+		new_component<gui_label_t>("forum.simutrans.com", SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+		new_component<gui_label_t>("wiki.simutrans.com", SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+		end_table();
+		new_component<gui_fill_t>();
+	}
+
+	end_table();
+
+	// scrolling text ...
+	new_component<banner_text_t>();
+
+	add_table(3,2)->set_force_equal_columns(true);
+	{
+		// New game button
+		new_map.init( button_t::roundbox | button_t::flexible, "Neue Karte");
+		new_map.add_listener( this );
+		add_component( &new_map );
+
+		// Load game button
+		load_map.init( button_t::roundbox | button_t::flexible, "Load game");
+		load_map.add_listener( this );
+		add_component( &load_map );
+
+		// Load scenario button
+		load_scenario.init( button_t::roundbox | button_t::flexible, "Load scenario");
+		load_scenario.add_listener( this );
+		add_component( &load_scenario );
+
+		// Options button
+		options.init( button_t::roundbox | button_t::flexible, "Optionen");
+		options.add_listener( this );
+		add_component( &options );
+
+		// Play online button
+		join_map.init( button_t::roundbox | button_t::flexible, "join game");
+		join_map.add_listener( this );
+		add_component( &join_map );
+
+		// Quit button
+		quit.init( button_t::roundbox | button_t::flexible, "Beenden");
+		quit.add_listener( this );
+		add_component( &quit );
+	}
+	end_table();
+
+	reset_min_windowsize();
+}
 
 
 bool banner_t::infowin_event(const event_t *ev)
 {
-	if(  gui_frame_t::getroffen( ev->cx, ev->cy  )  ) {
+	if(  gui_frame_t::is_hit( ev->cx, ev->cy  )  ) {
 		gui_frame_t::infowin_event( ev );
 	}
 	return false;
 }
 
 
-
-bool banner_t::action_triggered( gui_action_creator_t *komp, value_t)
+bool banner_t::action_triggered( gui_action_creator_t *comp, value_t)
 {
-	if(  komp == &quit  ) {
-		umgebung_t::quit_simutrans = true;
+	if(  comp == &quit  ) {
+		env_t::quit_simutrans = true;
 		destroy_all_win(true);
 	}
-	else if(  komp == &new_map  ) {
+	else if(  comp == &new_map  ) {
 		destroy_all_win(true);
 	}
-	else if(  komp == &load_map  ) {
+	else if(  comp == &load_map  ) {
 		destroy_all_win(true);
-		create_win( new loadsave_frame_t(welt, true), w_info, magic_load_t);
+		create_win( new loadsave_frame_t(true), w_info, magic_load_t);
 	}
-	else if(komp==&load_scenario) {
+	else if(  comp == &load_scenario  ) {
 		destroy_all_win(true);
-		create_win( new scenario_frame_t(welt), w_info, magic_load_t );
+		create_win( new scenario_frame_t(), w_info, magic_load_t );
 	}
-	else if(  komp == &join_map  ) {
+	else if(  comp == &options  ) {
 		destroy_all_win(true);
-		create_win( new server_frame_t(welt), w_info, magic_server_frame_t );
+		create_win( new optionen_gui_t(), w_info, magic_optionen_gui_t );
+	}
+	else if(  comp == &join_map  ) {
+		destroy_all_win(true);
+		create_win( new server_frame_t(), w_info, magic_server_frame_t );
 	}
 	return true;
 }
 
-#define COL_PT (5)
 
-void banner_t::zeichnen(koord pos, koord gr )
+void banner_text_t::draw(scr_coord offset)
 {
-	gui_frame_t::zeichnen( pos, gr );
-
-	// Hajo: add white line on top since this frame has no title bar.
-	display_fillbox_wh(pos.x, pos.y + 16, gr.x, 1, COL_GREY6, false);
-
-	KOORD_VAL yp = pos.y+22;
-	display_shadow_proportional( pos.x+10, yp, COL_PT, COL_BLACK, "This is an extended version of Simutrans", true );
-	yp += LINESPACE+5;
-#ifdef REVISION
-	display_shadow_proportional( pos.x+10, yp, COL_WHITE, COL_BLACK, "Version " VERSION_NUMBER, true );
-	yp += LINESPACE+2;
-	display_shadow_proportional( pos.x+10, yp, COL_WHITE, COL_BLACK, EXPERIMENTAL_VERSION " " VERSION_DATE " r" QUOTEME(REVISION), true );
-#else
-	display_shadow_proportional( pos.x+10, yp, COL_WHITE, COL_BLACK, "Version " VERSION_NUMBER " " EXPERIMENTAL_VERSION " " VERSION_DATE, true );
-#endif
-	yp += LINESPACE+7;
-
-	display_shadow_proportional( pos.x+8, yp, COL_PT, COL_BLACK,  "Simutrans-Experimental is developed", true );
-	yp += LINESPACE+5;
-	display_shadow_proportional( pos.x+8+24, yp, COL_WHITE, COL_BLACK, "by the Simutrans community", true );
-	yp += LINESPACE+2;
-	display_shadow_proportional( pos.x+8+24, yp, COL_WHITE, COL_BLACK, "under the Artistic Licence; forked", true );
-	yp += LINESPACE+2;
-	display_shadow_proportional( pos.x+8+24, yp, COL_WHITE, COL_BLACK, "from Simutrans-Standard "QUOTEME(SIM_VERSION_MAJOR) "." QUOTEME(SIM_VERSION_MINOR), true );
-	yp += LINESPACE+7;
-
-	display_shadow_proportional( pos.x+8+24, yp, COL_LIGHT_ORANGE, COL_BLACK, "Selling this software is forbidden.", true );
-	yp += LINESPACE+5;
-
-	display_shadow_proportional( pos.x+8, yp, COL_PT, COL_BLACK, "For more information, see the website and forum:", true );
-	yp += LINESPACE+2;
-	display_shadow_proportional( pos.x+8+24, yp, COL_WHITE, COL_BLACK, "http://www.simutrans.com", true );
-	yp += LINESPACE+2;
-	display_shadow_proportional( pos.x+8+24, yp, COL_WHITE, COL_BLACK, "http://forum.simutrans.com", true );
-	yp += LINESPACE+7;
-
 	// now the scrolling
+	//                    BANNER_ROWS defines size and how many rows of text are shown in banner
+	//                    BANNER_TEXT_INDENT defines left and right padding inside banner area
+
 	static const char* const scrolltext[] = {
-#include "../scrolltext.h"
+		#include "../scrolltext.h"
 	};
 
-	const KOORD_VAL text_line = (line / 9) * 2;
-	const KOORD_VAL text_offset = line % 9;
-	const KOORD_VAL left = pos.x + D_MARGIN_LEFT;
-	const KOORD_VAL width = gr.x-D_MARGIN_LEFT-D_MARGIN_RIGHT;
+	scr_coord cursor(get_pos() + offset);
+	const scr_coord_val text_line = (line / LINESPACE) * 2;
+	const scr_coord_val text_offset = line % LINESPACE;
+	const scr_coord_val left = cursor.x + D_MARGIN_LEFT;
+	const scr_coord_val width = size.w - D_MARGIN_LEFT - D_MARGIN_RIGHT;
+	const scr_coord_val height = size.h;
 
-	display_fillbox_wh(left, yp, width, 52, COL_GREY1, true);
-	display_fillbox_wh(left, yp - 1, width, 1, COL_GREY3, false);
-	display_fillbox_wh(left, yp + 52, width, 1, COL_GREY6, false);
 
-	PUSH_CLIP( left, yp, width, 52 );
-	display_proportional_clip( left + 4, yp + 1 - text_offset, scrolltext[text_line + 0], ALIGN_LEFT, COL_WHITE, false);
-	display_proportional_clip( left + width - 4, yp + 1 - text_offset, scrolltext[text_line + 1], ALIGN_RIGHT, COL_WHITE, false);
-	display_proportional( left + 4, yp + 11 - text_offset, scrolltext[text_line + 2], ALIGN_LEFT, COL_WHITE, false);
-	display_proportional( left + width - 4, yp + 11 - text_offset, scrolltext[text_line + 3], ALIGN_RIGHT, COL_WHITE, false);
-	display_proportional( left + 4, yp + 21 - text_offset, scrolltext[text_line + 4], ALIGN_LEFT, COL_GREY6, false);
-	display_proportional( left + width - 4, yp + 21 - text_offset, scrolltext[text_line + 5], ALIGN_RIGHT, COL_GREY6, false);
-	display_proportional( left + 4, yp + 31 - text_offset, scrolltext[text_line + 6], ALIGN_LEFT, COL_GREY5, false);
-	display_proportional( left + width - 4, yp + 31 - text_offset, scrolltext[text_line + 7], ALIGN_RIGHT, COL_GREY5, false);
-	display_proportional( left + 4, yp + 41 - text_offset, scrolltext[text_line + 8], ALIGN_LEFT, COL_GREY4, false);
-	display_proportional( left + width - 4, yp + 41 - text_offset, scrolltext[text_line + 9], ALIGN_RIGHT, COL_GREY4, false);
-	display_proportional_clip( left + 4, yp + 51 - text_offset, scrolltext[text_line + 10], ALIGN_LEFT, COL_GREY3, false);
-	display_proportional_clip( left + width - 4, yp + 51 - text_offset, scrolltext[text_line + 11], ALIGN_RIGHT, COL_GREY3, false);
+	PUSH_CLIP_FIT( left, cursor.y, width, height );
+
+	display_fillbox_wh_clip_rgb(left, cursor.y,          width, height, color_idx_to_rgb(COL_GREY1), true);
+	display_fillbox_wh_clip_rgb(left, cursor.y - 1,      width, 1,      color_idx_to_rgb(COL_GREY3), false);
+	display_fillbox_wh_clip_rgb(left, cursor.y + height, width, 1,      color_idx_to_rgb(COL_GREY6), false);
+
+	cursor.y++;
+
+	for(  int row = 0;  row < L_BANNER_ROWS+1;  row++  ) {
+
+		PIXVAL color;
+		if(  row > L_BANNER_ROWS-COLOR_RAMP_SIZE+1  ) {
+			color = color_idx_to_rgb(colors[L_BANNER_ROWS-row+1]);
+		}
+		else {
+			color = color_idx_to_rgb(colors[0]);
+		}
+
+		if (scrolltext[text_line + row * 2] == NULL || scrolltext[text_line + row * 2 + 1] == NULL)
+		{
+			break;
+		}
+
+		display_proportional_clip_rgb( left + L_BANNER_TEXT_INDENT,         cursor.y - text_offset, scrolltext[text_line + row*2    ], ALIGN_LEFT,  color, false);
+		display_proportional_clip_rgb( left + width - L_BANNER_TEXT_INDENT, cursor.y - text_offset, scrolltext[text_line + row*2 + 1], ALIGN_RIGHT, color, false);
+
+		cursor.y += LINESPACE;
+	}
+
 	POP_CLIP();
 
 	// scroll on every 70 ms
@@ -163,7 +239,8 @@ void banner_t::zeichnen(koord pos, koord gr )
 		line ++;
 	}
 
-	if (scrolltext[text_line + 12] == 0) {
+	if (scrolltext[text_line + (L_BANNER_ROWS+1)*2] == 0) {
 		line = 0;
 	}
+
 }

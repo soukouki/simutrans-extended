@@ -1,22 +1,20 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic license.
- * (see license.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef blockmanager_h
-#define blockmanager_h
+#ifndef OLD_BLOCKMANAGER_H
+#define OLD_BLOCKMANAGER_H
 
 
 class karte_t;
+class loadsave_t;
 
 
 /**
  * Der Blockmanager verwaltet die Blockstrecken.
  * Als singleton implementiert.
  * @see blockstrecke_t
- * @author Hj. Malthaner
  */
 class old_blockmanager_t
 {
@@ -25,7 +23,7 @@ private:
 
 public:
 	static void rdwr(karte_t *welt, loadsave_t *file);
-	static void laden_abschliessen(karte_t *welt);
+	static void finish_rd(karte_t *welt);
 };
 
 #endif

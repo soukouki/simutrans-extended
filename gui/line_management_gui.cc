@@ -1,79 +1,70 @@
 /*
- * part of the Simutrans project
- * @author hsiegeln
- * 01/12/2003
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#include "../dataobj/fahrplan.h"
-#include "../dataobj/translator.h"
+#include "../dataobj/schedule.h"
 #include "../dataobj/loadsave.h"
-#include "../gui/karte.h"
+#include "minimap.h"
 #include "../simline.h"
-#include "../simwin.h"
-#include "../simwerkz.h"
-#include "../simlinemgmt.h"
+#include "simwin.h"
+#include "../simtool.h"
 #include "../utils/cbuffer_t.h"
 
 #include "line_management_gui.h"
 
-line_management_gui_t::line_management_gui_t(linehandle_t line, spieler_t* sp) :
-	fahrplan_gui_t(line->get_schedule()->copy(), sp, convoihandle_t() )
+line_management_gui_t::line_management_gui_t(linehandle_t line, player_t* player_) :
+	schedule_gui_t()
 {
 	this->line = line;
-	// has this line a single running convoi?
-	if(  line->count_convoys() > 0  ) {
-		reliefkarte_t::get_karte()->set_current_cnv( line->get_convoy(0) );
+	if (line.is_bound() ) {
+		schedule_gui_t::init(line);
+
+		title.printf("%s - %s", translator::translate("Fahrplan"), line->get_name());
+		gui_frame_t::set_name(title);
 	}
-	show_line_selector(false);
 }
 
 
 line_management_gui_t::~line_management_gui_t()
 {
-	delete old_fpl;	// since we pass a *copy* of the line's schedule to the base class
-	old_fpl = NULL;
-}
-
-
-
-const char *line_management_gui_t::get_name() const
-{
-	return translator::translate("Line Management");
+	delete old_schedule; // since we pass a *copy* of the line's schedule to the base class
+	old_schedule = NULL;
 }
 
 
 bool line_management_gui_t::infowin_event(const event_t *ev)
 {
-	if(  sp!=NULL  ) {
+	if(  player!=NULL  ) {
 		// not "magic_line_schedule_rdwr_dummy" during loading of UI ...
 		if(  !line.is_bound()  ) {
 			destroy_win( this );
 		}
 		else  {
-			if(  fahrplan_gui_t::infowin_event(ev)  ) {
+			if(  schedule_gui_t::infowin_event(ev)  ) {
 				return true;
 			}
 			if(  ev->ev_class == INFOWIN  &&  ev->ev_code == WIN_CLOSE  ) {
-				// Added by : Knightly
-				// Check if the schedule is modified
-				// Bernd Gabriel, Feb 14, 2010: this->fpl is a copy of line->schedule now.
-				//  Thus line->is_schedule_updated() always returns false now, as changes to this->fpl aren't present there, yet.
-				//if ( line->is_schedule_updated() ) 
-				// @jamespetts, 3rd of February 2011: And, further, with the change in Standard yesterday removing "old_fpl", the is_schedule_updated
-				// method is completely depracated.
-				karte_t * world = line->get_besitzer()->get_welt();
-				if (!fpl->matches(world, line->get_schedule()))
+				if (!schedule->matches(welt, line->get_schedule()))
 				{
+					FOR(minivec_tpl<schedule_entry_t>, &i, schedule->entries)
+					{
+						// It is necessary to re-set the reversing status here, as
+						// the reversing status of one stop may well change depending on
+						// what other stops are next to it in the schedule.
+						i.reverse = -1;
+					}
+
 					// update all convoys of this line!
 					// update line schedule via tool!
-					werkzeug_t *w = create_tool( WKZ_LINE_TOOL | SIMPLE_TOOL );
+					tool_t *tool = create_tool( TOOL_CHANGE_LINE | SIMPLE_TOOL );
 					cbuffer_t buf;
 					buf.printf( "g,%i,", line.get_id() );
-					fpl->sprintf_schedule( buf );
-					w->set_default_param(buf);
-					world->set_werkzeug( w, line->get_besitzer() );
+					schedule->sprintf_schedule( buf );
+					tool->set_default_param(buf);
+					welt->set_tool( tool, line->get_owner() );
 					// since init always returns false, it is save to delete immediately
-					delete w;
+					delete tool;
 				}
 			}
 		}
@@ -83,51 +74,58 @@ bool line_management_gui_t::infowin_event(const event_t *ev)
 
 
 
-line_management_gui_t::line_management_gui_t(karte_t *welt) :
-	fahrplan_gui_t( welt )
-{
-	show_line_selector(false);
-}
-
 void line_management_gui_t::rdwr(loadsave_t *file)
 {
-	// this handles only schedules of bound convois
-	// lines are handled by line_management_gui_t
+	scr_size size = get_windowsize();
+	size.rdwr( file );
+	// player that edits
 	uint8 player_nr;
-	koord gr = get_fenstergroesse();
-	if(  file->is_saving()  ) {
-		player_nr = line->get_besitzer()->get_player_nr();
+	if (file->is_saving()) {
+		player_nr = player->get_player_nr();
 	}
-	else {
-		// dummy types
-		old_fpl = new autofahrplan_t();
-		fpl = new autofahrplan_t();
-	}
-	gr.rdwr( file );
 	file->rdwr_byte( player_nr );
+	player = welt->get_player(player_nr);
 	simline_t::rdwr_linehandle_t(file, line);
-	old_fpl->rdwr(file);
-	fpl->rdwr(file);
-	if(  file->is_loading()  ) {
-		spieler_t *sp = welt->get_spieler(player_nr);
-		assert(sp);	// since it was alive during saving, this shoudl never happen
 
-		if(  line.is_bound()  &&  old_fpl->matches( welt, line->get_schedule() )  ) {
-			// now we can open the window ...
-			koord const& pos = win_get_pos(this);
-			line_management_gui_t *w = new line_management_gui_t( line, sp );
-			create_win(pos.x, pos.y, w, w_info, (ptrdiff_t)line.get_rep());
-			w->set_fenstergroesse( gr );
-			w->fpl->copy_from( fpl );
+	// save edited schedule
+	if(  file->is_loading()  ) {
+		// dummy types
+		old_schedule = new truck_schedule_t();
+		schedule = new truck_schedule_t();
+	}
+	schedule->rdwr(file);
+	old_schedule->rdwr(file);
+
+	if(  file->is_loading()  ) {
+		player_t *player = welt->get_player(player_nr);
+		assert(player); // since it was alive during saving, this should never happen
+		if(  line.is_bound()  &&  old_schedule->matches( welt, line->get_schedule() )  ) {
+
+			delete old_schedule;
+			old_schedule = NULL;
+
+			schedule_t *save_schedule = schedule->copy();
+
+			schedule_gui_t::init(line);
+			title.printf("%s - %s", translator::translate("Fahrplan"), line->get_name());
+			gui_frame_t::set_name(title);
+			// init replaced schedule, restore
+			schedule->copy_from(save_schedule);
+			delete save_schedule;
+
+			if(  line->count_convoys() > 0  ) {
+				minimap_t::get_instance()->set_selected_cnv(line->get_convoy(0));
+			}
+
+			set_windowsize(size);
+
+			win_set_magic(this, (ptrdiff_t)line.get_rep());
 		}
 		else {
+			line = linehandle_t();
+			player = NULL; // prevent destructor from updating
+			destroy_win( this );
 			dbg->error( "line_management_gui_t::rdwr", "Could not restore schedule window for line id %i", line.get_id() );
 		}
-		sp = NULL;
-		delete old_fpl;
-		delete fpl;
-		fpl = old_fpl = NULL;
-		line = linehandle_t();
-		destroy_win( this );
 	}
 }

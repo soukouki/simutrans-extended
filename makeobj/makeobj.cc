@@ -1,118 +1,169 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "../utils/log.h"
+
+log_t::level_t debuglevel = log_t::LEVEL_WARN;
 
 #include "../simdebug.h"
 #include "../simtypes.h"
 #include "../simversion.h"
 #include "../utils/simstring.h"
-#include "../besch/writer/obj_pak_exception.h"
-#include "../besch/writer/root_writer.h"
-#include "../besch/writer/image_writer.h"
+#include "../descriptor/writer/obj_pak_exception.h"
+#include "../descriptor/writer/root_writer.h"
+#include "../descriptor/writer/image_writer.h"
+
 
 // Needed to avoid linking problems
-unsigned long dr_time(void)
+uint32 dr_time(void)
 {
 	return 0;
 }
 
+
 int main(int argc, char* argv[])
 {
-	argv++, argc--;
+	argv++; argc--;
 
-	init_logging("stderr", true, true, "Makeobj version " MAKEOBJ_VERSION " for simutrans " VERSION_NUMBER EXPERIMENTAL_VERSION " and higher\n", "makeobj");
+	init_logging("stderr", true, true, "", "makeobj");
+	debuglevel = log_t::LEVEL_WARN; // only warnings and errors
 
-	if (argc && !STRICMP(argv[0], "quiet")) {
-		argv++, argc--;
-	} else {
-		puts(
-			"\nMakeobj-Experimental, based on Makeobj version " MAKEOBJ_VERSION " for Simutrans " VERSION_NUMBER EXPERIMENTAL_VERSION " and higher\n"
-			"Experimental version by James E. Petts, derived from Makeobj, (c) 2002-2012 V. Meyer , Hj. Malthaner and \n"
-			"M. Pristovsek and the Simutrans development team. This is open source software, released under the Artistic Licence.\n"
-		);
+	while(  argc  &&  (  !STRICMP(argv[0], "quiet")  ||  !STRICMP(argv[0], "verbose")  ||  !STRICMP(argv[0], "debug")  )  ) {
+
+		if (argc && !STRICMP(argv[0], "debug")) {
+			argv++; argc--;
+			debuglevel = log_t::LEVEL_DEBUG; // everything
+		}
+		else if (argc && !STRICMP(argv[0], "verbose")) {
+			argv++; argc--;
+			debuglevel = log_t::LEVEL_MSG; // only messages errors
+		}
+		else if (argc && !STRICMP(argv[0], "quiet")) {
+			argv++; argc--;
+			debuglevel = log_t::LEVEL_ERROR; // only fatal errors
+		}
+
+		if(  debuglevel>=log_t::LEVEL_WARN  ) {
+			puts(
+				"Makeobj-Extended, based on Makeobj version " MAKEOBJ_VERSION " for Simutrans " VERSION_NUMBER EXTENDED_VERSION " and higher"
+				"Extended version by James E. Petts, derived from Makeobj, (c) 2002-2012 V. Meyer , Hj. Malthaner and \n"
+				"M. Pristovsek and the Simutrans development team. This is open source software, released under the Artistic Licence.\n"
+			);
+		}
 	}
 
 	if (argc && !STRICMP(argv[0], "capabilities")) {
-		argv++, argc--;
+		argv++; argc--;
 		root_writer_t::instance()->capabilites();
 		return 0;
 	}
 
 	if (argc && !STRICMP(argv[0], "pak")) {
-		argv++, argc--;
+		argv++; argc--;
 
 		try {
 			const char* dest;
 			if (argc) {
 				dest = argv[0];
-				argv++, argc--;
-			} else {
+				argv++; argc--;
+			}
+			else {
 				dest = "./";
 			}
 			root_writer_t::instance()->write(dest, argc, argv);
 		}
 		catch (const obj_pak_exception_t& e) {
-			fprintf(stderr, "ERROR IN CLASS %s: %s\n", e.get_class(), e.get_info());
+			dbg->error( e.get_class(), e.get_info() );
 			return 1;
 		}
 		return 0;
 	}
 
 	if (argc && STRNICMP(argv[0], "pak", 3) == 0) {
-		int img_size = atoi(argv[0] + 3);
+		const int img_size = atoi(argv[0] + 3);
 
 		if (img_size >= 16 && img_size < 32766) {
-			printf("Image size is set to %dx%d\n", img_size, img_size);
+			dbg->message( "Image size", "Now set to %dx%d", img_size, img_size );
 
-			image_writer_t::set_img_size(img_size);
+			obj_writer_t::set_img_size(img_size);
 
-			argv++, argc--;
+			argv++; argc--;
 
 			try {
 				const char* dest;
 				if (argc) {
 					dest = argv[0];
-					argv++, argc--;
-				} else {
+					argv++; argc--;
+				}
+				else {
 					dest = "./";
 				}
 				root_writer_t::instance()->write(dest, argc, argv);
 			}
 			catch (const obj_pak_exception_t& e) {
-				fprintf(stderr, "ERROR IN CLASS %s: %s\n", e.get_class(), e.get_info());
+				dbg->error( e.get_class(), e.get_info() );
 				return 1;
 			}
 
-			// image_writer_t::dump_special_histogramm();
 			return 0;
 		}
 	}
 
+	if (argc && !STRICMP(argv[0], "expand")) {
+		argv++; argc--;
+
+		try {
+			const char* dest;
+
+			if (argc) {
+				dest = argv[0];
+				argv++; argc--;
+			}
+			else {
+				dest = "./";
+			}
+
+			root_writer_t::instance()->expand_dat(dest, argc, argv);
+		}
+		catch (const obj_pak_exception_t& e) {
+			dbg->error( e.get_class(), e.get_info() );
+			return 1;
+		}
+
+		return 0;
+	}
+
 	if (argc > 1) {
 		if (!STRICMP(argv[0], "dump")) {
-			argv++, argc--;
+			argv++; argc--;
 			root_writer_t::instance()->dump(argc, argv);
 			return 0;
 		}
 		if (!STRICMP(argv[0], "list")) {
-			argv++, argc--;
+			argv++; argc--;
 			root_writer_t::instance()->list(argc, argv);
 			return 0;
 		}
 		if (!STRICMP(argv[0], "extract")) {
-			argv++, argc--;
+			argv++; argc--;
 			root_writer_t::instance()->uncopy(argv[0]);
 			return 0;
 		}
 		if (!STRICMP(argv[0], "merge")) {
-			argv++, argc--;
+			argv++; argc--;
 			try {
 				const char* dest = argv[0];
-				argv++, argc--;
+				argv++; argc--;
 				root_writer_t::instance()->copy(dest, argc, argv);
 			}
 			catch (const obj_pak_exception_t& e) {
-				fprintf(stderr, "ERROR IN CLASS %s: %s\n", e.get_class(), e.get_info());
+				dbg->error( e.get_class(), e.get_info() );
 				return 1;
 			}
 			return 0;
@@ -120,30 +171,44 @@ int main(int argc, char* argv[])
 	}
 
 	puts(
-		"\n   Usage:\n"
+		"\n   Usage: MakeObj [QUIET|VERBOSE|DEBUG] <Command> <params>\n"
+		"\n"
 		"      MakeObj CAPABILITIES\n"
 		"         Gives the list of objects, this program can read\n"
 		"      MakeObj PAK <pak file> <dat file(s)>\n"
 		"         Creates a ready to use pak file for Simutrans from the dat files\n"
 		"      MakeObj pak128 <pak file> <dat file(s)>\n"
 		"         Creates a special pak file for with 128x128 images\n"
-		"         Works with PAK16 up to PAK255 but only 32 to 224 are tested\n"
+		"         Works with PAK16 up to PAK32767 but only up to 255 are tested\n"
 		"      MakeObj LIST <pak file(s)>\n"
 		"         Lists the contents of the given pak files\n"
 		"      MakeObj DUMP <pak file> <pak file(s)>\n"
 		"         List the internal nodes of a file\n"
 		"      MakeObj MERGE <pak file library> <pak file(s)>\n"
 		"         Merges multiple pak files into one new pak file library\n"
-		"      MakeObj EXTRACT <pak file archieve>\n"
+		"      MakeObj EXPAND <output> <dat file(s)>\n"
+		"         Expands minified notation to complete notation on dat file(s)\n"
+		"      MakeObj EXTRACT <pak file archive>\n"
 		"         Creates single files from a pak file library\n"
 		"\n"
-		"      with QUIET as first arg copyright message will be omitted\n"
-		"      with a trailing slash a direcory is searched rather than a file\n"
+		"      with a trailing slash a directory is searched rather than a file\n"
 		"      default for PAK is PAK ./ ./\n"
-#if 0
-		"      MakeObj DUMP <pak file(s)>\n"
-		"         Dumps the node structure of the given pak files\n"
-#endif
+		"\n"
+		"      with QUIET as first arg status and copyright messages are omitted\n"
+		"\n"
+		"      with VERBOSE as first arg also unused lines\n"
+		"      and unassigned entries are printed\n"
+		"\n"
+		"      DEBUG dumps extended information about the pak process.\n"
+		"          Source: interpreted line from .dat file\n"
+		"          Image:  .png file name\n"
+		"          X:      X start position in .png to pack\n"
+		"          Y:      Y start position in .png to pack\n"
+		"          Off X:  X offset in image\n"
+		"          Off Y:  Y offset in image\n"
+		"          Width:  image width\n"
+		"          Width:  image height\n"
+		"          Zoom:   If image is zoomable or not\n"
 	);
 
 	return 3;

@@ -1,32 +1,21 @@
 /*
- * float32e8_t.h
- *
- *  Created on: 22.05.2011
- *      Author: Bernd
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef FLOAT32E8_T_H_
-#define FLOAT32E8_T_H_
+#ifndef UTILS_FLOAT32E8_T_H
+#define UTILS_FLOAT32E8_T_H
+
+
+#include "../simtypes.h"
 
 #include <iostream>
-using namespace std;
-
+#include <cmath>
 #include <string>
-#include <math.h>
 
-#ifndef NO_SIMUTRANS
-	#include "../simtypes.h"
-#else
-	typedef unsigned	long long	uint64;
-	typedef 			long long	sint64;
-	typedef unsigned	long		uint32;
-	typedef 			long		sint32;
-	typedef unsigned	short		uint16;
-	typedef 			short		sint16;
-	typedef unsigned	char  		uint8;
-#endif
-	
+
 class loadsave_t;
+
 
 class float32e8_t
 {
@@ -55,11 +44,11 @@ protected:
 			}
 			else
 			{
-				return _ild[x];
+				return _ild[(uint8)x];
 			}
 		}
 	}
-	
+
 protected:
 	uint32 m;	// mantissa
 	sint16 e;	// exponent
@@ -73,20 +62,26 @@ public:
 	static const sint16 max_exponent;
 	static const uint32 max_mantissa;
 	static const float32e8_t zero;
+	static const float32e8_t micro;
+	static const float32e8_t ten_thousandth;
+	static const float32e8_t milli;
+	static const float32e8_t centi;
 	static const float32e8_t tenth;
 	static const float32e8_t quarter;
 	static const float32e8_t third;
 	static const float32e8_t half;
+
 	static const float32e8_t one;
 	static const float32e8_t two;
 	static const float32e8_t three;
 	static const float32e8_t four;
-	static const float32e8_t milli;
-	static const float32e8_t micro;
+	static const float32e8_t ten;
+	static const float32e8_t hundred;
+	static const float32e8_t thousand;
+	static const float32e8_t tenthousand;
 
-	inline float32e8_t() {};
+	inline float32e8_t() : m(0L), e(0), ms(false) {};
 
-	inline float32e8_t(const float32e8_t &value) { m = value.m; e = value.e; ms = value.ms; }
 	inline float32e8_t(const uint32 mantissa, const sint16 exponent, const bool negative_man) { m = mantissa; e = exponent; ms = negative_man; }
 	inline void set_value(const float32e8_t &value) { m = value.m; e = value.e; ms = value.ms; }
 	inline bool is_zero() const { return m == 0L; }
@@ -105,8 +100,8 @@ public:
 
 	inline float32e8_t(const sint32 nominator, const sint32 denominator) { set_value(float32e8_t(nominator) / float32e8_t(denominator)); }
 	inline float32e8_t(const uint32 nominator, const uint32 denominator) { set_value(float32e8_t(nominator) / float32e8_t(denominator)); }
-	inline float32e8_t(const sint64 nominator, const sint64 denominator) { set_value(float32e8_t(nominator) / float32e8_t(denominator)); }
-	inline float32e8_t(const uint64 nominator, const uint64 denominator) { set_value(float32e8_t(nominator) / float32e8_t(denominator)); }
+	//inline float32e8_t(const sint64 nominator, const sint64 denominator) { set_value(float32e8_t(nominator) / float32e8_t(denominator)); }
+	//inline float32e8_t(const uint64 nominator, const uint64 denominator) { set_value(float32e8_t(nominator) / float32e8_t(denominator)); }
 
 	inline void set_value(const uint8 value)
 	{
@@ -251,20 +246,20 @@ public:
 	const float32e8_t operator * (const float32e8_t &value) const;
 	const float32e8_t operator / (const float32e8_t &value) const;
 
-	inline const float32e8_t operator + (const uint8 value) const { return *this + float32e8_t(value); } 
-	inline const float32e8_t operator - (const uint8 value) const { return *this - float32e8_t(value); } 
-	inline const float32e8_t operator * (const uint8 value) const { return *this * float32e8_t(value); } 
-	inline const float32e8_t operator / (const uint8 value) const { return *this / float32e8_t(value); } 
+	inline const float32e8_t operator + (const uint8 value) const { return *this + float32e8_t(value); }
+	inline const float32e8_t operator - (const uint8 value) const { return *this - float32e8_t(value); }
+	inline const float32e8_t operator * (const uint8 value) const { return *this * float32e8_t(value); }
+	inline const float32e8_t operator / (const uint8 value) const { return *this / float32e8_t(value); }
 
-	inline const float32e8_t operator + (const sint32 value) const { return *this + float32e8_t(value); } 
-	inline const float32e8_t operator - (const sint32 value) const { return *this - float32e8_t(value); } 
-	inline const float32e8_t operator * (const sint32 value) const { return *this * float32e8_t(value); } 
-	inline const float32e8_t operator / (const sint32 value) const { return *this / float32e8_t(value); } 
+	inline const float32e8_t operator + (const sint32 value) const { return *this + float32e8_t(value); }
+	inline const float32e8_t operator - (const sint32 value) const { return *this - float32e8_t(value); }
+	inline const float32e8_t operator * (const sint32 value) const { return *this * float32e8_t(value); }
+	inline const float32e8_t operator / (const sint32 value) const { return *this / float32e8_t(value); }
 
-	inline const float32e8_t operator + (const uint32 value) const { return *this + float32e8_t(value); } 
-	inline const float32e8_t operator - (const uint32 value) const { return *this - float32e8_t(value); } 
-	inline const float32e8_t operator * (const uint32 value) const { return *this * float32e8_t(value); } 
-	inline const float32e8_t operator / (const uint32 value) const { return *this / float32e8_t(value); } 
+	inline const float32e8_t operator + (const uint32 value) const { return *this + float32e8_t(value); }
+	inline const float32e8_t operator - (const uint32 value) const { return *this - float32e8_t(value); }
+	inline const float32e8_t operator * (const uint32 value) const { return *this * float32e8_t(value); }
+	inline const float32e8_t operator / (const uint32 value) const { return *this / float32e8_t(value); }
 
 	inline const float32e8_t operator + (const sint64 value) const { return *this + float32e8_t(value); }
 	inline const float32e8_t operator - (const sint64 value) const { return *this - float32e8_t(value); }
@@ -312,23 +307,26 @@ public:
 	const float32e8_t log2() const;
 	const float32e8_t exp2() const;
 
+	// For efficient use in checksums:
+	inline uint32 get_mantissa() { return m; }
+
 	void rdwr(loadsave_t *file);
 
 private:
 #ifdef USE_DOUBLE
 public:
 #else
-	friend ostream & operator << (ostream &out, const float32e8_t &x);
+	friend std::ostream &operator << (std::ostream &out, const float32e8_t &x);
 #endif
 public:
 	double to_double() const;
 	sint32 to_sint32() const;
 	//const string to_string() const;
 
-	inline operator sint32 () const { return to_sint32(); }
+	explicit inline operator sint32 () const { return to_sint32(); }
 };
 
-ostream & operator << (ostream &out, const float32e8_t &x);
+std::ostream &operator << (std::ostream &out, const float32e8_t &x);
 
 inline const float32e8_t operator + (const uint8 x, const float32e8_t &y) {return float32e8_t(x) + y; }
 inline const float32e8_t operator - (const uint8 x, const float32e8_t &y) {return float32e8_t(x) - y; }
@@ -377,6 +375,21 @@ public:
 
 	const char* get_message()  const { return message.c_str(); }
 };
+
+#ifdef NETTOOL
+#undef min
+#undef max
+#endif
+
+static inline float32e8_t fl_min(const float32e8_t a, const float32e8_t b)
+{
+	return a < b ? a : b;
+}
+
+static inline float32e8_t fl_max(const float32e8_t a, const float32e8_t b)
+{
+	return a > b ? a : b;
+}
 
 
 #endif /* FLOAT32E8_T_H_ */

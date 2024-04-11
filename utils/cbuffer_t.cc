@@ -1,3 +1,8 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -68,10 +73,13 @@ void cbuffer_t::free ()
 
 void cbuffer_t::append(const char * text)
 {
-	size_t const n = strlen(text);
-	extend(n);
-	memcpy(buf + size, text, n + 1);
-	size += n;
+	size_t const n = text ? strlen( text ) : 0;
+	if (n)
+	{
+		extend( n );
+		memcpy( buf + size, text, n + 1);
+		size += n;
+	}
 }
 
 void cbuffer_t::append(long n)
@@ -98,7 +106,7 @@ void cbuffer_t::append(long n)
 }
 
 
-void cbuffer_t::append (const char* text, size_t maxchars)
+void cbuffer_t::append(const char* text, size_t maxchars)
 {
 	size_t const n = min( strlen( text ), maxchars );
 	extend( n );
@@ -110,13 +118,19 @@ void cbuffer_t::append (const char* text, size_t maxchars)
 
 void cbuffer_t::append(double n,int decimals)
 {
-	char tmp[32];
+	char tmp[128];
 	number_to_string( tmp, n, decimals );
 	append(tmp);
 }
 
+void cbuffer_t::append_money(double money)
+{
+	char tmp[128];
+	money_to_string(tmp, money, true);
+	append(tmp);
+}
 
-const char* cbuffer_t::get_str () const
+const char* cbuffer_t::get_str() const
 {
 	return buf;
 }
@@ -127,7 +141,7 @@ const char* cbuffer_t::get_str () const
  * If an error occurs, an error message is printed into @p error.
  * Checks for positional parameters: either all or no parameter have to be positional as eg %1$d.
  * If positional parameter %[n]$ is specified then all up to n have to be present in the string as well.
- * Treates all integer parameters %i %u %d etc the same.
+ * Treats all integer parameters %i %u %d etc the same.
  * Ignores positional width parameters as *[n].
  *
  * @param format format string
@@ -149,11 +163,12 @@ static void get_format_mask(const char* format, char *typemask, int max_params, 
 		}
 		format++;
 		// read out position
-		int i = atoi(format);
+		const int i = atoi(format);
 		// skip numbers
 		while(*format  &&  ('0'<=*format  &&  *format<='9') ) format++;
+
 		// check for correct positional argument
-		if (i>0) {
+		if (i>0 && i<=max_params) {
 			if (format  &&  *format=='$')  {
 				format ++;
 				if (found > 0  &&  !positional) {
@@ -180,9 +195,9 @@ static void get_format_mask(const char* format, char *typemask, int max_params, 
 				if (mask == ' ') {
 					// broken format string
 				}
-				else {
+				else if (pos < max_params) {
 					// found valid format
-					if (pos >= max_params) 
+					if (pos >= max_params)
 						error.printf("Too many parameters or illegal position %d not in supported range 0..%d.", pos, max_params - 1);
 					typemask[pos] = mask;
 					found++;
@@ -198,7 +213,7 @@ static void get_format_mask(const char* format, char *typemask, int max_params, 
 		for(uint16 i=0; i<found; i++) {
 			if (typemask[i]==0) {
 				// unspecified
-				error.printf("Positional parameter %d not specified.", i+1);
+				error.printf("Positional parameter %d not specified.", i);
 				return;
 			}
 		}
@@ -207,6 +222,7 @@ static void get_format_mask(const char* format, char *typemask, int max_params, 
 err_mix_pos_nopos:
 	error.append("Either all or no parameters have to be positional.");
 }
+
 
 /**
  * Check whether the format specifiers in @p translated match those in @p master.
@@ -257,7 +273,6 @@ bool cbuffer_t::check_format_strings(const char* master, const char* translated)
 			               i+1, translated, master, master_tm[i], translated_tm[i], master_tm,translated_tm);
 			return false;
 		}
-		i++;
 	}
 	return true;
 }
@@ -284,16 +299,16 @@ static int my_vsnprintf(char *buf, size_t n, const char* fmt, va_list ap )
 	if(  const char *c=strstr( fmt, "%1$" )  ) {
 		// but they are requested here ...
 		// our routine can only handle max. 9 parameters
-		char pos[6];
+		char pos[13];
 		static char format_string[256];
 		char *cfmt = format_string;
-		static char buffer[16000];	// the longest possible buffer ...
+		static char buffer[16000]; // the longest possible buffer ...
 		int count = 0;
 		for(  ;  c  &&  count<9;  count++  ) {
 			sprintf( pos, "%%%i$", count+1 );
 			c = strstr( fmt, pos );
 			if(  c  ) {
-				// extend format string, using 1 as marke between strings
+				// extend format string, using 1 as mark between strings
 				if(  count  ) {
 					*cfmt++ = '\01';
 				}
@@ -367,21 +382,26 @@ void cbuffer_t::printf(const char* fmt, ...)
 }
 
 
-void cbuffer_t::vprintf(const char *fmt,  va_list ap )
+void cbuffer_t::vprintf(const char *fmt, va_list ap )
 {
 	for (;;) {
-		size_t const n     = capacity - size;
+		size_t const n = capacity - size;
 		size_t inc;
 
 		va_list args;
-#ifdef __va_copy
+
+#if defined(va_copy)
+		va_copy(args, ap);
+#elif defined(__va_copy)
+		// Deprecated macro possibly used by older compilers.
 		__va_copy(args, ap);
 #else
-		// HACK: this is undefined behavior but should work ... hopefully ...
-		args = ap;
+		// Undefined behaviour that might work.
+		args = ap; // If this throws an error then C++11 conformance may be required.
 #endif
-		int    const count = my_vsnprintf(buf + size, n, fmt, args );
-		if (count < 0) {
+
+		const int count = my_vsnprintf( buf+size, n, fmt, args );
+		if(  count < 0  ) {
 #ifdef _WIN32
 			inc = capacity;
 #else
@@ -389,31 +409,50 @@ void cbuffer_t::vprintf(const char *fmt,  va_list ap )
 			buf[size] = '\0';
 			break;
 #endif
-		} else if ((size_t)count < n) {
+		}
+		else if(  (size_t)count < n  ) {
 			size += count;
 			break;
-		} else {
+		}
+		else {
 			// Make room for the string.
 			inc = (size_t)count;
 		}
 		extend(inc);
+
+		va_end(args);
 	}
 }
 
 
 void cbuffer_t::extend(unsigned int min_free_space)
 {
-	if (min_free_space >= capacity - size) {
+	if(  min_free_space >= capacity - size  ) {
+
 		unsigned int by_amount = min_free_space + 1 - (capacity - size);
-		if (by_amount < capacity) {
+		if(  by_amount < capacity  ) {
 			// At least double the size of the buffer.
 			by_amount = capacity;
 		}
+
 		unsigned int new_capacity = capacity + by_amount;
 		char *new_buf = new char [new_capacity];
 		memcpy( new_buf, buf, capacity );
 		delete [] buf;
 		buf = new_buf;
 		capacity = new_capacity;
+	}
+}
+
+
+// remove whitespace and unprinatable characters
+void cbuffer_t::trim()
+{
+	while (size > 0) {
+		const unsigned char c = buf[size - 1];
+		if (c >= 33) {
+			break;
+		}
+		size--;
 	}
 }

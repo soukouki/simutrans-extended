@@ -1,51 +1,54 @@
 /*
- * Copyright (c) 1997 - 2010 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef gui_fixedwidth_textarea_h
-#define gui_fixedwidth_textarea_h
+#ifndef GUI_COMPONENTS_GUI_FIXEDWIDTH_TEXTAREA_H
+#define GUI_COMPONENTS_GUI_FIXEDWIDTH_TEXTAREA_H
 
-#include "gui_komponente.h"
-#include "../../simgraph.h"
+
+#include "gui_component.h"
+#include "gui_container.h"
+#include "../../display/simgraph.h"
 
 class cbuffer_t;
 
 /**
- * Knightly :
- *	A fixed-width, automatically line-wrapping text-area,
- *	optionally with a reserved area in the upper right corner.
- *	It does *not* add 10px margins from the top and the left.
- *	Core code borrowed from ding_infowin_t::calc_draw_info() with adaptation.
+ * A fixed-width, automatically line-wrapping text-area,
+ * optionally with a reserved area in the upper right corner.
+ * It does *not* add 10px margins from the top and the left.
+ * Core code borrowed from ding_infowin_t::calc_draw_info() with adaptation.
  */
-class gui_fixedwidth_textarea_t : public gui_komponente_t
+class gui_fixedwidth_textarea_t : public gui_component_t
 {
 private:
-	// Pointer to the text to be displayed. The text is *not* copied.
+	/// Pointer to the text to be displayed. The text is *not* copied.
 	cbuffer_t* buf;
 
-	// reserved area in the upper right corner
-	koord reserved_area;
+	/// Reserved area in the upper right corner
+	scr_size reserved_area;
 
-	// for calculating text height and/or displaying the text
-	// borrowed from ding_infowin_t::calc_draw_info() with adaptation
-	void calc_display_text(const koord offset, const bool draw);
+	/**
+	 * For calculating text height and/or displaying the text.
+	 */
+	scr_size calc_display_text(const scr_coord offset, const bool draw) const;
 
 public:
-	gui_fixedwidth_textarea_t(cbuffer_t* buf, const sint16 width, const koord reserved_area = koord(0,0));
+	gui_fixedwidth_textarea_t(cbuffer_t* buf, const sint16 width);
 
+	// call this after buffer size changes
 	void recalc_size();
 
-	// after using any of these setter functions, remember to call recalc_size() to recalculate textarea height
-	void set_width(const sint16 width);
-	void set_reserved_area(const koord area);
+	// this sets a maximum width. The actual width may be smaller, depending on the text
+	void set_width(scr_coord_val width) OVERRIDE;
 
-	// it will deliberately ignore the y-component (height) of groesse
-	void set_groesse(koord groesse) OVERRIDE;
+	void set_reserved_area(const scr_size area);
 
-	virtual void zeichnen(koord offset);
+	void draw(scr_coord offset) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE;
+
+	scr_size get_max_size() const OVERRIDE;
 };
 
 #endif

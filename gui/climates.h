@@ -1,12 +1,11 @@
 /*
- * dialog for setting the climate border and other map related parameters
- *
- * Hj. Malthaner
- * April 2000
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef climate_gui_h
-#define climate_gui_h
+#ifndef GUI_CLIMATES_H
+#define GUI_CLIMATES_H
+
 
 #include "gui_frame.h"
 #include "components/gui_button.h"
@@ -20,29 +19,33 @@ class settings_t;
 
 /**
  * set the climate borders
- * @author prissi
  */
 class climate_gui_t  : public gui_frame_t, private action_listener_t
 {
 private:
 	settings_t* sets;
 
-	enum { MAX_CLIMATE_LABEL=14 };
+	enum { MAX_CLIMATE_LABEL=15 };
+	gui_numberinput_t
+		water_level,
+		mountain_height,
+		mountain_roughness,
+		snowline_winter,
+		climate_borders_ui[rocky_climate];
 
-	// since decrease/increase buttons always pair these ...
-	gui_numberinput_t water_level, mountain_height, mountain_roughness;
+	gui_label_buf_t
+		summer_snowline;
 
-	gui_numberinput_t snowline_winter;
+	button_t
+		no_tree; // without tree
 
-	gui_numberinput_t climate_borders_ui[rocky_climate];
+	button_t
+		lake; // lake
 
-	gui_label_t numberinput_lbl[MAX_CLIMATE_LABEL], summer_snowline;
-
-	char snowline_txt[16];
-
-	button_t no_tree; // without tree
-
-	gui_numberinput_t river_n, river_min, river_max;
+	gui_numberinput_t
+		river_n,
+		river_min,
+		river_max;
 
 	// Gives a hilly landscape
 	// @author: jamespetts
@@ -60,12 +63,11 @@ public:
 	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
-	 * @author Hj. Malthaner
 	 */
-	const char * get_hilfe_datei() const {return "climates.txt";}
+	const char * get_help_filename() const OVERRIDE {return "climates.txt";}
 
 	// does not work during new world dialog
-	virtual bool has_sticky() const { return false; }
+	bool has_sticky() const OVERRIDE { return false; }
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 

@@ -1,52 +1,35 @@
 /*
- * Copyright (c) 1997 - 2003 Hansjörg Malthaner
- * Copyright 2013 Nathanael Nerode, James Petts
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/*
- * Display information about each configured good
- * as a list like display
- * @author Hj. Malthaner
- */
+#ifndef GUI_GOODS_STATS_T_H
+#define GUI_GOODS_STATS_T_H
 
-#ifndef good_stats_t_h
-#define good_stats_t_h
 
 #include "../simtypes.h"
-#include "components/gui_komponente.h"
+#include "components/gui_aligned_container.h"
 
+template<class T> class vector_tpl;
+class goods_desc_t;
 
-class karte_t;
-
-class goods_stats_t : public gui_komponente_t
+class goods_stats_t : public gui_aligned_container_t
 {
+	static karte_ptr_t welt;
+
 private:
-	static karte_t *welt;
-	uint16 *goodslist;
-	int relative_speed_percentage;
+	uint32 vehicle_speed;
 	uint8 comfort;
 	uint8 catering_level;
 	uint32 distance_meters;
-	waytype_t way_type;
-
-	// The number of goods to be displayed. May be less than maximum number of goods possible,
-	// if we are filtering to only the goods being produced by factories in the current game.
-	int listed_goods;
+	uint8 g_class;
 
 public:
-	goods_stats_t( karte_t *welt );
+	goods_stats_t() {}
 
 	// update list and resize
-	void update_goodslist(uint16 *g, int relative_speed_percentage, int listed_goods, uint32 distance, uint8 comfort, uint8 catering, waytype_t waytype);
-
-	/**
-	* Draw the component
-	* @author Hj. Malthaner
-	*/
-	void zeichnen(koord offset);
+	//void update_goodslist(uint16 *g, uint32 vehicle_speed, int listd_goods, uint32 distance, uint8 comfort, uint8 catering, uint8 g_class);
+	void update_goodslist(vector_tpl<const goods_desc_t*>, uint32 vehicle_speed, /*int listd_goods,*/ uint32 distance, uint8 comfort, uint8 catering, uint8 g_class, uint8 display_mode);
 };
 
 #endif

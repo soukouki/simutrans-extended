@@ -1,46 +1,66 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include <string.h>
 
 #include "money_frame.h"
 #include "ai_option_t.h"
+#include "headquarter_info.h"
+#include "simwin.h"
 
 #include "../simworld.h"
 #include "../simdebug.h"
-#include "../simgraph.h"
+#include "../display/simgraph.h"
 #include "../simcolor.h"
-#include "../simwin.h"
 #include "../utils/simstring.h"
 #include "../dataobj/translator.h"
-#include "../dataobj/umgebung.h"
+#include "../dataobj/environment.h"
 #include "../dataobj/scenario.h"
 #include "../dataobj/loadsave.h"
 
+#include "components/gui_button_to_chart.h"
+
 // for headquarter construction only ...
 #include "../simmenu.h"
-#include "../bauer/hausbauer.h"
 
+// for stats only ...
+#include "../convoy.h"
+#include "../simhalt.h"
+#include "../simline.h"
+#include "../linehandle_t.h"
+#include "../simdepot.h"
+#include "../obj/bruecke.h"
+#include "../obj/gebaeude.h"
+#include "../obj/wayobj.h"
+#include "../obj/signal.h"
+#include "../obj/roadsign.h"
+#include "../obj/tunnel.h"
+#include "../descriptor/way_desc.h"
+#include "../descriptor/building_desc.h"
+#include "../descriptor/tunnel_desc.h"
+#include "../vehicle/vehicle.h"
+#include "halt_list_frame.h"
+#include "schedule_list.h"
+#include "convoi_frame.h"
+#include "components/gui_divider.h"
+#include "components/gui_waytype_image_box.h"
+#include "signalboxlist_frame.h"
+#include "../simsignalbox.h"
 
-// remebers last settings
-static uint32 bFilterStates[MAX_PLAYER_COUNT];
+// remembers last settings
+static vector_tpl<sint32> bFilterStates;
 
-#define COST_BALANCE    10 // bank balance
+#define BUTTONSPACE max(D_BUTTON_HEIGHT, LINESPACE)
 
-#define BUTTONWIDTH 120
-#define BUTTONSPACE 14
+#define FINANCE_TABLE_ROWS 13
 
-#define COLUMN_TWO_START 10
-
-// @author hsiegeln
-const char *money_frame_t::cost_type_name[MAX_PLAYER_COST_BUTTON] =
+static const char *cost_type_name[MAX_PLAYER_COST_BUTTON] =
 {
 	"Revenue",
 	"Operation",
+	"Vehicle maintenance",
 	"Maintenance",
 	"Road toll",
 	"Ops Profit",
@@ -48,96 +68,165 @@ const char *money_frame_t::cost_type_name[MAX_PLAYER_COST_BUTTON] =
 	"Construction_Btn",
 	"Interest",
 	"Gross Profit",
-	"Transported",
+	"Pax-km",
 	"Cash",
 	"Assets",
 	"Net Wealth",
 	"Credit Limit",
 	"Solvency Limit",
-	"Margin (%)"
+	"Margin (%)",
+	"Mail-km",
+	"Freight-km"
 };
 
-const char money_frame_t::cost_tooltip[MAX_PLAYER_COST_BUTTON][256] =
+static const char *cost_tooltip[MAX_PLAYER_COST_BUTTON] =
 {
   "Gross revenue",
-  "Vehicle running costs (both fixed and distance related)",
-  "Recurring expenses of infrastructure maintenance", 
+  "Vehicle running costs per km",
+  "Vehicle maintenance costs per month",
+  "Recurring expenses of infrastructure maintenance",
   "The charges incurred or revenues earned by running on other players' ways",
-  "Operating revenue less operating expenditure", 
-  "Capital expenditure on vehicle purchases and upgrades", 	
-  "Capital expenditure on infrastructure", 
-  "Cost of overdraft interest payments", 
-  "Total income less total expenditure", 
-  "Number of units of passengers and goods transported", 
-  "Total liquid assets", 
-  "Total capital assets, excluding liabilities", 
-  "Total assets less total liabilities", 
+  "Operating revenue less operating expenditure",
+  "Capital expenditure on vehicle purchases and upgrades",
+  "Capital expenditure on infrastructure",
+  "Cost of overdraft interest payments",
+  "Total income less total expenditure",
+  "A measure of the amount of passengers transported, expressed in passenger-kilometre",
+  "Total liquid assets",
+  "Total capital assets, excluding liabilities",
+  "Total assets less total liabilities",
   "The maximum amount that can be borrowed without prohibiting further capital outlays",
   "The maximum amount that can be borrowed without going bankrupt",
-  "Percentage of revenue retained as profit"
+  "Percentage of revenue retained as profit",
+  "A measure of the amount of mail transported, expressed in tonne-kilometre",
+  "A measure of the amount of freight transported, expressed in tonne-kilometre"
 };
 
 
-const COLOR_VAL money_frame_t::cost_type_color[MAX_PLAYER_COST_BUTTON] =
+static const uint8 cost_type_color[MAX_PLAYER_COST_BUTTON] =
 {
 	COL_REVENUE,
 	COL_OPERATION,
+	COL_VEH_MAINTENANCE,
 	COL_MAINTENANCE,
 	COL_TOLL,
-	COL_OPS_PROFIT,
+	COL_PROFIT,
 	COL_NEW_VEHICLES,
 	COL_CONSTRUCTION,
 	COL_INTEREST,
-	COL_PROFIT,
-	COL_TRANSPORTED,
+	COL_CASH_FLOW,
+	COL_LIGHT_PURPLE,
 	COL_CASH,
 	COL_VEHICLE_ASSETS,
 	COL_WEALTH,
 	COL_SOFT_CREDIT_LIMIT,
 	COL_HARD_CREDIT_LIMIT,
-	COL_MARGIN
+	COL_MARGIN,
+	COL_TRANSPORTED,
+	COL_BROWN
 };
 
-const uint8 money_frame_t::cost_type[3*MAX_PLAYER_COST_BUTTON] =
+
+static const uint8 cost_type[3*MAX_PLAYER_COST_BUTTON] =
 {
-	ATV_REVENUE_TRANSPORT,          TT_ALL, MONEY,    // Income
-	ATV_RUNNING_COST,               TT_ALL, MONEY,    // Vehicle running costs
-	ATV_INFRASTRUCTURE_MAINTENANCE, TT_ALL, MONEY,    // Upkeep
-	ATV_WAY_TOLL,                   TT_ALL, MONEY,
-	ATV_OPERATING_PROFIT,           TT_ALL, MONEY,
-	ATV_NEW_VEHICLE,                TT_ALL, MONEY,   // New vehicles
-	ATV_CONSTRUCTION_COST,	        TT_ALL, MONEY,   // Construction
-	ATC_INTEREST,					TT_MAX, MONEY,	// Interest paid servicing debt
-	ATV_PROFIT,                     TT_ALL, MONEY,
-	ATV_TRANSPORTED,                TT_ALL, STANDARD, // all transported goods
-	ATC_CASH,                       TT_MAX, MONEY,   // Cash
-	ATV_NON_FINANCIAL_ASSETS,       TT_ALL, MONEY,   // value of all vehicles and buildings
-	ATC_NETWEALTH,                  TT_MAX, MONEY,   // Total Cash + Assets
-	ATC_SOFT_CREDIT_LIMIT,			TT_MAX, MONEY,	// Maximum amount that can be borrowed
-	ATC_HARD_CREDIT_LIMIT,			TT_MAX, MONEY,	// Borrowing which will lead to bankruptcy
-	ATV_PROFIT_MARGIN,              TT_ALL, STANDARD
+	ATV_REVENUE_TRANSPORT,          TT_ALL, gui_chart_t::MONEY,    // Income
+	ATV_RUNNING_COST,               TT_ALL, gui_chart_t::MONEY,    // Vehicle running costs
+	ATV_VEHICLE_MAINTENANCE,        TT_ALL, gui_chart_t::MONEY,    // Vehicle monthly maintenance
+	ATV_INFRASTRUCTURE_MAINTENANCE, TT_ALL, gui_chart_t::MONEY,    // Upkeep
+	ATV_WAY_TOLL,                   TT_ALL, gui_chart_t::MONEY,
+	ATV_OPERATING_PROFIT,           TT_ALL, gui_chart_t::MONEY,
+	ATV_NEW_VEHICLE,                TT_ALL, gui_chart_t::MONEY,    // New vehicles
+	ATV_CONSTRUCTION_COST,          TT_ALL, gui_chart_t::MONEY,    // Construction
+	ATC_INTEREST,                   TT_MAX, gui_chart_t::MONEY,    // Interest paid servicing debt
+	ATV_PROFIT,                     TT_ALL, gui_chart_t::MONEY,
+	ATV_TRANSPORTED_PASSENGER,      TT_ALL, gui_chart_t::PAX_KM,   // all transported pax
+	ATC_CASH,                       TT_MAX, gui_chart_t::MONEY,    // Cash
+	ATV_NON_FINANCIAL_ASSETS,       TT_ALL, gui_chart_t::MONEY,    // value of all vehicles and buildings
+	ATC_NETWEALTH,                  TT_MAX, gui_chart_t::MONEY,    // Total Cash + Assets
+	ATC_SOFT_CREDIT_LIMIT,          TT_MAX, gui_chart_t::MONEY,    // Maximum amount that can be borrowed
+	ATC_HARD_CREDIT_LIMIT,          TT_MAX, gui_chart_t::MONEY,    // Borrowing which will lead to insolvency
+	ATV_PROFIT_MARGIN,              TT_ALL, gui_chart_t::PERCENT,
+	ATV_TRANSPORTED_MAIL,           TT_ALL, gui_chart_t::TON_KM_MAIL,  // all transported mail
+	ATV_TRANSPORTED_GOOD,           TT_ALL, gui_chart_t::TON_KM,   // all transported goods
+};
+
+static const sint8 cell_to_buttons[] =
+{
+	0,  -1,  -1,  -1,  -1,
+	1,  -1,  -1,  -1,  -1,
+	2,  -1,  -1,  -1,  -1,
+	3,  -1,  -1,  -1,  -1,
+	4,  -1,  -1,  -1,  -1,
+	5,  -1,  -1,  -1,  -1,
+	6,  -1,  -1,  11,  -1,
+	7,  -1,  -1,  12,  -1,
+	8,  -1,  -1,  13,  -1,
+	9,  -1,  -1,  14,  -1,
+	10, -1,  -1,  15,  -1,
+	17,  -1,  -1,  16,  -1,
+	18,  -1,  -1,  -1,  -1
 };
 
 
-/* order has to be same as in enum transport_type in file player/finance.h */
-const char * money_frame_t::transport_type_values[TT_MAX] = {
-	"All",
-	"Truck",
-	"Train",
-	"Ship",
-	"Monorail",
-	"Maglev",
-	"Tram",
-	"Narrowgauge",
-	"Air",
-	"tt_Other",
-	"Powerlines",
+// money label types: tt, atv, current/previous, type
+static const uint16 label_type[] =
+{
+	TT_ALL, ATV_REVENUE_TRANSPORT,          0, gui_chart_t::MONEY,
+	TT_ALL, ATV_REVENUE_TRANSPORT,          1, gui_chart_t::MONEY,
+	TT_ALL, ATV_RUNNING_COST,               0, gui_chart_t::MONEY,
+	TT_ALL, ATV_RUNNING_COST,               1, gui_chart_t::MONEY,
+	TT_ALL, ATV_VEHICLE_MAINTENANCE,        0, gui_chart_t::MONEY,
+	TT_ALL, ATV_VEHICLE_MAINTENANCE,        1, gui_chart_t::MONEY,
+	TT_ALL, ATV_INFRASTRUCTURE_MAINTENANCE, 0, gui_chart_t::MONEY,
+	TT_ALL, ATV_INFRASTRUCTURE_MAINTENANCE, 1, gui_chart_t::MONEY,
+	TT_ALL, ATV_WAY_TOLL,                   0, gui_chart_t::MONEY,
+	TT_ALL, ATV_WAY_TOLL,                   1, gui_chart_t::MONEY,
+	TT_ALL, ATV_OPERATING_PROFIT,           0, gui_chart_t::MONEY,
+	TT_ALL, ATV_OPERATING_PROFIT,           1, gui_chart_t::MONEY,
+	TT_ALL, ATV_NEW_VEHICLE,                0, gui_chart_t::MONEY,
+	TT_ALL, ATV_NEW_VEHICLE,                1, gui_chart_t::MONEY,
+	TT_ALL, ATV_CONSTRUCTION_COST,          0, gui_chart_t::MONEY,
+	TT_ALL, ATV_CONSTRUCTION_COST,          1, gui_chart_t::MONEY,
+	TT_MAX, ATC_INTEREST,                   0, gui_chart_t::MONEY,
+	TT_MAX, ATC_INTEREST,                   1, gui_chart_t::MONEY,
+	TT_ALL, ATV_PROFIT,                     0, gui_chart_t::MONEY,
+	TT_ALL, ATV_PROFIT,                     1, gui_chart_t::MONEY,
+	TT_ALL, ATV_TRANSPORTED_PASSENGER,      0, gui_chart_t::PAX_KM,
+	TT_ALL, ATV_TRANSPORTED_PASSENGER,      1, gui_chart_t::PAX_KM,
+	TT_ALL, ATV_TRANSPORTED_MAIL,           0, gui_chart_t::TON_KM_MAIL,
+	TT_ALL, ATV_TRANSPORTED_MAIL,           1, gui_chart_t::TON_KM_MAIL,
+	TT_ALL, ATV_TRANSPORTED_GOOD,           0, gui_chart_t::TON_KM,
+	TT_ALL, ATV_TRANSPORTED_GOOD,           1, gui_chart_t::TON_KM,
+	TT_MAX, ATC_CASH,                       0, gui_chart_t::MONEY,
+	TT_ALL, ATV_NON_FINANCIAL_ASSETS,       0, gui_chart_t::MONEY,
+	TT_MAX, ATC_NETWEALTH,                  0, gui_chart_t::MONEY,
+	TT_MAX, ATC_SOFT_CREDIT_LIMIT,          0, gui_chart_t::MONEY,
+	TT_MAX, ATC_HARD_CREDIT_LIMIT,          0, gui_chart_t::MONEY,
+	TT_ALL, ATV_PROFIT_MARGIN,              0, gui_chart_t::PERCENT
 };
+
+static const sint8 cell_to_moneylabel[] =
+{
+	-1,   0,   1,  -1,  -1,
+	-1,   2,   3,  -1,  -1,
+	-1,   4,   5,  -1,  -1,
+	-1,   6,   7,  -1,  -1,
+	-1,   8,   9,  -1,  -1,
+	-1,  10,  11,  -1,  -1,
+	-1,  12,  13,  -1,  26,
+	-1,  14,  15,  -1,  27,
+	-1,  16,  17,  -1,  28,
+	-1,  18,  19,  -1,  29,
+	-1,  20,  21,  -1,  30,
+	-1,  22,  23,  -1,  31,
+	-1,  24,  25,  -1,  -1,
+};
+
 
 /// Helper method to query data from players statistics
 sint64 money_frame_t::get_statistics_value(int tt, uint8 type, int yearmonth, bool monthly)
 {
-	const finance_t* finance = sp->get_finance();
+	const finance_t* finance = player->get_finance();
 	if (tt == TT_MAX) {
 		return monthly ? finance->get_history_com_month(yearmonth, type)
 		               : finance->get_history_com_year( yearmonth, type);
@@ -149,35 +238,54 @@ sint64 money_frame_t::get_statistics_value(int tt, uint8 type, int yearmonth, bo
 	}
 }
 
-
-/**
- * Updates label text and color.
- * @param buf used to save the string
- * @param transport_type transport type to query statistics for (or TT_ALL)
- * @param type value from accounting_type_common (if transport_type==TT_ALL) or accounting_type_vehicles
- * @param yearmonth how many months/years back in history (0 == current)
- * @param label_type MONEY or STANDARD
- * @param always_monthly: reference monthly values even when in "year" mode
- */
-void money_frame_t::update_label(gui_label_t &label, char *buf, int transport_type, uint8 type, int yearmonth, int label_type, bool always_monthly)
+class money_frame_label_t : public gui_label_buf_t
 {
-	bool monthly = always_monthly || year_month_tabs.get_active_tab_index()==1;
-	sint64 value = get_statistics_value(transport_type, type, yearmonth, monthly);
-	int color = value >= 0 ? (value > 0 ? MONEY_PLUS : COL_YELLOW) : MONEY_MINUS;
+	uint8 transport_type;
+	uint8 type;
+	uint8 label_type;
+	uint8 index;
+	bool monthly;
 
-	if (label_type == MONEY) {
-		const double cost = value / 100.0;
-		money_to_string(buf, cost );
-	}
-	else {
-		const double cost = value / 1.0;
-		money_to_string(buf, cost );
-		buf[strlen(buf)-4] = 0;	// remove comma
+public:
+	money_frame_label_t(uint8 tt, uint8 t, uint8 lt, uint8 i, bool mon)
+	: gui_label_buf_t(lt == gui_chart_t::STANDARD ? SYSCOL_TEXT : MONEY_PLUS, lt != gui_chart_t::MONEY ? gui_label_t::right : gui_label_t::money_right)
+	, transport_type(tt), type(t), label_type(lt), index(i), monthly(mon)
+	{
 	}
 
-	label.set_text(buf);
-	label.set_color(color);
-}
+	void update(money_frame_t *mf)
+	{
+		uint8 tt = transport_type == TT_ALL ? mf->transport_type_option : transport_type;
+		sint64 value = mf->get_statistics_value(tt, type, index, monthly ? 1 : 0);
+		PIXVAL color = value >= 0 ? (value > 0 ? MONEY_PLUS : SYSCOL_TEXT_UNUSED) : MONEY_MINUS;
+
+		switch (label_type) {
+			case gui_chart_t::MONEY:
+				buf().append_money(value / 100.0);
+				break;
+			case gui_chart_t::PERCENT:
+				buf().append(value / 100.0, 2);
+				buf().append("%");
+				break;
+			case gui_chart_t::PAX_KM:
+				buf().append(value / 10.0, 0);
+				buf().append(translator::translate("pkm"));
+				break;
+			case gui_chart_t::TON_KM_MAIL:
+				buf().append(value / 1000.0, 2);
+				buf().append(translator::translate("tkm"));
+				break;
+			case gui_chart_t::TON_KM:
+				buf().append(value / 10.0, 0);
+				buf().append(translator::translate("tkm"));
+				break;
+			default:
+				buf().append(value * 1.0, 0);
+		}
+		gui_label_buf_t::update();
+		set_color(color);
+	}
+};
 
 
 void money_frame_t::fill_chart_tables()
@@ -199,7 +307,7 @@ void money_frame_t::fill_chart_tables()
 
 bool money_frame_t::is_chart_table_zero(int ttoption)
 {
-	if (sp->get_finance()->get_maintenance_with_bits((transport_type)ttoption) != 0) {
+	if (player->get_finance()->get_maintenance_with_bits((transport_type)ttoption) != 0) {
 		return false;
 	}
 	// search for any non-zero values
@@ -225,519 +333,928 @@ bool money_frame_t::is_chart_table_zero(int ttoption)
 	return true;
 }
 
-
-money_frame_t::money_frame_t(spieler_t *sp)
-  : gui_frame_t( translator::translate("Finanzen"), sp),
-		tylabel("This Year", COL_WHITE, gui_label_t::right),
-		lylabel("Last Year", COL_WHITE, gui_label_t::right),
-		conmoney(NULL, COL_WHITE, gui_label_t::money),
-		nvmoney(NULL, COL_WHITE, gui_label_t::money),
-		vrmoney(NULL, COL_WHITE, gui_label_t::money),
-		imoney(NULL, COL_WHITE, gui_label_t::money),
-		tmoney(NULL, COL_WHITE, gui_label_t::money),
-		mmoney(NULL, COL_WHITE, gui_label_t::money),
-		omoney(NULL, COL_WHITE, gui_label_t::money),
-		interest(NULL, COL_WHITE, gui_label_t::money),
-		old_conmoney(NULL, COL_WHITE, gui_label_t::money),
-		old_nvmoney(NULL, COL_WHITE, gui_label_t::money),
-		old_vrmoney(NULL, COL_WHITE, gui_label_t::money),
-		old_imoney(NULL, COL_WHITE, gui_label_t::money),
-		old_tmoney(NULL, COL_WHITE, gui_label_t::money),
-		old_mmoney(NULL, COL_WHITE, gui_label_t::money),
-		old_omoney(NULL, COL_WHITE, gui_label_t::money),
-		old_interest(NULL, COL_WHITE, gui_label_t::money),
-		tylabel2("This Year", COL_WHITE, gui_label_t::right),
-		cash_money(NULL, COL_WHITE, gui_label_t::money),
-		assets(NULL, COL_WHITE, gui_label_t::money),
-		net_wealth(NULL, COL_WHITE, gui_label_t::money),
-		margin(NULL, COL_WHITE, gui_label_t::money),
-		soft_credit_limit(NULL, COL_WHITE, gui_label_t::money),
-		hard_credit_limit(NULL, COL_WHITE, gui_label_t::money),
-		transport(NULL, COL_WHITE, gui_label_t::right),
-		old_transport(NULL, COL_WHITE, gui_label_t::right),
-		toll(NULL, COL_WHITE, gui_label_t::money),
-		old_toll(NULL, COL_WHITE, gui_label_t::money),
-		maintenance_label("Next Month:",COL_WHITE, gui_label_t::right),
-		maintenance_label2("Fixed Costs",COL_WHITE, gui_label_t::right),
-		maintenance_money(NULL, COL_RED, gui_label_t::money),
-		// vehicle_maintenance_money(NULL, COL_RED, gui_label_t::money),
-		warn("", COL_YELLOW, gui_label_t::left),
-		scenario("", COL_BLACK, gui_label_t::left),
-		transport_type_option(0),
-		headquarter_view(sp->get_welt(), koord3d::invalid, koord(BUTTONWIDTH, 64))
+#define L_VALUE_CELL_WIDTH proportional_string_width("8,888.8km")
+void money_frame_t::init_stats()
 {
-	if(sp->get_welt()->get_spieler(0)!=sp) {
-		sprintf(money_frame_title,translator::translate("Finances of %s"),translator::translate(sp->get_name()) );
+	uint8 active_wt_count = 0;
+	for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+		if( depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) ) ) {
+			active_wt_count++;
+		}
+	}
+	cont_stats.set_table_layout(1,0);
+	cont_stats.new_component<gui_heading_t>("Monthly maintenance cost details", SYSCOL_TEXT, get_titlecolor(), 2);
+	cont_stats.add_table(active_wt_count+3,0)->set_spacing( scr_size(D_H_SPACE,1) );
+	{
+		// 0. header (symbol)
+		cont_stats.new_component<gui_margin_t>(10);
+		cont_stats.new_component<gui_margin_t>(10);
+		// symbol
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.new_component<gui_waytype_image_box_t>( finance_t::translate_tt_to_waytype((transport_type)(i+1)), true );
+			}
+		}
+		cont_stats.new_component<gui_label_t>("Total", SYSCOL_TEXT_TITLE, gui_label_t::centered);
+
+		//-- buildings
+		// 1-2. depots
+		bt_access_depotlist.init(button_t::arrowright_state, "");
+		bt_access_depotlist.add_listener(this);
+		cont_stats.add_component(&bt_access_depotlist);
+		cont_stats.new_component<gui_label_t>("Depots")->set_tooltip(translator::translate("Number of depots per way type, and those monthly maintenance costs."));
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_depots[i]);
+				lb_depots[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_total_depots.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_depots);
+
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_depots_maint[i]);
+				lb_depots_maint[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_total_depot_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_depot_maint);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE / 2, active_wt_count+3);
+
+		// 3. station counts
+		bt_access_haltlist.init(button_t::arrowright_state, "");
+		bt_access_haltlist.add_listener(this);
+		cont_stats.add_component(&bt_access_haltlist);
+		cont_stats.new_component<gui_label_t>("Stops")->set_tooltip(translator::translate("hlptxt_mf_stations"));
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_station_counts[i]);
+				lb_station_counts[i].set_align(gui_label_t::right);
+				lb_station_counts[i].set_min_size(scr_size(L_VALUE_CELL_WIDTH,D_LABEL_HEIGHT));
+			}
+		}
+		lb_total_halts.set_align(gui_label_t::right);
+		lb_total_halts.set_min_size(scr_size(L_VALUE_CELL_WIDTH, D_LABEL_HEIGHT));
+		cont_stats.add_component(&lb_total_halts);
+
+		cont_stats.new_component_span<gui_empty_t>(active_wt_count+2);
+		lb_total_halt_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_halt_maint);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE / 2, active_wt_count+3);
+
+		// 4. signalbox
+		bt_access_signalboxlist.init(button_t::arrowright_state, "");
+		bt_access_signalboxlist.add_listener(this);
+		cont_stats.add_component(&bt_access_signalboxlist);
+		cont_stats.new_component<gui_label_t>("Signalboxes")->set_tooltip(translator::translate("Number of signalboxes and total monthly maintenance costs."));
+		cont_stats.new_component_span<gui_empty_t>(active_wt_count);
+		lb_signalbox_count.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_signalbox_count);
+
+		cont_stats.new_component_span<gui_empty_t>(active_wt_count+2);
+		lb_signalbox_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_signalbox_maint);
+
+		// divider
+		cont_stats.new_component_span<gui_divider_t>(active_wt_count+3);
+
+		// way and way objects
+		// 5-6. way total distance (tiles)
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_label_t>("way_distances")->set_tooltip(translator::translate("hlptxt_mf_way_distances"));
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_way_distances[i]);
+				lb_way_distances[i].set_align(gui_label_t::right);
+			}
+		}
+		cont_stats.new_component<gui_empty_t>();
+
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_way_maintenances[i]);
+				lb_way_maintenances[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_total_way_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_way_maint);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE/2, active_wt_count+3);
+
+		// 4-5. electrification  distance (tiles)
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_label_t>("Electrified Distances")->set_tooltip(translator::translate("hlptxt_mf_electrified_distances"));
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_electrified_distances[i]);
+				lb_electrified_distances[i].set_align(gui_label_t::right);
+			}
+		}
+		cont_stats.new_component<gui_empty_t>();
+
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_electrification_maint[i]);
+				lb_electrification_maint[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_total_electrification_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_electrification_maint);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE/2, active_wt_count+3);
+
+		// 12. signals/signs
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_label_t>("Signals/signs")->set_tooltip(translator::translate("Number of signals and signs per way type, and those monthly maintenance costs."));
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_sign_counts[i]);
+				lb_sign_counts[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_own_sign_count.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_own_sign_count);
+
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_sign_maint[i]);
+				lb_sign_maint[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_total_sign_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_sign_maint);
+
+		// divider
+		cont_stats.new_component_span<gui_divider_t>(active_wt_count+3);
+
+		// 8. lines
+		bt_access_schedulelist.init(button_t::arrowright_state, "");
+		bt_access_schedulelist.add_listener(this);
+		cont_stats.add_component(&bt_access_schedulelist);
+		cont_stats.new_component<gui_label_t>("Active lines")->set_tooltip(translator::translate("Number of active lines per way type."));
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_line_counts[i]);
+				lb_line_counts[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_total_active_lines.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_active_lines);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE/2, active_wt_count+3);
+
+		// 9. convoys
+		bt_access_convoylist.init(button_t::arrowright_state, "");
+		bt_access_convoylist.add_listener(this);
+		cont_stats.add_component(&bt_access_convoylist);
+		cont_stats.new_component<gui_label_t>("Convois")->set_tooltip(translator::translate("Number of convoys per way type, and inactive convoys number in parentheses."));
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				lb_convoy_counts[i].set_align(gui_label_t::right);
+				cont_stats.add_component(&lb_convoy_counts[i]);
+			}
+		}
+		lb_own_convoy_count.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_own_convoy_count);
+		cont_stats.new_component_span<gui_margin_t>(0, LINESPACE/2, active_wt_count+3);
+
+		// 10-11. vehicles
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_label_t>("Vehicles")->set_tooltip(translator::translate("Number of vehicles per way type, and those monthly maintenance costs."));
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_vehicle_counts[i]);
+				lb_vehicle_counts[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_own_vehicle_count.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_own_vehicle_count);
+
+		cont_stats.new_component<gui_empty_t>();
+		cont_stats.new_component<gui_empty_t>();
+		for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+			if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+				cont_stats.add_component(&lb_vehicle_maint[i]);
+				lb_vehicle_maint[i].set_align(gui_label_t::right);
+			}
+		}
+		lb_total_veh_maint.set_align(gui_label_t::right);
+		cont_stats.add_component(&lb_total_veh_maint);
+	}
+	cont_stats.end_table();
+}
+
+money_frame_t::money_frame_t(player_t *player) :
+	gui_frame_t( translator::translate("Finanzen"), player),
+	maintenance_money(MONEY_PLUS, gui_label_t::money_right),
+	scenario_desc(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::left),
+	scenario_completion(SYSCOL_TEXT, gui_label_t::left),
+	warn(SYSCOL_TEXT_STRONG, gui_label_t::centered),
+	scrolly_stats(&cont_stats, true),
+	transport_type_option(0)
+{
+	if(welt->get_player(0)!=player) {
+		money_frame_title.printf(translator::translate("Finances of %s"), translator::translate(player->get_name()) );
 		set_name(money_frame_title);
 	}
 
-	this->sp = sp;
+	this->player = player;
 
-	const int top = 30;
-	const int left = 12;
+	set_table_layout(1,0);
 
-	// Button components are left-aligned, but number components aren't.
-	// Number components are aligned at the *decimal point*,
-	// which is 25 to the left of the *right* edge!
-	const sint16 tyl_x = left + BUTTONWIDTH + 100 - 25; // "this month" column numbers
-	const sint16 lyl_x = left + BUTTONWIDTH + 2 * 100 - 25; // "last month" column numbers
+	// scenario name
+	if(player->get_player_nr()!=1  &&  welt->get_scenario()->active()) {
 
-	const sint16 c2_x = left + BUTTONWIDTH + 2 * 100 + 15; // center column left edge (fixed costs)
-	const sint16 c2_num_x = c2_x + 85 - 25; // center column number alignment
-
-	const sint16 c3_btn_x = c2_x + 85 + 15; // right column buttons
-	const sint16 c3_num_x = c3_btn_x + BUTTONWIDTH + 100 - 25; // numbers for right column of buttons
-	const sint16 WINDOW_WIDTH = c3_num_x + 25 + 15;
-
-	// left column
-	tylabel.set_pos(koord(tyl_x+25,top-1*BUTTONSPACE));
-	lylabel.set_pos(koord(lyl_x+25,top-1*BUTTONSPACE));
-
-	imoney.set_pos(koord(tyl_x,top+0*BUTTONSPACE));  // revenue
-	old_imoney.set_pos(koord(lyl_x,top+0*BUTTONSPACE));
-	vrmoney.set_pos(koord(tyl_x,top+1*BUTTONSPACE)); // running costs
-	old_vrmoney.set_pos(koord(lyl_x,top+1*BUTTONSPACE));
-	mmoney.set_pos(koord(tyl_x,top+2*BUTTONSPACE)); // inf. maintenance
-	old_mmoney.set_pos(koord(lyl_x,top+2*BUTTONSPACE));
-	toll.set_pos(koord(tyl_x,top+3*BUTTONSPACE));
-	old_toll.set_pos(koord(lyl_x,top+3*BUTTONSPACE));
-	omoney.set_pos(koord(tyl_x,top+4*BUTTONSPACE)); // op. profit
-	old_omoney.set_pos(koord(lyl_x,top+4*BUTTONSPACE));
-	nvmoney.set_pos(koord(tyl_x,top+5*BUTTONSPACE)); // new vehicles
-	old_nvmoney.set_pos(koord(lyl_x,top+5*BUTTONSPACE));
-	conmoney.set_pos(koord(tyl_x,top+6*BUTTONSPACE)); // construction costs
-	old_conmoney.set_pos(koord(lyl_x,top+6*BUTTONSPACE));
-	interest.set_pos(koord(tyl_x,top+7*BUTTONSPACE)); // interest
-	old_interest.set_pos(koord(lyl_x,top+7*BUTTONSPACE));
-	tmoney.set_pos(koord(tyl_x,top+8*BUTTONSPACE));  // cash flow
-	old_tmoney.set_pos(koord(lyl_x,top+8*BUTTONSPACE));
-	transport.set_pos(koord(tyl_x+19, top+9*BUTTONSPACE)); // units transported
-	old_transport.set_pos(koord(lyl_x+19, top+9*BUTTONSPACE));
-
-	// center column (above selector box)
-	maintenance_label.set_pos(koord(c2_num_x+25, top-1*BUTTONSPACE));
-	maintenance_label2.set_pos(koord(c2_num_x+25, top+0*BUTTONSPACE));
-	// vehicle maintenance money should be the same height as running costs
-	// vehicle_maintenance_money.set_pos(koord(c2_num_x, top+1*BUTTONSPACE));
-	// maintenance money should be the same height as inf. maintenance (mmoney)
-	maintenance_money.set_pos(koord(c2_num_x, top+2*BUTTONSPACE));
-
-	// right column (lower)
-	tylabel2.set_pos(koord(c3_num_x+25, top+3*BUTTONSPACE-2));
-	cash_money.set_pos(koord(c3_num_x, top+4*BUTTONSPACE));
-	assets.set_pos(koord(c3_num_x, top+5*BUTTONSPACE));
-	net_wealth.set_pos(koord(c3_num_x, top+6*BUTTONSPACE));
-	soft_credit_limit.set_pos(koord(c3_num_x, top+7*BUTTONSPACE));
-	hard_credit_limit.set_pos(koord(c3_num_x, top+8*BUTTONSPACE));
-	margin.set_pos(koord(c3_num_x, top+9*BUTTONSPACE));
-
-
-	// Scenario and warning location
-	warn.set_pos(koord(c2_x, top+10*BUTTONSPACE));
-	if(sp->get_player_nr()!=1  &&  sp->get_welt()->get_scenario()->active()) {
-		scenario.set_pos( koord( 10,1 ) );
-		sp->get_welt()->get_scenario()->update_scenario_texts();
-		scenario.set_text( sp->get_welt()->get_scenario()->description_text );
-		add_komponente(&scenario);
+		add_table(3,1);
+		new_component<gui_label_t>("Scenario_", SYSCOL_TEXT_HIGHLIGHT);
+		add_component(&scenario_desc);
+		add_component(&scenario_completion);
+		end_table();
 	}
 
-	const int TOP_OF_CHART = top + 11 * BUTTONSPACE + 10; // extra space is for chart labels
-	const int HEIGHT_OF_CHART = 120;
+	// select transport type
+	gui_aligned_container_t *top = add_table(4,1);
+	{
+		new_component<gui_label_t>("Show finances for transport type");
 
-	//CHART YEAR
-	chart.set_pos(koord(104,TOP_OF_CHART));
-	chart.set_groesse(koord(457,HEIGHT_OF_CHART));
+		transport_type_c.set_selection(0);
+		transport_type_c.set_focusable( false );
+
+		for(int i=0, count=0; i<TT_MAX; ++i) {
+			if (!is_chart_table_zero(i)) {
+				transport_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(finance_t::get_transport_type_name((transport_type)i)), SYSCOL_TEXT);
+				transport_types[ count++ ] = i;
+			}
+		}
+
+		add_component(&transport_type_c);
+		transport_type_c.add_listener( this );
+
+		transport_type_c.set_selection(0);
+		top->set_focus( &transport_type_c );
+		set_focus(top);
+
+		new_component<gui_fill_t>();
+
+		add_component(&headquarter);
+		headquarter.init(button_t::roundbox, "", scr_coord(0,0), D_BUTTON_SIZE);
+		headquarter.add_listener(this);
+	}
+	end_table();
+
+	// tab panels
+	// tab (month/year)
+	year_month_tabs.add_tab( &container_year, translator::translate("Years"));
+	year_month_tabs.add_tab( &container_month, translator::translate("Months"));
+	// tab (stats)
+	init_stats();
+	update_stats(); // Needed to initialize size
+	cont_stats.set_size(cont_stats.get_size());
+	year_month_tabs.add_tab( &scrolly_stats, translator::translate("player_stats"));
+
+	year_month_tabs.add_listener(this);
+	add_component(&year_month_tabs);
+
+	// fill both containers
+	gui_aligned_container_t *current = &container_year;
+	gui_chart_t *current_chart = &chart;
+	// .. put the same buttons in both containers
+	button_t* buttons[MAX_PLAYER_COST_BUTTON];
+
+	for(uint8 i = 0; i < 2 ; i++) {
+		uint8 k = 0;
+		current->set_table_layout(1,0);
+
+		current->add_table(5, FINANCE_TABLE_ROWS+1);
+
+		// first row: some labels
+		current->new_component<gui_empty_t>();
+		current->new_component<gui_label_t>(i==0 ? "This Year" : "This Month", SYSCOL_TEXT_HIGHLIGHT);
+		current->new_component<gui_label_t>(i==0 ? "Last Year" : "Last Month", SYSCOL_TEXT_HIGHLIGHT);
+		current->new_component<gui_empty_t>();
+		current->new_component<gui_empty_t>();
+
+		// all other rows: mix of buttons and money-labels
+		for(uint8 r = 0; r < FINANCE_TABLE_ROWS; r++) {
+			for(uint8 c = 0; c < 5; c++, k++) {
+				sint8 cost = cell_to_buttons[k];
+				sint8 l = cell_to_moneylabel[k];
+				// button + chart line
+				if (cost >=0 ) {
+					// add chart line
+					const int curve_type = cost_type[3*cost+2];
+					const int curve_precision = (curve_type==gui_chart_t::STANDARD) ? 0 : (curve_type==gui_chart_t::MONEY||curve_type==gui_chart_t::PERCENT) ? 2: (curve_type == gui_chart_t::TON_KM_MAIL) ? 3 : 1;
+					sint16 curve = i == 0
+					? chart.add_curve(  color_idx_to_rgb(cost_type_color[cost]), *chart_table_year,  MAX_PLAYER_COST_BUTTON, cost, MAX_PLAYER_HISTORY_YEARS,  curve_type, false, true, curve_precision)
+					: mchart.add_curve( color_idx_to_rgb(cost_type_color[cost]), *chart_table_month, MAX_PLAYER_COST_BUTTON, cost, MAX_PLAYER_HISTORY_MONTHS, curve_type, false, true, curve_precision);
+					// add button
+					button_t *b;
+					if (i == 0) {
+						b = current->new_component<button_t>();
+						b->init(button_t::box_state_automatic | button_t::flexible, cost_type_name[cost]);
+						b->set_tooltip(cost_tooltip[cost]);
+						b->background_color = color_idx_to_rgb(cost_type_color[cost]);
+						b->pressed = false;
+						buttons[cost] = b;
+					}
+					else {
+						b = buttons[cost];
+						current->add_component(b);
+					}
+					button_to_chart.append(b, current_chart, curve);
+				}
+				else if (l >= 0) {
+					// money_frame_label_t(uint8 tt, uint8 t, uint8 lt, uint8 i, bool mon)
+					money_labels.append( current->new_component<money_frame_label_t>(label_type[4*l], label_type[4*l+1], label_type[4*l+3], label_type[4*l+2], i==1) );
+				}
+				else {
+					if (i == 1 && r == 2 && c == 3) {
+						current->new_component<gui_label_t>("Next Month", SYSCOL_TEXT_HIGHLIGHT);
+					}
+					else if (i == 1 && r == 3 && c == 3) {
+						current->add_component(&maintenance_money);
+					}
+					else if (r == 5 && c == 4) {
+						current->new_component<gui_label_t>("This Year", SYSCOL_TEXT_HIGHLIGHT);
+					}
+					else {
+						current->new_component<gui_empty_t>();
+					}
+				}
+			}
+		}
+		current->end_table();
+
+		// bankruptcy notice
+		current->add_component(&warn);
+		warn.set_visible(false);
+
+		current->new_component<gui_margin_t>(LINESPACE/2);
+
+		current->add_component(current_chart);
+		current = &container_month;
+		current_chart = &mchart;
+	}
+
+	// recover button states
+	if (bFilterStates.get_count() > 0) {
+		for(uint8 i = 0; i<bFilterStates.get_count(); i++) {
+			button_to_chart[i]->get_button()->pressed = bFilterStates[i] > 0;
+			button_to_chart[i]->update();
+		}
+	}
+
+	chart.set_min_size(scr_size(0 ,8*BUTTONSPACE));
 	chart.set_dimension(MAX_PLAYER_HISTORY_YEARS, 10000);
-	chart.set_seed(sp->get_welt()->get_last_year());
-	chart.set_background(MN_GREY1);
-	chart.set_ltr(umgebung_t::left_to_right_graphs);
-	//CHART YEAR END
+	chart.set_seed(welt->get_last_year());
+	chart.set_background(SYSCOL_CHART_BACKGROUND);
 
-	//CHART MONTH
-	mchart.set_pos(koord(104,TOP_OF_CHART));
-	mchart.set_groesse(koord(457,HEIGHT_OF_CHART));
+	mchart.set_min_size(scr_size(0,8*BUTTONSPACE));
 	mchart.set_dimension(MAX_PLAYER_HISTORY_MONTHS, 10000);
 	mchart.set_seed(0);
-	mchart.set_background(MN_GREY1);
-	mchart.set_ltr(umgebung_t::left_to_right_graphs);
-	//CHART MONTH END
+	mchart.set_background(SYSCOL_CHART_BACKGROUND);
 
-	// add chart curves
-	for (int i = 0; i<MAX_PLAYER_COST_BUTTON; i++) {
-		const int curve_type = cost_type[3*i+2];
-		const int curve_precision = curve_type == MONEY ? 2 : 0;
-		mchart.add_curve( cost_type_color[i], *chart_table_month, MAX_PLAYER_COST_BUTTON, i, MAX_PLAYER_HISTORY_MONTHS, curve_type, false, true, curve_precision);
-		chart.add_curve(  cost_type_color[i], *chart_table_year,  MAX_PLAYER_COST_BUTTON, i, MAX_PLAYER_HISTORY_YEARS,  curve_type, false, true, curve_precision);
-	}
+	update_labels();
 
-	// tab (month/year)
-	year_month_tabs.add_tab( &year_dummy, translator::translate("Years"));
-	year_month_tabs.add_tab( &month_dummy, translator::translate("Months"));
-	year_month_tabs.set_pos(koord(0, LINESPACE-2));
-	year_month_tabs.set_groesse(koord(lyl_x+25, gui_tab_panel_t::HEADER_VSIZE));
-	add_komponente(&year_month_tabs);
-
-	add_komponente(&conmoney);
-	add_komponente(&nvmoney);
-	add_komponente(&vrmoney);
-	add_komponente(&mmoney);
-	add_komponente(&imoney);
-	add_komponente(&interest);
-	add_komponente(&tmoney);
-	add_komponente(&omoney);
-	add_komponente(&toll);
-	add_komponente(&transport);
-
-	add_komponente(&old_conmoney);
-	add_komponente(&old_nvmoney);
-	add_komponente(&old_vrmoney);
-	add_komponente(&old_mmoney);
-	add_komponente(&old_imoney);
-	add_komponente(&old_interest);
-	add_komponente(&old_tmoney);
-	add_komponente(&old_omoney);
-	add_komponente(&old_toll);
-	add_komponente(&old_transport);
-	
-	add_komponente(&lylabel);
-	add_komponente(&tylabel);
-
-	add_komponente(&tylabel2);
-	add_komponente(&cash_money);
-	add_komponente(&assets);
-	add_komponente(&net_wealth);
-	add_komponente(&margin);
-	add_komponente(&soft_credit_limit);
-	add_komponente(&hard_credit_limit);
-
-	add_komponente(&maintenance_label);
-	add_komponente(&maintenance_label2);
-	add_komponente(&maintenance_money);
-	// add_komponente(&vehicle_maintenance_money);
-
-	add_komponente(&warn);
-
-	add_komponente(&chart);
-	add_komponente(&mchart);
-
-	// easier headquarter access
-	old_level = sp->get_headquarter_level();
-	old_pos = sp->get_headquarter_pos();
-	headquarter_tooltip[0] = 0;
-
-	// Headquarters is at upper right
-	if(  sp->get_ai_id()!=spieler_t::HUMAN  ) {
-		// misuse headquarter button for AI configure
-		headquarter.init(button_t::box, "Configure AI", koord(c3_btn_x, 0), koord(BUTTONWIDTH, BUTTONSPACE));
-		headquarter.add_listener(this);
-		add_komponente(&headquarter);
-		headquarter.set_tooltip( "Configure AI setttings" );
-	}
-	else if(old_level > 0  ||  hausbauer_t::get_headquarter(0,sp->get_welt()->get_timeline_year_month())!=NULL) {
-
-		headquarter.init(button_t::box, old_pos!=koord::invalid ? "upgrade HQ" : "build HQ", koord(c3_btn_x, 0), koord(BUTTONWIDTH, BUTTONSPACE));
-		headquarter.add_listener(this);
-		add_komponente(&headquarter);
-		headquarter.set_tooltip( NULL );
-		headquarter.disable();
-
-		// reuse tooltip from wkz_headquarter_t
-		const char * c = werkzeug_t::general_tool[WKZ_HEADQUARTER]->get_tooltip(sp);
-		if(c) {
-			// only true, if the headquarter can be built/updated
-			tstrncpy(headquarter_tooltip, c, lengthof(headquarter_tooltip));
-			headquarter.set_tooltip( headquarter_tooltip );
-			headquarter.enable();
-		}
-	}
-
-	if(old_pos!=koord::invalid) {
-		headquarter_view.set_location( sp->get_welt()->lookup_kartenboden( sp->get_headquarter_pos() )->get_pos() );
-	}
-	headquarter_view.set_pos( koord(c3_btn_x, BUTTONSPACE) );
-	add_komponente(&headquarter_view);
-
-	// add filter buttons
-	for(int ibutton=0;  ibutton<COLUMN_TWO_START;  ibutton++) {
-		filterButtons[ibutton].init(button_t::box, cost_type_name[ibutton], koord(left, top+ibutton*BUTTONSPACE-2), koord(BUTTONWIDTH, BUTTONSPACE));
-		filterButtons[ibutton].add_listener(this);
-		filterButtons[ibutton].background = cost_type_color[ibutton];
-		filterButtons[ibutton].set_tooltip(cost_tooltip[ibutton]);
-		add_komponente(filterButtons + ibutton);
-	}
-	for(int ibutton=COLUMN_TWO_START;  ibutton<MAX_PLAYER_COST_BUTTON;  ibutton++) {
-		filterButtons[ibutton].init(button_t::box, cost_type_name[ibutton], koord(c3_btn_x, top+(ibutton-6)*BUTTONSPACE-2), koord(BUTTONWIDTH, BUTTONSPACE));
-		filterButtons[ibutton].add_listener(this);
-		filterButtons[ibutton].background = cost_type_color[ibutton];
-		filterButtons[ibutton].set_tooltip(cost_tooltip[ibutton]);
-		add_komponente(filterButtons + ibutton);
-	}
-
-	// states ...
-	for ( int i = 0; i<MAX_PLAYER_COST_BUTTON; i++) {
-		if (bFilterStates[sp->get_player_nr()] & (1<<i)) {
-			chart.show_curve(i);
-			mchart.show_curve(i);
-		}
-		else {
-			chart.hide_curve(i);
-			mchart.hide_curve(i);
-		}
-	}
-
-	transport_type_c.set_pos( koord(c2_x - 14, top + 3 * BUTTONSPACE) ); // below fixed costs
-	transport_type_c.set_groesse( koord( 85 + 14 + 14, D_BUTTON_HEIGHT) ); // width of column plus spacing
-	transport_type_c.set_max_size( koord( 85 + 14 + 14, 7*BUTTONSPACE ) );
-	for(int i=0, count=0; i<TT_MAX; ++i) {
-		if (!is_chart_table_zero(i)) {
-			transport_type_c.append_element( new gui_scrolled_list_t::const_text_scrollitem_t(translator::translate(transport_type_values[i]), COL_BLACK));
-			transport_types[ count++ ] = i;
-		}
-	}
-	transport_type_c.set_selection(0);
-	transport_type_c.set_focusable( false );
-	add_komponente(&transport_type_c);
-	transport_type_c.add_listener( this );
-
-	const int WINDOW_HEIGHT = TOP_OF_CHART + HEIGHT_OF_CHART + 10 + BUTTONSPACE * 2 ; // formerly 340
-	// The extra room below the chart is for (a) labels, (b) year label (BUTTONSPACE), (c) empty space
-	set_fenstergroesse(koord(WINDOW_WIDTH, WINDOW_HEIGHT));
+	reset_min_windowsize();
+	set_windowsize(get_min_windowsize());
+	set_resizemode(diagonal_resize);
+	resize(scr_size(0,0));
 }
 
 
-void money_frame_t::zeichnen(koord pos, koord gr)
+money_frame_t::~money_frame_t()
 {
-	// Hajo: each label needs its own buffer
-	static char str_buf[35][256];
+	bFilterStates.clear();
+	// save button states
+	FOR(vector_tpl<gui_button_to_chart_t*>, b2c, button_to_chart.list()) {
+		bFilterStates.append( b2c->get_button()->pressed ? 1 : 0);
+	}
+}
 
-	sp->get_finance()->calc_finance_history();
-	fill_chart_tables();
-
-	chart.set_visible( year_month_tabs.get_active_tab_index()==0 );
-	mchart.set_visible( year_month_tabs.get_active_tab_index()==1 );
-
-	tylabel.set_text( year_month_tabs.get_active_tab_index() ? "This Month" : "This Year" );
-	lylabel.set_text( year_month_tabs.get_active_tab_index() ? "Last Month" : "Last Year" );
-
-	// update_label(gui_label_t &label, char *buf, int transport_type, uint8 type, int yearmonth)
-	update_label(conmoney, str_buf[0], transport_type_option, ATV_CONSTRUCTION_COST, 0);
-	update_label(nvmoney,  str_buf[1], transport_type_option, ATV_NEW_VEHICLE, 0);
-	update_label(vrmoney,  str_buf[2], transport_type_option, ATV_RUNNING_COST, 0);
-	update_label(mmoney,   str_buf[3], transport_type_option, ATV_INFRASTRUCTURE_MAINTENANCE, 0);
-	update_label(imoney,   str_buf[4], transport_type_option, ATV_REVENUE_TRANSPORT, 0);
-	update_label(tmoney,   str_buf[5], transport_type_option, ATV_PROFIT, 0);
-	update_label(omoney,   str_buf[6], transport_type_option, ATV_OPERATING_PROFIT, 0);
-
-	update_label(old_conmoney, str_buf[7], transport_type_option, ATV_CONSTRUCTION_COST, 1);
-	update_label(old_nvmoney,  str_buf[8], transport_type_option, ATV_NEW_VEHICLE, 1);
-	update_label(old_vrmoney,  str_buf[9], transport_type_option, ATV_RUNNING_COST, 1);
-	update_label(old_mmoney,   str_buf[10], transport_type_option, ATV_INFRASTRUCTURE_MAINTENANCE, 1);
-	update_label(old_imoney,   str_buf[11], transport_type_option, ATV_REVENUE_TRANSPORT, 1);
-	update_label(old_tmoney,   str_buf[12], transport_type_option, ATV_PROFIT, 1);
-	update_label(old_omoney,   str_buf[13], transport_type_option, ATV_OPERATING_PROFIT, 1);
-
-	// transported goods
-	update_label(transport,     str_buf[20], transport_type_option, ATV_TRANSPORTED, 0, STANDARD);
-	update_label(old_transport, str_buf[21], transport_type_option, ATV_TRANSPORTED, 1, STANDARD);
-
-	update_label(toll,     str_buf[24], transport_type_option, ATV_WAY_TOLL, 0);
-	update_label(old_toll, str_buf[25], transport_type_option, ATV_WAY_TOLL, 1);
-
-	// It causes confusion when interest shows up with transport types other than "all" or "other".
-	// Arguably interest should be registered by transport type (for borrowing against railcars etc.)
-	// but that is a complex enhancement which require savefile format changes.
-	if (transport_type_option == TT_ALL || transport_type_option == TT_OTHER) {
-		update_label(interest, str_buf[31], TT_MAX, ATC_INTEREST, 0);
-		update_label(old_interest, str_buf[32], TT_MAX, ATC_INTEREST, 1);
-	} else {
-		// Print interest as zero.  (Doesn't affect graph, only number entries.)
-		money_to_string(str_buf[31], 0 );
-		interest.set_text(str_buf[31]);
-		interest.set_color(COL_YELLOW);
-		money_to_string(str_buf[32], 0 );
-		old_interest.set_text(str_buf[32]);
-		old_interest.set_color(COL_YELLOW);
+void money_frame_t::update_labels()
+{
+	FOR(vector_tpl<money_frame_label_t*>, lb, money_labels) {
+		lb->update(this);
 	}
 
-	update_label(cash_money, str_buf[14], TT_MAX, ATC_CASH, 0);
-	update_label(assets, str_buf[17], transport_type_option, ATV_NON_FINANCIAL_ASSETS, 0);
-	update_label(net_wealth, str_buf[18], TT_MAX, ATC_NETWEALTH, 0);
+	// scenario
+	if(player->get_player_nr()!=1  &&  welt->get_scenario()->active()) {
+		welt->get_scenario()->update_scenario_texts();
+		scenario_desc.buf().append( welt->get_scenario()->description_text );
+		scenario_desc.buf().append( ":" );
+		scenario_desc.update();
 
-	// To avoid confusion, these should always show the current month's credit limit, even when "year" is selected
-	update_label(soft_credit_limit, str_buf[33], TT_MAX, ATC_SOFT_CREDIT_LIMIT, 0, true);
-	update_label(hard_credit_limit, str_buf[34], TT_MAX, ATC_HARD_CREDIT_LIMIT, 0, true);
-
-	update_label(margin, str_buf[19], transport_type_option, ATV_PROFIT_MARGIN, 0);
-	str_buf[19][strlen(str_buf[19])-1] = '%';	// remove cent sign
-
-	// warning/success messages
-	if(sp->get_player_nr()!=1  &&  sp->get_welt()->get_scenario()->active()) {
-		warn.set_color( COL_BLACK );
-		sint32 percent = sp->get_welt()->get_scenario()->get_completion(sp->get_player_nr());
+		sint32 percent = welt->get_scenario()->get_completion(player->get_player_nr());
 		if (percent >= 0) {
-			sprintf( str_buf[15], translator::translate("Scenario complete: %i%%"), percent );
+			scenario_completion.buf().printf(translator::translate("Scenario complete: %i%%"), percent );
 		}
 		else {
-			tstrncpy(str_buf[15], translator::translate("Scenario lost!"), lengthof(str_buf[15]) );
+			scenario_completion.buf().printf(translator::translate("Scenario lost!"));
 		}
-	}
-	else if(sp->get_finance()->get_history_com_month(0, ATC_CASH)<sp->get_finance()->get_history_com_month(0, ATC_HARD_CREDIT_LIMIT)) {
-		warn.set_color( MONEY_MINUS );
-		tstrncpy(str_buf[15], translator::translate("Company bankrupt"), lengthof(str_buf[15]) );
-	}
-	else if(sp->get_finance()->get_history_com_month(0, ATC_CASH)<sp->get_finance()->get_history_com_month(0, ATC_SOFT_CREDIT_LIMIT)) {
-		warn.set_color( MONEY_MINUS );
-		tstrncpy(str_buf[15], translator::translate("Credit limit exceeded"), lengthof(str_buf[15]) );
-	}
-	else if(sp->get_finance()->get_history_com_month(0, ATC_NETWEALTH)<0) {
-		warn.set_color( MONEY_MINUS );
-		tstrncpy(str_buf[15], translator::translate("Net wealth negative"), lengthof(str_buf[15]) );
-	}
-	else if(  sp->get_account_overdrawn()  ) {
-		warn.set_color( COL_YELLOW );
-		sprintf( str_buf[15], translator::translate("On loan since %i month(s)"), sp->get_account_overdrawn() );
-	}
-	else {
-		str_buf[15][0] = '\0';
-	}
-	warn.set_text(str_buf[15]);
-
-	// scenario description
-	if(sp->get_player_nr()!=1  &&  sp->get_welt()->get_scenario()->active()) {
-		dynamic_string& desc = sp->get_welt()->get_scenario()->description_text;
-		if (desc.has_changed()) {
-			scenario.set_text( desc );
-			desc.clear_changed();
-		}
+		scenario_completion.update();
 	}
 
+	// update headquarter button
 	headquarter.disable();
-	if(  sp->get_ai_id()!=spieler_t::HUMAN  ) {
+	/*if(  player->get_ai_id()!=player_t::HUMAN  ) {
 		headquarter.set_tooltip( "Configure AI setttings" );
 		headquarter.set_text( "Configure AI" );
 		headquarter.enable();
 	}
-	else if(sp!=sp->get_welt()->get_active_player()) {
+	else {*/
+	if (player->get_ai_id() == player_t::HUMAN) {
+		koord pos = player->get_headquarter_pos();
+		headquarter.set_text( pos != koord::invalid ? "show HQ" : "build HQ" );
 		headquarter.set_tooltip( NULL );
-	}
-	else {
-		// I am on my own => allow upgrading
-		if(old_level!=sp->get_headquarter_level()) {
 
-			// reuse tooltip from wkz_headquarter_t
-			const char * c = werkzeug_t::general_tool[WKZ_HEADQUARTER]->get_tooltip(sp);
-			if(c) {
-				// only true, if the headquarter can be built/updated
-				tstrncpy(headquarter_tooltip, c, lengthof(headquarter_tooltip));
-				headquarter.set_tooltip( headquarter_tooltip );
-			}
-			else {
-				headquarter_tooltip[0] = 0;
-				headquarter.set_tooltip( NULL );
+		if (pos == koord::invalid) {
+			if(player == welt->get_active_player()) {
+				// reuse tooltip from tool_headquarter_t
+				const char * c = tool_t::general_tool[TOOL_HEADQUARTER]->get_tooltip(player);
+				if(c) {
+					// only true, if the headquarter can be built/updated
+					headquarter_tooltip.clear();
+					headquarter_tooltip.append(c);
+					headquarter.set_tooltip( headquarter_tooltip );
+					headquarter.enable();
+				}
+
 			}
 		}
-		// HQ construction still possible ...
-		if(  headquarter_tooltip[0]  ) {
+		else {
 			headquarter.enable();
 		}
 	}
 
-	if(old_level!=sp->get_headquarter_level()  ||  old_pos!=sp->get_headquarter_pos()) {
-		if(  sp->get_ai_id()!=spieler_t::HUMAN  ) {
-			headquarter.set_text( sp->get_headquarter_pos()!=koord::invalid ? "upgrade HQ" : "build HQ" );
+	// current maintenance
+	double maintenance = player->get_finance()->get_maintenance_with_bits((transport_type)transport_type_option) / 100.0;
+	maintenance_money.append_money(-maintenance);
+	maintenance_money.update();
+
+	// warning/success messages
+	bool visible = warn.is_visible();
+
+	if (player->check_solvency() == player_t::in_administration)
+	{
+		warn.set_color(COL_DARK_BLUE);
+		warn.buf().append(translator::translate("in_administration"));
+		warn.set_visible(true);
+	}
+	else if (player->check_solvency() == player_t::in_liquidation)
+	{
+		warn.set_color(COL_DARK_RED);
+		warn.buf().append(translator::translate("in_liquidation"));
+		warn.set_visible(true);
+	}
+	else if (player->get_finance()->get_history_com_month(0, ATC_CASH) < player->get_finance()->get_history_com_month(0, ATC_SOFT_CREDIT_LIMIT))
+	{
+		warn.set_color(MONEY_MINUS);
+		warn.buf().append(translator::translate("Credit limit exceeded"));
+		warn.set_visible(true);
+	}
+	else if (player->get_finance()->get_history_com_year(0, ATC_NETWEALTH) * 10 < welt->get_settings().get_starting_money(welt->get_current_month() / 12))
+	{
+		warn.set_color(MONEY_MINUS);
+		warn.buf().append( translator::translate("Net wealth near zero") );
+		warn.set_visible(true);
+	}
+	else if (player->get_account_overdrawn())
+	{
+		warn.set_color(COL_YELLOW);
+		warn.buf().printf(translator::translate("On loan since %i month(s)"), player->get_account_overdrawn() );
+		warn.set_visible(true);
+	}
+	else {
+		warn.set_visible(false);
+	}
+	warn.update();
+	if (visible != warn.is_visible()) {
+		resize(scr_size(0,0));
+	}
+}
+
+void money_frame_t::update_stats()
+{
+	// reset data
+	for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+		tt_halt_counts[i] = 0;
+		tt_way_length[i] = 0;
+		tt_way_maint[i] = 0;
+		tt_electrified_len[i] = 0;
+		tt_electrification_maint[i] = 0;
+		tt_convoy_counts[i] = 0;
+		tt_inactive_convoy_counts[i] = 0;
+		tt_vehicle_counts[i] = 0;
+		tt_vehicle_maint[i] = 0;
+		tt_depot_counts[i] = 0;
+		tt_depot_maint[i] = 0;
+		tt_sign_counts[i] = 0;
+		tt_sign_maint[i] = 0;
+	}
+	/*
+	memset(tt_halt_counts,            0, sizeof(tt_halt_counts));
+	memset(tt_way_length,             0, sizeof(tt_way_length));
+	memset(tt_way_maint,              0, sizeof(tt_way_maint));
+	memset(tt_electrified_len,        0, sizeof(tt_electrified_len));
+	memset(tt_electrification_maint,  0, sizeof(tt_electrification_maint));
+	memset(tt_convoy_counts,          0, sizeof(tt_convoy_counts));
+	memset(tt_inactive_convoy_counts, 0, sizeof(tt_inactive_convoy_counts));
+	memset(tt_vehicle_counts,         0, sizeof(tt_vehicle_counts));
+	memset(tt_vehicle_maint,          0, sizeof(tt_vehicle_maint));
+	memset(tt_depot_counts,           0, sizeof(tt_depot_counts));
+	memset(tt_depot_maint,            0, sizeof(tt_depot_maint));
+	memset(tt_sign_counts,            0, sizeof(tt_sign_counts));
+	memset(tt_sign_maint,             0, sizeof(tt_sign_maint));
+	*/
+	// Collect data
+	uint16 total_halts=0;
+	sint64 total_halt_maint=0;
+	sint64 total_way_maintenance = 0;
+	sint64 total_electrification_maintenance = 0;
+	uint16 total_own_convoys = 0;
+	uint32 total_own_vehicles = 0;
+	uint32 total_depots = 0;
+	sint64 total_depot_maintenance=0;
+	uint32 total_vehicle_maintenance = 0;
+	uint32 total_sign_maintenance = 0;
+	uint16 total_own_signalboxes = 0;
+	uint64 total_signalbox_maintenance = 0;
+
+	// - stations
+	FOR(vector_tpl<halthandle_t>, const halt, haltestelle_t::get_alle_haltestellen()) {
+		if (halt->get_owner() == player) {
+			for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+				if (finance_t::translate_tt_to_waytype((transport_type)(i+1)) ==road_wt) {
+					if (halt->get_station_type() & haltestelle_t::busstop || halt->get_station_type() & haltestelle_t::loadingbay) {
+						tt_halt_counts[i]++;
+					}
+				}
+				else if (halt->get_station_type() & simline_t::linetype_to_stationtype[simline_t::waytype_to_linetype( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )]) {
+					tt_halt_counts[i]++;
+				}
+			}
+			total_halts++;
+			total_halt_maint += halt->calc_maintenance();
 		}
-		remove_komponente(&headquarter_view);
-		old_level = sp->get_headquarter_level();
-		old_pos = sp->get_headquarter_pos();
-		if(  old_pos!=koord::invalid  ) {
-			headquarter_view.set_location( sp->get_welt()->lookup_kartenboden(old_pos)->get_pos() );
-			add_komponente(&headquarter_view);
+	}
+	// - depot & vehicle
+	FOR(slist_tpl<depot_t*>, const depot, depot_t::get_depot_list()) {
+		if (depot->get_owner_nr() == player->get_player_nr()) {
+			const uint8 tt_idx = finance_t::translate_waytype_to_tt(depot->get_waytype())-1;
+			tt_depot_counts[tt_idx]++;
+			total_depot_maintenance += welt->get_settings().maint_building * depot->get_tile()->get_desc()->get_level();
+			tt_depot_maint[tt_idx] += welt->get_settings().maint_building * depot->get_tile()->get_desc()->get_level();
+			total_depots++;
+			// all vehicles stored in depot not part of a convoi
+			tt_vehicle_counts[tt_idx] += depot->get_vehicle_list().get_count();
+			total_own_vehicles += depot->get_vehicle_list().get_count();
+			FOR(slist_tpl<vehicle_t*>, vehicle, depot->get_vehicle_list()) {
+				total_vehicle_maintenance += vehicle->get_fixed_cost(welt);
+				tt_vehicle_maint[tt_idx] += vehicle->get_fixed_cost(welt);
+			}
+		}
+	}
+	// - convoys
+	FOR(vector_tpl<convoihandle_t>, const cnv, welt->convoys()) {
+		if (cnv->get_owner() == player) {
+			const uint8 tt_idx = finance_t::translate_waytype_to_tt(cnv->front()->get_desc()->get_waytype())-1;
+			tt_convoy_counts[tt_idx]++;
+			if (cnv->in_depot()) {
+				tt_inactive_convoy_counts[tt_idx]++;
+			}
+			tt_vehicle_counts[tt_idx] += cnv->get_vehicle_count();
+			total_own_vehicles += cnv->get_vehicle_count();
+			total_own_convoys++;
+			tt_vehicle_maint[tt_idx] += cnv->get_fixed_cost();
+			total_vehicle_maintenance+=cnv->get_fixed_cost();
+		}
+	}
+	// - signalboxes
+	FOR(slist_tpl<signalbox_t*>, const sigb, signalbox_t::all_signalboxes) {
+		if (sigb->get_owner() == player && sigb->get_first_tile() == sigb) {
+			total_signalbox_maintenance += (uint32)welt->lookup(sigb->get_pos())->get_building()->get_tile()->get_desc()->get_maintenance();
+			total_own_signalboxes++;
+		}
+	}
+	// - way & electrification
+	FOR(vector_tpl<weg_t*>, const way, weg_t::get_alle_wege()) {
+		const uint8 tt_idx = finance_t::translate_waytype_to_tt(way->get_desc()->get_finance_waytype())-1;
+		if (tt_idx >= TT_MAX_VEH-1) {
+			continue;
+		}
+		const grund_t* gr = welt->lookup(way->get_pos());
+		if (way->get_owner()==player) {
+			sint32 maint = way->get_desc()->get_maintenance();
+
+			if( gr->ist_bruecke() ) {
+				if( bruecke_t* bridge = gr->find<bruecke_t>(1) ) {
+					maint += bridge->get_desc()->get_maintenance();
+				}
+			}
+			if( gr->ist_tunnel() ) {
+				if( tunnel_t* tunnel = gr->find<tunnel_t>(1) ) {
+					maint += tunnel->get_desc()->get_maintenance();
+				}
+			}
+
+			if(way->is_diagonal()){
+				maint *= 10;
+				maint /= 14;
+				tt_way_length[tt_idx]+=7;
+			}
+			else {
+				tt_way_length[tt_idx]+=10;
+			}
+			total_way_maintenance += maint;
+			tt_way_maint[tt_idx]  += maint;
+		}
+		// way and electrification object owners can be different
+		if (way->is_electrified()) {
+			const wayobj_t *wo = gr->get_wayobj(way->get_waytype());
+			if (wo->get_owner() == player) {
+				sint32 wo_maint = wo->get_desc()->get_maintenance();
+				if (way->is_diagonal()) {
+					tt_electrified_len[tt_idx] += 7;
+					wo_maint *= 10;
+					wo_maint /= 14;
+				}
+				else {
+					tt_electrified_len[tt_idx] += 10;
+				}
+				tt_electrification_maint[tt_idx] += wo_maint;
+				total_electrification_maintenance += wo_maint;
+			}
+		}
+		if (way->has_sign()) {
+			const roadsign_t* rs = gr->find<roadsign_t>();
+			if (rs->get_owner()==player) {
+				tt_sign_counts[tt_idx]++;
+				tt_sign_maint[tt_idx]+= rs->get_desc()->get_maintenance();
+			}
+		}
+		if (way->has_signal()) {
+			const signal_t* sig = gr->find<signal_t>();
+			if (sig->get_owner() == player) {
+				tt_sign_counts[tt_idx]++;
+				tt_sign_maint[tt_idx] += sig->get_desc()->get_maintenance();
+			}
 		}
 	}
 
-	// Hajo: Money is counted in credit cents (100 cents = 1 Cr)
-	sint64 maintenance = sp->get_finance()->get_maintenance_with_bits((transport_type)transport_type_option);
-	money_to_string(str_buf[16],
-		(double)(maintenance)/100.0
-	);
-	maintenance_money.set_text(str_buf[16]);
-	maintenance_money.set_color(maintenance>=0?MONEY_PLUS:MONEY_MINUS);
 
-	for (int i = 0;  i<MAX_PLAYER_COST_BUTTON;  i++) {
-		filterButtons[i].pressed = ( (bFilterStates[sp->get_player_nr()]&(1<<i)) != 0 );
-		// year_month_toggle.pressed = mchart.is_visible();
+	// Update table(labels)
+	uint32 active_lines = 0;
+	for (uint8 i = 0; i < TT_MAX_VEH-1; i++) {
+		if (depotlist_frame_t::is_available_wt( finance_t::translate_tt_to_waytype((transport_type)(i+1)) )) {
+			// depots
+			if (tt_depot_counts[i]) {
+				lb_depots[i].buf().printf("%u", tt_depot_counts[i]);
+				lb_depots_maint[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_depot_maint[i]) / 100.0);
+			}
+			else {
+				lb_depots[i].buf().append("-");
+			}
+			lb_depots_maint[i].update();
+			lb_depots[i].update();
+
+			// halt
+			if (tt_halt_counts[i]) {
+				lb_station_counts[i].buf().printf("%u", tt_halt_counts[i]);
+			}
+			else {
+				lb_station_counts[i].buf().append("-");
+			}
+			lb_station_counts[i].update();
+
+			// way
+			if (tt_way_length[i]) {
+				lb_way_distances[i].buf().printf("%.1fkm", (double)(tt_way_length[i] * welt->get_settings().get_meters_per_tile()/10000.0));
+				lb_way_maintenances[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_way_maint[i]) / 100.0);
+			}
+			else {
+				lb_way_distances[i].buf().append("-");
+			}
+			lb_way_distances[i].update();
+			lb_way_maintenances[i].update();
+			// electrification
+			if (tt_electrified_len[i]) {
+				lb_electrified_distances[i].buf().printf("%.1fkm", (double)(tt_electrified_len[i] * welt->get_settings().get_meters_per_tile() / 10000.0));
+				lb_electrification_maint[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_electrification_maint[i]) / 100.0);
+			}
+			else {
+				lb_electrified_distances[i].buf().append("-");
+			}
+			lb_electrified_distances[i].update();
+			lb_electrification_maint[i].update();
+
+			// lines
+			vector_tpl<linehandle_t> lines;
+			player->simlinemgmt.get_lines(simline_t::waytype_to_linetype( finance_t::translate_tt_to_waytype((transport_type)(i+1)) ), &lines, 0, false);
+			if (lines.get_count()) {
+				lb_line_counts[i].buf().append(lines.get_count());
+				active_lines+=lines.get_count();
+			}
+			else {
+				lb_line_counts[i].buf().append("-");
+			}
+			lb_line_counts[i].update();
+
+			// convoys
+			if (tt_convoy_counts[i]) {
+				lb_convoy_counts[i].buf().printf("%u", tt_convoy_counts[i]);
+				if (tt_inactive_convoy_counts[i]) {
+					lb_convoy_counts[i].buf().printf("(%u)", tt_inactive_convoy_counts[i]);
+				}
+			}
+			else {
+				lb_convoy_counts[i].buf().append("-");
+			}
+			lb_convoy_counts[i].update();
+
+			// vehicles
+			if (tt_vehicle_counts[i]) {
+				lb_vehicle_counts[i].buf().printf("%u", tt_vehicle_counts[i]);
+				lb_vehicle_maint[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_vehicle_maint[i]) / 100.0);
+			}
+			else {
+				lb_vehicle_counts[i].buf().append("-");
+			}
+			lb_vehicle_maint[i].update();
+			lb_vehicle_counts[i].update();
+
+			// signs
+			if (tt_sign_counts[i]) {
+				lb_sign_counts[i].buf().printf("%u", tt_sign_counts[i]);
+				lb_sign_maint[i].buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(tt_sign_maint[i]) / 100.0);
+				total_sign_maintenance += tt_sign_maint[i];
+			}
+			else {
+				lb_sign_counts[i].buf().append("-");
+			}
+			lb_sign_maint[i].update();
+			lb_sign_counts[i].update();
+		}
 	}
+	// update total values
+	lb_total_halts.buf().append(total_halts,0);
+	lb_total_halts.update();
+	lb_total_halt_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_halt_maint) / 100.0);
+	lb_total_halt_maint.update();
 
-	// Hajo: update chart seed
-	chart.set_seed(sp->get_welt()->get_last_year());
+	lb_total_way_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_way_maintenance) / 100.0);
+	lb_total_way_maint.update();
 
-	gui_frame_t::zeichnen(pos, gr);
+	lb_total_electrification_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_electrification_maintenance) / 100.0);
+	lb_total_electrification_maint.update();
+
+	lb_total_depots.buf().append(total_depots, 0);
+	lb_total_depots.update();
+	lb_total_depot_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_depot_maintenance) / 100.0);
+	lb_total_depot_maint.update();
+
+	lb_total_active_lines.buf().append(active_lines, 0);
+	lb_total_active_lines.update();
+
+	lb_own_convoy_count.buf().append(total_own_convoys, 0);
+	lb_own_convoy_count.update();
+
+	lb_own_vehicle_count.buf().append(total_own_vehicles, 0);
+	lb_own_vehicle_count.update();
+
+	lb_total_veh_maint.buf().printf("%.2f$", welt->calc_adjusted_monthly_figure(total_vehicle_maintenance) / 100.0);
+	lb_total_veh_maint.update();
+
+	lb_total_sign_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_sign_maintenance) / 100.0);
+	lb_total_sign_maint.update();
+
+	lb_signalbox_count.buf().append(total_own_signalboxes, 0);
+	lb_signalbox_count.update();
+	lb_signalbox_maint.buf().printf("%.2f$", (double)welt->calc_adjusted_monthly_figure(total_signalbox_maintenance) / 100.0);
+	lb_signalbox_maint.update();
+}
+
+void money_frame_t::set_windowsize(scr_size size)
+{
+	gui_frame_t::set_windowsize(size);
+	// recompute the active container
+	if (year_month_tabs.get_active_tab_index() == 0) {
+		container_year.set_size( container_year.get_size() );
+	}
+	else {
+		container_month.set_size( container_month.get_size() );
+	}
 }
 
 
-bool money_frame_t::action_triggered( gui_action_creator_t *komp,value_t /* */)
+void money_frame_t::draw(scr_coord pos, scr_size size)
 {
-	if(komp==&headquarter) {
-		if(  sp->get_ai_id()!=spieler_t::HUMAN  ) {
-			create_win( new ai_option_t(sp), w_info, magic_ai_options_t+sp->get_player_nr() );
+
+	player->get_finance()->calc_finance_history();
+	fill_chart_tables();
+	update_labels();
+
+	// update chart seed
+	chart.set_seed(welt->get_last_year());
+
+	if (year_month_tabs.get_active_tab_index() == 2) {
+		update_stats();
+	}
+
+	gui_frame_t::draw(pos, size);
+}
+
+
+bool money_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
+{
+	if(  comp == &headquarter  ) {
+		if(  player->get_ai_id()!=player_t::HUMAN  ) {
+			create_win( new ai_option_t(player), w_info, magic_ai_options_t+player->get_player_nr() );
 		}
 		else {
-			sp->get_welt()->set_werkzeug( werkzeug_t::general_tool[WKZ_HEADQUARTER], sp );
+			if (player->get_headquarter_pos() == koord::invalid) {
+				welt->set_tool( tool_t::general_tool[TOOL_HEADQUARTER], player );
+			}
+			else {
+				// open dedicated HQ window
+				create_win( new headquarter_info_t(player), w_info, magic_headquarter+player->get_player_nr() );
+			}
 		}
 		return true;
 	}
-
-	for ( int i = 0; i<MAX_PLAYER_COST_BUTTON; i++) {
-		if (komp == &filterButtons[i]) {
-			bFilterStates[sp->get_player_nr()] ^= (1<<i);
-			if (bFilterStates[sp->get_player_nr()] & (1<<i)) {
-				chart.show_curve(i);
-				mchart.show_curve(i);
-			}
-			else {
-				chart.hide_curve(i);
-				mchart.hide_curve(i);
-			}
-			return true;
+	if (comp == &year_month_tabs) {
+		if (year_month_tabs.get_active_tab_index() == 0) {
+			container_year.set_size( container_year.get_size() );
+		}
+		else {
+			container_month.set_size( container_month.get_size() );
 		}
 	}
-	if(komp == &transport_type_c) {
+	if(  comp == &transport_type_c) {
 		int tmp = transport_type_c.get_selection();
 		if((0 <= tmp) && (tmp < transport_type_c.count_elements())) {
 			transport_type_option = transport_types[tmp];
 		}
 		return true;
 	}
+	if (  comp == &bt_access_haltlist  ) {
+		create_win( new halt_list_frame_t(), w_info, magic_halt_list );
+		return true;
+	}
+	if (  comp == &bt_access_depotlist  ) {
+		create_win( new depotlist_frame_t(player), w_info, magic_depotlist + player->get_player_nr() );
+		return true;
+	}
+	if (  comp == &bt_access_schedulelist  ) {
+		create_win( new schedule_list_gui_t(player), w_info, magic_line_management_t + player->get_player_nr() );
+		return true;
+	}
+	if (  comp == &bt_access_convoylist  ) {
+		create_win( new convoi_frame_t(), w_info, magic_convoi_list + player->get_player_nr() );
+		return true;
+	}
+	if (  comp == &bt_access_signalboxlist) {
+		create_win( new signalboxlist_frame_t(player), w_info, magic_signalboxlist + player->get_player_nr() );
+		return true;
+	}
 	return false;
+}
+
+
+bool money_frame_t::infowin_event(const event_t *ev)
+{
+	bool swallowed = gui_frame_t::infowin_event(ev);
+	set_focus( &transport_type_c );
+	return swallowed;
 }
 
 
 uint32 money_frame_t::get_rdwr_id()
 {
-	return magic_finances_t+sp->get_player_nr();
+	return magic_finances_t+player->get_player_nr();
 }
 
 
 void money_frame_t::rdwr( loadsave_t *file )
 {
-	bool monthly = mchart.is_visible();;
-	file->rdwr_bool( monthly );
+	// button-to-chart array
+	button_to_chart.rdwr(file);
 
-	// button state already cooledcted
-	file->rdwr_long( bFilterStates[sp->get_player_nr()] );
+	year_month_tabs.rdwr(file);
 
-	if(  file->is_loading()  ) {
-		// states ...
-		for( uint32 i = 0; i<MAX_PLAYER_COST_BUTTON; i++) {
-			if (bFilterStates[sp->get_player_nr()] & (1<<i)) {
-				chart.show_curve(i);
-				mchart.show_curve(i);
-			}
-			else {
-				chart.hide_curve(i);
-				mchart.hide_curve(i);
+	file->rdwr_short(transport_type_option);
+	if (file->is_loading()) {
+		for(int i=0; i<transport_type_c.count_elements(); i++) {
+			if (transport_types[i] == transport_type_option) {
+				transport_type_c.set_selection(i);
+				break;
 			}
 		}
-		year_month_tabs.set_active_tab_index( monthly );
 	}
 }

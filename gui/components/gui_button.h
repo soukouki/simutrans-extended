@@ -1,96 +1,102 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/*
- * Defines all button types: Normal (roundbox), Checkboxes (square), Arrows, Scrollbars
- */
+#ifndef GUI_COMPONENTS_GUI_BUTTON_H
+#define GUI_COMPONENTS_GUI_BUTTON_H
 
-#ifndef gui_button_h
-#define gui_button_h
 
 #include "gui_action_creator.h"
-#include "gui_komponente.h"
+#include "gui_component.h"
 #include "../../simcolor.h"
-#include "../../simimg.h"
+#include "../../dataobj/koord.h"
+#include "../../dataobj/koord3d.h"
+#include "../../display/simimg.h"
 
+class karte_ptr_t;
 
 /**
  * Class for buttons in Windows
- *
- * @author Hj. Malthaner, Niels Roest
- * @date December 2000
  */
 class button_t :
 	public gui_action_creator_t,
-	public gui_komponente_t
+	public gui_component_t
 {
+
 public:
-	/*
-	 * if there is a skin, those are the button ids used then
-	 */
-	static image_id square_button_pushed;
-	static image_id square_button_normal;
-	static image_id arrow_left_pushed;
-	static image_id arrow_left_normal;
-	static image_id arrow_right_pushed;
-	static image_id arrow_right_normal;
-	static image_id arrow_up_pushed;
-	static image_id arrow_up_normal;
-	static image_id arrow_down_pushed;
-	static image_id arrow_down_normal;
-
-	// these are optional: buttons made out of graphics
-	static image_id b_cap_left;
-	static image_id b_body;
-	static image_id b_cap_right;
-
-	static image_id b_cap_left_p;
-	static image_id b_body_p;
-	static image_id b_cap_right_p;
-
-	// these are optional: scrollbars horizontal ...
-	static image_id scrollbar_left;
-	static image_id scrollbar_right;
-	static image_id scrollbar_middle;
-
-	static image_id scrollbar_slider_left;
-	static image_id scrollbar_slider_right;
-	static image_id scrollbar_slider_middle;
-
-	// these are optional: ... and scrollbars vertical
-	static image_id scrollbar_top;
-	static image_id scrollbar_bottom;
-	static image_id scrollbar_center;
-
-	static image_id scrollbar_slider_top;
-	static image_id scrollbar_slider_bottom;
-	static image_id scrollbar_slider_center;
-
 	/* the button with the postfix state do not automatically change their state like the normal button do
 	 * the _state buttons must be changed by the caller!
 	 * _automatic buttons do everything themselves, i.e. depress/release alternately
 	 *
-	 * square: button with text on the right side next to it
-	 * box:  button with is used for many selection purposes; can have colored background
-	 * roundbox: button for "load" cancel and such options
+	 * square:        a checkbox with text on the right side next to it
+	 * box:           button which is used for many selection purposes, can have colored background
+	 * roundbox:      button for "load", "cancel" and such options
 	 * arrow-buttons: buttons with arrows, cannot have text
 	 * repeat arrows: calls the caller until the mouse is released
-	 * scrollbar: well you guess it. Not used by gui_frame_t things ...
+	 * flexible:      flag, can be set to box, square to get infinitely enlarging buttons
 	 */
 	enum type {
-		square=1, box, roundbox, arrowleft, arrowright, arrowup, arrowdown, scrollbar_horizontal, scrollbar_vertical, repeatarrowleft, repeatarrowright, posbutton,
-		square_state=129, box_state, roundbox_state, arrowleft_state, arrowright_state, arrowup_state, arrowdown_state, scrollbar_horizontal_state, scrollbar_vertical_state, repeatarrowleft_state, repeatarrowright_state,
-		square_automatic=257
+		square = 1,
+		box,
+		roundbox,
+		roundbox_left,
+		roundbox_middle,
+		roundbox_right,
+		imagebox,
+		depot,
+		sortarrow,
+		arrowleft,
+		arrowright,
+		arrowup,
+		arrowdown,
+		posbutton,
+		repeatarrowleft,
+		repeatarrowright,
+		swap_vertical,
+		TYPE_MASK = (1 << 6) - 1,
+
+		state            = 1 << 6,
+		square_state     = square     | state,
+		box_state        = box        | state,
+		roundbox_state   = roundbox   | state,
+		roundbox_left_state   = roundbox_left   | state,
+		roundbox_middle_state = roundbox_middle | state,
+		roundbox_right_state  = roundbox_right  | state,
+		imagebox_state   = imagebox   | state,
+		depot_state      = depot      | state,
+		sortarrow_state  = sortarrow  | state,
+		arrowright_state = arrowright | state,
+		arrowup_state    = arrowup    | state,
+		arrowdown_state  = arrowdown  | state,
+		automatic = 1<<7,
+		square_automatic    = square_state | automatic,
+		box_state_automatic = box_state    | automatic,
+		imagebox_automatic  = imagebox     | automatic,
+		sortarrow_automatic = sortarrow    | automatic,
+		posbutton_automatic = posbutton    | automatic,
+		depot_automatic     = depot        | automatic,
+
+		flexible = 1 << 9
 	};
+
+protected:
+	/**
+	 * Hide the base class init() version to force use of
+	 * the extended init() version for buttons.
+	 */
+	using gui_component_t::init;
+
+	/**
+	 * The displayed text of the button
+	 * direct access provided to avoid translations
+	 */
+	const char *text;
+	const char *translated_text;
 
 private:
 	/**
 	 * Tooltip for this button
-	 * @author Hj. Malthaner
 	 */
 	const char * tooltip, *translated_tooltip;
 
@@ -98,73 +104,75 @@ private:
 
 	/**
 	 * if buttons is disabled show only grey label
-	 * @author hsiegeln
 	 */
 	uint8 b_enabled:1;
 	uint8 b_no_translate:1;
 
-	/**
-	 * The displayed text of the button
-	 * direct access provided to avoid translations
-	 * @author Hj. Malthaner
-	 */
-	struct { sint16 x,y; } targetpos;
-	const char * text;
- 	const char *translated_text;
+	union {
+		koord3d targetpos;
+		image_id img;
+		uint32 button_click_time;
+	};
 
-	// private function for displaying buttons or their replacement
-	void display_button_image(sint16 x, sint16 y, int number, bool pushed) const;
+	bool img_on_right=false;
 
-	// draw a rectangular button
-	void draw_roundbutton(sint16 x, sint16 y, sint16 w, sint16 h, bool pressed);
+	// any click will go to this world
+	static karte_ptr_t welt;
 
-	// scrollbar either skinned or simple
-	void draw_scrollbar(sint16 x, sint16 y, sint16 w, sint16 h, bool horizontal, bool slider);
+	void draw_focus_rect( scr_rect, scr_coord_val offset = 1);
+
+	// Hide these
+	button_t(const button_t&);        // forbidden
+	void operator =(const button_t&); // forbidden
 
 public:
-	static void init_button_images();	// must be called at least once after loading skins
-
-	PLAYER_COLOR_VAL background; //@author hsiegeln
-	PLAYER_COLOR_VAL foreground;
+	PIXVAL background_color;
+	PIXVAL text_color;
 
 	bool pressed;
 
 	button_t();
 
-	void init(enum type typ, const char *text, koord pos, koord size = koord::invalid);
+	/**
+	 * Initializes the button. Sets the size depending on type.
+	 */
+	void init(enum type typ, const char *text, scr_coord pos=scr_coord(0,0), scr_size size = scr_size::invalid);
 
 	void set_typ(enum type typ);
+	enum type get_type() const { return this->type; }
 
 	const char * get_text() const {return text;}
 
 	/**
 	 * Set the displayed text of the button
-	 * @author Hj. Malthaner
 	 */
-	void set_text(const char * text);
+	virtual void set_text(const char * text);
 
 	/**
-	 * Get/Set text to position
-	 * @author prissi
+	 * Set position for posbuttons, will be returned on calling listener
 	 */
-	void set_targetpos(const koord k ) { this->targetpos.x = k.x; this->targetpos.y = k.y; }
+	void set_targetpos( const koord k ); // assuming this is on map ground
+	void set_targetpos3d( const koord3d k ) { targetpos = k; }
+
+	// relevant for imagebox, box and roundbox
+	void set_image(image_id id) { img = id; }
+	// Currently can only choose between the left and right edges,
+	// but in the future we could add options such as just to the left of the text.
+	void set_image_position_right(bool on_right) { img_on_right = on_right; }
 
 	/**
 	 * Set the displayed text of the button when not to translate
-	 * @author Hj. Malthaner
 	 */
 	void set_no_translate(bool b) { b_no_translate = b; }
 
 	/**
 	 * Sets the tooltip of this button
-	 * @author Hj. Malthaner
 	 */
 	void set_tooltip(const char * tooltip);
 
 	/**
 	 * @return true when x, y is within button area, i.e. the button was clicked
 	 * @return false when x, y is outside button area
-	 * @author Hj. Malthaner
 	 */
 	bool getroffen(int x, int y) OVERRIDE;
 
@@ -172,24 +180,32 @@ public:
 
 	/**
 	 * Draw the component
-	 * @author Hj. Malthaner
 	 */
-	void zeichnen(koord offset);
+	void draw(scr_coord offset) OVERRIDE;
 
-	void enable() { b_enabled = true; }
+	/**
+	 * Max-size: infinity for checkboxes, equal to size for the other types.
+	 */
+	scr_size get_max_size() const OVERRIDE;
 
-	void disable() { b_enabled = false; }
+	/**
+	 * Min-size: equal to the size (set by init).
+	 */
+	scr_size get_min_size() const OVERRIDE;
+
+	void enable(bool true_false_par = true) { b_enabled = true_false_par; }
+
+	void disable() { enable(false); }
 
 	bool enabled() { return b_enabled; }
 
-	// Knightly : a button can only be focusable when it is enabled
-	virtual bool is_focusable() { return b_enabled && gui_komponente_t::is_focusable(); }
+	// a button can only be focusable when it is enabled
+	bool is_focusable() OVERRIDE { return b_enabled && gui_component_t::is_focusable(); }
 
 	void update_focusability();
 
-private:
-	button_t(const button_t&);        // forbidden
-	void operator =(const button_t&); // forbidden
 };
+
+ENUM_BITSET(enum button_t::type)
 
 #endif

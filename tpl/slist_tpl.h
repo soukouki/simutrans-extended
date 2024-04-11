@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic license.
- * (see license.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef tpl_slist_tpl_h
-#define tpl_slist_tpl_h
+#ifndef TPL_SLIST_TPL_H
+#define TPL_SLIST_TPL_H
+
 
 #include <iterator>
 #include <typeinfo>
@@ -24,16 +23,12 @@
  * work in fixed time. Maintains a list of free nodes to reduce calls
  * to new and delete.
  *
- * Must NOT be used with things with copy contructor like button_t or std::string!!!
- *
- * @date November 2000
- * @author Hj. Malthaner
+ * Must NOT be used with things with copy constructor like button_t or std::string!!!
  */
-
 template<class T>
 class slist_tpl
 {
-private:	
+private:
 	struct node_t
 	{
 		node_t(const T& data_, node_t* next_) : next(next_), data(data_) {}
@@ -140,13 +135,11 @@ public:
 
 	/**
 	 * Creates a new empty list.
-	 *
-	 * @author Hj. Malthaner
 	 */
 	slist_tpl()
 	{
-		head = 0;             // leere liste
-		tail = 0;
+		head = nullptr;             // empty list
+		tail = nullptr;
 		node_count = 0;
 	}
 
@@ -157,14 +150,12 @@ public:
 
 	/**
 	 * Inserts an element at the beginning of the list.
-	 *
-	 * @author Hj. Malthaner
 	 */
 	void insert(const T& data)
 	{
 		node_t* tmp = new node_t(data, head);
 		head = tmp;
-		if(  tail == NULL  ) {
+		if(  tail == nullptr) {
 			tail = tmp;
 		}
 		node_count++;
@@ -179,7 +170,7 @@ public:
 	{
 		node_t* tmp = new node_t(head);
 		head = tmp;
-		if(  tail == NULL  ) {
+		if(  tail == nullptr ) {
 			tail = tmp;
 		}
 		node_count++;
@@ -187,12 +178,10 @@ public:
 
 	/**
 	 * Appends an element to the end of the list.
-	 *
-	 * @author Hj. Malthaner
 	 */
 	void append(const T& data)
 	{
-		if (tail == 0) {
+		if (tail == nullptr) {
 			insert(data);
 		}
 		else {
@@ -209,7 +198,7 @@ public:
 	 */
 	void append()
 	{
-		if (tail == 0) {
+		if (tail == nullptr) {
 			insert();
 		}
 		else {
@@ -222,12 +211,10 @@ public:
 
 	/**
 	 * Appends an element to the end of the list.
-	 *
-	 * @author Hj. Malthaner
 	 */
 	void append_unique(const T& data)
 	{
-		if (tail == 0) {
+		if (tail == nullptr) {
 			insert(data);
 		}
 		else if(  !is_contained(data)  ) {
@@ -242,8 +229,6 @@ public:
 	 * Appends the nodes of another list
 	 * empties other list
 	 * -> no memory allocation involved
-	 *
-	 * @author dwachs
 	 */
 	void append_list(slist_tpl<T>& other)
 	{
@@ -259,15 +244,13 @@ public:
 		node_count += other.node_count;
 
 		// empty other list
-		other.tail = NULL;
-		other.head = NULL;
+		other.tail = nullptr;
+		other.head = nullptr;
 		other.node_count = 0;
 	}
 
 	/**
 	 * Checks if the given element is already contained in the list.
-	 *
-	 * @author Hj. Malthaner
 	 */
 	bool is_contained(const T& data) const
 	{
@@ -276,13 +259,11 @@ public:
 		while(p != 0 && p->data != data) {
 			p = p->next;
 		}
-		return p != 0;         // ist NULL wenn nicht gefunden
+		return p != 0;         // is NULL when not found
 	}
 
 	/**
 	 * Removes an element from the list
-	 *
-	 * @author Hj. Malthaner
 	 */
 	bool remove(const T& data)
 	{
@@ -303,10 +284,10 @@ public:
 		else {
 			node_t *p = head;
 
-			while(p->next != 0 && !(p->next->data == data)) {
+			while(p->next != nullptr && !(p->next->data == data)) {
 				p = p->next;
 			}
-			if(p->next == 0) {
+			if(p->next == nullptr) {
 				//MESSAGE("slist_tpl<T>::remove()", "data not in list!");
 				return false;
 			}
@@ -314,7 +295,7 @@ public:
 			delete p->next;
 			p->next = tmp;
 
-			if(tmp == 0) {
+			if(tmp == nullptr) {
 				tail = p;
 			}
 		}
@@ -324,8 +305,7 @@ public:
 
 	/**
 	 * Retrieves the first element from the list. This element is
-	 * deleted from the list. Useful for some queueing tasks.
-	 * @author Hj. Malthaner
+	 * deleted from the list. Useful for some queuing tasks.
 	 */
 	T remove_first()
 	{
@@ -341,9 +321,9 @@ public:
 
 		node_count--;
 
-		if(head == 0) {
+		if(head == nullptr) {
 			// list is empty now
-			tail = 0;
+			tail = nullptr;
 		}
 
 		return tmp;
@@ -352,7 +332,6 @@ public:
 	/**
 	 * Recycles all nodes.
 	 * Leaves the list empty.
-	 * @author Hj. Malthaner
 	 */
 	void clear()
 	{
@@ -362,8 +341,8 @@ public:
 			p = p->next;
 			delete tmp;
 		}
-		head = 0;
-		tail = 0;
+		head = nullptr;
+		tail = nullptr;
 		node_count = 0;
 	}
 
@@ -372,7 +351,7 @@ public:
 		return node_count;
 	}
 
-	bool empty() const { return head == 0; }
+	bool empty() const { return head == nullptr; }
 
 	T& at(uint32 pos) const
 	{
@@ -423,13 +402,13 @@ public:
 	iterator insert(iterator pos, const T& x)
 	{
 		node_t* tmp = new node_t(x, pos.ptr);
-		if (pos.pred == NULL) {
+		if (pos.pred == nullptr) {
 			head = tmp;
 		}
 		else {
 			pos.pred->next = tmp;
 		}
-		if (pos.ptr == NULL) {
+		if (pos.ptr == nullptr) {
 			tail = tmp;
 		}
 		++node_count;
@@ -442,13 +421,13 @@ public:
 	iterator insert(iterator pos)
 	{
 		node_t* tmp = new node_t(pos.ptr);
-		if (pos.pred == NULL) {
+		if (pos.pred == nullptr) {
 			head = tmp;
 		}
 		else {
 			pos.pred->next = tmp;
 		}
-		if (pos.ptr == NULL) {
+		if (pos.ptr == nullptr) {
 			tail = tmp;
 		}
 		++node_count;
@@ -466,6 +445,47 @@ public:
 		}
 		return t ? index : -1;
 	}
+
+	/**
+	 * sorts list using specified comparator
+	 */
+	void sort( int (*compare)(const T &l, const T &r) ){
+		if( nullptr == head  ||  head == tail  ) {
+			return;
+		}
+
+		for(  uint i=1;  i < node_count;  ++i  ) {
+			int changes = 0;
+			if(  compare( head->data, head->next->data ) > 0  ) {
+				node_t * tmp = head;
+				head = head->next;
+				tmp->next = head->next;
+				head->next = tmp;
+				++changes;
+				if(  head == tail  ) {
+					tail = tail->next;
+					break;
+				}
+			}
+			for(  node_t *node = head;  node != tail  &&  node->next != tail;  node = node->next  ) {
+				if(  compare( node->next->data, node->next->next->data ) > 0  ) {
+					node_t * tmp = node->next;
+					node->next = node->next->next;
+					tmp->next = node->next->next;
+					node->next->next = tmp;
+					++changes;
+					if(  node->next == tail  ){
+						tail = tail->next;
+						break;
+					}
+				}
+			}
+			if(  changes == 0  ) {
+				break;
+			}
+		}
+	}
+
 private:
 	slist_tpl(const slist_tpl& slist_tpl);
 	slist_tpl& operator=( slist_tpl const& other );

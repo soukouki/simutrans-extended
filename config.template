@@ -1,12 +1,16 @@
 #
+# This file is part of the Simutrans-Extended project under the Artistic License.
+# (see LICENSE.txt)
+#
+
+#
 # to compile:
 # copy this file to config.default and adjust the settings
 #
 
-#BACKEND = allegro
 #BACKEND = gdi
-#BACKEND = opengl
 #BACKEND = sdl
+#BACKEND = sdl2
 #BACKEND = mixer_sdl
 #BACKEND = posix
 
@@ -19,25 +23,46 @@
 #OSTYPE = freebsd
 #OSTYPE = haiku
 #OSTYPE = linux
-#OSTYPE = mingw
+#OSTYPE = mingw32
+#OSTYPE = mingw64
 #OSTYPE = mac
+#OSTYPE = openbsd
 
-#DEBUG = 3    # Level 1-3, higher number means more debug-friendly, see Makefile
+#DEBUG = 1    # Level 1-3, higher number means more debug-friendly but slower, see Makefile
+#MSG_LEVEL = 1 # Level 1-4, more runtime debug messages (without only warnings and errors)
 #OPTIMISE = 1 # Add umpteen optimisation flags
 #PROFILE = 1  # Enable profiling
 #PROFILE = 2  # Enable profiling with optimisation flags, can be used with `OPTIMISE = 1'
+#LTO = 1 # enable link time optimizations
+#TUNE_NATIVE = 1 # enable tuning for this machine (makes binary not portable)
+#GCC_POPCOUNT = 1 # use gcc builtin popcount to speed up on modern machines (makes binary not portable) 
 
-#WITH_REVISION = 1 # adds the revision from svn; required for networkgames
-# if you do not use SVN, add -DREVISION="1234" to the FLAGS below
+#AV_FOUNDATION = 1  # Use AVFoundation instead of QTKit. If you are using macOS 10.12 or later, this must be enabled.
+
+WITH_REVISION = 1 # adds the commit number (truncated) from Github; important for network games
+# if you do not use Github and the related scripts for setting the commit number automatically, add -DREVISION="1234" to the FLAGS below
 
 #WIN32_CONSOLE = 1 # adds a console for windows debugging
 
-#MULTI_THREAD = 4 # start this many threads for some tasks like updating, map rotation, ...
+MULTI_THREAD = 1 # Enable multithreading
+
+# using freetype for Truetype font support
+#USE_FREETYPE = 0
+
+# using UPnP for easy server hosting behind routers
+#USE_UPNP = 0
+
+# using zstd compression library
+USE_ZSTD = 1
+
+# using FluidSynth for MIDI playback (SDL2 backend needed for Linux/MacOS, SDL2 or GDI for MinGW)
+#USE_FLUIDSYNTH_MIDI = 1
 
 # Define these as empty strings, if you don't have the respective config program
-#ALLEGRO_CONFIG = allegro-config
 #PNG_CONFIG     = pkg-config libpng
 #SDL_CONFIG     = sdl-config
+#SDL2_CONFIG    = sdl2-config
+#FREETYPE_CONFIG = freetype-config
 
 #VERBOSE = 1
 
@@ -46,6 +71,7 @@
 # Needed to compile:
 # USE_C: no assembler for copying (required for not using GCC on x86)
 # SIM_BIG_ENDIAN: MUST be set for PPC/Motorola byte order! (old mac, amiga)
+# NO_INTPTR_T: must be set if intptr_t is not available
 #
 # Changing appearance:
 # USE_SOFTPOINTER: emulate mouse pointer (set automatically in Makefile)
@@ -61,13 +87,11 @@
 # OTTD_LIKE: Enables half height tiles and crossconnects all industries
 # AUTOMATIC_BRIDGES and AUTOMATIC_TUNNELS: will be built also for player
 # AUTOJOIN_PUBLIC: stations next to a public stop will be joined to it
-# MAX_CHOOSE_BLOCK_TILES=xxx: maximum distance between choose signal and a
-#    target (undefined means no limit)
 # USE_DIFFERENT_WIND: different airplane approach directions over the map
-# DESTINATION_CITYCARS: Citycars can have a destination (enabled automatically - cannot be disabled)
 #
 # In order to use the flags, add a line like this: (-Dxxx)
 # FLAGS = -DUSE_C
+# The above flag is recommended for speed on modern CPUs: see http://forum.simutrans.com/index.php?topic=16773.msg159658#msg159658
 
 # Output directories:
 #
@@ -76,11 +100,15 @@
 #
 # BUILDDIR = $(shell pwd)
 #
-# use this to specifiy the target directory for the executable:
+# use this to specify the target directory for the executable:
 # .. otherwise defaults to BUILDDIR
 #
 # MAKEOBJ_PROGDIR = $(shell pwd)
 # NETTOOL_PROGDIR = $(shell pwd)
 # PROGDIR  = $(shell pwd)
 
-FLAGS = -fpermissive
+# For compiling on Linux with SDL2, use -I/usr/include/SDL2
+# For compiling on Linux with Freetype 2, use -I/usr/include/freetype2
+# For compiling on Linux with miniupnpc, use -I/usr/includeude/miniupnpc
+FLAGS = -DUSE_C -fno-delete-null-pointer-checks -fno-strict-aliasing -std=c++11
+

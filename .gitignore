@@ -10,45 +10,175 @@
 *.opensdf
 *.tar.gz
 *.log
+simutrans/
 *.out
+*.exe
+*.app
+*.vcxproj.filters
+*.zip*
+*.7z
+*.dll
+*.tar*
+*.gz*
+*.ilk
+*.bz2
+*.obj
+*.rules
+*.log*
+*.diagsession
+*.iobj
+*.ipdb
+*.TMP
+settings-experimental-debug.xml
+settings-extended-debug.xml
 ipch
 /Debug
-/Debug (SDL)
 /Debug-nettool
 /Release
-/Release (SDL)
-/build
+/build*
+/.ccls-cache
 /config.*
 /intermediates
 /makeobj/makeobj
-/makeobj/makeobj.exe
-*sim
-/sim.exe
+*.exe.*
 /binaries
+/OSX/getversion
 /save
 /screenshot
 /maps
 Pak*
 pak*
+PAK*
 settings.xml
 /simutrans-experimental
-Simutrans-Experimental.exe
+/simutrans-extended
+/Debug-makeobj
+simutrans-experimental*
+simexstrip
 _UpgradeReport_Files*
-*.*~
-*~
 /.build
 *.orig
 *.rej
 /simutrans/*pak*
 /simutrans/pak*
-/simutrans/text
 *.bdf
-*.zip
-*.vcxproj
-*.vcxproj.*
 /ipch/*
 *.*sdf
 *.diff
 *.patch
 *.log
 /doxygen
+/libs
+*.lnk
+*.pak
+/Default
+/x64
+/zlib*
+*server*-network.sve
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+revision.h
+.gitattributes
+2019 server signal desync logs.txt
+commands for debugging server.txt
+*.db
+*.opendb
+base-texts*
+base_texts*
+wishlist.txt
+test.dat
+teleport-testing.rtf
+simline-corrupt.cc
+bugs-simutrans-ex-0.3.txt
+bugs-pak128.britain.txt
+UpgradeLog.htm
+*.psess
+*.vsp
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+#Visual Studio and VS Code local configuration directories
+.vs/
+.vscode/
+
+# =========================
+# Operating System Files
+# =========================
+
+# OSX
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Language files to be added eventually:
+text/cz
+text/de
+text/dk
+#text/en
+text/es
+text/fr
+text/hr
+text/hu
+text/it
+text/ja
+text/nl
+text/pl
+text/pt
+text/ro
+text/ru
+text/sk
+text/sv
+text/zh
+
+
+# Folders:
+script/
+pak*/
+text/citylists/
+
+
+# Files:
+simctrl
+envvars
+text/*.*
+text/en/Simutrans-Experimental.vcxproj.lnk
+text/en/Simutrans-Extended.vcxproj.lnk
+text/all-help-file-names
+
+/Simutrans-Ex/nbproject/private/
+*.cache
+configure

@@ -1,16 +1,21 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #ifndef MACROS_H
 #define MACROS_H
 
+
 #include "simtypes.h"
 
-// XXX Workaround: Old GCCs choke on type check.
-#if defined __cplusplus && (!defined __GNUC__ || GCC_ATLEAST(3, 0))
+#define N_BAGS_SMALL 11
+#define N_BAGS_MEDIUM 37
+#define N_BAGS_LARGE 101
+
 // Ensures that the argument has array type.
-template <typename T, unsigned N> static inline void lengthof_check(T (&)[N]) {}
-#	define lengthof(x) (1 ? sizeof(x) / sizeof(*(x)) : (lengthof_check((x)), 0))
-#else
-#	define lengthof(x) (sizeof(x) / sizeof(*(x)))
-#endif
+template<typename T, size_t N>
+static inline size_t lengthof(T (&)[N]) { return N; }
 
 #define endof(x) ((x) + lengthof(x))
 
@@ -21,19 +26,12 @@ template <typename T, unsigned N> static inline void lengthof_check(T (&)[N]) {}
 #define MEMZERO(obj)     MEMZERON(&(obj), 1)
 
 // make sure, a value in within the borders
-static inline int clamp(int x, int min, int max)
+template<typename T> static inline T clamp(T v, T l, T u)
 {
-	if (x <= min) {
-		return min;
-	}
-	if (x >= max) {
-		return max;
-	}
-	return x;
+	return v < l ? l : (v > u ? u :v);
 }
 
 
-#ifdef __cplusplus
 namespace sim {
 
 template<class T> inline void swap(T& a, T& b)
@@ -43,10 +41,6 @@ template<class T> inline void swap(T& a, T& b)
 	b = t;
 }
 
-// XXX Workaround for GCC 2.95
-template<typename T> static inline T up_cast(T x) { return x; }
-
 }
 #endif
 
-#endif

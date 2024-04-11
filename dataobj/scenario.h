@@ -1,5 +1,11 @@
-#ifndef scenario_h
-#define scenario_h
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef DATAOBJ_SCENARIO_H
+#define DATAOBJ_SCENARIO_H
+
 
 /** @file scenario.h declarations for scenario interface */
 
@@ -29,13 +35,13 @@ class scenario_t
 private:
 	/// possible states of scenario
 	enum scenario_state_t {
-		INACTIVE = 0,         ///< scenario inactive
-		SCRIPTED = 7,         ///< scenario active (non-network game or at server)
+		INACTIVE         = 0, ///< scenario inactive
+		SCRIPTED         = 7, ///< scenario active (non-network game or at server)
 		SCRIPTED_NETWORK = 8  ///< scenario active, network game at client
 	};
 
 	/// state of the current scenario @see scenario_state_t
-	uint16	what_scenario;
+	uint16 what_scenario;
 
 	/// the world we are scripting in
 	karte_t *welt;
@@ -45,7 +51,7 @@ private:
 	/// e.g. my_scenario
 	plainstring scenario_name;
 
-	/// path to scenario directory (relative to umgebung_t::program_dir)
+	/// path to scenario directory (relative to env_t::program_dir)
 	/// e.g. pak/scenario/my_scenario/
 	plainstring scenario_path;
 
@@ -56,7 +62,12 @@ private:
 	 */
 	bool load_script(const char* filename);
 
-	/// is set, if an error occured during loading of savegame
+	/**
+	 * loads necessary compatibility scripts
+	 */
+	void load_compatibility_script();
+
+	/// is set, if an error occurred during loading of savegame
 	/// e.g. re-starting of scenario failed due to script error
 	bool rdwr_error;
 
@@ -74,11 +85,15 @@ private:
 	 * tools or to have toolbars reflect allowed tools.
 	 */
 	struct forbidden_t {
-		enum forbid_type { forbid_tool = 1, forbid_tool_rect = 2};
+		enum forbid_type {
+			forbid_tool      = 1,
+			forbid_tool_rect = 2
+		};
+
 		forbid_type type;
 		uint8 player_nr;
 		/// id of tool to be forbidden, as set by constructors of classes derived from
-		/// werkzeug_t, @see simwerkz.h
+		/// tool_t, @see simtool.h
 		uint16 toolnr;
 		/// waytype of tool, @see waytype_t
 		sint16 waytype;
@@ -90,12 +105,12 @@ private:
 		/// constructor: forbid tool/etc for a certain player
 		forbidden_t(forbid_type type_=forbid_tool, uint8 player_nr_=255, uint16 toolnr_=0, sint16 waytype_=invalid_wt) :
 			type(type_), player_nr(player_nr_), toolnr(toolnr_), waytype(waytype_),
-			pos_nw(koord::invalid), pos_se(koord::invalid), hmin(-128), hmax(127), error() {};
+			pos_nw(koord::invalid), pos_se(koord::invalid), hmin(-128), hmax(127), error() {}
 
 		/// constructor: forbid tool for a certain player at certain locations (and heights)
 		forbidden_t(uint8 player_nr_, uint16 toolnr_, sint16 waytype_, koord nw, koord se, sint8 hmin_=-128, sint8 hmax_=127) :
 			type(forbid_tool_rect), player_nr(player_nr_), toolnr(toolnr_), waytype(waytype_),
-			pos_nw(nw), pos_se(se), hmin(hmin_), hmax(hmax_), error() {};
+			pos_nw(nw), pos_se(se), hmin(hmin_), hmax(hmax_), error() {}
 
 		// copy constructor
 		forbidden_t(const forbidden_t&);
@@ -145,6 +160,10 @@ private:
 
 	/// list of forbidden tools
 	vector_tpl<forbidden_t*>forbidden_tools;
+
+	/// set to true if rules changed to update toolbars,
+	/// toolbars will be updated in next call to step()
+	bool need_toolbar_update;
 
 	/**
 	 * helper function:
@@ -225,14 +244,28 @@ public:
 	bool is_scripted() const { return what_scenario == SCRIPTED  ||  what_scenario == SCRIPTED_NETWORK; }
 
 	/**
+	 * compiles and executes given string
+	 * @returns error msg (or NULL if succeeded)
+	 */
+	const char* eval_string(const char* squirrel_string) const;
+
+	/**
 	 * Get percentage of scenario completion. Does not call script to update this value.
 	 * On clients: call server for update via dynamic_string logic.
-	 *
+	 * Returns percentage of scenario completion.
+	 * @param player_nr player
 	 * @returns percentage of scenario completion:
 	 * if >= 100 then scenario is won
 	 * if < 0 then scenario is lost
 	 */
-	int get_completion(int player_nr);
+	sint32 get_completion(int player_nr);
+
+	/**
+	 * Sets percentage of scenario completion. Used as callback if script call got suspended.
+	 * @param player_nr player
+	 * @returns dummy return value
+	 */
+	bool set_completion(sint32 player_nr, sint32 percentage);
 
 	void rotate90(const sint16 y_size);
 
@@ -275,6 +308,7 @@ public:
 	dynamic_string rule_text;
 	dynamic_string result_text;
 	dynamic_string about_text;
+	dynamic_string debug_text;
 	/// @}
 
 	/**
@@ -296,10 +330,20 @@ public:
 
 
 	/**
-	 * Calls scripted is_scenario_completed. Caches this value in statistics of spieler_t.
+	 * Calls scripted is_scenario_completed. Caches this value in statistics of player_t.
 	 * Server sends update of won/lost if necessary.
 	 */
 	void step();
+
+	/**
+	 * Called upon month change: at 0:00 of the first day of the new month.
+	 */
+	void new_month();
+
+	/**
+	 * Called upon new year: at 0:00 January 1st.
+	 */
+	void new_year();
 
 	/// @{
 	/// @name Interface to forbid tools in-game
@@ -309,15 +353,15 @@ public:
 	 *
 	 * @param player_nr number of player this rule applies to,
 	 *                  if this is set to MAX_PLAYER_COUNT then this acts for all players except public player
-	 * @param wkz_id id of tool
+	 * @param tool_id id of tool
 	 */
-	void forbid_tool(uint8 player_nr, uint16 wkz_id);
+	void forbid_tool(uint8 player_nr, uint16 tool_id);
 
 	/**
 	 * @ingroup squirrel-api
 	 * @see forbid_tool
 	 */
-	void allow_tool(uint8 player_nr, uint16 wkz_id);
+	void allow_tool(uint8 player_nr, uint16 tool_id);
 
 	/**
 	 * Forbid tool with certain waytype
@@ -325,16 +369,16 @@ public:
 	 *
 	 * @param player_nr number of player this rule applies to,
 	 *                  if this is set to MAX_PLAYER_COUNT then this acts for all players except public player
-	 * @param wkz_id id of tool
+	 * @param tool_id id of tool
 	 * @param wt waytype
 	 */
-	void forbid_way_tool(uint8 player_nr, uint16 wkz_id, waytype_t wt);
+	void forbid_way_tool(uint8 player_nr, uint16 tool_id, waytype_t wt);
 
 	/**
 	 * @ingroup squirrel-api
 	 * @see forbid_way_tool
 	 */
-	void allow_way_tool(uint8 player_nr, uint16 wkz_id, waytype_t wt);
+	void allow_way_tool(uint8 player_nr, uint16 tool_id, waytype_t wt);
 
 	/**
 	 * Forbid tool with certain waytype within rectangular region on the map
@@ -342,19 +386,19 @@ public:
 	 *
 	 * @param player_nr number of player this rule applies to,
 	 *                  if this is set to MAX_PLAYER_COUNT then this acts for all players except public player
-	 * @param wkz_id id of tool
+	 * @param tool_id id of tool
 	 * @param wt waytype
 	 * @param pos_nw coordinate of north-western corner of rectangle
 	 * @param pos_se coordinate of south-eastern corner of rectangle
 	 * @param err error message presented to user when trying to apply this tool
 	 */
-	void forbid_way_tool_rect(uint8 player_nr, uint16 wkz_id, waytype_t wt, koord pos_nw, koord pos_se, plainstring err);
+	void forbid_way_tool_rect(uint8 player_nr, uint16 tool_id, waytype_t wt, koord pos_nw, koord pos_se, plainstring err);
 
 	/**
 	 * @ingroup squirrel-api
 	 * @see forbid_way_tool_rect
 	 */
-	void allow_way_tool_rect(uint8 player_nr, uint16 wkz_id, waytype_t wt, koord pos_nw, koord pos_se);
+	void allow_way_tool_rect(uint8 player_nr, uint16 tool_id, waytype_t wt, koord pos_nw, koord pos_se);
 
 	/**
 	 * Forbid tool with certain waytype within cubic region on the map.
@@ -362,19 +406,19 @@ public:
 	 *
 	 * @param player_nr number of player this rule applies to,
 	 *                  if this is set to MAX_PLAYER_COUNT then this acts for all players except public player
-	 * @param wkz_id id of tool
+	 * @param tool_id id of tool
 	 * @param wt waytype
 	 * @param pos_nw coordinate of north-western corner of cube
 	 * @param pos_se coordinate of south-eastern corner of cube
 	 * @param err error message presented to user when trying to apply this tool
 	 */
-	void forbid_way_tool_cube(uint8 player_nr, uint16 wkz_id, waytype_t wt, koord3d pos_nw, koord3d pos_se, plainstring err);
+	void forbid_way_tool_cube(uint8 player_nr, uint16 tool_id, waytype_t wt, koord3d pos_nw, koord3d pos_se, plainstring err);
 
 	/**
 	 * @ingroup squirrel-api
 	 * @see forbid_way_tool_cube
 	 */
-	void allow_way_tool_cube(uint8 player_nr, uint16 wkz_id, waytype_t wt, koord3d pos_nw, koord3d pos_se);
+	void allow_way_tool_cube(uint8 player_nr, uint16 tool_id, waytype_t wt, koord3d pos_nw, koord3d pos_se);
 
 	/**
 	 * Clears all rules.
@@ -384,26 +428,26 @@ public:
 
 	/**
 	 * Checks if player can use this tool at all.
-	 * Called for instance in karte_t::local_set_werkzeug to change active tool or when filling toolbars.
+	 * Called for instance in karte_t::local_set_tool to change active tool or when filling toolbars.
 	 * @return true if player can use this tool.
 	 */
-	bool is_tool_allowed(spieler_t* sp, uint16 wkz_id, sint16 wt=invalid_wt);
+	bool is_tool_allowed(const player_t* player, uint16 tool_id, sint16 wt = invalid_wt);
 
 	/**
 	 * Checks if player can use the tool at this position.
 	 * @return NULL if allowed otherwise error message
 	 */
-	const char* is_work_allowed_here(spieler_t* sp, uint16 wkz_id, sint16 wt, koord3d pos);
+	const char* is_work_allowed_here(const player_t* player, uint16 tool_id, sint16 wt, koord3d pos);
 
 	/**
 	 * Checks if player can use this schedule.
 	 *
-	 * @param sp player
+	 * @param player player
 	 * @param schedule the schedule
 	 *
 	 * @return null if allowed, an error message otherwise
 	 */
-	const char* is_schedule_allowed(spieler_t* sp, schedule_t* schedule);
+	const char* is_schedule_allowed(const player_t* player, const schedule_t* schedule);
 
 
 	/// @return debug dump of forbidden tools

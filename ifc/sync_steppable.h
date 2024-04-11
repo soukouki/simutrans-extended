@@ -1,24 +1,32 @@
-#ifndef sync_steppable_h
-#define sync_steppable_h
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
 
+#ifndef IFC_SYNC_STEPPABLE_H
+#define IFC_SYNC_STEPPABLE_H
+
+
+#include "../simtypes.h"
+
+enum sync_result {
+	SYNC_OK,     ///< object remains in list
+	SYNC_REMOVE, ///< remove object from list
+	SYNC_DELETE  ///< delete object and remove from list
+};
 
 /**
- * Alle synchron bewegten Dinge müssen dieses Interface implementieren.
- *
- * @author Hj. Malthaner
+ * All synchronously moving things must implement this interface.
  */
 class sync_steppable
 {
 public:
-    /**
-     * Methode für Echtzeitfunktionen eines Objekts.
-     * @return false wenn Objekt aus der Liste der synchronen
-     * Objekte entfernt werden sol
-     * @author Hj. Malthaner
-     */
-    virtual bool sync_step(long delta_t) = 0;
+	/**
+	 * Method for real-time features of an object.
+	 */
+	virtual sync_result sync_step(uint32 delta_t) = 0;
 
-    virtual ~sync_steppable() {}
+	virtual ~sync_steppable() {}
 };
 
 #endif

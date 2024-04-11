@@ -1,5 +1,11 @@
-#ifndef _API_CLASS_H_
-#define _API_CLASS_H_
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+#ifndef SCRIPT_API_CLASS_H
+#define SCRIPT_API_CLASS_H
+
 
 #include "api_param.h"
 
@@ -21,6 +27,23 @@ namespace script_api {
 	 * @return SQ_OK or SQ_ERROR
 	 */
 	SQInteger create_class(HSQUIRRELVM vm, const char* classname, const char* baseclass = NULL);
+
+	/**
+	 * Creates squirrel class on the stack. Inherits from @p baseclass.
+	 * Has to be complemented by call to end_class.
+	 * Assigns the tag from param<C>::tag() to the class.
+	 * @tparam C assigns tag from C::tag() to the new class
+	 * @return SQ_OK or SQ_ERROR
+	 */
+	template<class C>
+	SQInteger create_class(HSQUIRRELVM vm, const char* classname, const char* baseclass = NULL)
+	{
+		SQInteger res = create_class(vm, classname, baseclass);
+		if (SQ_SUCCEEDED(res)) {
+			sq_settypetag(vm, -1, param<C>::tag());
+		}
+		return res;
+	}
 
 	/**
 	 * Pushes class on stack.
@@ -121,5 +144,43 @@ namespace script_api {
 		return ok ? 1 : -1;
 	}
 
+	template<class T> struct param< quickstone_tpl<T> > {
+		/**
+		 * Assumes that constructor of corresponding squirrel class
+		 * accepts one parameter (the id).
+		 * @return positive value for success, negative for failure
+		 */
+		static SQInteger push(HSQUIRRELVM vm, quickstone_tpl<T> const& h)
+		{
+			if (h.is_bound()) {
+				return push_instance(vm, param<T*>::squirrel_type(), h.get_id());
+			}
+			else {
+				sq_pushnull(vm);
+				return 1;
+			}
+		}
+		static const quickstone_tpl<T> get(HSQUIRRELVM vm, SQInteger index)
+		{
+			uint16 id = 0;
+			get_slot(vm, "id", id, index);
+			quickstone_tpl<T> h;
+			if (id < quickstone_tpl<T>::get_size()) {
+				h.set_id(id);
+			}
+			else {
+				sq_raise_error(vm, "Invalid id %d, too large", id);
+			}
+			return h;
+		}
+		static const char* squirrel_type()
+		{
+			return param<T*>::squirrel_type();
+		}
+		static const char* typemask()
+		{
+			return param<T*>::typemask();
+		}
+	};
 }; // end of namespace
 #endif

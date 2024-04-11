@@ -1,40 +1,35 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef boden_wege_monorail_h
-#define boden_wege_monorail_h
+#ifndef BODEN_WEGE_MONORAIL_H
+#define BODEN_WEGE_MONORAIL_H
 
 
 #include "schiene.h"
 
 
 /**
- * Klasse für Schienen in Simutrans.
- * Auf den Schienen koennen Züge fahren.
- * Jede Schiene gehört zu einer Blockstrecke
- *
- * @author Hj. Malthaner
+ * Class for monorail tracks, derived from schiene.
+ * Monorail trains can drive on this tracks.
+ * Each track belongs to a section block
  */
 class monorail_t : public schiene_t
 {
 public:
-	static const weg_besch_t *default_monorail;
+	static const way_desc_t *default_monorail;
 
-	monorail_t(karte_t *welt) : schiene_t(welt, monorail_wt) { set_besch(default_monorail); }
+	monorail_t() : schiene_t(monorail_wt) { set_desc(default_monorail); }
 
 	/**
 	 * File loading constructor.
-	 * @author prissi
 	 */
-	monorail_t(karte_t *welt, loadsave_t *file);
+	monorail_t(loadsave_t *file);
 
-	//virtual waytype_t get_waytype() const {return monorail_wt;}
+	//waytype_t get_waytype() const OVERRIDE {return monorail_wt;}
 
-	void rdwr(loadsave_t *file);
+	void rdwr(loadsave_t *file) OVERRIDE;
 };
 
 #endif

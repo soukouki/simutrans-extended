@@ -1,16 +1,13 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef gui_label_info_h
-#define gui_label_info_h
+#ifndef GUI_LABEL_INFO_H
+#define GUI_LABEL_INFO_H
+
 
 #include "gui_frame.h"
-#include "components/gui_label.h"
-#include "components/gui_textarea.h"
 #include "components/gui_textinput.h"
 #include "components/gui_location_view_t.h"
 #include "components/action_listener.h"
@@ -18,31 +15,24 @@
 class label_t;
 
 /**
- * Dies stellt ein Fenster mit den Zielinformationen
- * fuer eine Haltestelle dar.
- *
- * @author Hj. Malthaner
+ * Label creation/edition window
  */
-
 class label_info_t : public gui_frame_t, private action_listener_t
 {
 private:
-	static karte_t *welt;
-	spieler_t *sp;
 	label_t *label;
 
-	gui_label_t player_name;
 	gui_textinput_t input;
 	location_view_t view;
 	char edit_name[256];
 
 public:
-	label_info_t(karte_t *welt, label_t* l);
+	label_info_t(label_t* l);
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
 	// rotated map need new info ...
-	void map_rotate90( sint16 );
+	void map_rotate90( sint16 ) OVERRIDE;
 };
 
 #endif

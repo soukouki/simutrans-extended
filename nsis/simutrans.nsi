@@ -1,4 +1,16 @@
+;
+; This file is part of the Simutrans-Extended project under the Artistic License.
+; (see LICENSE.txt)
+;
+
 ; ************************************* Pakset downloader for simutrans *********************************************
+
+; needs the following plugins:
+; nsisunz
+; inetc
+; CabDll
+; untgz
+; ShellLink
 
 !include "preparation-functions.nsh"
 
@@ -16,7 +28,7 @@ Function PostExeInstall
 
   ; just change to simuconf.tab "singleuser_install = 1"
   FileOpen $0 "$INSTDIR\config\simuconf.tab" a
-  FileSeek $0 866
+  FileSeek $0 924
   FileWrite $0 "singleuser_install = 1 "
   FileClose $0
   goto finishGDIexe
@@ -31,18 +43,18 @@ finishGDIexe:
 FunctionEnd
 
 Section "Executable (GDI, Unicode)" GDIexe
-  AddSize 9556
-  StrCpy $downloadlink "http://downloads.sourceforge.net/project/simutrans/simutrans/112-2/simuwin-112-2.zip"
-  StrCpy $archievename "simuwin-112-2.zip"
+  AddSize 10583
+  StrCpy $downloadlink "http://downloads.sourceforge.net/project/simutrans/simutrans/120-1-1/simuwin-120-1-1.zip"
+  StrCpy $archievename "simuwin-120-1-1.zip"
   StrCpy $downloadname "Simutrans Executable (GDI)"
   Call DownloadInstallZip
   Call PostExeInstall
 SectionEnd
 
 Section /o "Executable (SDL, better sound)" SDLexe
-  AddSize 9870
-  StrCpy $downloadlink "http://downloads.sourceforge.net/project/simutrans/simutrans/112-2/simuwin-sdl-112-2.zip"
-  StrCpy $archievename "simuwin-sdl-112-2.zip"
+  AddSize 10898
+  StrCpy $downloadlink "http://downloads.sourceforge.net/project/simutrans/simutrans/120-1-1/simuwin-sdl-120-1-1.zip"
+  StrCpy $archievename "simuwin-sdl-120-1-1.zip"
   StrCpy $downloadname "Simutrans Executable (SDL)"
   Call DownloadInstallZip
   Call PostExeInstall

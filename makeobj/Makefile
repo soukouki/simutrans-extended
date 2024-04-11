@@ -1,9 +1,12 @@
-# This is for MAKEOBJ
+#
+# This file is part of the Simutrans-Extended project under the Artistic License.
+# (see LICENSE.txt)
+#
 
 CFG ?= default
 -include ../config.$(CFG)
 
-OSTYPES       = beos cygwin freebsd haiku linux mingw mac
+OSTYPES       = amiga beos cygwin freebsd haiku linux mingw32 mingw64 mac
 
 ifeq ($(findstring $(OSTYPE), $(OSTYPES)),)
   $(error Unkown OSTYPE "$(OSTYPE)", must be one of "$(OSTYPES)")
@@ -31,7 +34,7 @@ ifeq ($(OSTYPE),cygwin)
   STD_LIBS += -lwinmm
 endif
 
-ifeq ($(OSTYPE),mingw)
+ifeq ($(OSTYPE),mingw32)
   CC ?= gcc
   OS_OPT   ?= -DPNG_STATIC -DZLIB_STATIC -march=pentium
   LDFLAGS += -static-libgcc -static-libstdc++
@@ -79,60 +82,61 @@ ifneq ($(PROFILE),)
   LDFLAGS += -pg
 endif
 
-CFLAGS   += -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align -Wstrict-prototypes $(OS_INC) $(OS_OPT) $(FLAGS)
-CXXFLAGS += -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align $(OS_INC) $(OS_OPT) $(FLAGS)
+CFLAGS   += -Wall -Wextra -Wcast-qual -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wpadded $(OS_INC) $(OS_OPT) $(FLAGS)
+CXXFLAGS += -Wall -Wextra -Wcast-qual -Wpointer-arith -Wcast-align -Wpadded -std=c++11 $(OS_INC) $(OS_OPT) $(FLAGS)
 
 # SOLO_SOURCES contains files which are unique to makeobj;
 # SHARED_SOURCES contains those with the exact same object code in makeobj and simutrans;
 # VARIANT_SOURCES contains those which need different .o files for makeobj and simutrans.
 # At the moment they're all treated identically, of course.
 SOLO_SOURCES += makeobj.cc
-SOLO_SOURCES += ../besch/writer/bridge_writer.cc
-SOLO_SOURCES += ../besch/writer/building_writer.cc
-SOLO_SOURCES += ../besch/writer/citycar_writer.cc
-SOLO_SOURCES += ../besch/writer/crossing_writer.cc
-SOLO_SOURCES += ../besch/writer/factory_writer.cc
-SOLO_SOURCES += ../besch/writer/get_climate.cc
-SOLO_SOURCES += ../besch/writer/get_waytype.cc
-SOLO_SOURCES += ../besch/writer/good_writer.cc
-SOLO_SOURCES += ../besch/writer/groundobj_writer.cc
-SOLO_SOURCES += ../besch/writer/ground_writer.cc
-SOLO_SOURCES += ../besch/writer/image_writer.cc
-SOLO_SOURCES += ../besch/writer/imagelist2d_writer.cc
-SOLO_SOURCES += ../besch/writer/imagelist3d_writer.cc
-SOLO_SOURCES += ../besch/writer/imagelist_writer.cc
-SOLO_SOURCES += ../besch/writer/obj_node.cc
-SOLO_SOURCES += ../besch/writer/obj_writer.cc
-SOLO_SOURCES += ../besch/writer/pedestrian_writer.cc
-SOLO_SOURCES += ../besch/writer/roadsign_writer.cc
-SOLO_SOURCES += ../besch/writer/root_writer.cc
-SOLO_SOURCES += ../besch/writer/sim_writer.cc
-SOLO_SOURCES += ../besch/writer/skin_writer.cc
-SOLO_SOURCES += ../besch/writer/sound_writer.cc
-SOLO_SOURCES += ../besch/writer/text_writer.cc
-SOLO_SOURCES += ../besch/writer/tree_writer.cc
-SOLO_SOURCES += ../besch/writer/tunnel_writer.cc
-SOLO_SOURCES += ../besch/writer/vehicle_writer.cc
-SOLO_SOURCES += ../besch/writer/way_writer.cc
-SOLO_SOURCES += ../besch/writer/way_obj_writer.cc
-SOLO_SOURCES += ../besch/writer/xref_writer.cc
+SOLO_SOURCES += ../descriptor/writer/bridge_writer.cc
+SOLO_SOURCES += ../descriptor/writer/building_writer.cc
+SOLO_SOURCES += ../descriptor/writer/citycar_writer.cc
+SOLO_SOURCES += ../descriptor/writer/crossing_writer.cc
+SOLO_SOURCES += ../descriptor/writer/factory_writer.cc
+SOLO_SOURCES += ../descriptor/writer/get_climate.cc
+SOLO_SOURCES += ../descriptor/writer/get_waytype.cc
+SOLO_SOURCES += ../descriptor/writer/good_writer.cc
+SOLO_SOURCES += ../descriptor/writer/groundobj_writer.cc
+SOLO_SOURCES += ../descriptor/writer/ground_writer.cc
+SOLO_SOURCES += ../descriptor/writer/image_writer.cc
+SOLO_SOURCES += ../descriptor/writer/imagelist2d_writer.cc
+SOLO_SOURCES += ../descriptor/writer/imagelist3d_writer.cc
+SOLO_SOURCES += ../descriptor/writer/imagelist_writer.cc
+SOLO_SOURCES += ../descriptor/writer/obj_node.cc
+SOLO_SOURCES += ../descriptor/writer/obj_writer.cc
+SOLO_SOURCES += ../descriptor/writer/pedestrian_writer.cc
+SOLO_SOURCES += ../descriptor/writer/roadsign_writer.cc
+SOLO_SOURCES += ../descriptor/writer/root_writer.cc
+SOLO_SOURCES += ../descriptor/writer/sim_writer.cc
+SOLO_SOURCES += ../descriptor/writer/skin_writer.cc
+SOLO_SOURCES += ../descriptor/writer/sound_writer.cc
+SOLO_SOURCES += ../descriptor/writer/text_writer.cc
+SOLO_SOURCES += ../descriptor/writer/tree_writer.cc
+SOLO_SOURCES += ../descriptor/writer/tunnel_writer.cc
+SOLO_SOURCES += ../descriptor/writer/vehicle_writer.cc
+SOLO_SOURCES += ../descriptor/writer/way_writer.cc
+SOLO_SOURCES += ../descriptor/writer/way_obj_writer.cc
+SOLO_SOURCES += ../descriptor/writer/xref_writer.cc
+SOLO_SOURCES += ../descriptor/writer/pier_writer.cc
 SOLO_SOURCES += ../utils/dr_rdpng.cc
-SHARED_SOURCES += ../besch/bild_besch.cc
+SHARED_SOURCES += ../descriptor/image.cc
 SHARED_SOURCES += ../dataobj/freelist.cc
-SHARED_SOURCES += ../dataobj/tabfile.cc
 SHARED_SOURCES += ../simdebug.cc
 SHARED_SOURCES += ../simmem.cc
 SHARED_SOURCES += ../utils/simstring.cc
 SHARED_SOURCES += ../utils/searchfolder.cc
 SHARED_SOURCES += ../utils/float32e8_t.cc
-VARIANT_SOURCES += ../simtools.cc
+VARIANT_SOURCES += ../utils/simrandom.cc
+VARIANT_SOURCES += ../dataobj/tabfile.cc
 VARIANT_SOURCES += ../utils/log.cc
 
 SOURCES ?= $(SOLO_SOURCES) $(SHARED_SOURCES) $(VARIANT_SOURCES)
 
 BUILDDIR ?= build/$(CFG)
-TOOL  = makeobj
-PROG ?= makeobj
+TOOL  = makeobj-extended
+PROG ?= makeobj-extended
 
 ifeq ($(origin MAKEOBJ_PROGDIR), undefined)
   MAKEOBJ_PROGDIR := ../$(BUILDDIR)/$(TOOL)

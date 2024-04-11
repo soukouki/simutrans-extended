@@ -1,112 +1,91 @@
 /*
- * Copyright (c) 1997 - 2003 Hansjörg Malthaner
- * Copyright 2013 Nathanael Nerode, James Petts
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
- */
-
-/*
- * Display information about each configured good
- * as a list like display
- * @author Hj. Malthaner
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include "goods_stats_t.h"
 
-#include "../simgraph.h"
 #include "../simcolor.h"
 #include "../simworld.h"
 #include "../simconvoi.h"
 
-#include "../bauer/warenbauer.h"
-#include "../besch/ware_besch.h"
+#include "../bauer/goods_manager.h"
+#include "../descriptor/goods_desc.h"
 
 #include "../dataobj/translator.h"
-#include "../utils/cbuffer_t.h"
-#include "../utils/simstring.h"
 
-#include "../besch/ware_besch.h"
+#include "../descriptor/goods_desc.h"
 #include "gui_frame.h"
+#include "components/gui_button.h"
+#include "components/gui_colorbox.h"
+#include "components/gui_label.h"
 
+#include "components/gui_image.h"
 
-karte_t *goods_stats_t::welt = NULL;
+// for reference
+#include "components/gui_factory_storage_info.h"
 
-goods_stats_t::goods_stats_t( karte_t *wl )
+karte_ptr_t goods_stats_t::welt;
+
+void goods_stats_t::update_goodslist(vector_tpl<const goods_desc_t*>goods, uint32 b, uint32 d, uint8 c, uint8 ct, uint8 gc, uint8 display_mode)
 {
-	welt = wl;
-	set_groesse( koord(BUTTON4_X + D_BUTTON_WIDTH + 2, warenbauer_t::get_waren_anzahl() * (LINESPACE+1) ) );
-}
-
-
-void goods_stats_t::update_goodslist( uint16 *g, int b, int l, uint32 d, uint8 c, uint8 ct, waytype_t wt)
-{
-	goodslist = g;
-	relative_speed_percentage = b;
+	vehicle_speed = b;
 	distance_meters = d;
 	comfort = c;
 	catering_level = ct;
-	way_type = wt;
-	listed_goods = l;
-	set_groesse( koord(BUTTON4_X + D_BUTTON_WIDTH + 2, listed_goods * (LINESPACE+1) ) );
-}
+	g_class = gc;
 
+	scr_size size = get_size();
+	remove_all();
+	set_table_layout(display_mode>0 ? 5:7, 0);
 
-/**
- * Draw the component
- * @author Hj. Malthaner
- */
-void goods_stats_t::zeichnen(koord offset)
-{
-	int yoff = offset.y;
-	char money_buf[256];
-	cbuffer_t buf;
+	FOR(vector_tpl<const goods_desc_t*>, wtyp, goods) {
+		new_component<gui_colorbox_t>(wtyp->get_color())->set_size(GOODS_COLOR_BOX_SIZE);
 
-	// Pre-111.1 in case current does not work.
-	/*for(  uint16 i=0;  i<warenbauer_t::get_waren_anzahl()-1u;  i++  )*/
-
-	for(  uint16 i=0;  i<listed_goods;  i++  )
-	{
-		const ware_besch_t * wtyp = warenbauer_t::get_info(goodslist[i]);
-
-		display_ddd_box_clip(offset.x + 2, yoff, 8, 8, MN_GREY0, MN_GREY4);
-		display_fillbox_wh_clip(offset.x + 3, yoff+1, 6, 6, wtyp->get_color(), true);
-
-		buf.clear();
-		buf.printf("%s", translator::translate(wtyp->get_name()));
-		display_proportional_clip(offset.x + 14, yoff,	buf, ALIGN_LEFT, COL_BLACK, true);
-
-		// Massively cleaned up by neroden, June 2013
-		sint64 relevant_speed = ( welt->get_average_speed(way_type) * (relative_speed_percentage + 100) ) / 100;
-		// Roundoff is deliberate here (get two-digit speed)... question this
-		if (relevant_speed <= 0) {
-			// Negative and zero speeds will be due to roundoff errors
-			relevant_speed = 1;
+		gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
+		if (wtyp->get_number_of_classes() > 1) {
+			lb->buf().printf("%s (%s)", translator::translate(wtyp->get_name()), goods_manager_t::get_translated_fare_class_name(wtyp->get_catg_index(),min(g_class, wtyp->get_number_of_classes()-1)));
 		}
-		const sint64 journey_tenths = tenths_from_meters_and_kmh(distance_meters, relevant_speed);
+		else {
+			lb->buf().append( translator::translate(wtyp->get_name()) );
+		}
+		lb->update();
 
-		sint64 revenue = wtyp->get_fare_with_comfort_catering_speedbonus(welt,
-				comfort, catering_level, journey_tenths, relative_speed_percentage, distance_meters);
-		// Convert to simcents.  Should be very fast.
-		sint64 price = (revenue + 2048) / 4096;
+		if (display_mode==0) {
+			// Massively cleaned up by neroden, June 2013
+			// Roundoff is deliberate here (get two-digit speed)... question this
+			if (vehicle_speed <= 0) {
+				// Negative and zero speeds will be due to roundoff errors
+				vehicle_speed = 1;
+			}
 
-		money_to_string( money_buf, (double)price/100.0 );
-		buf.clear();
-		buf.printf(money_buf);
-		display_proportional_clip(offset.x + 170, yoff, buf, 	ALIGN_RIGHT, 	COL_BLACK, true);
+			const sint64 journey_tenths = tenths_from_meters_and_kmh(distance_meters, vehicle_speed);
 
-		buf.clear();
-		buf.printf("%d%%", wtyp->get_adjusted_speed_bonus(distance_meters));
-		display_proportional_clip(offset.x + 205, yoff, buf, ALIGN_RIGHT, COL_BLACK, true);
+			sint64 revenue = wtyp->get_total_fare(distance_meters, 0u, comfort, catering_level, min(g_class, wtyp->get_number_of_classes() - 1), journey_tenths);
 
-		buf.clear();
-		buf.printf( "%s",	translator::translate(wtyp->get_catg_name()));
-		display_proportional_clip(offset.x + 220, yoff, buf, 	ALIGN_LEFT, COL_BLACK, 	true);
+			// Convert to simucents.  Should be very fast.
+			sint64 price = (revenue + 2048) / 4096;
 
-		buf.clear();
-		buf.printf("%dKg", wtyp->get_weight_per_unit());
-		display_proportional_clip(offset.x + 360, yoff, buf, ALIGN_RIGHT, COL_BLACK, true);
+			lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+			lb->buf().append_money(price / 100.0);
+			lb->update();
 
-		yoff += LINESPACE+1;
+			new_component<gui_margin_t>(LINESPACE);
+		}
+		new_component<gui_image_t>(wtyp->get_catg_symbol(), 0, ALIGN_NONE, true);
+
+		new_component<gui_label_t>(wtyp->get_catg_name());
+
+		if (display_mode == 0) {
+			lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
+			lb->buf().printf("%dKg", wtyp->get_weight_per_unit());
+			lb->update();
+		}
+		else {
+			new_component<gui_goods_handled_factory_t>(wtyp, display_mode==1? false:true);
+		}
 	}
+
+	scr_size min_size = get_min_size();
+	set_size(scr_size(max(size.w, min_size.w), min_size.h));
 }

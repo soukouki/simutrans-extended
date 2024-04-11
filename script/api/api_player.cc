@@ -1,3 +1,8 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 #include "api.h"
 
 /** @file api_player.cc exports player/company related functions. */
@@ -10,7 +15,7 @@
 
 using namespace script_api;
 
-vector_tpl<sint64> const& get_player_stat(spieler_t *sp, sint32 INDEX, sint32 TTYPE, bool monthly)
+vector_tpl<sint64> const& get_player_stat(player_t *player, sint32 INDEX, sint32 TTYPE, bool monthly)
 {
 	static vector_tpl<sint64> v;
 	v.clear();
@@ -26,8 +31,10 @@ vector_tpl<sint64> const& get_player_stat(spieler_t *sp, sint32 INDEX, sint32 TT
 		}
 		atv = true;
 	}
-	if (sp) {
-		finance_t *finance = sp->get_finance();
+	if (player) {
+		finance_t *finance = player->get_finance();
+		// calculate current month
+		finance->calc_finance_history();
 		uint16 maxi = monthly ? MAX_PLAYER_HISTORY_MONTHS : MAX_PLAYER_HISTORY_YEARS;
 		for(uint16 i = 0; i < maxi; i++) {
 			sint64 m = atv ? ( monthly ? finance->get_history_veh_month((transport_type)TTYPE, i, INDEX) : finance->get_history_veh_year((transport_type)TTYPE, i, INDEX) )
@@ -48,20 +55,30 @@ vector_tpl<sint64> const& get_player_stat(spieler_t *sp, sint32 INDEX, sint32 TT
 	return v;
 }
 
-void_t change_player_account(spieler_t *sp, sint64 delta)
+script_api::void_t change_player_account(player_t *player, sint64 delta)
 {
-	if (sp) {
-		sp->get_finance()->book_account(delta);
+	if (player) {
+		player->get_finance()->book_account(delta);
 	}
-	return void_t();
+	return script_api::void_t();
 }
 
 
-bool player_active(spieler_t *sp)
+bool player_active(player_t *player)
 {
-	return sp != NULL;
+	return player != NULL;
 }
 
+
+SQInteger player_export_line_list(HSQUIRRELVM vm)
+{
+	if (player_t* player = param<player_t*>::get(vm, 1)) {
+		push_instance(vm, "line_list_x");
+		set_slot(vm, "player_id", player->get_player_nr());
+		return 1;
+	}
+	return SQ_ERROR;
+}
 
 void export_player(HSQUIRRELVM vm)
 {
@@ -80,20 +97,20 @@ void export_player(HSQUIRRELVM vm)
 	// register_function(..., "constructor", ...);
 
 	/**
-	 * Return headquarter level.
-	 * @returns level, level is zero if no headquarter was built
+	 * Return headquarters level.
+	 * @returns level, level is zero if no headquarters was built
 	 */
-	register_method(vm, &spieler_t::get_headquarter_level, "get_headquarter_level");
+	register_method(vm, &player_t::get_headquarters_level, "get_headquarters_level");
 	/**
-	 * Return headquarter position.
-	 * @returns coordinate, (-1,-1) if no headquarter was built
+	 * Return headquarters position.
+	 * @returns coordinate, (-1,-1) if no headquarters was built
 	 */
-	register_method(vm, &spieler_t::get_headquarter_pos,   "get_headquarter_pos");
+	register_method(vm, &player_t::get_headquarter_pos,   "get_headquarter_pos");
 	/**
 	 * Return name of company.
 	 * @returns name
 	 */
-	register_method(vm, &spieler_t::get_name,              "get_name");
+	register_method(vm, &player_t::get_name,              "get_name");
 	/**
 	 * Get monthly statistics of construction costs.
 	 * @returns array, index [0] corresponds to current month
@@ -194,8 +211,16 @@ void export_player(HSQUIRRELVM vm)
 
 	/**
 	 * Returns whether the player (still) exists in the game.
+	 *
+	 * @deprecated Only available for api versions less than 120.1, see @ref get_api_version.
+	 * @typemask bool()
 	 */
-	register_method(vm, &player_active, "is_active", true);
+	// register_method(vm,, "is_active", true); implemented in scenario_compat.nut
+	/**
+	 * Exports list of lines of this player.
+	 * @typemask line_list_x()
+	 */
+	register_function(vm, &player_export_line_list, "get_line_list", 1, param<player_t*>::typemask());
 
 	end_class(vm);
 }

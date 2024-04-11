@@ -1,9 +1,8 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
+
 #include <string>
 #include <stdio.h>
 #include <string.h>
@@ -11,16 +10,17 @@
 
 #include "../macros.h"
 #include "../simdebug.h"
-#include "../simsys.h"
+#include "../sys/simsys.h"
 #include "../simtypes.h"
-#include "../simgraph.h"	// for unicode stuff
+#include "../display/simgraph.h" // for unicode stuff
 #include "translator.h"
 #include "loadsave.h"
-#include "umgebung.h"
+#include "environment.h"
 #include "../simmem.h"
 #include "../utils/cbuffer_t.h"
 #include "../utils/searchfolder.h"
 #include "../utils/simstring.h"
+#include "../utils/simrandom.h"
 #include "../unicode.h"
 #include "../tpl/vector_tpl.h"
 
@@ -40,15 +40,15 @@ static char *fgets_line(char *buffer, int max_len, FILE *file)
 }
 
 
-const char *translator::lang_info::translate(const char* text) const
+const char *translator::lang_info::translate(const char *text) const
 {
-	if (text    == NULL) {
+	if(  text    == NULL  ) {
 		return "(null)";
 	}
-	if (text[0] == '\0') {
+	if(  text[0] == '\0'  ) {
 		return text;
 	}
-	const char* trans = texts.get(text);
+	const char *trans = texts.get(text);
 	return trans != NULL ? trans : text;
 }
 
@@ -56,7 +56,7 @@ const char *translator::lang_info::translate(const char* text) const
 /* Made to be dynamic, allowing any number of languages to be loaded */
 static translator::lang_info langs[40];
 static translator::lang_info *current_langinfo = langs;
-static stringhashtable_tpl<const char*> compatibility;
+static stringhashtable_tpl<const char*, N_BAGS_LARGE> compatibility;
 
 
 translator translator::single_instance;
@@ -74,33 +74,20 @@ const translator::lang_info* translator::get_langs()
 }
 
 
-#ifdef need_dump_hashtable
-// diagnosis
-static void dump_hashtable(stringhashtable_tpl<const char*>* tbl)
-{
-	printf("keys\n====\n");
-	tbl->dump_stats();
-	printf("entries\n=======\n");
-	FOR(stringhashtable_tpl<char const*>, const& i, *tbl) {
-		printf("%s\n", i.object);
-	}
-	fflush(NULL);
-}
-#endif
+/* first two file functions needed in connection with utf */
 
-/* first two file fuctions needed in connection with utf */
-
-/* checks, if we need a unicode translation (during load only done for identifying strings like "Auflösen")
- * @date 2.1.2005
- * @author prissi
+/**
+ * checks, if we need a unicode translation
  */
 static bool is_unicode_file(FILE* f)
 {
-	unsigned char	str[2];
-	int	pos = ftell(f);
+	unsigned char str[2];
+	int pos = ftell(f);
 //	DBG_DEBUG("is_unicode_file()", "checking for unicode");
 //	fflush(NULL);
-	fread( str, 1, 2,  f );
+	if (fread( str, 1, 2,  f ) != 2) {
+		return false;
+	}
 //	DBG_DEBUG("is_unicode_file()", "file starts with %x%x",str[0],str[1]);
 //	fflush(NULL);
 	if (str[0] == 0xC2 && str[1] == 0xA7) {
@@ -111,7 +98,9 @@ static bool is_unicode_file(FILE* f)
 	if(  str[0]==0xEF  &&  str[1]==0xBB   &&  fgetc(f)==0xBF  ) {
 		// the first letter is the byte order mark => may need to skip a paragraph (Latin A7, UTF8 C2 A7)
 		pos = ftell(f);
-		fread( str, 1, 2,  f );
+		if (fread( str, 1, 2,  f ) != 2) {
+			return false;
+		}
 		if(  str[0] != 0xC2  ||  str[1] == 0xA7  ) {
 			fseek(f, pos, SEEK_SET);
 			dbg->error( "is_unicode_file()", "file is UTF-8 but has no paragraph" );
@@ -125,46 +114,59 @@ static bool is_unicode_file(FILE* f)
 
 
 
-// the bytes in an UTF sequence have always the format 10xxxxxx
-static inline int is_cont_char(utf8 c) { return (c & 0xC0) == 0x80; }
-
-
 // recodes string to put them into the tables
-static char* recode(const char* src, bool translate_from_utf, bool translate_to_utf)
+static char *recode(const char *src, bool translate_from_utf, bool translate_to_utf, bool is_latin2 )
 {
-	char* base;
-	if (translate_to_utf!=translate_from_utf) {
+	char *base;
+	if(  translate_to_utf != translate_from_utf  ) {
 		// worst case
 		base = MALLOCN(char, strlen(src) * 2 + 2);
 	}
 	else {
 		base = MALLOCN(char, strlen(src) + 2);
 	}
-	char* dst = base;
+	char *dst = base;
 	uint8 c = 0;
 
 	do {
 		if (*src =='\\') {
-			src +=2;
+			if (*(src + 1) == 0) {
+				// backslash at end of line -> corrupted
+				break;
+			}
+
+			src += 2;
 			*dst++ = c = '\n';
 		}
 		else {
 			c = *src;
 			if(c>127) {
-				if(translate_from_utf == translate_to_utf) {
+				if(  translate_from_utf == translate_to_utf  ) {
 					// but copy full letters! (or, if ASCII, copy more than one letter, does not matter
 					do {
 						*dst++ = *src++;
 					} while (is_cont_char(*src));
 					c = *src;
-				} else if (translate_to_utf) {
-					// make UTF8 from latin
-					dst += c = utf16_to_utf8((unsigned char)*src++, (utf8*)dst);
-				} else if (translate_from_utf) {
+				}
+				else if(  translate_to_utf  ) {
+					if(  !is_latin2  ) {
+						// make UTF8 from latin1
+						dst += c = utf16_to_utf8((unsigned char)*src++, (utf8*)dst);
+					}
+					else {
+						dst += c = utf16_to_utf8( latin2_to_unicode( (uint8)*src++ ), (utf8*)dst );
+					}
+				}
+				else if(  translate_from_utf  ) {
 					// make latin from UTF8 (ignore overflows!)
-					size_t len = 0;
-					*dst++ = c = (uint8)utf8_to_utf16((const utf8*)src, &len);
-					src += len;
+					const utf8 *p = reinterpret_cast<const utf8 *>(src);
+					if(  !is_latin2  ) {
+						*dst++ = c = (uint8)utf8_decoder_t::decode(p);
+					}
+					else {
+						*dst++ = c = unicode_to_latin2(utf8_decoder_t::decode(p));
+					}
+					src = reinterpret_cast<const char *>(p);
 				}
 			}
 			else if(c>=13) {
@@ -185,51 +187,60 @@ static char* recode(const char* src, bool translate_from_utf, bool translate_to_
 
 
 /* needed for loading city names */
-std::string translator::pak_name;
+static char pakset_path[256];
 
 // List of custom city and streetnames
-vector_tpl<char*> translator::city_name_list;
-vector_tpl<char*> translator::street_name_list;
-
-
-// fills a list from a file with the given prefix followed by a language code
-void translator::load_custom_list( int lang, vector_tpl<char*> &name_list, const char *fileprefix )
+vector_tpl< vector_tpl<char*> > translator::city_name_list;
+vector_tpl < vector_tpl<char *> > translator::street_name_list;
+void translator::clear_custom_list(vector_tpl<vector_tpl<char *>>&name_list)
 {
-	FILE* file;
-
-	// alle namen aufräumen
+	FOR(vector_tpl<vector_tpl<char *>>, i, name_list) {
+		clear_custom_list(i);
+	}
+	name_list.clear();
+}
+void translator::clear_custom_list(vector_tpl<char *>&name_list)
+{
 	FOR(vector_tpl<char*>, const i, name_list) {
 		free(i);
 	}
 	name_list.clear();
+}
 
-	// @author prissi: first try in pakset
+// fills a list from a file with the given prefix followed by a language code
+void translator::load_custom_list( int lang, vector_tpl<char *>&name_list, const char *fileprefix )
+{
+	FILE *file;
+
+	clear_custom_list(name_list);
+
+	// first try in pakset
 	{
-		string local_file_name(umgebung_t::user_dir);
-		local_file_name = local_file_name + "addons/" + pak_name + "text/" + fileprefix + langs[lang].iso_base + ".txt";
+		string local_file_name(env_t::user_dir);
+		local_file_name = local_file_name + "addons/" + pakset_path + "text/" + fileprefix + langs[lang].iso_base + ".txt";
 		DBG_DEBUG("translator::load_custom_list()", "try to read city name list from '%s'", local_file_name.c_str());
-		file = fopen(local_file_name.c_str(), "rb");
+		file = dr_fopen(local_file_name.c_str(), "rb");
 	}
 	// not found => try user location
 	if(  file==NULL  ) {
-		string local_file_name(umgebung_t::user_dir);
+		string local_file_name(env_t::user_dir);
 		local_file_name = local_file_name + fileprefix + langs[lang].iso_base + ".txt";
-		file = fopen(local_file_name.c_str(), "rb");
+		file = dr_fopen(local_file_name.c_str(), "rb");
 		DBG_DEBUG("translator::load_custom_list()", "try to read city name list from '%s'", local_file_name.c_str());
 	}
 	// not found => try pak location
 	if(  file==NULL  ) {
-		string local_file_name(umgebung_t::program_dir);
-		local_file_name = local_file_name + pak_name + "text/" + fileprefix + langs[lang].iso_base + ".txt";
+		string local_file_name(env_t::data_dir);
+		local_file_name = local_file_name + pakset_path + "text/" + fileprefix + langs[lang].iso_base + ".txt";
 		DBG_DEBUG("translator::load_custom_list()", "try to read city name list from '%s'", local_file_name.c_str());
-		file = fopen(local_file_name.c_str(), "rb");
+		file = dr_fopen(local_file_name.c_str(), "rb");
 	}
 	// not found => try global translations
 	if(  file==NULL  ) {
-		string local_file_name(umgebung_t::program_dir);
+		string local_file_name(env_t::data_dir);
 		local_file_name = local_file_name + "text/" + fileprefix + langs[lang].iso_base + ".txt";
 		DBG_DEBUG("translator::load_custom_list()", "try to read city name list from '%s'", local_file_name.c_str());
-		file = fopen(local_file_name.c_str(), "rb");
+		file = dr_fopen(local_file_name.c_str(), "rb");
 	}
 	fflush(NULL);
 
@@ -240,7 +251,7 @@ void translator::load_custom_list( int lang, vector_tpl<char*> &name_list, const
 		while(  !feof(file)  ) {
 			if (fgets_line(buf, sizeof(buf), file)) {
 				rtrim(buf);
-				char *c = recode(buf, file_is_utf, langs[lang].utf_encoded);
+				char *c = recode(buf, file_is_utf, true, langs[lang].is_latin2_based );
 				if(  *c!=0  &&  *c!='#'  ) {
 					name_list.append(c);
 				}
@@ -255,48 +266,254 @@ void translator::load_custom_list( int lang, vector_tpl<char*> &name_list, const
 }
 
 
-/* the city list is now reloaded after the language is changed
+/**
+ * the city list is now reloaded after the language is changed
  * new cities will get their appropriate names
- * @author hajo, prissi
  */
 void translator::init_custom_names(int lang)
 {
-	// Hajo: init names. There are two options:
+	// init names. There are two options:
 	//
 	// 1.) read list from file
 	// 2.) create random names (only for cities)
 
-	// try to read list
-	load_custom_list( lang, city_name_list, "citylist_" );
-	load_custom_list( lang, street_name_list, "streetlist_" );
+	// We have separate lists for each region
+	//@author: jamespetts, June 2020
 
-	if (city_name_list.empty()) {
-		DBG_MESSAGE("translator::init_city_names", "reading failed, creating random names.");
-		// Hajo: try to read list failed, create random names
-		for(  uint i = 0;  i < 256;  i++  ) {
-			char name[32];
-			sprintf( name, "%%%X_CITY_SYLL", i );
-			const char* s1 = translator::translate(name,lang);
-			if(s1==name) {
-				// name not available ...
-				continue;
+	// We do not know the number of regions here, so we have to assume the maximum of 16.
+
+	for (uint8 count = 0; count < 16; count++)
+	{
+		vector_tpl<char*> city_names_this_region;
+		vector_tpl<char*> street_names_this_region;
+
+		// try to read list
+		if (count == 0)
+		{
+			load_custom_list(lang, city_names_this_region, "citylist_");
+			load_custom_list(lang, street_names_this_region, "streetlist_");
+
+			if (city_names_this_region.empty())
+			{
+				load_custom_list(lang, city_names_this_region, "citylist[0]_");
 			}
-			// now add all second name extensions ...
-			const size_t l1 = strlen(s1);
-			for(  uint j = 0;  j < 128;  j++  ) {
-
-				sprintf( name, "&%X_CITY_SYLL", j );
-				const char* s2 = translator::translate(name,lang);
-				if(s2==name) {
-					// name not available ...
-					continue;
-				}
-				const size_t l2 = strlen(s2);
-				char* const c = MALLOCN(char, l1 + l2 + 1);
-				sprintf(c, "%s%s", s1, s2);
-				city_name_list.append(c);
+			if (street_names_this_region.empty())
+			{
+				load_custom_list(lang, street_names_this_region, "streetlist[0]_");
 			}
 		}
+		else
+		{
+			char name_text[128];
+			sprintf(name_text, "citylist[%u]_", count);
+			load_custom_list(lang, city_names_this_region, name_text);
+			sprintf(name_text, "streetlist[%u]_", count);
+			load_custom_list(lang, street_names_this_region, name_text);
+		}
+
+		if (city_names_this_region.empty()) {
+			DBG_MESSAGE("translator::init_city_names", "reading failed, creating random names.");
+			// Hajo: try to read list failed, create random names
+			for (uint i = 0; i < 2048; i++)
+			{
+				char name[64];
+				if (count == 0)
+				{
+					sprintf(name, "%%%X_CITY_SYLL", i);
+				}
+				else
+				{
+					sprintf(name, "%%%X_CITY_SYLL[%u]", i, count);
+				}
+				const char* s1 = translator::translate(name, lang);
+				if (s1 == name)
+				{
+					if (count == 0)
+					{
+						sprintf(name, "%%%X_CITY_SYLL[0]", i);
+						const char* s1 = translator::translate(name, lang);
+						if (s1 == name)
+						{
+							// name not available ...
+							continue;
+						}
+					}
+					else
+					{
+						// name not available ...
+						continue;
+					}
+				}
+				// now add all second name extensions ...
+				const size_t l1 = strlen(s1);
+				for (uint j = 0; j < 1024; j++)
+				{
+					if (count == 0)
+					{
+						sprintf(name, "&%X_CITY_SYLL", j);
+					}
+					else
+					{
+						sprintf(name, "&%X_CITY_SYLL[%u]", j, count);
+					}
+					const char* s2 = translator::translate(name, lang);
+					if (s2 == name)
+					{
+						if (count == 0)
+						{
+							sprintf(name, "&%X_CITY_SYLL[0]", j);
+							const char* s2 = translator::translate(name, lang);
+							if (s2 == name)
+							{
+								// name not available ...
+								continue;
+							}
+						}
+						else
+						{
+							// name not available ...
+							continue;
+						}
+					}
+					const size_t l2 = strlen(s2);
+					char* const c = MALLOCN(char, l1 + l2 + 1);
+					sprintf(c, "%s%s", s1, s2);
+					city_names_this_region.append(c);
+
+					// Now prefixes and suffixes.
+					// Only add a random fraction of these, as
+					// it would be too repetative to have every
+					// prefix and suffix with every name.
+
+					// TODO: Add geographically specific
+					// prefixes and suffixes (e.g. "-on-sea"
+					// appearing only where the town is
+					// actually by the sea).
+
+					const uint32 random_percent = sim_async_rand(100);
+
+					// TODO: Have these set from simuconf.tab
+					const uint32 prefix_probability = 5;
+					const uint32 suffix_probability = 5;
+
+					const uint32 max_prefixes_per_name = 5;
+					const bool allow_prefixes_and_suffixes_together = false;
+
+					uint32 prefixes_this_name = 0;
+					uint32 suffixes_this_name = 0;
+
+					if (random_percent <= prefix_probability)
+					{
+						// Prefixes
+						for (uint32 p = 0; p < 256; p++)
+						{
+							if (count == 0)
+							{
+								sprintf(name, "&%X_CITY_PREFIX", p);
+							}
+							else
+							{
+								sprintf(name, "&%X_CITY_PREFIX[%u]", p, count);
+							}
+							const char* s3 = translator::translate(name, lang);
+							const uint32 random_percent_prefix = sim_async_rand(100);
+
+							if (s3 == name || random_percent_prefix > prefix_probability)
+							{
+								if (count == 0 && s3 == name)
+								{
+									sprintf(name, "&%X_CITY_PREFIX[0]", p);
+									const char* s3 = translator::translate(name, lang);
+									if (s3 == name)
+									{
+										// name not available ...
+										continue;
+									}
+								}
+								else
+								{
+									// name not available ...
+									continue;
+								}
+							}
+							const size_t l3 = strlen(s3);
+							char* const c2 = MALLOCN(char, l1 + l2 + l3 + 1);
+							sprintf(c2, "%s%s%s", s3, s1, s2);
+							city_names_this_region.append(c2);
+							if (prefixes_this_name++ > max_prefixes_per_name)
+							{
+								break;
+							}
+						}
+					}
+
+					if (random_percent >= (100 - suffix_probability) && (random_percent >= prefix_probability || allow_prefixes_and_suffixes_together))
+					{
+						// Suffixes
+						for (uint32 p = 0; p < 256; p++)
+						{
+							if (count == 0)
+							{
+								sprintf(name, "&%X_CITY_SUFFIX", p);
+							}
+							else
+							{
+								sprintf(name, "&%X_CITY_SUFFIX[%u]", p, count);
+							}
+
+							const char* s3 = translator::translate(name, lang);
+							const uint32 random_percent_suffix = sim_async_rand(100);
+
+							if (s3 == name || random_percent_suffix > prefix_probability || strcmp(s3, s2) == 0)
+							{
+								if (count == 0 && s3 == name)
+								{
+									sprintf(name, "&%X_CITY_SUFFIX[0]", p);
+									const char* s3 = translator::translate(name, lang);
+									if (s3 == name)
+									{
+										// Name not available
+										continue;
+									}
+								}
+								else
+								{
+									// Name not available or the suffix is identical to the final syllable
+									// (This should avoid names such as Tarwoodwood).
+									continue;
+								}
+							}
+
+							// Compare lower cases end parts without spaces with upper case end parts with spaces.
+							// This should avoid town names such as "Bumblewick Wick"
+							// First, remove the space
+							std::string spaceless_name = s3;
+							spaceless_name.erase(0, 1);
+							// Now perform case insensitive comparison. Different for Linux and Windows.
+#ifdef _MSC_VER
+							if (stricmp(spaceless_name.c_str(), s2) == 0 || stricmp(s2, s3) == 0)
+#else
+							if (strcasecmp(spaceless_name.c_str(), s2) == 0 || strcasecmp(s2, s3) == 0)
+#endif
+							{
+								continue;
+							}
+
+							const size_t l3 = strlen(s3);
+							char* const c2 = MALLOCN(char, l1 + l2 + l3 + 1);
+							sprintf(c2, "%s%s%s", s1, s2, s3);
+							city_names_this_region.append(c2);
+							if (suffixes_this_name++ > max_prefixes_per_name)
+							{
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		city_name_list.append(city_names_this_region);
+		street_name_list.append(street_names_this_region);
 	}
 }
 
@@ -304,7 +521,7 @@ void translator::init_custom_names(int lang)
 /* now on to the translate stuff */
 
 
-static void load_language_file_body(FILE* file, stringhashtable_tpl<const char*>* table, bool language_is_utf, bool file_is_utf)
+static void load_language_file_body(FILE* file, stringhashtable_tpl<const char*, N_BAGS_LARGE>* table, bool language_is_utf, bool file_is_utf, bool language_is_latin2 )
 {
 	char buffer1 [4096];
 	char buffer2 [4096];
@@ -313,18 +530,23 @@ static void load_language_file_body(FILE* file, stringhashtable_tpl<const char*>
 
 	do {
 		fgets_line(buffer1, sizeof(buffer1), file);
-		if (buffer1[0] == '#') {
+		if(  buffer1[0] == '#'  ) {
 			// ignore comments
 			continue;
 		}
-		if (!feof(file)) {
+		if(  !feof(file)  ) {
 			fgets_line(buffer2, sizeof(buffer2), file);
 			if(  strcmp(buffer1,buffer2)  ) {
 				// only add line which are actually different
-				const char *raw = recode(buffer1, file_is_utf, false);
-				const char *translated = recode(buffer2, false, convert_to_unicode);
-				if (cbuffer_t::check_format_strings(raw, translated) ) {
+				char *raw = recode(buffer1, file_is_utf, false, language_is_latin2 );
+				char *translated = recode(buffer2, false, convert_to_unicode,language_is_latin2);
+
+				if(  cbuffer_t::check_format_strings(raw, translated)  ) {
 					table->set( raw, translated );
+				}
+				else {
+					free(raw);
+					free(translated);
 				}
 			}
 		}
@@ -334,26 +556,46 @@ static void load_language_file_body(FILE* file, stringhashtable_tpl<const char*>
 
 void translator::load_language_file(FILE* file)
 {
-	char buffer1 [256];
+	char buffer1[256];
 	bool file_is_utf = is_unicode_file(file);
+
 	// Read language name
 	fgets_line(buffer1, sizeof(buffer1), file);
 
 	langs[single_instance.lang_count].name = strdup(buffer1);
-	// if the language file is utf, all language strings are assumed to be unicode
-	// @author prissi
-	langs[single_instance.lang_count].utf_encoded = file_is_utf;
+
+	if(  !file_is_utf  ) {
+		// find out the font if not unicode (and skip it)
+		while(  !feof(file)  ) {
+			fgets_line( buffer1, sizeof(buffer1), file );
+			if(  buffer1[0] == '#'  ) {
+				continue;
+			}
+			if(  strcmp(buffer1,"PROP_FONT_FILE") == 0  ) {
+				fgets_line( buffer1, sizeof(buffer1), file );
+				// HACK: so we guess about latin2 from the font name!
+				langs[single_instance.lang_count].is_latin2_based = STRNICMP( buffer1+5, "latin2", 6 )==0;
+				// we must register now a unicode font
+				langs[single_instance.lang_count].texts.set( "PROP_FONT_FILE", langs[single_instance.lang_count].is_latin2_based ? "cyr.bdf" : strdup(buffer1) );
+				break;
+			}
+		}
+	}
+	else {
+		// since it is anyway UTF8
+		langs[single_instance.lang_count].is_latin2_based = false;
+	}
 
 	//load up translations, putting them into
 	//language table of index 'lang'
-	load_language_file_body(file, &langs[single_instance.lang_count].texts, file_is_utf, file_is_utf);
-}
+	load_language_file_body(file, &langs[single_instance.lang_count].texts, true, file_is_utf, langs[single_instance.lang_count].is_latin2_based );
+ }
 
 
-static translator::lang_info* get_lang_by_iso(const char* iso)
+static translator::lang_info* get_lang_by_iso(const char *iso)
 {
-	for (translator::lang_info* i = langs; i != langs + translator::get_language_count(); ++i) {
-		if (i->iso_base[0] == iso[0] && i->iso_base[1] == iso[1]) {
+	for(  translator::lang_info* i = langs;  i != langs + translator::get_language_count();  ++i  ) {
+		if(  i->iso_base[0] == iso[0]  &&  i->iso_base[1] == iso[1]  ) {
 			return i;
 		}
 	}
@@ -361,29 +603,86 @@ static translator::lang_info* get_lang_by_iso(const char* iso)
 }
 
 
-void translator::load_files_from_folder(const char* folder_name, const char* what)
+static uint32 get_highest_character( const utf8 *str )
+{
+	size_t len = 0;
+	uint32 max_char = 0, symbol;
+	do {
+		symbol = utf8_decoder_t::decode( str, len );
+		str += len;
+		if( symbol > max_char ) {
+			max_char = symbol;
+		}
+	} while( symbol > 0 );
+	return max_char;
+}
+
+
+uint32 translator::guess_highest_unicode(int n)
+{
+	const char* T1 = langs[n].texts.get( "Bruecke muss an\neinfachem\nHang beginnen!\n" );
+	uint32 max_char = 0xDF;
+	if( T1 ) {
+		max_char = get_highest_character( (const utf8 *)T1 );
+	}
+	const char* T2 = langs[n].texts.get( "Start" );
+	if( T2 ) {
+		uint32 max_char2 = get_highest_character( (const utf8 *)T2 );
+		max_char = max( max_char, max_char2 );
+	}
+	return max_char;
+}
+
+
+void translator::load_files_from_folder(const char *folder_name, const char *what)
 {
 	searchfolder_t folder;
-	int num_pak_lang_dat = folder.search(folder_name, "tab");
-	DBG_MESSAGE("translator::load_files_from_folder()", "search folder \"%s\" and found %i files", folder_name, num_pak_lang_dat);
-	//read now the basic language infos
-	FOR(searchfolder_t, const& i, folder) {
-		string const fileName(i);
-		size_t pstart = fileName.rfind('/') + 1;
-		const string iso = fileName.substr(pstart, fileName.size() - pstart - 4);
+	const int num_pak_lang_dat = folder.search(folder_name, "tab");
+	DBG_MESSAGE("translator::load_files_from_folder()", "search folder \"%s\" and found %i files", folder_name, num_pak_lang_dat); (void)num_pak_lang_dat;
 
-		lang_info* lang = get_lang_by_iso(iso.c_str());
-		if (lang != NULL) {
-			DBG_MESSAGE("translator::load_files_from_folder()", "loading %s translations from %s for language %s", what, fileName.c_str(), lang->iso_base);
-			if (FILE* const file = fopen(fileName.c_str(), "rb")) {
-				bool file_is_utf = is_unicode_file(file);
-				load_language_file_body(file, &lang->texts, lang->utf_encoded, file_is_utf);
-				fclose(file);
-			} else {
-				dbg->warning("translator::load_files_from_folder()", "cannot open '%s'", fileName.c_str());
+	// read now the basic language infos
+	// we allow either "LA.*.tab" or "*.LA.tab" whe LA is the ISO language code
+	for(const char* const& filename : folder) {
+		lang_info* lang = NULL;
+
+		const char *filestr1 = strrchr(filename, '/');
+		const char *filestr2 = strrchr(filename, '\\');
+		const char *filestr = filestr1 > filestr2 ? filestr1 : filestr2;
+
+		if (filestr) {
+			if(  filestr[3] == '.'  ) {
+				// try the start of the string first
+				lang = get_lang_by_iso(filestr + 1);
 			}
-		} else {
-			dbg->warning("translator::load_files_from_folder()", "no %s texts for language '%s'", what, iso.c_str());
+		}
+		else if(filename[2] == '.') {
+			// try the start of the filename if no path separator found
+			lang = get_lang_by_iso(filename);
+		}
+
+		if (!lang) {
+			const char *langcode = strrchr(filename, '.');
+			if(  langcode  ) {
+				if(  ((langcode - filename) > 3  &&  !isalnum(langcode[-3]))  || (langcode - filename) == -2  ) {
+					// try before the point
+					lang = get_lang_by_iso(langcode - 2);
+				}
+			}
+		}
+
+		if (lang != NULL) {
+			DBG_MESSAGE("translator::load_files_from_folder()", "loading %s translations from %s for language %s", what, filename, lang->iso_base);
+			if (FILE* const file = dr_fopen(filename, "rb")) {
+				bool file_is_utf = is_unicode_file(file);
+				load_language_file_body(file, &lang->texts, true, file_is_utf, lang->is_latin2_based );
+				fclose(file);
+			}
+			else {
+				dbg->warning("translator::load_files_from_folder()", "cannot open '%s'", filename);
+			}
+		}
+		else {
+			dbg->warning("translator::load_files_from_folder()", "%s no language '%s'", filename, what );
 		}
 	}
 }
@@ -391,8 +690,8 @@ void translator::load_files_from_folder(const char* folder_name, const char* wha
 
 bool translator::load(const string &path_to_pakset)
 {
-	chdir( umgebung_t::program_dir );
-	pak_name = path_to_pakset;
+	dr_chdir( env_t::data_dir );
+	tstrncpy(pakset_path, path_to_pakset.c_str(), lengthof(pakset_path));
 
 	//initialize these values to 0(ie. nothing loaded)
 	single_instance.current_lang = -1;
@@ -404,17 +703,18 @@ bool translator::load(const string &path_to_pakset)
 
 	//read now the basic language infos
 	for (searchfolder_t::const_iterator i = folder.begin(), end = folder.end(); i != end; ++i) {
-		string const fileName(*i);
+		const string fileName(*i);
 		size_t pstart = fileName.rfind('/') + 1;
 		const string iso = fileName.substr(pstart, fileName.size() - pstart - 4);
 
-		if (FILE* const file = fopen(fileName.c_str(), "rb")) {
+		if (FILE* const file = dr_fopen(fileName.c_str(), "rb")) {
 			DBG_MESSAGE("translator::load()", "base file \"%s\" - iso: \"%s\"", fileName.c_str(), iso.c_str());
 			load_language_iso(iso);
 			load_language_file(file);
 			fclose(file);
+			langs[single_instance.lang_count].highest_character = guess_highest_unicode( single_instance.lang_count );
 			single_instance.lang_count++;
-			if (single_instance.lang_count == lengthof(langs)) {
+			if (single_instance.lang_count == (int)lengthof(langs)) {
 				if (++i != end) {
 					// some languages were not loaded, let the user know what happened
 					dbg->warning("translator::load()", "some languages were not loaded, limit reached");
@@ -432,13 +732,13 @@ bool translator::load(const string &path_to_pakset)
 	const string folderName(path_to_pakset + "text/");
 	load_files_from_folder(folderName.c_str(), "pak");
 
-	if(  umgebung_t::default_einstellungen.get_with_private_paks()  ) {
-		chdir( umgebung_t::user_dir );
+	if(  env_t::default_settings.get_with_private_paks()  ) {
+		dr_chdir( env_t::user_dir );
 		// now read the pakset specific text
 		// there can be more than one file per language, provided it is name like iso_xyz.tab
 		const string folderName("addons/" + path_to_pakset + "text/");
 		load_files_from_folder(folderName.c_str(), "pak addons");
-		chdir( umgebung_t::program_dir );
+		dr_chdir( env_t::data_dir );
 	}
 
 	//if NO languages were loaded then game cannot continue
@@ -447,9 +747,9 @@ bool translator::load(const string &path_to_pakset)
 	}
 
 	// now we try to read the compatibility stuff
-	if (FILE* const file = fopen((path_to_pakset + "compat.tab").c_str(), "rb")) {
-		load_language_file_body(file, &compatibility, false, false);
-		DBG_MESSAGE("translator::load()", "pakset compatibilty texts loaded.");
+	if (FILE* const file = dr_fopen((path_to_pakset + "compat.tab").c_str(), "rb")) {
+		load_language_file_body(file, &compatibility, false, false, false );
+		DBG_MESSAGE("translator::load()", "pakset compatibility texts loaded.");
 		fclose(file);
 	}
 	else {
@@ -457,19 +757,15 @@ bool translator::load(const string &path_to_pakset)
 	}
 
 	// also addon compatibility ...
-	if(  umgebung_t::default_einstellungen.get_with_private_paks()  ) {
-		chdir( umgebung_t::user_dir );
-		if (FILE* const file = fopen(string("addons/"+path_to_pakset + "compat.tab").c_str(), "rb")) {
-			load_language_file_body(file, &compatibility, false, false);
+	if(  env_t::default_settings.get_with_private_paks()  ) {
+		dr_chdir( env_t::user_dir );
+		if (FILE* const file = dr_fopen(string("addons/"+path_to_pakset + "compat.tab").c_str(), "rb")) {
+			load_language_file_body(file, &compatibility, false, false, false );
 			DBG_MESSAGE("translator::load()", "pakset addon compatibility texts loaded.");
 			fclose(file);
 		}
-		chdir( umgebung_t::program_dir );
+		dr_chdir( env_t::data_dir );
 	}
-
-//#if DEBUG>=4
-//	dump_hashtable(&compatibility);
-//#endif
 
 	// use english if available
 	current_langinfo = get_lang_by_iso("en");
@@ -496,11 +792,11 @@ void translator::set_language(int lang)
 	if(  0 <= lang  &&  lang < single_instance.lang_count  ) {
 		single_instance.current_lang = lang;
 		current_langinfo = langs+lang;
-		umgebung_t::language_iso = langs[lang].iso;
-		umgebung_t::default_einstellungen.set_name_language_iso( langs[lang].iso );
-		display_set_unicode(langs[lang].utf_encoded);
+		env_t::language_iso = langs[lang].iso;
+		env_t::default_settings.set_name_language_iso( langs[lang].iso );
 		init_custom_names(lang);
-		DBG_MESSAGE("translator::set_language()", "%s, unicode %d", langs[lang].name, langs[lang].utf_encoded);
+		current_langinfo->ellipsis_width = proportional_string_width( translate("...") );
+		DBG_MESSAGE("translator::set_language()", "%s, unicode %d", langs[lang].name, true);
 	}
 	else {
 		dbg->warning("translator::set_language()", "Out of bounds : %d", lang);
@@ -509,10 +805,10 @@ void translator::set_language(int lang)
 
 
 // returns the id for this language or -1 if not there
-int translator::get_language(const char* iso)
+int translator::get_language(const char *iso)
 {
 	for(  int i = 0;  i < single_instance.lang_count;  i++  ) {
-		const char* iso_base = langs[i].iso_base;
+		const char *iso_base = langs[i].iso_base;
 		if(  iso_base[0] == iso[0]  &&  iso_base[1] == iso[1]  ) {
 			return i;
 		}
@@ -521,33 +817,48 @@ int translator::get_language(const char* iso)
 }
 
 
-void translator::set_language(const char* iso)
+bool translator::set_language(const char *iso)
 {
 	for(  int i = 0;  i < single_instance.lang_count;  i++  ) {
-		const char* iso_base = langs[i].iso_base;
+		const char *iso_base = langs[i].iso_base;
 		if(  iso_base[0] == iso[0]  &&  iso_base[1] == iso[1]  ) {
 			set_language(i);
-			return;
+			return true;
 		}
 	}
+
+	// if the request language does not exist
+	if( single_instance.current_lang == -1 ) {
+		for( int i = 0; i < single_instance.lang_count; i++ ) {
+			const char* iso_base = langs[i].iso_base;
+			if( iso_base[0] == 'e'  &&  iso_base[1] == 'n' ) {
+				set_language( i );
+				return false;
+			}
+		}
+		// not even english found ...
+		set_language(0);
+	}
+
+	return false;
 }
 
 
-const char* translator::translate(const char* str)
+const char *translator::translate(const char *str)
 {
 	return get_lang()->translate(str);
 }
 
 
-const char* translator::translate(const char* str, int lang)
+const char *translator::translate(const char *str, int lang)
 {
 	return langs[lang].translate(str);
 }
 
 
-const char* translator::get_month_name(uint16 month)
+const char *translator::get_month_name(uint16 month)
 {
-	static const char* const month_names[] = {
+	static const char *const month_names[] = {
 		"January",
 		"February",
 		"March",
@@ -564,9 +875,88 @@ const char* translator::get_month_name(uint16 month)
 	return translate(month_names[month % lengthof(month_names)]);
 }
 
+const char *translator::get_short_month_name(uint16 month)
+{
+	static const char *const short_month_names[] = {
+		"Jan.",
+		"Feb.",
+		"Mar.",
+		"Apr.",
+		"May",
+		"June",
+		"July",
+		"Aug.",
+		"Sept.",
+		"Oct.",
+		"Nov.",
+		"Dec."
+	};
+	return translate(short_month_names[month % lengthof(short_month_names)]);
+}
+
+const char *translator::get_date(uint16 year, uint16 month, uint16 day, char const* season)
+{
+	char const* const month_ = get_month_name(month);
+	char const* const year_sym = strcmp("YEAR_SYMBOL", translate("YEAR_SYMBOL")) ? translate("YEAR_SYMBOL") : "";
+	char const* const day_sym = strcmp("DAY_SYMBOL", translate("DAY_SYMBOL")) ? translate("DAY_SYMBOL") : "";
+	static char date[256];
+	switch (env_t::show_month) {
+		case env_t::DATE_FMT_GERMAN:
+			sprintf(date, "%s %d. %s %d%s", season, day, month_, year, year_sym);
+			break;
+		case env_t::DATE_FMT_GERMAN_NO_SEASON:
+			sprintf(date, "%d. %s %d%s", day, month_, year, year_sym);
+			break;
+		case env_t::DATE_FMT_US:
+			sprintf(date, "%s %s %d %d%s", season, month_, day, year, year_sym);
+			break;
+		case env_t::DATE_FMT_US_NO_SEASON:
+			sprintf(date, "%s %d %d%s", month_, day, year, year_sym);
+			break;
+		case env_t::DATE_FMT_JAPANESE:
+			sprintf(date, "%s %d%s %s %d%s", season, year, year_sym, month_, day, day_sym);
+			break;
+		case env_t::DATE_FMT_JAPANESE_NO_SEASON:
+			sprintf(date, "%d%s %s %d%s", year, year_sym, month_, day, day_sym);
+			break;
+		case env_t::DATE_FMT_MONTH:
+			sprintf(date, "%s, %s %d%s", month_, season, year, year_sym);
+			break;
+		case env_t::DATE_FMT_SEASON:
+			sprintf(date, "%s %d%s", season, year, year_sym);
+			break;
+		case env_t::DATE_FMT_INTERNAL_MINUTE: // Extended unique
+		case env_t::DATE_FMT_JAPANESE_INTERNAL_MINUTE: // Extended unique
+			sprintf(date, "%s %d%s %s", season, year, year_sym, month_);
+			break;
+	}
+	return date;
+}
+
+const char *translator::get_short_date(uint16 year, uint16 month)
+{
+	char const* const month_ = get_short_month_name(month);
+	char const* const year_sym = strcmp("YEAR_SYMBOL", translate("YEAR_SYMBOL")) ? translate("YEAR_SYMBOL") : "";
+	static char sdate[256];
+	switch (env_t::show_month) {
+		case env_t::DATE_FMT_JAPANESE_INTERNAL_MINUTE:
+		case env_t::DATE_FMT_JAPANESE:
+		case env_t::DATE_FMT_JAPANESE_NO_SEASON:
+			sprintf(sdate, "%4d%s %s", year, year_sym, month_);
+			break;
+		case env_t::DATE_FMT_GERMAN:
+		case env_t::DATE_FMT_GERMAN_NO_SEASON:
+		case env_t::DATE_FMT_US:
+		case env_t::DATE_FMT_US_NO_SEASON:
+		default:
+			sprintf(sdate, "%s %4d%s", month_, year, year_sym);
+			break;
+	}
+	return sdate;
+}
 
 /* get a name for a non-matching object */
-const char* translator::compatibility_name(const char* str)
+const char *translator::compatibility_name(const char *str)
 {
 	if(  str==NULL  ) {
 		return "(null)";
@@ -574,6 +964,41 @@ const char* translator::compatibility_name(const char* str)
 	if(  str[0]=='\0'  ) {
 		return str;
 	}
-	const char* trans = compatibility.get(str);
+	const char *trans = compatibility.get(str);
 	return trans != NULL ? trans : str;
+}
+
+const char *translator::get_year_month(uint16 year_month)
+{
+	uint16 year = year_month / 12;
+	uint8 month = year_month % 12 + 1;
+	char const* const month_ = get_month_name(year_month % 12);
+	char const* mon_sym = strcmp("MON_SYMBOL", translate("MON_SYMBOL")) ? translate("MON_SYMBOL") : "";
+	char const* year_sym = strcmp("YEAR_SYMBOL", translate("YEAR_SYMBOL")) ? translate("YEAR_SYMBOL") : "";
+	static char format_year_month[64];
+
+	switch (env_t::show_month) {
+		case env_t::DATE_FMT_SEASON:
+			sprintf(format_year_month, "%04d%s", year, year_sym);
+			break;
+		case env_t::DATE_FMT_JAPANESE:
+		case env_t::DATE_FMT_JAPANESE_NO_SEASON:
+		case env_t::DATE_FMT_JAPANESE_INTERNAL_MINUTE: // Extended unique
+			if (strcmp(year_sym, "") == 0) {
+				year_sym = "/";
+				mon_sym = "";
+			}
+			sprintf(format_year_month, "%04d%s%2d%s", year, year_sym, month, mon_sym);
+			break;
+		case env_t::DATE_FMT_MONTH:
+		case env_t::DATE_FMT_GERMAN:
+		case env_t::DATE_FMT_GERMAN_NO_SEASON:
+		case env_t::DATE_FMT_US:
+		case env_t::DATE_FMT_US_NO_SEASON:
+		case env_t::DATE_FMT_INTERNAL_MINUTE: // Extended unique
+			sprintf(format_year_month, "%s %04d%s", month_, year, year_sym);
+			break;
+	}
+
+	return format_year_month;
 }

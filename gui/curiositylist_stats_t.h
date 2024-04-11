@@ -1,57 +1,56 @@
 /*
- * Copyright (c) 1997 - 2003 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-/**
- * Where curiosity (attractions) stats are calculated for list dialog
- * @author Hj. Malthaner
- */
+#ifndef GUI_CURIOSITYLIST_STATS_T_H
+#define GUI_CURIOSITYLIST_STATS_T_H
 
-#ifndef curiositylist_stats_t_h
-#define curiositylist_stats_t_h
 
-#include "../tpl/vector_tpl.h"
-#include "components/gui_komponente.h"
-#include "components/gui_button.h"
+#include "components/gui_aligned_container.h"
+#include "components/gui_colorbox.h"
+#include "components/gui_scrolled_list.h"
+#include "components/gui_image.h"
 
-class karte_t;
 class gebaeude_t;
 
 namespace curiositylist {
-    enum sort_mode_t { by_name=0, by_paxlevel/*, by_maillevel*/, SORT_MODES };
+	enum sort_mode_t {
+		by_name=0,
+		by_paxlevel,
+		by_pax_arrived,
+		by_region,
+		SORT_MODES
+	};
 };
 
-class curiositylist_stats_t : public gui_komponente_t
+/**
+ * Where curiosity (attractions) stats are calculated for list dialog
+ */
+class curiositylist_stats_t : public gui_aligned_container_t, public gui_scrolled_list_t::scrollitem_t
 {
 private:
-	karte_t * welt;
-	vector_tpl<gebaeude_t*> attractions;
-	uint32 line_selected;
+	gebaeude_t* attraction;
 
-	uint32 last_world_curiosities;
-	curiositylist::sort_mode_t sortby;
-	bool sortreverse;
+	enum { no_networks = 0, someones_network = 1, own_network = 2 };
+
+	gui_label_t lb_name;
 
 public:
-	curiositylist_stats_t(karte_t* welt, curiositylist::sort_mode_t sortby, bool sortreverse);
+	static uint8 sort_mode, region_filter;
+	static bool sortreverse, filter_own_network;
+	static bool compare(const gui_component_t *a, const gui_component_t *b);
 
-	void get_unique_attractions(curiositylist::sort_mode_t sortby, bool reverse);
+	curiositylist_stats_t(gebaeude_t *att);
+
+	gui_image_t img_enabled[4];
+
+	char const* get_text() const OVERRIDE;
+	bool is_valid() const OVERRIDE;
 
 	bool infowin_event(event_t const*) OVERRIDE;
 
-	/**
-	* Recalc the current size required to display everything, and set komponente groesse
-	*/
-	void recalc_size();
-
-	/**
-	* Draw the component
-	* @author Hj. Malthaner
-	*/
-	void zeichnen(koord offset);
+	void draw(scr_coord offset) OVERRIDE;
 };
 
 #endif

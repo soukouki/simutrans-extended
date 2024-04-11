@@ -1,42 +1,13 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 // This file should not be compiled. It wont compile either.
 
 /** @file api_base.h documents base classes that are defined elsewhere. */
 
-/**
- * Table that holds 2d coordinates.
- *
- * Coordinates always refer to the original rotation in @ref map.file.
- * They will be rotated if transferred between the game engine and squirrel.
- */
-// never declared, only implicitly through script_api::param<koord>
-class coord { // begin_class("coord", 0)
-#ifdef SQAPI_DOC // document members
-	/// x-coordinate
-	integer x;
-	/// y-coordinate
-	integer y;
-#endif
-}; // end_class
-
-/**
- * Table that holds 3d coordinates.
- *
- * Coordinates always refer to the original rotation in @ref map.file.
- * They will be rotated if transferred between the game engine and squirrel.
- */
-// never declared, only implicitly through script_api::param<koord>
-// begin_class("coord3d", 0)
-class coord3d {
-public:
-#ifdef SQAPI_DOC // document members
-	/// x-coordinate
-	integer x;
-	/// y-coordinate
-	integer y;
-	/// z-coordinate - height
-	integer z;
-#endif
-}; // end_class
+#ifdef DOXYGEN
 
 /**
  * Translatable text.
@@ -119,3 +90,4 @@ class ttextfile : public ttext { // begin_class("ttextfile", "ttext")
  */
 class extend_get { // begin_class("extend_get", 0)
 }; // end_class
+#endif

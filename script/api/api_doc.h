@@ -1,3 +1,8 @@
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
 /** @file api_doc.h Just contains pages of exciting documentation */
 
 /**
@@ -34,7 +39,7 @@
  *
  * All coordinates in the script are with respect to the initial rotation of the map. If a player rotates
  * a map, then all coordinates are translated to the original rotation.
- * This effects the classes @ref coord and @ref coord3d as well as any functions that expect coordinates as input, as
+ * This affects the classes @ref coord and @ref coord3d as well as any functions that expect coordinates as input, as
  * for instance factory_x::factory_x or rules::forbid_way_tool_rect.
  *
  * @section sec_network Network play
@@ -84,7 +89,7 @@
  * pak-something/scenario/myscenario/
  * </tt>
  *
- * If need more complex texts, these go into sub-directories named after the language, in which they are written.
+ * If you need more complex texts, these go into sub-directories named after the language, in which they are written.
  *
  * <tt>
  * pak-something/scenario/myscenario/en/ <- English files go here.
@@ -105,7 +110,7 @@
  * Let us inspect a sample script file. We will have a look into the pak64 Millionaire scenario.
  * The objective of this scenario is to get rich as fast as possible.
  *
- * @dontinclude millionaire/scenario.nut
+ * @don'tinclude millionaire/scenario.nut
  * As first the savegame is specified:
  * @skipline map.file
  * Then we provide some meta-information about the ::scenario
@@ -143,7 +148,7 @@
  *
  * We will learn how to make the translation of the script's output possible.
  *
- * @dontinclude pharmacy-max/scenario.nut
+ * @don'tinclude pharmacy-max/scenario.nut
  * We do not care about the meta information, and jump right into the @ref get_rule_text method.
  * @skip get_rule_text
  * @until }
@@ -185,7 +190,7 @@
  * @until }
  * Both of the strings are translated by means of calls to ttext::to_string and the result is returned.
  *
- * Thats it. The remaining parts of this script are plain routine.
+ * That's it. The remaining parts of this script are plain routine.
  */
 
 /**

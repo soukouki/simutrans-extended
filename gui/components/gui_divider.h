@@ -1,38 +1,50 @@
 /*
- * Copyright (c) 2001 Hansjörg Malthaner
- * Written (w) 2001 Markus Weber
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef gui_components_gui_divider_h
-#define gui_components_gui_divider_h
+#ifndef GUI_COMPONENTS_GUI_DIVIDER_H
+#define GUI_COMPONENTS_GUI_DIVIDER_H
 
-#include "gui_komponente.h"
-#include "../../simgraph.h"
-#include "../../simcolor.h"
 
+#include "gui_component.h"
+#include "../gui_theme.h"
 
 /**
- * Eine einfache Trennlinie
- *
- * @date 30-Oct-01
- * @author Markus Weber
+ * A horizontal divider line
  */
-class gui_divider_t : public gui_komponente_t
+class gui_divider_t : public gui_component_t
 {
+	scr_coord_val temp_width = gui_theme_t::gui_divider_size.w;
 public:
-	void init( koord xy, sint16 width ) {
+	// TODO remove later
+	void init( scr_coord xy, scr_coord_val width, scr_coord_val height = D_DIVIDER_HEIGHT ) {
+		temp_width = width;
 		set_pos( xy );
-		set_groesse( koord( width, 2 ) );
-	};
+		set_size( scr_size( width, height ) );
+	}
 
-	/**
-     * Zeichnet die Komponente
-     * @author Markus Weber
-     */
-    void zeichnen(koord offset) { display_ddd_box_clip(pos.x+offset.x, pos.y+offset.y, groesse.x, groesse.y, MN_GREY0, MN_GREY4); }
+	scr_size get_min_size() const OVERRIDE;
+
+	scr_size get_max_size() const OVERRIDE;
+
+	void draw(scr_coord offset) OVERRIDE;
+};
+
+/**
+ * A horizontal border line
+ */
+class gui_border_t : public gui_divider_t
+{
+	PIXVAL color;
+public:
+	gui_border_t(PIXVAL color = SYSCOL_HIGHLIGHT);
+
+	scr_size get_min_size() const OVERRIDE;
+
+	scr_size get_max_size() const OVERRIDE;
+
+	void draw(scr_coord offset) OVERRIDE;
 };
 
 #endif

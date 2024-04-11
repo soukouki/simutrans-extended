@@ -1,54 +1,48 @@
 /*
- * Copyright (c) 1997 - 2001 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef gui_scenario_frame_h
-#define gui_scenario_frame_h
+#ifndef GUI_SCENARIO_FRAME_H
+#define GUI_SCENARIO_FRAME_H
 
 
 #include "savegame_frame.h"
 #include "../utils/cbuffer_t.h"
 
-class karte_t;
 
 
 class scenario_frame_t : public savegame_frame_t
 {
 private:
-	karte_t *welt;
-	bool do_load;
 	cbuffer_t path;
+	button_t easy_server;
 
 protected:
 	/**
 	 * Action that's started by the press of a button.
-	 * @author Hansjörg Malthaner
 	 */
-	virtual void action(const char *fullpath);
+	bool item_action(const char *fullpath) OVERRIDE;
 
 	/**
-	 * Aktion, die nach X-Knopfdruck gestartet wird.
-	 * @author V. Meyer
+	 * Action, started after X-Button pressing
 	 */
-	virtual bool del_action(const char *f) { action(f); return true; }
+	bool del_action(const char *f) OVERRIDE { return item_action(f); }
 
 	// returns extra file info
-	virtual const char *get_info(const char *fname);
+	const char *get_info(const char *fname) OVERRIDE;
 
 	// true, if valid
-	virtual bool check_file( const char *filename, const char *suffix );
+	bool check_file( const char *filename, const char *suffix ) OVERRIDE;
+
 public:
 	/**
 	* Set the window associated helptext
 	* @return the filename for the helptext, or NULL
-	* @author Hj. Malthaner
 	*/
-	virtual const char * get_hilfe_datei() const { return "scenario.txt"; }
+	const char * get_help_filename() const OVERRIDE { return "scenario.txt"; }
 
-	scenario_frame_t(karte_t *welt);
+	scenario_frame_t();
 };
 
 #endif

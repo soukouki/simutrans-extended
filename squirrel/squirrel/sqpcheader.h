@@ -10,10 +10,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 #include <new>
 //squirrel stuff
 #include "../squirrel.h"
 #include "sqobject.h"
 #include "sqstate.h"
 
-#endif //_SQPCHEADER_H_
+#endif

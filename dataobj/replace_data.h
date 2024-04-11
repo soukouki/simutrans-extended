@@ -1,15 +1,17 @@
-// Header file for vehicle replacement class
-// @author: jamespetts, March 2010
-// Distributed under the terms of the Artistic Licence.
+/*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
 
-#ifndef replace_data_h
-#define replace_data_h
+#ifndef DATAOBJ_REPLACE_DATA_H
+#define DATAOBJ_REPLACE_DATA_H
+
 
 #include "../simconvoi.h"
 #include "../tpl/vector_tpl.h"
 
-class vehikel_t;
-class vehikel_besch_t;
+class vehicle_t;
+class vehicle_desc_t;
 class cbuffer_t;
 
 class replace_data_t
@@ -18,8 +20,8 @@ private:
 	/**
 	* The replacing vehicles, if any
 	*/
-	vector_tpl<const vehikel_besch_t *> *replacing_vehicles;
-	
+	vector_tpl<const vehicle_desc_t *> *replacing_vehicles;
+
 	/**
 	* The convoys currently being replaced
 	*/
@@ -32,9 +34,9 @@ private:
 	bool autostart;
 
 	/**
-	 * If this is true, vehicles will be retained in the depot 
+	 * If this is true, vehicles will be retained in the depot
 	 * when replaced (if they are not used in the new convoy);
-	 * otherwise, they are either upgraded (if possible), or 
+	 * otherwise, they are either upgraded (if possible), or
 	 * otherwise sold.
 	 * @author: jamespetts, March 2010
 	 */
@@ -50,7 +52,7 @@ private:
 
 	/**
 	 * If this is true, when the convoy is replaced, vehicles
-	 * already in the depot will be used where available in 
+	 * already in the depot will be used where available in
 	 * preference to buying new or upgrading.
 	 * @author: jamespetts, March 2010
 	 */
@@ -62,11 +64,11 @@ private:
 	 */
 	sint16 number_of_convoys;
 
-	bool clearing;
+	bool clearing = false;
 
 public:
 	sint16 get_number_of_convoys() const { return number_of_convoys; }
-	
+
 	bool get_autostart() const { return autostart; }
 
 	void set_autostart(bool new_autostart) { autostart=new_autostart; }
@@ -80,13 +82,13 @@ public:
 	void set_use_home_depot(bool value) { use_home_depot = value; }
 
 	bool get_allow_using_existing_vehicles() const { return allow_using_existing_vehicles; }
-	
+
 	void set_allow_using_existing_vehicles(bool value) { allow_using_existing_vehicles = value; }
 
-	const vector_tpl<const vehikel_besch_t *>* get_replacing_vehicles() const { return replacing_vehicles; }
-	const vehikel_besch_t* get_replacing_vehicle(uint16 number) const;
-	void set_replacing_vehicles(vector_tpl<const vehikel_besch_t *> *rv) { replacing_vehicles = rv; }
-	void add_vehicle(const vehikel_besch_t* vehicle, bool add_at_front = false);
+	const vector_tpl<const vehicle_desc_t *>* get_replacing_vehicles() const { return replacing_vehicles; }
+	const vehicle_desc_t* get_replacing_vehicle(uint16 number) const;
+	void set_replacing_vehicles(vector_tpl<const vehicle_desc_t *> *rv) { replacing_vehicles = rv; }
+	void add_vehicle(const vehicle_desc_t* vehicle, bool add_at_front = false);
 
 	void increment_convoys(convoihandle_t cnv);
 	void decrement_convoys(convoihandle_t cnv);
@@ -107,7 +109,7 @@ public:
 
 	/**
 	 * Will clear the replace data of all convoys currently
-	 * being replaced with this dataset. 
+	 * being replaced with this dataset.
 	 * WARNING: This is equivalent to *deleting* this object.
 	 */
 	void clear_all();

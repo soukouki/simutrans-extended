@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Simutrans Extended
+Comment=An in-depth open source transport simulation game
+Exec=simutrans-extended
+Icon=simutrans-extended
+Terminal=false
+Type=Application
+Categories=Game;Simulation;
+X-Purism-FormFactor=Workstation;Mobile;
+X-KDE-FormFactors=desktop;tablet;handset;

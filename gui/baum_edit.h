@@ -1,48 +1,59 @@
 /*
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
+ */
+
+/*
  * The trees builder
  */
 
-#ifndef gui_baum_edit_h
-#define gui_baum_edit_h
+#ifndef GUI_BAUM_EDIT_H
+#define GUI_BAUM_EDIT_H
+
 
 #include "extend_edit.h"
+#include "components/gui_image.h"
 
-#include "components/gui_label.h"
 
-
-class baum_besch_t;
-class wkz_plant_tree_t;
+class tree_desc_t;
+class tool_plant_tree_t;
 
 class baum_edit_frame_t : public extend_edit_gui_t
 {
 private:
-	static wkz_plant_tree_t baum_tool;
-	static char param_str[256];
+	static tool_plant_tree_t baum_tool;
+	static cbuffer_t param_str;
 
-	const baum_besch_t *besch;
+	const tree_desc_t *desc;
 
-	vector_tpl<const baum_besch_t *>baumlist;
+	gui_image_t tree_image;
 
-	void fill_list( bool translate );
+	vector_tpl<const tree_desc_t *>tree_list;
 
-	virtual void change_item_info( sint32 i );
+	button_t bt_randomage;
+
+	void fill_list() OVERRIDE;
+
+	void change_item_info( sint32 i ) OVERRIDE;
 
 public:
-	baum_edit_frame_t(spieler_t* sp,karte_t* welt);
+	baum_edit_frame_t(player_t* player_);
+
+	static bool sortreverse;
 
 	/**
 	* in top-level windows the name is displayed in titlebar
 	* @return the non-translated component name
-	* @author Hj. Malthaner
 	*/
 	const char* get_name() const { return "baum builder"; }
 
 	/**
 	* Set the window associated helptext
 	* @return the filename for the helptext, or NULL
-	* @author Hj. Malthaner
 	*/
-	const char* get_hilfe_datei() const { return "baum_build.txt"; }
+	const char* get_help_filename() const OVERRIDE { return "baum_build.txt"; }
+
+	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 };
 
 #endif

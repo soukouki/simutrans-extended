@@ -1,7 +1,12 @@
+#
+# This file is part of the Simutrans-Extended project under the Artistic License.
+# (see LICENSE.txt)
+#
+
 CFG ?= default
 -include ../config.$(CFG)
 
-OSTYPES       = beos cygwin freebsd haiku linux mingw mac
+OSTYPES       = amiga beos cygwin freebsd haiku linux mingw32 mingw64 mac
 
 ifeq ($(findstring $(OSTYPE), $(OSTYPES)),)
   $(error Unkown OSTYPE "$(OSTYPE)", must be one of "$(OSTYPES)")
@@ -17,11 +22,13 @@ ifeq ($(OSTYPE),cygwin)
   STD_LIBS += -lwinmm -lcurses
 endif
 
-ifeq ($(OSTYPE),mingw)
+ifeq ($(OSTYPE),mingw32 mingw64)
   CC ?= gcc
-  OS_OPT   ?= -mno-cygwin -march=pentium
+  OS_OPT   ?= -march=pentium
   # we need the libraries EXACTLY in this order to link
-  STD_LIBS = -lmingw32 -lstdc++ -lwsock32
+  STD_LIBS = -lmingw32 -lstdc++ -lwsock32 -lws2_32
+  #LDFLAGS += -static-libgcc -static-libstdc++ -Wl,--large-address-aware -static
+  #CFLAGS  += -_WIN32_WINNT -static
 endif
 
 ifeq ($(OSTYPE),mac)
@@ -64,8 +71,8 @@ ifneq ($(PROFILE),)
   LDFLAGS += -pg
 endif
 
-CFLAGS   += -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align -Wstrict-prototypes $(OS_INC) $(OS_OPT) $(FLAGS)
-CXXFLAGS += -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align $(OS_INC) $(OS_OPT) $(FLAGS)
+CFLAGS   += -Wall -Wextra -Wcast-qual -Wpointer-arith -Wcast-align -Wstrict-prototypes $(OS_INC) $(OS_OPT) $(FLAGS)
+CXXFLAGS += -Wall -Wextra -Wcast-qual -Wpointer-arith -Wcast-align -std=c++11 $(OS_INC) $(OS_OPT) $(FLAGS)
 
 # SOLO_SOURCES contains files which are unique to nettool;
 # SHARED_SOURCES contains those with the exact same object code in nettool and simutrans;
@@ -73,20 +80,20 @@ CXXFLAGS += -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align $(OS_INC) $(OS_OPT
 # At the moment they're all treated identically, of course.
 SOLO_SOURCES += nettool.cc
 SHARED_SOURCES += ../dataobj/freelist.cc
-SHARED_SOURCES += ../dataobj/network_address.cc
-SHARED_SOURCES += ../dataobj/network_cmd.cc
-SHARED_SOURCES += ../dataobj/network_packet.cc
-SHARED_SOURCES += ../dataobj/network_socket_list.cc
-SHARED_SOURCES += ../dataobj/pwd_hash.cc
+SHARED_SOURCES += ../network/memory_rw.cc
+SHARED_SOURCES += ../network/network_address.cc
+SHARED_SOURCES += ../network/network_cmd.cc
+SHARED_SOURCES += ../network/network_packet.cc
+SHARED_SOURCES += ../network/network_socket_list.cc
+SHARED_SOURCES += ../network/pwd_hash.cc
 SHARED_SOURCES += ../simdebug.cc
 SHARED_SOURCES += ../simmem.cc
-SHARED_SOURCES += ../utils/memory_rw.cc
 SHARED_SOURCES += ../utils/simstring.cc
 SHARED_SOURCES += ../utils/fetchopt.cc
 SHARED_SOURCES += ../utils/sha1.cc
 VARIANT_SOURCES += ../utils/log.cc
-VARIANT_SOURCES += ../dataobj/network.cc
-VARIANT_SOURCES += ../dataobj/network_file_transfer.cc
+VARIANT_SOURCES += ../network/network.cc
+VARIANT_SOURCES += ../network/network_file_transfer.cc
 
 SOURCES ?= $(SOLO_SOURCES) $(SHARED_SOURCES) $(VARIANT_SOURCES)
 

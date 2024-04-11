@@ -1,29 +1,45 @@
 /*
- * Wasser-Untergrund für Simutrans.
- * Überarbeitet Januar 2001
- * von Hj. Malthaner
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 #include "wasser.h"
 
+#include "../dataobj/environment.h"
+#include "../descriptor/ground_desc.h"
+#include "../obj/gebaeude.h"
 #include "../simworld.h"
-
-#include "../besch/grund_besch.h"
-
-#include "../dataobj/umgebung.h"
-
 
 
 int wasser_t::stage = 0;
 bool wasser_t::change_stage = false;
 
 
+wasser_t::wasser_t(loadsave_t *file, koord pos) :
+	grund_t(koord3d(pos,0) ),
+	ribi(ribi_t::none),
+	canal_ribi(ribi_t::none)
+{
+	rdwr(file);
+}
+
+
+wasser_t::wasser_t(koord3d pos) :
+	grund_t(pos),
+	ribi(ribi_t::none),
+	canal_ribi(ribi_t::none),
+	display_ribi(ribi_t::none)
+{
+	set_hoehe( welt->get_water_hgt( pos.get_2d() ) );
+	slope = slope_t::flat;
+}
+
 
 // for animated waves
 void wasser_t::prepare_for_refresh()
 {
-	if(!welt->is_fast_forward()  &&  umgebung_t::water_animation>0) {
-		int new_stage = (welt->get_zeit_ms() / umgebung_t::water_animation) % grund_besch_t::water_animation_stages;
+	if(!welt->is_fast_forward()  &&  env_t::water_animation>0) {
+		int new_stage = (welt->get_ticks() / env_t::water_animation) % ground_desc_t::water_animation_stages;
 		wasser_t::change_stage = (new_stage != stage);
 		wasser_t::stage = new_stage;
 	}
@@ -33,40 +49,99 @@ void wasser_t::prepare_for_refresh()
 }
 
 
-void wasser_t::calc_bild_internal()
+/**
+ * helper function: return maximal possible ribis, does not
+ * take water ribi of sea tiles into account.
+ */
+ribi_t::ribi get_base_water_ribi(grund_t *gr)
 {
-	set_hoehe( welt->get_grundwasser() );
-	slope = hang_t::flach;
+	return gr->is_water() ? (ribi_t::ribi)ribi_t::all : gr->grund_t::get_weg_ribi(water_wt);
+}
 
-	sint16 zpos = min( welt->lookup_hgt(get_pos().get_2d()), welt->get_grundwasser() ); // otherwise slope will fail ...
 
-	if (grund_t::underground_mode==grund_t::ugm_level && grund_t::underground_level < zpos) {
-		set_bild(IMG_LEER);
-	}
-	else {
-		set_bild( min( welt->get_grundwasser()-zpos, grund_besch_t::water_depth_levels ) /*grund_besch_t::get_ground_tile(0,zpos)*/ );
-	}
-	// test for ribis
-	ribi = ribi_t::keine;
-	grund_t *grw = welt->lookup_kartenboden(pos.get_2d() + koord(-1,0)); // west
-	if (grw  &&  (grw->ist_wasser()  ||  grw->hat_weg(water_wt))) {
-		ribi |= ribi_t::west;
-	}
-	grund_t *grn = welt->lookup_kartenboden(pos.get_2d() + koord(0,-1)); // nord
-	if (grn  &&  (grn->ist_wasser()  ||  grn->hat_weg(water_wt))) {
-		ribi |= ribi_t::nord;
-	}
-	grund_t *gre = welt->lookup_kartenboden(pos.get_2d() + koord(1,0)); // ost
-	if (gre  &&  (gre->ist_wasser()  ||  gre->hat_weg(water_wt))) {
-		ribi |= ribi_t::ost;
-	}
-	grund_t *grs = welt->lookup_kartenboden(pos.get_2d() + koord(0,1)); // sued
-	if (grs  &&  (grs->ist_wasser()  ||  grs->hat_weg(water_wt))) {
-		ribi |= ribi_t::sued;
-	}
+void wasser_t::calc_image_internal(const bool calc_only_snowline_change)
+{
+	if(  !calc_only_snowline_change  ) {
+		koord pos2d( get_pos().get_2d() );
+		sint8 height = welt->get_water_hgt( pos2d );\
+		set_hoehe(height);
+		slope = slope_t::flat;
 
-	// artifical walls from here on ...
-	grund_t::calc_back_bild(welt->get_grundwasser(), 0);
+		sint8 zpos = min( welt->lookup_hgt( pos2d ), height ); // otherwise slope will fail ...
+
+		if(  grund_t::underground_mode == grund_t::ugm_level  &&  grund_t::underground_level < zpos  ) {
+			set_image(IMG_EMPTY);
+		}
+		else {
+			set_image( min( height - zpos, ground_desc_t::water_depth_levels ) /*ground_desc_t::get_ground_tile(0,zpos)*/ );
+		}
+		recalc_ribis();
+
+		// artifical walls from here on ...
+		grund_t::calc_back_image( height, 0 );
+	}
+}
+
+
+void wasser_t::recalc_ribis()
+{
+	// test tiles to north, south, east and west and add to ribi if water
+	ribi = ribi_t::none;
+	canal_ribi = ribi_t::none;
+	display_ribi = ribi_t::none;
+
+	bool harbour = find<gebaeude_t>();
+
+	for(  uint8 i = 0;  i < 4;  i++  ) {
+		grund_t *gr_neighbour = NULL;
+		ribi_t::ribi test = ribi_t::nesw[i];
+
+		if( get_neighbour(gr_neighbour, invalid_wt, test) ) {
+			// neighbour tile has water ways
+			ribi_t::ribi ribi_neigh_base = get_base_water_ribi(gr_neighbour);
+			if ((ribi_neigh_base & ribi_t::reverse_single(test))==0) {
+				// we cannot go back to our tile
+				continue;
+			}
+
+			// set water ribi bit
+			ribi |= test;
+
+			// test whether we can turn on neighbour canal tile
+			if (!gr_neighbour->is_water()) {
+				ribi_t::ribi ribi_orth = ribi_t::doubles( ribi_t::rotate90( test ));
+				if ((ribi_neigh_base & ribi_orth) != ribi_orth) {
+					// turning not possible, mark it as canal ribi
+					canal_ribi |= test;
+				}
+				display_ribi |= test;
+			}
+			else {
+				// if building is on one but not on the other tile
+				// pretend tiles are not connected for displaying purposes
+				if ( (gr_neighbour->find<gebaeude_t>() != NULL) == harbour) {
+					display_ribi |= test;
+				}
+			}
+		}
+	}
+}
+
+
+void wasser_t::recalc_water_neighbours()
+{
+	recalc_ribis();
+
+	for(  uint8 i = 0;  i < 4;  i++  ) {
+		grund_t *gr_neighbour = NULL;
+		ribi_t::ribi test = ribi_t::nesw[i];
+
+		if( get_neighbour(gr_neighbour, invalid_wt, test) ) {
+			if (wasser_t* gr_water = dynamic_cast<wasser_t*>(gr_neighbour) ) {
+				gr_water->recalc_ribis();
+			}
+		}
+	}
 }
 
 
@@ -74,4 +149,6 @@ void wasser_t::rotate90()
 {
 	grund_t::rotate90();
 	ribi = ribi_t::rotate90(ribi);
+	canal_ribi = ribi_t::rotate90(canal_ribi);
+	display_ribi = ribi_t::rotate90(display_ribi);
 }

@@ -1,28 +1,70 @@
 /*
- * This file is part of the Simutrans project under the artistic license.
- * (see license.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
-#ifndef finance_h
-#define finance_h
+#ifndef PLAYER_FINANCE_H
+#define PLAYER_FINANCE_H
+
 
 #include <assert.h>
 
 #include "../simtypes.h"
 #include "../simworld.h"
 
-// This should be used when players attempt to buy things they can't afford.
-#define CREDIT_MESSAGE "That would exceed\nyour credit limit."
+ /****************************************** notification strings **************************************/
+
+ /**
+ * Translated notification text identifiers used by tools are placed here.
+ * This is because they are not simple well structured internal identifiers.
+ * Instead they can be complex sentences intended to be read untranslated.
+ * Using these constants assues a valid and correct text identifier is choosen.
+ */
+
+ /**
+ * Message returned when a player cannot afford to complete an action.
+ */
+char const *const NOTICE_INSUFFICIENT_FUNDS = "That would exceed\nyour credit limit.";
+
+/**
+* Message returned when a player tries to place trees when trees are disabled.
+*/
+char const *const NOTICE_NO_TREES = "Trees disabled!";
+
+/**
+* Message returned when valid terrain cannot be found for a tool to use.
+*/
+char const *const NOTICE_UNSUITABLE_GROUND = "No suitable ground!";
+
+/**
+* Message returned when a tool fails because the target is owned by another player and access is not granted.
+*/
+char const *const NOTICE_OWNED_BY_OTHER_PLAYER = "Das Feld gehoert\neinem anderen Spieler\n";
+
+/**
+* Message returned when a depot cannot be placed.
+*/
+char const *const NOTICE_DEPOT_BAD_POS = "Cannot built depot here!";
+
+/**
+* Message returned when a tool fails due to the target tile being occupied.
+*/
+char const *const NOTICE_TILE_FULL = "Tile not empty.";
+
+/**
+ * Message returned when a company tries to make a public way when public ways are disabled.
+ */
+char const *const NOTICE_DISABLED_PUBLIC_WAY = "Not allowed to make publicly owned ways!";
 
 /// for compatibility with old versions
-/// Must be different in experimental!
+/// Must be different in extended!
 #define OLD_MAX_PLAYER_COST (21)
 
 /// number of years to keep history
-#define MAX_PLAYER_HISTORY_YEARS  (25)
+#define MAX_PLAYER_HISTORY_YEARS  (26)
 
 /// number of months to keep history
-#define MAX_PLAYER_HISTORY_MONTHS (25)
+#define MAX_PLAYER_HISTORY_MONTHS (26)
 
 
 /**
@@ -30,7 +72,6 @@
  * waytype_t was not used because of values assigned to air_wt and powerline_wt.
  * There are also buildings like railway station that can be distinguished
  * by transport_type and can not be distinguished by waytype_t.
- * @author jk271
  */
 enum transport_type {
 	TT_ALL=0,
@@ -49,20 +90,37 @@ enum transport_type {
 };
 
 
+/* these have to match the strings in schedule_type_text[]!  */
+/* (and it is sad that the order between those do not match ...) */
+static const char* const transport_type_text[TT_MAX] = {
+	"All",
+	"Truck",
+	"Train",
+	"Ship",
+	"Monorail",
+	"Maglev",
+	"Tram",
+	"Narrowgauge",
+	"Air",
+	"tt_Other",
+	"Powerlines",
+};
+
+
 /**
- * ATC = accounting type commmon (common means data common for all transport types).
+ * ATC = accounting type common (common means data common for all transport types).
  *
  * Supersedes COST_ types, that CAN NOT be distinguished by type of transport-
  * - the data are concerning to whole company
  */
 enum accounting_type_common {
-	ATC_CASH = 0,		///< Cash
-	ATC_NETWEALTH,		///< Total Cash + Assets
-	ATC_ALL_CONVOIS,        ///< Convoy count
-	ATC_SCENARIO_COMPLETED, ///< Scenario success (only useful if there is one ... )
-	ATC_INTEREST,			/// interest received/paid
-	ATC_SOFT_CREDIT_LIMIT,		/// soft credit limit (player can't buy new stuff)
-	ATC_HARD_CREDIT_LIMIT,		/// hard credit limit (player loses)
+	ATC_CASH = 0,				///< Cash
+	ATC_NETWEALTH,				///< Total Cash + Assets
+	ATC_ALL_CONVOIS,			///< Convoy count
+	ATC_SCENARIO_COMPLETED,		///< Scenario success (only useful if there is one ... )
+	ATC_INTEREST,				/// interest received/paid
+	ATC_SOFT_CREDIT_LIMIT,		/// soft credit limit (player cannot spend money)
+	ATC_HARD_CREDIT_LIMIT,		/// hard credit limit (player is insolvent)
 	ATC_MAX
 };
 
@@ -70,28 +128,27 @@ enum accounting_type_common {
 /**
  * ATV = accounting type vehicles.
  * Supersedes COST_ types, that CAN be distinguished by type of transport.
- * @author jk271
  */
 enum accounting_type_vehicles {
-	ATV_REVENUE_PASSENGER=0, ///< Revenue from passenger transport
-	ATV_REVENUE_MAIL,        ///< Revenue from mail transport
-	ATV_REVENUE_GOOD,        ///< Revenue from good transport
-	ATV_REVENUE_TRANSPORT,	 ///< Operating profit = passenger + mail + goods = was: COST_INCOME
-	ATV_TOLL_RECEIVED,	 ///< Toll paid to you by another player
-	ATV_REVENUE,             ///< Operating profit = revenue_transport + toll = passenger + mail+ goods + toll_received
+	ATV_REVENUE_PASSENGER = 0, ///< Revenue from passenger transport
+	ATV_REVENUE_MAIL,          ///< Revenue from mail transport
+	ATV_REVENUE_GOOD,          ///< Revenue from good transport
+	ATV_REVENUE_TRANSPORT,     ///< Operating profit = passenger + mail + goods = was: COST_INCOME
+	ATV_TOLL_RECEIVED,         ///< Toll paid to you by another player
+	ATV_REVENUE,               ///< Operating profit = revenue_transport + toll = passenger + mail+ goods + toll_received
 
 	ATV_RUNNING_COST,               ///< Distance based running costs, was: COST_VEHICLE_RUN
 	ATV_VEHICLE_MAINTENANCE,        ///< Monthly vehicle maintenance.
 	ATV_INFRASTRUCTURE_MAINTENANCE, ///< Infrastructure maintenance (roads, railway, ...), was: COST_MAINTENANCE
-	ATV_TOLL_PAID,			  ///< Toll paid by you to another player
-	ATV_EXPENDITURE,		        ///< Total expenditure = RUNNING_COSTS+VEHICLE_MAINTENANCE+INFRACTRUCTURE_MAINTENANCE+TOLL_PAID
-	ATV_OPERATING_PROFIT,		  ///< ATV_REVENUE - ATV_EXPENDITURE, was: COST_OPERATING_PROFIT
-	ATV_NEW_VEHICLE,			  ///< New vehicles
-	ATV_CONSTRUCTION_COST,		  ///< Construction cost, COST_CONSTRUCTION mapped here
-	ATV_PROFIT,			        ///< ATV_OPERATING_PROFIT - (CONSTRUCTION_COST + NEW_VEHICLE) + COST_INTEREST, was: COST_PROFIT
-	ATV_WAY_TOLL,			  ///< = ATV_TOLL_PAID + ATV_TOLL_RECEIVED, was: COST_WAY_TOLLS
-	ATV_NON_FINANCIAL_ASSETS,	  ///< Value of vehicles owned by your company, was: COST_ASSETS
-	ATV_PROFIT_MARGIN,		  ///< ATV_OPERATING_PROFIT / ATV_REVENUE, was: COST_MARGIN
+	ATV_TOLL_PAID,                  ///< Toll paid by you to another player
+	ATV_EXPENDITURE,                ///< Total expenditure = RUNNING_COSTS+VEHICLE_MAINTENANCE+INFRACTRUCTURE_MAINTENANCE+TOLL_PAID
+	ATV_OPERATING_PROFIT,           ///< ATV_REVENUE - ATV_EXPENDITURE, was: COST_OPERATING_PROFIT
+	ATV_NEW_VEHICLE,                ///< New vehicles
+	ATV_CONSTRUCTION_COST,          ///< Construction cost, COST_CONSTRUCTION mapped here
+	ATV_PROFIT,                     ///< ATV_OPERATING_PROFIT - (CONSTRUCTION_COST + NEW_VEHICLE) + COST_INTEREST, was: COST_PROFIT
+	ATV_WAY_TOLL,                   ///< = ATV_TOLL_PAID + ATV_TOLL_RECEIVED, was: COST_WAY_TOLLS
+	ATV_NON_FINANCIAL_ASSETS,       ///< Value of vehicles owned by your company, was: COST_ASSETS
+	ATV_PROFIT_MARGIN,              ///< ATV_OPERATING_PROFIT / ATV_REVENUE, was: COST_MARGIN
 
 	ATV_TRANSPORTED_PASSENGER, ///< Number of transported passengers
 	ATV_TRANSPORTED_MAIL,      ///< Number of transported mail
@@ -109,13 +166,12 @@ enum accounting_type_vehicles {
 
 class loadsave_t;
 class karte_t;
-class spieler_t;
+class player_t;
 class scenario_t;
 
 
 /**
  * Encapsulate margin calculation  (Operating_Profit / Income)
- * @author Ben Love
  */
 inline sint64 calc_margin(sint64 operating_profit, sint64 proceeds)
 {
@@ -137,19 +193,17 @@ inline sint64 convert_money(sint64 value) { return (value + 50) / 100; }
  */
 class finance_t {
 	/** transport company */
-	spieler_t * player;
+	player_t * player;
 
 	karte_t * world;
 
 	/**
- 	 * Amount of money, previously known as "konto"
- 	 * @author Hj. Malthaner
- 	 */
+	 * Amount of money, previously known as "konto"
+	 */
 	sint64 account_balance;
 
 	/**
 	 * Shows how many months you have been in red numbers.
-	 * @author Hj. Malthaner
 	 */
 	sint32 account_overdrawn;
 
@@ -161,8 +215,7 @@ class finance_t {
 	/**
 	 * Contains values having relation with whole company but not with particular
 	 * type of transport (com - common).
- 	 * @author jk271
- 	 */
+	 */
 	sint64 com_year[MAX_PLAYER_HISTORY_YEARS][ATC_MAX];
 
 	/**
@@ -172,44 +225,39 @@ class finance_t {
 
 	/**
 	 * Finance history having relation with particular type of service
- 	 * @author jk271
- 	 */
+	 */
 	sint64 veh_year[TT_MAX][MAX_PLAYER_HISTORY_YEARS][ATV_MAX];
 	sint64 veh_month[TT_MAX][MAX_PLAYER_HISTORY_MONTHS][ATV_MAX];
 
 	/**
- 	 * Monthly maintenance cost
- 	 * @author Hj. Malthaner
- 	 */
-	sint32 maintenance[TT_MAX];
+	 * Monthly maintenance cost
+	 */
+	sint64 maintenance[TT_MAX];
 
 	/**
 	 * Monthly vehicle maintenance cost per transport type.
- 	 * @author jk271
- 	 */
+	 */
 	// Unused because vehicle maintenance varies monthly for each vehicle.
-	// sint32 vehicle_maintenance[TT_MAX];
+	// sint64 vehicle_maintenance[TT_MAX];
 
 public:
-	finance_t(spieler_t * _player, karte_t * _world);
+	finance_t(player_t * _player, karte_t * _world);
 
 	/**
 	 * Adds construction cost to finance stats.
 	 * @param amount sum of money
 	 * @param wt way type, e.g. tram_wt
-	 * @param utyp used for distinguishing tranport type of building for accounting purposes, used with buildings only.
 	 */
 	inline void book_construction_costs(const sint64 amount, const waytype_t wt) {
 		transport_type tt = translate_waytype_to_tt(wt);
-		veh_year[tt][0][ATV_CONSTRUCTION_COST] += (sint64) amount;
-		veh_month[tt][0][ATV_CONSTRUCTION_COST] += (sint64) amount;
+		veh_year[tt][0][ATV_CONSTRUCTION_COST] += amount;
+		veh_month[tt][0][ATV_CONSTRUCTION_COST] += amount;
 
 		account_balance += amount;
 	}
 
 	/**
 	 * Adds count to number of convois in statistics.
-	 * @author jk271
 	 */
 	inline void book_convoi_number( const int count ) {
 		com_year[0][ATC_ALL_CONVOIS] += count;
@@ -220,9 +268,8 @@ public:
 	 * Adds maintenance into/from finance stats.
 	 * @param change monthly maintenance cost difference
 	 * @param wt - waytype for accounting purposes
-	 * @param utyp - used for distinguishing of transport type of buildings. Used with buildings only.
 	 */
-	inline sint32 book_maintenance(sint32 change, waytype_t const wt)
+	inline sint64 book_maintenance(sint64 change, waytype_t const wt)
 	{
 		transport_type tt = translate_waytype_to_tt(wt);
 		maintenance[tt] += change;
@@ -231,8 +278,22 @@ public:
 	}
 
 	/**
+	 * Adds way renewal into/from finance stats (booked as a one off payment of infrastructure maintenance)
+	 * @param renewal cost
+	 * @param wt - waytype for accounting purposes
+	 */
+	inline void book_way_renewal(const sint64 amount, const waytype_t wt)
+	{
+		transport_type tt = translate_waytype_to_tt(wt);
+		veh_year[tt][0][ATV_INFRASTRUCTURE_MAINTENANCE] += amount;
+		veh_month[tt][0][ATV_INFRASTRUCTURE_MAINTENANCE] += amount;
+
+		account_balance += amount;
+	}
+
+	/**
 	 * Account purchase of new vehicle: Subtracts money, increases assets.
-	 * @param amount money paid for vehicle
+	 * @param amount money paid for vehicle (negative)
 	 * @param wt - waytype of vehicle
 	 */
 	inline void book_new_vehicle(const sint64 amount, const waytype_t wt)
@@ -241,10 +302,10 @@ public:
 		// It is positive for a SALE of a vehicle
 		const transport_type tt = translate_waytype_to_tt(wt);
 
-		veh_year[ tt][0][ATV_NEW_VEHICLE] += (sint64) amount;
-		veh_month[tt][0][ATV_NEW_VEHICLE] += (sint64) amount;
-		veh_year[ tt][0][ATV_NON_FINANCIAL_ASSETS] -= (sint64) amount;
-		veh_month[tt][0][ATV_NON_FINANCIAL_ASSETS] -= (sint64) amount;
+		veh_year[ tt][0][ATV_NEW_VEHICLE] += amount;
+		veh_month[tt][0][ATV_NEW_VEHICLE] += amount;
+
+		update_assets(-amount, wt);
 
 		account_balance += amount;
 	}
@@ -261,8 +322,8 @@ public:
 
 		index = ((0 <= index) && (index <= 2)? index : 2);
 
-		veh_year[tt][0][ATV_REVENUE_PASSENGER+index] += (sint64) amount;
-		veh_month[tt][0][ATV_REVENUE_PASSENGER+index] += (sint64) amount;
+		veh_year[tt][0][ATV_REVENUE_PASSENGER+index] += amount;
+		veh_month[tt][0][ATV_REVENUE_PASSENGER+index] += amount;
 
 		account_balance += amount;
 	}
@@ -288,8 +349,8 @@ public:
 	inline void book_toll_paid(const sint64 amount, const waytype_t wt)
 	{
 		const transport_type tt =  translate_waytype_to_tt(wt);
-		veh_year[tt][0][ATV_TOLL_PAID] += (sint64) amount;
-		veh_month[tt][0][ATV_TOLL_PAID] += (sint64) amount;
+		veh_year[tt][0][ATV_TOLL_PAID] += amount;
+		veh_month[tt][0][ATV_TOLL_PAID] += amount;
 		account_balance += amount;
 	}
 
@@ -301,8 +362,8 @@ public:
 	inline void book_toll_received(const sint64 amount, const waytype_t wt)
 	{
 		const transport_type tt = translate_waytype_to_tt(wt);
-		veh_year[tt][0][ATV_TOLL_RECEIVED] += (sint64) amount;
-		veh_month[tt][0][ATV_TOLL_RECEIVED] += (sint64) amount;
+		veh_year[tt][0][ATV_TOLL_RECEIVED] += amount;
+		veh_month[tt][0][ATV_TOLL_RECEIVED] += amount;
 		account_balance += amount;
 	}
 
@@ -362,8 +423,8 @@ public:
 	}
 
 	/**
-	 * Calculates the finance history for player
-	 * @author hsiegeln
+	 * Calculates the finance history for player.
+	 * This method has to be called before reading any variables besides account_balance!
 	 */
 	void calc_finance_history();
 
@@ -375,7 +436,7 @@ public:
 	/**
 	 * Is player allowed to purchase something of this price, or is player
 	 * too deep in debt?  (Note that this applies to all players; the public
-     * player is special-cased in spieler_t, and skips this routine.)
+     * player is special-cased in player_t, and skips this routine.)
 	 * @returns whether player is allowed to purchase something of cost "price"
 	 * @params price
 	 */
@@ -396,9 +457,37 @@ public:
 
 	/**
 	 * This is a negative number.  Upon having an account balance more negative than this,
-	 * the player goes bankrupt and is shut down.
+	 * the player becomes insolvent.
 	 */
 	inline sint64 get_hard_credit_limit() const { return com_month[0][ATC_HARD_CREDIT_LIMIT]; }
+
+	/**
+	* Return the number of consecutiuve months for which this player has been insolvent, starting
+	* with the current month. If the player is not currently insolvent, 0 is returned. The maximum
+	* number returned is MAX_PLAYER_HISTORY_MONTHS.
+	*/
+	inline uint32 get_number_of_months_insolvent() const
+	{
+		if (account_balance >= com_month[0][ATC_HARD_CREDIT_LIMIT])
+		{
+			return 0;
+		}
+
+		uint32 months = 0;
+		for (uint32 i = 0; i < MAX_PLAYER_HISTORY_MONTHS; i++)
+		{
+			if (com_month[i][ATC_CASH] < com_month[i][ATC_HARD_CREDIT_LIMIT])
+			{
+				months++;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		return months;
+	}
 
 	/**
 	 * Recalculate credit limits.
@@ -426,19 +515,19 @@ public:
 
 	/**
 	 * Returns the finance history (indistinguishable part) for player.
+	 * Call calc_finance_history before use!
 	 * @param year 0 .. current year, 1 .. last year, etc
 	 * @param type one of accounting_type_common
-	 * @author jk271
 	 */
 	sint64 get_history_com_year(int year, int type) const { return com_year[year][type]; }
 	sint64 get_history_com_month(int month, int type) const { return com_month[month][type]; }
 
 	/**
 	 * Returns the finance history (distinguishable by type of transport) for player.
+	 * Call calc_finance_history before use!
 	 * @param tt one of transport_type
 	 * @param year 0 .. current year, 1 .. last year, etc
 	 * @param type one of accounting_type_vehicles
-	 * @author jk271
 	 */
 	sint64 get_history_veh_year(transport_type tt, int year, int type) const { return veh_year[tt][year][type]; }
 	sint64 get_history_veh_month(transport_type tt, int month, int type) const { return veh_month[tt][month][type]; }
@@ -452,15 +541,21 @@ public:
 	 * @returns maintenance
 	 * @param tt transport type (Truck, Ship Air, ...)
 	 */
-	sint32 get_maintenance(transport_type tt=TT_ALL) const { assert(tt<TT_MAX); return maintenance[tt]; }
+	sint64 get_maintenance(transport_type tt=TT_ALL) const { assert(tt<TT_MAX); return maintenance[tt]; }
 
 	/**
 	 * @returns maintenance scaled with bits_per_month
-	 * @author jk271
 	 */
 	sint64 get_maintenance_with_bits(transport_type tt=TT_ALL) const;
 
-	sint64 get_netwealth() const { return com_year[0][ATC_NETWEALTH]; }
+	sint64 get_netwealth() const
+	{
+		// return com_year[0][ATC_NETWEALTH]; wont work as ATC_NETWEALTH is *only* updated in calc_finance_history
+		// see calc_finance_history
+		return veh_month[TT_ALL][0][ATV_NON_FINANCIAL_ASSETS] + account_balance;
+	}
+
+	sint64 get_financial_assets() const {return veh_month[TT_ALL][0][ATV_NON_FINANCIAL_ASSETS];}
 
 	sint64 get_scenario_completed() const { return com_month[0][ATC_SCENARIO_COMPLETED]; }
 
@@ -470,7 +565,6 @@ public:
 
 	/**
 	 * @returns vehicle maintenance scaled with bits_per_month
-	 * @author jk271
 	 */
 	// sint64 get_vehicle_maintenance_with_bits(transport_type tt=TT_ALL) const;
 
@@ -482,7 +576,7 @@ public:
 	/**
 	 * returns TRUE if net wealth > 0 (but this of course requires that we keep netwealth up to date!)
 	 */
-	bool has_money_or_assets() const { return ((get_history_com_year(0, ATC_NETWEALTH) ) > 0 ); }
+	bool has_money_or_assets() const { return ( get_netwealth() > 0 ); }
 
 	/**
 	 * increases number of month for which the company is in red numbers
@@ -490,18 +584,12 @@ public:
 	void increase_account_overdrawn() { account_overdrawn++; }
 
 	/**
-	 * returns true if company bankrupted
-	 */
-	bool is_bankrupted() const;
-
-	/**
 	 * Called at beginning of new month.
 	 */
 	void new_month();
 
 	/**
-	 * rolls the finance history for player (needed when neues_jahr() or neuer_monat()) triggered
-	 * @author hsiegeln, jk271
+	 * rolls the finance history for player (needed when new_year() or new_month()) triggered
 	 */
 	void roll_history_year();
 	void roll_history_month();
@@ -531,17 +619,21 @@ public:
 	void set_starting_money(sint64 amount) {  starting_money = amount; }
 
 	/**
- 	 * Translates haus_besch_t to transport_type
+	 * Translates building_desc_t to transport_type
 	 * Building can be assigned to transport type using utyp
- 	 * @author jk271
- 	 */
+	 */
 	static transport_type translate_utyp_to_tt(int utyp);
 
 	/**
- 	 * Translates waytype_t to transport_type
- 	 * @author jk271
- 	 */
+	 * Translates waytype_t to transport_type
+	 */
 	static transport_type translate_waytype_to_tt(waytype_t wt);
+
+	static waytype_t translate_tt_to_waytype(transport_type tt);
+
+	inline static char const *get_transport_type_name(transport_type tt) {
+		return transport_type_text[tt];
+	}
 
 	void update_assets(sint64 delta, waytype_t wt);
 
@@ -558,16 +650,9 @@ private:
 	 */
 	sint64 credit_limit_by_profits() const;
 
-	/// helper method to translate old COST_ constants
-	static int translate_index_cost_to_at(int cost_);
-
-	/// helper method to translate old COST_ constants
-	static int translate_index_cost_to_atc(int cost_index);
-
 	/**
 	 * Translates finance statistics from new format to old one.
 	 * Used for saving data in old format
-	 * @author jk271
 	 */
 	void export_to_cost_month(sint64 finance_history_month[][OLD_MAX_PLAYER_COST]);
 	void export_to_cost_year( sint64 finance_history_year[][OLD_MAX_PLAYER_COST]);
@@ -576,7 +661,6 @@ private:
 	/**
 	 * Translates finance statistics from old format to new one.
 	 * Used for loading data from old format
-	 * @author jk271
 	 */
 	void import_from_cost_month(const sint64 finance_history_month[][OLD_MAX_PLAYER_COST]);
 	void import_from_cost_year( const sint64 finance_history_year[][OLD_MAX_PLAYER_COST]);

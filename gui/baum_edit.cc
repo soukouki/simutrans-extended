@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 1997 - 2004 Hansjörg Malthaner
- *
- * This file is part of the Simutrans project under the artistic licence.
- * (see licence.txt)
+ * This file is part of the Simutrans-Extended project under the Artistic License.
+ * (see LICENSE.txt)
  */
 
 /*
@@ -11,77 +9,95 @@
 
 #include <stdio.h>
 
-#include "../simtools.h"
 #include "../simworld.h"
-#include "../simwerkz.h"
+#include "../simtool.h"
 #include "../simmenu.h"
 
 #include "../dataobj/translator.h"
 
 
-#include "../besch/bild_besch.h"
-#include "../besch/grund_besch.h"
+#include "../descriptor/image.h"
+#include "../descriptor/ground_desc.h"
 
 #include "../utils/cbuffer_t.h"
+#include "../utils/simrandom.h"
 #include "../utils/simstring.h"
 
 #include "baum_edit.h"
 
 
 // new tool definition
-wkz_plant_tree_t baum_edit_frame_t::baum_tool;
-char baum_edit_frame_t::param_str[256];
+tool_plant_tree_t baum_edit_frame_t::baum_tool;
+cbuffer_t baum_edit_frame_t::param_str;
+bool baum_edit_frame_t::sortreverse = false;
 
 
-
-static bool compare_baum_besch(const baum_besch_t* a, const baum_besch_t* b)
+static bool compare_tree_desc(const tree_desc_t* a, const tree_desc_t* b)
+{
+	int diff = strcmp( a->get_name(), b->get_name() );
+	return baum_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
+}
+static bool compare_tree_desc_name(const tree_desc_t* a, const tree_desc_t* b)
 {
 	int diff = strcmp( translator::translate(a->get_name()), translator::translate(b->get_name()) );
 	if(diff ==0) {
 		diff = strcmp( a->get_name(), b->get_name() );
 	}
-	return diff < 0;
+	return baum_edit_frame_t::sortreverse ? diff > 0 : diff < 0;
 }
 
 
-baum_edit_frame_t::baum_edit_frame_t(spieler_t* sp_, karte_t* welt) :
-	extend_edit_gui_t(translator::translate("baum builder"), sp_, welt),
-	baumlist(16)
+baum_edit_frame_t::baum_edit_frame_t(player_t* player_) :
+	extend_edit_gui_t(translator::translate("baum builder"), player_),
+	tree_list(16)
 {
-	bt_timeline.set_text( "Random age" );
+	cont_timeline.set_visible(false);
 
-	baum_tool.id = werkzeug_t::general_tool[WKZ_PLANT_TREE]->id;
+	bt_randomage.init( button_t::square_state, "Random age");
+	bt_randomage.add_listener(this);
+	bt_randomage.pressed = true;
+	cont_options.add_component(&bt_randomage);
 
-	remove_komponente( &bt_obsolete );
-	offset_of_comp -= D_BUTTON_HEIGHT;
-
-	besch = NULL;
+	desc = NULL;
 	baum_tool.set_default_param(NULL);
 
-	fill_list( is_show_trans_name );
+	fill_list();
 
-	resize( koord(0,0) );
+	// since we do not have a building image, we have to add the image again ourselves ...
+	cont_scrolly.remove_all();
+	cont_scrolly.set_table_layout(2, 0);
+	cont_scrolly.set_margin(scr_size(0, D_V_SPACE), scr_size(0, D_V_SPACE));
+	// add object description
+	cont_scrolly.add_component(&info_text, 2);
+	// add object image
+	cont_scrolly.add_component(&tree_image);
+	cont_scrolly.new_component<gui_fill_t>(true, false);
+	cont_scrolly.new_component_span<gui_fill_t>(false, true, 2);
+
+	bt_ignore_regions.set_visible(false);
 }
 
 
 
-// fill the current baumlist
-void baum_edit_frame_t::fill_list( bool translate )
+// fill the current tree_list
+void baum_edit_frame_t::fill_list()
 {
-	baumlist.clear();
-	FOR(vector_tpl<baum_besch_t const*>, const i, baum_t::get_all_besch()) {
-		if (i) {
-			baumlist.insert_ordered(i, compare_baum_besch);
+	tree_list.clear();
+	const bool is_sortedbyname = get_sortedby()==gui_sorting_item_t::BY_NAME_TRANSLATED;
+	sortreverse = sort_order.pressed;
+	FOR(vector_tpl<tree_desc_t const*>, const i, tree_builder_t::get_all_desc()) {
+		if ( i  &&  (i->get_allowed_climate_bits() & get_climate()) ) {
+			tree_list.insert_ordered(i, is_sortedbyname ? compare_tree_desc_name : compare_tree_desc);
 		}
 	}
 
 	// now build scrolled list
 	scl.clear_elements();
 	scl.set_selection(-1);
-	FOR(vector_tpl<baum_besch_t const*>, const i, baumlist) {
-		char const* const name = translate ? translator::translate(i->get_name()): i->get_name();
-		scl.append_element(new gui_scrolled_list_t::const_text_scrollitem_t(name, COL_BLACK));
-		if (i == besch) {
+	FOR(vector_tpl<tree_desc_t const*>, const i, tree_list) {
+		char const* const name = get_sortedby()==gui_sorting_item_t::BY_NAME_OBJECT ?  i->get_name() : translator::translate(i->get_name());
+		scl.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(name, SYSCOL_TEXT);
+		if (i == desc) {
 			scl.set_selection(scl.get_count()-1);
 		}
 	}
@@ -89,24 +105,52 @@ void baum_edit_frame_t::fill_list( bool translate )
 	change_item_info( scl.get_selection() );
 }
 
+bool baum_edit_frame_t::action_triggered( gui_action_creator_t *comp,value_t e)
+{
+	if(  comp==&bt_randomage  ) {
+		bt_randomage.pressed ^= 1;
+		change_item_info( scl.get_selection() );
+	}
+	return extend_edit_gui_t::action_triggered(comp,e);
+}
 
 
 void baum_edit_frame_t::change_item_info(sint32 entry)
 {
-	for(int i=0;  i<4;  i++  ) {
-		img[i].set_image( IMG_LEER );
-	}
 	buf.clear();
-	if(entry>=0  &&  entry<(sint32)baumlist.get_count()) {
+	if(entry>=0  &&  entry<(sint32)tree_list.get_count()) {
 
-		besch = baumlist[entry];
+		desc = tree_list[entry];
 
-		buf.append(translator::translate(besch->get_name()));
+		buf.append(translator::translate(desc->get_name()));
 		buf.append("\n\n");
+
+		/*
+		// region
+		if (!welt->get_settings().regions.empty()) {
+			buf.append(translator::translate("Allowed regions:"));
+			buf.append("\n");
+			const uint16 allowed_region_bits = desc->get_allowed_region_bits();
+			if (allowed_region_bits < 65535) {
+				uint32 region_idx = 0;
+				FORX(vector_tpl<region_definition_t>, region, welt->get_settings().regions, region_idx) {
+					if (allowed_region_bits & (1 << region_idx))
+					{
+						buf.printf(" - %s\n", translator::translate(region.name.c_str()));
+					}
+					region_idx++;
+				}
+			}
+			else {
+				buf.printf(" - %s\n", translator::translate("All"));
+			}
+			buf.append("\n");
+		}
+		*/
 
 		// climates
 		buf.append( translator::translate("allowed climates:\n") );
-		uint16 cl = besch->get_allowed_climate_bits();
+		uint16 cl = desc->get_allowed_climate_bits();
 		if(cl==0) {
 			buf.append( translator::translate("None") );
 			buf.append("\n");
@@ -115,32 +159,33 @@ void baum_edit_frame_t::change_item_info(sint32 entry)
 			for(uint16 i=0;  i<=arctic_climate;  i++  ) {
 				if(cl &  (1<<i)) {
 					buf.append(" - ");
-					buf.append(translator::translate(grund_besch_t::get_climate_name_from_bit((climate)i)));
+					buf.append(translator::translate(ground_desc_t::get_climate_name_from_bit((climate)i)));
 					buf.append("\n");
 				}
 			}
 		}
 
-		buf.printf( "\n%s %i\n", translator::translate("Seasons"), besch->get_seasons() );
+		buf.printf( "\n%s %i\n", translator::translate("Seasons"), desc->get_seasons() );
 
-		if (char const* const maker = besch->get_copyright()) {
+		if (char const* const maker = desc->get_copyright()) {
 			buf.append("\n");
 			buf.printf(translator::translate("Constructed by %s"), maker);
 			buf.append("\n");
 		}
 
-		info_text.recalc_size();
-		cont.set_groesse( info_text.get_groesse() + koord(0, 20) );
+		tree_image.set_image(desc->get_image_id( 0, 3 ), true);
 
-		img[3].set_image( besch->get_bild_nr( 0, 3 ) );
-
-		sprintf( param_str, "%i%i,%s", bt_climates.pressed, bt_timeline.pressed, besch->get_name() );
+		param_str.clear();
+		param_str.printf( "%i%i,%s", bt_climates.pressed, bt_randomage.pressed, desc->get_name() );
 		baum_tool.set_default_param(param_str);
-		baum_tool.cursor = werkzeug_t::general_tool[WKZ_PLANT_TREE]->cursor;
-		welt->set_werkzeug( &baum_tool, sp );
+		baum_tool.cursor = tool_t::general_tool[TOOL_PLANT_TREE]->cursor;
+		welt->set_tool( &baum_tool, player );
 	}
-	else if(welt->get_werkzeug(sp->get_player_nr())==&baum_tool) {
-		besch = NULL;
-		welt->set_werkzeug( werkzeug_t::general_tool[WKZ_ABFRAGE], sp );
+	else if(welt->get_tool(player->get_player_nr())==&baum_tool) {
+		desc = NULL;
+		tree_image.set_image(IMG_EMPTY, true);
+		welt->set_tool( tool_t::general_tool[TOOL_QUERY], player );
 	}
+	info_text.recalc_size();
+	reset_min_windowsize();
 }

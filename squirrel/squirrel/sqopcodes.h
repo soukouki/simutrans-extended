@@ -110,7 +110,8 @@ struct SQInstruction
 {
 	SQInstruction(){};
 	SQInstruction(SQOpcode _op,SQInteger a0=0,SQInteger a1=0,SQInteger a2=0,SQInteger a3=0)
-	{	op = _op;
+	{
+		op = (unsigned char)_op;
 		_arg0 = (unsigned char)a0;_arg1 = (SQInt32)a1;
 		_arg2 = (unsigned char)a2;_arg3 = (unsigned char)a3;
 	}
@@ -129,4 +130,4 @@ typedef sqvector<SQInstruction> SQInstructionVec;
 #define NEW_SLOT_ATTRIBUTES_FLAG	0x01
 #define NEW_SLOT_STATIC_FLAG		0x02
 
-#endif // _SQOPCODES_H_
+#endif
