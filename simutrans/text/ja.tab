@@ -323,6 +323,18 @@ Ferry service by\n%s\nnow between\n%s \nand %s.\n
 %s社は\n現在、船便を\n%s町と\n%s町\nとの間に提供しています。\n
 Travellers now\nuse %s's\nbusses between\n%s \nand %s.\n
 旅行者は現在、\n%s社が運行している\n%s町と\n%s町を結ぶ\nバスを利用しています。
+%s has withdrawn access rights from %s
+%s は %s の乗り入れ認可を取り下げました
+%s has allowed access rights to %s
+%s は %s に乗り入れ認可を出しました
+%s allows you to access its ways and stops
+%s所有の駅の利用、及び軌道への乗り入れが認可されています
+%s does not allow you to access its ways and stops
+%s所有の駅の利用、及び軌道への乗り入れが許可されていません
+Allow %s to access your ways and stops
+%sに自社所有設備への乗り入れを認可します
+Withdraw %s's access your ways and stops
+%sに対する自社所有設備への乗り入れ認可を取り下げます
 #___________________________________menu_text___________________________________
 #___________________________________menu_text___________________________________
 EDITTOOLS
@@ -1896,9 +1908,9 @@ Speichern
 Spieler
 プレイヤー
 Spieler(mz)
-ライバル会社
+プレイヤー一覧
 Spielerliste
-ライバル会社一覧
+プレイヤー切替・会社売買
 Sprache
 言語
 Sprachen
@@ -3778,9 +3790,43 @@ cl_btn_formation
 available_company_takeovers:
 買収可能なプレイヤー会社：
 allow_takeover_of_your_company
-会社の買収を許可
+会社を売却申請する
+allows_other_players_to_take_over_your_company
+現在のプレイヤー会社を売りに出し、他プレイヤーによる買収を許可します。
+is_available_for_take_over_by_another_company
+の会社売却申請が出され、会社の買収が可能になりました。
+is_not_available_for_takeover_any_more
+の売却申請は取り下げられました。
 take_over
 買収
+take_over_this_company
+この会社を買収します。注意: この操作は取り消せません。
+Takeover not permitted.
+買収できない対象です。
+administration_duration
+破産手続き完了まで 残り
+cancel_the_takeover_of_your_company
+売却申請を取り消します
+has_taken_over
+は次の会社を買収しました: 
+in_administration
+破産申請中
+in_administration_warning
+あなたの会社は現在破産申請中です：
+other_player_administration_duration
+の清算手続き開始まで 残り
+other_player_liquidation_duration
+の清算手続き完了まで 残り
+other_player_in_administration
+の破産手続きが行われています：
+other_player_in_liquidation
+の清算手続きが行われています：
+in_liquidation
+清算手続き中
+in_liquidation_warning
+あなたの会社は現在清算手続き中です：
+liquidation_duration_remaining
+会社の清算完了まで 残り
 filter_by_line
 この路線を待っている貨物に絞り込む
 filter_pas_line
