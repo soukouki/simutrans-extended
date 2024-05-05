@@ -113,8 +113,8 @@ ki_kontroll_t::ki_kontroll_t() :
 	cont_company_takeovers.add_table(3,0)->set_margin(scr_size(D_MARGIN_LEFT, D_V_SPACE>>1), scr_size(D_MARGIN_RIGHT, D_V_SPACE));
 
 	// header
-	new_component_span<gui_label_t>("Spieler", 2);
-	new_component<gui_image_t>(skinverwaltung_t::gadget ? skinverwaltung_t::gadget->get_image_id(SKIN_GADGET_LOCKED) : IMG_EMPTY, 0, ALIGN_CENTER_V, true);
+	new_component_span<gui_label_t>("Spieler", SYSCOL_TEXT, gui_label_t::centered, 2);
+	new_component<gui_image_t>(skinverwaltung_t::gadget ? skinverwaltung_t::gadget->get_image_id(SKIN_GADGET_LOCKED) : IMG_EMPTY, 0, ALIGN_CENTER_V, true)->set_tooltip(translator::translate("Name/password"));
 	new_component_span<gui_label_t>("Access", 4);
 	new_component<gui_label_t>("Cash", SYSCOL_TEXT, gui_label_t::right);
 
@@ -179,14 +179,9 @@ ki_kontroll_t::ki_kontroll_t() :
 
 		// Access button
 		new_component<gui_fill_t>();
-		if (i != PUBLIC_PLAYER_NR) {
-			access_out[i].init(button_t::square_state, "");
-			access_out[i].set_rigid(true);
-			add_component(&access_out[i]);
-		}
-		else {
-			new_component<gui_empty_t>();
-		}
+		access_out[i].init(button_t::square_state, "");
+		access_out[i].set_rigid(true);
+		add_component(&access_out[i]);
 		access_out[i].add_listener(this);
 		access_in[i].set_rigid(true);
 		add_component(&access_in[i]);
@@ -471,20 +466,17 @@ void ki_kontroll_t::update_data()
 				player_active[i-2].set_visible( player->get_ai_id()!=player_t::HUMAN	 &&	player_tools_allowed);
 			}
 
-			if (i != PUBLIC_PLAYER_NR) {
-				tooltip_out[i].clear();
-				access_out[i].pressed = player && welt->get_active_player()->allows_access_to(player->get_player_nr());
-				if(access_out[i].pressed && player)
-				{
-					tooltip_out[i].printf(translator::translate("Withdraw %s's access your ways and stops"), player->get_name());
-				}
-				else if(player)
-				{
-					tooltip_out[i].printf(translator::translate("Allow %s to access your ways and stops"), player->get_name());
-				}
-				access_out[i].set_visible(i != welt->get_active_player_nr());
-				access_out[i].set_tooltip(tooltip_out[i]);
+			tooltip_out[i].clear();
+			access_out[i].pressed = player && welt->get_active_player()->allows_access_to(player->get_player_nr());
+			if(access_out[i].pressed && player)
+			{
+				tooltip_out[i].printf(translator::translate("Withdraw %s's access your ways and stops"), player->get_name());
 			}
+			else if(player)
+			{
+				tooltip_out[i].printf(translator::translate("Allow %s to access your ways and stops"), player->get_name());
+			}
+			access_out[i].set_tooltip(tooltip_out[i]);
 
 
 			const bool allow_access = player && player->allows_access_to(welt->get_active_player_nr());
