@@ -34,6 +34,7 @@ password_button_t::password_button_t()
 	init(has_locked_icon ? button_t::imagebox : button_t::box, "");
 	set_state(EMPTY);
 	set_rigid(true);
+	set_tooltip(translator::translate("Name/password"));
 }
 
 void password_button_t::set_state(uint8 state) {
@@ -112,11 +113,13 @@ ki_kontroll_t::ki_kontroll_t() :
 	cont_company_takeovers.add_table(3,0)->set_margin(scr_size(D_MARGIN_LEFT, D_V_SPACE>>1), scr_size(D_MARGIN_RIGHT, D_V_SPACE));
 
 	// header
-	new_component_span<gui_label_t>("Name/password", 3);
+	new_component_span<gui_label_t>("Spieler", 2);
+	new_component<gui_image_t>(skinverwaltung_t::gadget ? skinverwaltung_t::gadget->get_image_id(SKIN_GADGET_LOCKED) : IMG_EMPTY, 0, ALIGN_CENTER_V, true);
 	new_component_span<gui_label_t>("Access", 4);
 	new_component<gui_label_t>("Cash", SYSCOL_TEXT, gui_label_t::right);
 
-	new_component_span<gui_border_t>(3);
+	new_component_span<gui_border_t>(2);
+	new_component<gui_border_t>();
 	new_component_span<gui_border_t>(4);
 	new_component<gui_border_t>();
 
