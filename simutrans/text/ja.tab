@@ -1531,6 +1531,8 @@ open_signalbox_info
 信号扱所情報
 open_signal_connector_gui
 信号機の接続先を操作する画面を開きます
+Open the player ranking dialog
+プレイヤーランキングを開きます
 Operation
 運行費
 Ops Profit
@@ -1619,6 +1621,8 @@ player 8
 プレイヤー 8
 player 9
 プレイヤー 9
+Player ranking
+プレイヤーランキング
 Please choose vehicles first\n
 最初に乗り物を選んでください\n
 Post
@@ -1725,6 +1729,8 @@ Revenue
 収入
 Revision:
 リビジョン:
+Right-click to open the finance dialog.
+右クリックでこのプレイヤーの財務ウィンドウを開きます
 road
 道路
 road vehicle
