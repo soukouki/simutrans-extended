@@ -209,7 +209,7 @@ ki_kontroll_t::ki_kontroll_t() :
 	freeplay.pressed = welt->get_settings().is_freeplay();
 	end_table();
 
-	bt_open_ranking.init(button_t::roundbox, "Player ranking");
+	bt_open_ranking.init(button_t::roundbox_state, "Player ranking");
 	if (skinverwaltung_t::open_window) {
 		bt_open_ranking.set_image(skinverwaltung_t::open_window->get_image_id(0));
 		bt_open_ranking.set_image_position_right(true);
@@ -665,6 +665,7 @@ void ki_kontroll_t::draw(scr_coord pos, scr_size size)
 	}
 
 	player_change_to[welt->get_active_player_nr()].pressed = true;
+	bt_open_ranking.pressed = win_get_magic(magic_player_ranking);
 
 	// All controls updated, draw them...
 	gui_frame_t::draw(pos, size);
