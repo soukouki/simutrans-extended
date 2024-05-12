@@ -52,7 +52,7 @@ private:
 
 	gui_tab_panel_t year_month_tabs;
 
-	button_t headquarter;
+	button_t headquarter, bt_open_ranking;
 	cbuffer_t headquarter_tooltip;
 
 	/// Helper method to query data from players statistics
