@@ -2085,10 +2085,6 @@ Verkehrsteilnehmer
 自家用車
 via
 経由地
-via %s\n
- (%s経由)\n
-via Menge
-待機数/経由地
 voranstellen
 先頭へ
 Waggon_tab
@@ -2247,6 +2243,32 @@ Zu nah am Kartenrand
 %s大通り%s
 #___________________________Simutrans Extended Texts____________________________
 #___________________________Simutrans Extended Texts____________________________
+hd_sv_mode_frequency
+運行頻度、編成数
+hd_sv_mode_catg
+取扱い貨物
+hd_sv_mode_route
+運行ルート
+distance_to_via
+次の降車駅までの距離
+distance_to_origin
+出発駅からの距離
+Show route
+予定ルートを表示
+Show transfer (in)
+乗換中/搬入中
+Show transfer (out)
+退出中/搬出中
+Shows the line or convoy where the cargo is waiting
+この駅から次の乗車・積み込み予定の路線を表示します
+Shows cargos heading to the platform to depart from this stop
+出発ホームへ移動中・搬入中の乗客・貨物を表示します
+Shows cargos leaving this stop
+駅に到着し、退出中の乗客と搬出中の貨物を表示します
+cargo_list_by_catg
+貨物種別順
+This stop
+当駅
 #_________________________________program_text__________________________________
 #_________________________________program_text__________________________________
  %1.2f$/mon
@@ -2681,8 +2703,6 @@ Departures to\n
 出発予想時間:\n
 Depot found but could not be inserted in schedule.  This is a bug!%s\n
 適切な車庫へのスケジュール挿入が出来ません。\n
-destination (detail)
-目的地 (詳細)
 differential
 微分値
 Direction
@@ -3011,10 +3031,6 @@ Operating revenue less operating expenditure
 収入から運行費と維持費を差し引いた利益を表します。
 origin
 出発地
-origin (amount)
-出発地 (待機数)
-origin (detail)
-出発地 (詳細)
 out of range
 航続距離オーバー
 overcrowded_capacity
@@ -3450,9 +3466,7 @@ Transfer time:
 transferring
 移動中
 transfers
-移動中の旅客/貨物
-Transfers
-乗降客数
+退出中の旅客/搬出中の貨物
 Transformer only next to factory or in city!
 変電所は産業の隣接マスか市域内にのみ建設できます。
 transparent background
@@ -3551,10 +3565,6 @@ way_cannot_be_used_by_any_vehicle
 通行不能です！
 way_speed
 軌道の最高速度
-wealth (detail)
-裕福度別 (詳細)
-wealth (via)
-裕福度別 (経由地)
 wealth_of_commuters
 通勤客の裕福度
 wealth_of_visitors
@@ -3895,14 +3905,10 @@ Services
 サービス
 hd_wealth
 所得層
-hd_waiting
-待機中
 hd_transfers
 乗換・移動中
 hd_category
 貨物品目分類
-hd_transship
-積替・搬出中
 Needed
 商品・資材需要
 Products
@@ -4571,3 +4577,23 @@ Power: %4d kW\n
 #郵便度
 #comfort: %i
 #快適度: %i
+#via Menge
+#待機数/経由地
+#origin (amount)
+#出発地 (待機数)
+#origin (detail)
+#出発地 (詳細)
+#destination (detail)
+#目的地 (詳細)
+#wealth (detail)
+#裕福度別 (詳細)
+#wealth (via)
+#裕福度別 (経由地)
+#via %s\n
+# (%s経由)\n
+#Transfers
+#乗降客数
+#hd_waiting
+#待機中
+#hd_transship
+#積替・搬出中
