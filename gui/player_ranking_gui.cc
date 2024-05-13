@@ -26,7 +26,7 @@ static const char* cost_type_name[player_ranking_gui_t::MAX_PLAYER_RANKING_CHART
 	"Freight-km",
 	"Cash",
 	"Net Wealth",
-	"Margin (%%)",
+	"Margin (%)",
 	"Convoys"
 	// "way_distances" // Way kilometreage
 	// "travel_distance"
