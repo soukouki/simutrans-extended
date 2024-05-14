@@ -8832,7 +8832,7 @@ void karte_t::switch_server( bool start_server, bool port_forwarding )
 		}
 		else {
 			// now start a server with defaults
-			env_t::networkmode = network_init_server( env_t::server_port );
+			env_t::networkmode = network_init_server( env_t::server_port, env_t::listen );
 			if(  env_t::networkmode  ) {
 
 				// query IP and try to open ports on router

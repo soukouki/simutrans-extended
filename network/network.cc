@@ -26,12 +26,9 @@
 #include "../dataobj/environment.h"
 #endif
 
-#ifdef NETTOOL
-#include "../tpl/vector_tpl.h"
-#endif
-
 #include "../utils/simstring.h"
 #include "../tpl/slist_tpl.h"
+
 
 static bool network_active = false;
 uint16 network_server_port = 0;
@@ -320,11 +317,11 @@ SOCKET network_open_address(char const* cp, char const*& err)
 
 
 /**
-* Start up server on the port specified
-* Server will listen on all addresses specified in env_t::listen
-* @return true on success
-*/
-bool network_init_server(int port)
+ * Start up server on the port specified
+ * Server will listen on all addresses specified in @p listen_addrs
+ * @return true on success
+ */
+bool network_init_server( int port, const vector_tpl<std::string> &listen_addrs )
 {
 	if (  port==0  ) {
 		dbg->fatal( "network_init_server()", "Cannot host on port 0!" );
@@ -336,10 +333,11 @@ bool network_init_server(int port)
 	socket_list_t::reset();
 
 #ifdef USE_IP4_ONLY
+	(void)listen_addrs;
 
-	SOCKET my = socket(PF_INET, SOCK_STREAM, 0);
-	if (my == INVALID_SOCKET) {
-		dbg->fatal("network_init_server()", "Failed to open socket!");
+	const SOCKET my = socket( PF_INET, SOCK_STREAM, 0 );
+	if (  my == INVALID_SOCKET  ) {
+		dbg->fatal( "network_init_server()", "Failed to open socket!" );
 		return false;
 	}
 
@@ -363,16 +361,8 @@ bool network_init_server(int port)
 
 #else
 
-#ifdef NETTOOL
-	// Nettool doesn't have env, so fake it
-	vector_tpl<std::string> ips;
-	ips.append_unique("::");
-	ips.append_unique("0.0.0.0");
-#else
-	vector_tpl<std::string> const& ips = env_t::listen;
-#endif
 	// For each address in the list of listen addresses try and create a socket to listen on
-	for(std::string const& ip : ips) {
+	for(std::string const& ip : listen_addrs) {
 		int ret;
 		char port_nr[16];
 		sprintf(port_nr, "%u", port);
