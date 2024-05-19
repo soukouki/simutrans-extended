@@ -1235,7 +1235,7 @@ bool money_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		return true;
 	}
 	else if ( comp==&bt_open_ranking ) {
-		create_win(new player_ranking_gui_t(), w_info, magic_player_ranking);
+		create_win(new player_ranking_gui_t(player->get_player_nr()), w_info, magic_player_ranking);
 	}
 	return false;
 }

@@ -41,15 +41,17 @@ public:
 	{
 		PR_REVENUE,
 		PR_PROFIT,
+		PR_MARGIN,
 		PR_TRANSPORT_PAX,
 		PR_TRANSPORT_MAIL,
 		PR_TRANSPORT_GOODS,
 		PR_CASH,
 		PR_NETWEALTH,
-		PR_MARGIN,
 		PR_CONVOIS,
 		MAX_PLAYER_RANKING_CHARTS
 	};
+	static uint8 transport_type_option;
+
 private:
 
 	gui_chart_t chart;
@@ -60,7 +62,11 @@ private:
 		bt_charts[MAX_PLAYER_RANKING_CHARTS];
 
 	gui_combobox_t
-		player_select[MAX_PLAYER_COUNT-1];
+		player_select[MAX_PLAYER_COUNT-1],
+		transport_type_c;
+	uint16 transport_types[TT_OTHER];
+
+	gui_label_buf_t lb_player_val[MAX_PLAYER_COUNT-1];
 
 	sint32 last_year;
 
@@ -73,8 +79,10 @@ private:
 
 	void sort_player();
 
+	bool is_chart_table_zero(uint8 player_nr) const;
+
 public:
-	player_ranking_gui_t();
+	player_ranking_gui_t(uint8 selected_player_nr=255);
 	~player_ranking_gui_t();
 
 	/**
