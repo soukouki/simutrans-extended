@@ -6612,3 +6612,7 @@ distance_to_origin
 distance to origin
 This stop
 This stop
+upgrade_only
+Can only be an upgrade, not a new build
+vehicle_details
+Vehicle details
