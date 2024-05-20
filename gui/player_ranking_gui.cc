@@ -29,7 +29,8 @@ static const char* cost_type_name[player_ranking_gui_t::MAX_PLAYER_RANKING_CHART
 	"Freight-km",
 	"Cash",
 	"Net Wealth",
-	"Convoys"
+	"Convoys",
+	"Stops"
 	// "way_distances" // Way kilometreage
 	// "travel_distance"
 };
@@ -44,6 +45,7 @@ static const uint8 cost_type[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
 	gui_chart_t::TON_KM,
 	gui_chart_t::MONEY,
 	gui_chart_t::MONEY,
+	gui_chart_t::STANDARD,
 	gui_chart_t::STANDARD
 };
 
@@ -57,7 +59,8 @@ static const uint8 cost_type_color[player_ranking_gui_t::MAX_PLAYER_RANKING_CHAR
 	COL_BROWN,
 	COL_CASH,
 	COL_WEALTH,
-	COL_VEHICLE_ASSETS
+	COL_VEHICLE_ASSETS,
+	COL_RED+1
 };
 
 // is_atv=1, ATV:vehicle finance record, ATC:common finance record
@@ -71,7 +74,8 @@ static const uint8 history_type_idx[player_ranking_gui_t::MAX_PLAYER_RANKING_CHA
 	1,ATV_TRANSPORTED_GOOD,
 	0,ATC_CASH,
 	0,ATC_NETWEALTH,
-	0,ATC_ALL_CONVOIS
+	1,ATV_CONVOIS,
+	0,ATC_HALTS
 };
 
 static int compare_atv(uint8 player_nr_a, uint8 player_nr_b, uint8 atv_index) {
@@ -120,6 +124,9 @@ static int compare_transport_goods(player_button_t* const& a, player_button_t* c
 static int compare_margin(player_button_t* const& a, player_button_t* const& b) {
 	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_PROFIT_MARGIN);
 }
+static int compare_convois(player_button_t* const& a, player_button_t* const& b) {
+	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_CONVOIS);
+}
 
 
 static int compare_cash(player_button_t* const &a, player_button_t* const &b) {
@@ -128,8 +135,8 @@ static int compare_cash(player_button_t* const &a, player_button_t* const &b) {
 static int compare_netwealth(player_button_t* const& a, player_button_t* const& b) {
 	return compare_atc(a->get_player_nr(), b->get_player_nr(), ATC_NETWEALTH);
 }
-static int compare_convois(player_button_t* const& a, player_button_t* const& b) {
-	return compare_atc(a->get_player_nr(), b->get_player_nr(), ATC_ALL_CONVOIS);
+static int compare_halts(player_button_t* const& a, player_button_t* const& b) {
+	return compare_atc(a->get_player_nr(), b->get_player_nr(), ATC_HALTS);
 }
 
 

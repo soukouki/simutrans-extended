@@ -157,7 +157,9 @@ public:
 	 * Sums up "count" with number of convois in statistics,
 	 * supersedes buche( count, COST_ALL_CONVOIS).
 	 */
-	void book_convoi_number(int count);
+	void book_convoi_number(int count, const waytype_t wt);
+
+	void book_stop_number(int count);
 
 	/**
 	 * Adds construction costs to accounting statistics.

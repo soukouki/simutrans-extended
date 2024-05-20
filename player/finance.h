@@ -116,7 +116,7 @@ static const char* const transport_type_text[TT_MAX] = {
 enum accounting_type_common {
 	ATC_CASH = 0,				///< Cash
 	ATC_NETWEALTH,				///< Total Cash + Assets
-	ATC_ALL_CONVOIS,			///< Convoy count
+	ATC_HALTS,			        ///< Halt count
 	ATC_SCENARIO_COMPLETED,		///< Scenario success (only useful if there is one ... )
 	ATC_INTEREST,				/// interest received/paid
 	ATC_SOFT_CREDIT_LIMIT,		/// soft credit limit (player cannot spend money)
@@ -153,7 +153,8 @@ enum accounting_type_vehicles {
 	ATV_TRANSPORTED_PASSENGER, ///< Number of transported passengers
 	ATV_TRANSPORTED_MAIL,      ///< Number of transported mail
 	ATV_TRANSPORTED_GOOD,      ///< Number of transported goods
-	ATV_TRANSPORTED,           ///< Total number of transported cargo, was COST_ALL_TRANSPORTED
+
+	ATV_CONVOIS,               ///< Number of convois
 
 	ATV_DELIVERED_PASSENGER,   ///< Number of delivered passengers, was: COST_TRANSPORTED_PAS
 	ATV_DELIVERED_MAIL,        ///< Number of delivered mail, was: COST_TRANSPORTED_MAIL
@@ -259,9 +260,20 @@ public:
 	/**
 	 * Adds count to number of convois in statistics.
 	 */
-	inline void book_convoi_number( const int count ) {
-		com_year[0][ATC_ALL_CONVOIS] += count;
-		com_month[0][ATC_ALL_CONVOIS] += count;
+	inline void book_convoi_number( const int count, const waytype_t wt) {
+		veh_year[TT_ALL][0][ATV_CONVOIS]  += count;
+		veh_month[TT_ALL][0][ATV_CONVOIS] += count;
+		transport_type tt = translate_waytype_to_tt(wt);
+		veh_year[tt][0][ATV_CONVOIS]  += count;
+		veh_month[tt][0][ATV_CONVOIS] += count;
+	}
+
+	/**
+	 * Adds count to number of stops in statistics.
+	 */
+	inline void book_stop_number( const int count ) {
+		com_year[0][ATC_HALTS]  += count;
+		com_month[0][ATC_HALTS] += count;
 	}
 
 	/**
@@ -571,7 +583,7 @@ public:
 	/**
 	 * @returns TRUE if there is at least one convoi, otherwise returns false
 	 */
-	bool has_convoi() const { return (com_year[0][ATC_ALL_CONVOIS] > 0); }
+	bool has_convoi() const { return (veh_year[TT_ALL][0][ATV_CONVOIS] > 0); }
 
 	/**
 	 * returns TRUE if net wealth > 0 (but this of course requires that we keep netwealth up to date!)

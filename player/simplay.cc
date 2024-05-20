@@ -510,11 +510,11 @@ bool player_t::new_month()
 			bool no_cnv = true;
 			const uint16 months = min( MAX_PLAYER_HISTORY_MONTHS,  welt->get_settings().get_remove_dummy_player_months() );
 			for(  uint16 m=0;  m<months  &&  no_cnv;  m++  ) {
-				no_cnv &= finance->get_history_com_month(m, ATC_ALL_CONVOIS) ==0;
+				no_cnv &= finance->get_history_veh_month(TT_ALL, m, ATV_CONVOIS)==0;
 			}
 			const uint16 years = max( MAX_PLAYER_HISTORY_YEARS,  (welt->get_settings().get_remove_dummy_player_months() - 1) / 12 );
 			for(  uint16 y=0;  y<years  &&  no_cnv;  y++  ) {
-				no_cnv &= finance->get_history_com_year(y, ATC_ALL_CONVOIS)==0;
+				no_cnv &= finance->get_history_veh_year(TT_ALL, y, ATV_CONVOIS)==0;
 			}
 			// never run a convoi => dummy
 			if(  no_cnv  ) {
@@ -900,6 +900,21 @@ void player_t::rdwr(loadsave_t *file)
 	}
 
 	if(file->is_loading()) {
+		if (file->is_version_ex_less(14, 64)) {
+			for (convoihandle_t const cnv : world()->convoys()) {
+				if (cnv->get_owner() == this) {
+					book_convoi_number(1, cnv->front()->get_waytype());
+				}
+			}
+
+			sint64 count=0;
+			for (halthandle_t const halt : haltestelle_t::get_alle_haltestellen()) {
+				if (halt->get_owner() == this) {
+					count++;
+				}
+			}
+			book_stop_number(count);
+		}
 
 		// halt_count will be zero for newer savegames
 DBG_DEBUG("player_t::rdwr()","player %i: loading %i halts.",welt->sp2num( this ),halt_count);
@@ -1220,10 +1235,16 @@ void player_t::tell_tool_result(tool_t *tool, koord3d, const char *err)
 }
 
 
-void player_t::book_convoi_number(int count)
+void player_t::book_convoi_number(int count, const waytype_t wt)
 {
-	finance->book_convoi_number(count);
+	finance->book_convoi_number(count, wt);
 }
+
+void player_t::book_stop_number(int count)
+{
+	finance->book_stop_number(count);
+}
+
 
 sint64 player_t::get_account_balance() const
 {

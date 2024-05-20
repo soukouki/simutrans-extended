@@ -258,7 +258,6 @@ convoi_t::convoi_t(loadsave_t* file) :
 convoi_t::convoi_t(player_t* player) : vehicle(max_vehicle, NULL)
 {
 	self = convoihandle_t(this);
-	player->book_convoi_number(1);
 	init(player);
 	set_name( "Unnamed" );
 	welt->add_convoi( self );
@@ -280,8 +279,6 @@ convoi_t::convoi_t(player_t* player) : vehicle(max_vehicle, NULL)
 
 convoi_t::~convoi_t()
 {
-	owner->book_convoi_number( -1);
-
 	assert(self.is_bound());
 	assert(vehicle_count==0);
 
@@ -1936,6 +1933,7 @@ end_loop:
 					{
 						set_name(front()->get_desc()->get_name());
 					}
+
 
 					clear_replace();
 
@@ -6256,6 +6254,7 @@ void convoi_t::destroy()
 {
 	// can be only done here, with a valid convoihandle ...
 	if(front()) {
+		owner->book_convoi_number(-1, front()->get_waytype());
 		front()->set_convoi(NULL);
 	}
 

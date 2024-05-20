@@ -48,6 +48,7 @@ public:
 		PR_CASH,
 		PR_NETWEALTH,
 		PR_CONVOIS,
+		PR_HALTS,
 		MAX_PLAYER_RANKING_CHARTS
 	};
 	static uint8 transport_type_option;
