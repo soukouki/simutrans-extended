@@ -177,6 +177,8 @@ public:
 	 */
 	void book_new_vehicle(const sint64 price, const koord k, const waytype_t wt=ignore_wt);
 
+	void book_vehicle_number(const sint64 count, const waytype_t wt);
+
 	/**
 	 * Adds income to accounting statistics.
 	 * @param amount earned money
@@ -233,14 +235,6 @@ public:
 	 * @param index 0 = passenger, 1 = mail, 2 = goods
 	 */
 	void book_transported(const sint64 amount, const waytype_t wt=ignore_wt, int index=2);
-
-	/**
-	 * Add amount of delivered passenger, mail, goods to accounting statistics.
-	 * @param amount sum of money
-	 * @param wt way type
-	 * @param index 0 = passenger, 1 = mail, 2 = goods
-	 */
-	void book_delivered(const sint64 amount, const waytype_t wt=ignore_wt, int index=2);
 
    /**
      * Is player allowed to purchase something of this price, or is player
@@ -351,6 +345,10 @@ public:
 	 * @return true when account balance is overdrawn
 	 */
 	int get_account_overdrawn() const;
+
+
+	// return player age in months
+	uint16 get_player_age() const { return player_age; }
 
 	/**
 	 * Displays messages from the queue of the player on the screen

@@ -143,20 +143,20 @@ enum accounting_type_vehicles {
 	ATV_TOLL_PAID,                  ///< Toll paid by you to another player
 	ATV_EXPENDITURE,                ///< Total expenditure = RUNNING_COSTS+VEHICLE_MAINTENANCE+INFRACTRUCTURE_MAINTENANCE+TOLL_PAID
 	ATV_OPERATING_PROFIT,           ///< ATV_REVENUE - ATV_EXPENDITURE, was: COST_OPERATING_PROFIT
-	ATV_NEW_VEHICLE,                ///< New vehicles
+	ATV_NEW_VEHICLE,                ///< Payment for new vehicles
 	ATV_CONSTRUCTION_COST,          ///< Construction cost, COST_CONSTRUCTION mapped here
 	ATV_PROFIT,                     ///< ATV_OPERATING_PROFIT - (CONSTRUCTION_COST + NEW_VEHICLE) + COST_INTEREST, was: COST_PROFIT
 	ATV_WAY_TOLL,                   ///< = ATV_TOLL_PAID + ATV_TOLL_RECEIVED, was: COST_WAY_TOLLS
 	ATV_NON_FINANCIAL_ASSETS,       ///< Value of vehicles owned by your company, was: COST_ASSETS
 	ATV_PROFIT_MARGIN,              ///< ATV_OPERATING_PROFIT / ATV_REVENUE, was: COST_MARGIN
 
-	ATV_TRANSPORTED_PASSENGER, ///< Number of transported passengers
+	ATV_TRANSPORTED_PASSENGER, ///< Passenger-distance
 	ATV_TRANSPORTED_MAIL,      ///< Number of transported mail
-	ATV_TRANSPORTED_GOOD,      ///< Number of transported goods
+	ATV_TRANSPORTED_GOOD,      ///< Payload-distance in tonne km
 
 	ATV_CONVOIS,               ///< Number of convois
+	ATV_VEHICLES,              ///< Number of vehicles
 
-	ATV_DELIVERED_PASSENGER,   ///< Number of delivered passengers, was: COST_TRANSPORTED_PAS
 	ATV_DELIVERED_MAIL,        ///< Number of delivered mail, was: COST_TRANSPORTED_MAIL
 	ATV_DELIVERED_GOOD,        ///< Number of delivered goods, was: COST_TRANSPORTED_GOOD
 	ATV_DELIVERED,             ///< Total number of delivered cargo
@@ -323,6 +323,17 @@ public:
 	}
 
 	/**
+	 * Adds count to number of vehicles in statistics.
+	 */
+	inline void book_vehicle_number(const int count, const waytype_t wt) {
+		veh_year[TT_ALL][0][ATV_VEHICLES] += count;
+		veh_month[TT_ALL][0][ATV_VEHICLES] += count;
+		transport_type tt = translate_waytype_to_tt(wt);
+		veh_year[tt][0][ATV_VEHICLES] += count;
+		veh_month[tt][0][ATV_VEHICLES] += count;
+	}
+
+	/**
 	 * Accounts income from transport of passenger, mail, or, goods.
 	 * @param amount earned money
 	 * @param wt waytype of vehicle
@@ -396,26 +407,6 @@ public:
 
 		veh_year[ tt][0][ATV_TRANSPORTED_PASSENGER+index] += amount;
 		veh_month[tt][0][ATV_TRANSPORTED_PASSENGER+index] += amount;
-	}
-
-
-	/**
-	 * Makes stats of amount of delivered passenger, mail and goods
-	 * @param amount sum of money
-	 * @param wt way type
-	 * @param index 0 = passenger, 1 = mail, 2 = goods
-	 */
-	inline void book_delivered(const sint64 amount, const waytype_t wt, int index)
-	{
-		const transport_type tt = translate_waytype_to_tt(wt);
-
-		// there are: passenger, mail, goods
-		if( (index < 0) || (index > 2)){
-			index = 2;
-		}
-
-		veh_year[ tt][0][ATV_DELIVERED_PASSENGER+index] += amount;
-		veh_month[tt][0][ATV_DELIVERED_PASSENGER+index] += amount;
 	}
 
 	/**

@@ -1908,6 +1908,7 @@ end_loop:
 							sint64 value = vehicle[a]->calc_sale_value();
 							waytype_t wt = vehicle[a]->get_desc()->get_waytype();
 							owner->book_new_vehicle( value, dep->get_pos().get_2d(),wt );
+							owner->book_vehicle_number(-1, wt);
 							delete vehicle[a];
 							vehicle_count--;
 						}
@@ -6297,6 +6298,7 @@ void convoi_t::destroy()
 
 		}
 		player_t::add_maintenance(owner, -vehicle[i]->get_desc()->get_maintenance(), vehicle[i]->get_desc()->get_waytype());
+		owner->book_vehicle_number( -1, wt );
 		vehicle[i]->discard_cargo();
 		vehicle[i]->cleanup(owner);
 		delete vehicle[i];

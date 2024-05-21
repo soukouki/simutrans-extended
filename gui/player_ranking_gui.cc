@@ -30,6 +30,7 @@ static const char* cost_type_name[player_ranking_gui_t::MAX_PLAYER_RANKING_CHART
 	"Cash",
 	"Net Wealth",
 	"Convoys",
+	"Vehicles",
 	"Stops"
 	// "way_distances" // Way kilometreage
 	// "travel_distance"
@@ -46,6 +47,7 @@ static const uint8 cost_type[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
 	gui_chart_t::MONEY,
 	gui_chart_t::MONEY,
 	gui_chart_t::STANDARD,
+	gui_chart_t::STANDARD,
 	gui_chart_t::STANDARD
 };
 
@@ -59,7 +61,8 @@ static const uint8 cost_type_color[player_ranking_gui_t::MAX_PLAYER_RANKING_CHAR
 	COL_BROWN,
 	COL_CASH,
 	COL_WEALTH,
-	COL_VEHICLE_ASSETS,
+	COL_COUNVOI_COUNT,
+	COL_NEW_VEHICLES,
 	COL_RED+1
 };
 
@@ -75,6 +78,7 @@ static const uint8 history_type_idx[player_ranking_gui_t::MAX_PLAYER_RANKING_CHA
 	0,ATC_CASH,
 	0,ATC_NETWEALTH,
 	1,ATV_CONVOIS,
+	1,ATV_VEHICLES,
 	0,ATC_HALTS
 };
 
@@ -132,6 +136,9 @@ static int compare_margin(player_button_t* const& a, player_button_t* const& b) 
 }
 static int compare_convois(player_button_t* const& a, player_button_t* const& b) {
 	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_CONVOIS);
+}
+static int compare_vehicles(player_button_t* const& a, player_button_t* const& b) {
+	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_VEHICLES);
 }
 
 
@@ -296,6 +303,9 @@ void player_ranking_gui_t::sort_player()
 			break;
 		case PR_MARGIN:
 			buttons.sort(compare_margin);
+			break;
+		case PR_VEHICLES:
+			buttons.sort(compare_vehicles);
 			break;
 		default:
 		case PR_CONVOIS:

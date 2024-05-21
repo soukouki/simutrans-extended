@@ -173,6 +173,11 @@ void player_t::book_new_vehicle(const sint64 amount, const koord k, const waytyp
 	add_money_message(amount, k);
 }
 
+void player_t::book_vehicle_number(const sint64 count, const waytype_t wt)
+{
+	finance->book_vehicle_number(count, wt);
+}
+
 
 void player_t::book_revenue(const sint64 amount, const koord k, const waytype_t wt, sint32 index)
 {
@@ -213,11 +218,6 @@ void player_t::book_toll_received(const sint64 amount, const waytype_t wt)
 void player_t::book_transported(const sint64 amount, const waytype_t wt, int index)
 {
 	finance->book_transported(amount, wt, index);
-}
-
-void player_t::book_delivered(const sint64 amount, const waytype_t wt, int index)
-{
-	finance->book_delivered(amount, wt, index);
 }
 
 bool player_t::can_afford(const sint64 price) const
@@ -904,6 +904,13 @@ void player_t::rdwr(loadsave_t *file)
 			for (convoihandle_t const cnv : world()->convoys()) {
 				if (cnv->get_owner() == this) {
 					book_convoi_number(1, cnv->front()->get_waytype());
+					book_vehicle_number(cnv->get_vehicle_count(), cnv->front()->get_waytype());
+				}
+			}
+
+			for (depot_t* const depot : depot_t::get_depot_list()) {
+				if (depot->get_owner_nr() == player_nr) {
+					book_vehicle_number(depot->get_vehicle_list().get_count(), depot->get_waytype());
 				}
 			}
 
