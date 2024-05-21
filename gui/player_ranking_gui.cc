@@ -300,7 +300,7 @@ void player_ranking_gui_t::sort_player()
 	for (uint i = 0; i < buttons.get_count(); i++) {
 		const uint8 player_nr = buttons.at(i)->get_player_nr();
 		// Exclude players who are not in the competition
-		if( is_chart_table_zero( player_nr ) ) {
+		if( player_nr==PUBLIC_PLAYER_NR || is_chart_table_zero( player_nr ) ) {
 			continue;
 		}
 		count++;
