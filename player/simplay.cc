@@ -1349,12 +1349,16 @@ void player_t::take_over(player_t* target_player)
 		// TODO: Add any liability for longer term loans here whenever longer term loans come to be implemented.
 	}
 */
-	// Transfer maintenance costs
+	// Transfer finance history of this month
 	for (uint32 i = 0; i < transport_type::TT_MAX; i++)
 	{
 		transport_type tt = (transport_type)i;
 		finance->book_maintenance(target_player->get_finance()->get_maintenance(tt), finance_t::translate_tt_to_waytype(tt));
+		if (i >= TT_MAX_VEH) continue;
+		finance->book_convoi_number(target_player->get_finance()->get_history_veh_month(tt, 0, ATV_CONVOIS), finance_t::translate_tt_to_waytype(tt));
+		finance->book_vehicle_number(target_player->get_finance()->get_history_veh_month(tt,0, ATV_VEHICLES), finance_t::translate_tt_to_waytype(tt));
 	}
+	finance->book_stop_number(target_player->get_finance()->get_history_com_month(0, ATC_HALTS));
 
 	// Transfer fixed assets (adopted from the liquidation algorithm)
 	for (int y = 0; y < welt->get_size().y; y++)
