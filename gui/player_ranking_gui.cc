@@ -89,9 +89,9 @@ static int compare_atv(uint8 player_nr_a, uint8 player_nr_b, uint8 atv_index) {
 
 	if (a_player && b_player) {
 		comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, 1, atv_index) - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, 1, atv_index);
-	}
-	if (comp==0) {
-		comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, 0, atv_index) - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, 0, atv_index);
+		if (comp==0) {
+			comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, 0, atv_index) - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, 0, atv_index);
+		}
 	}
 	if (comp==0) {
 		comp = player_nr_b - player_nr_a;
@@ -106,9 +106,9 @@ static int compare_atc(uint8 player_nr_a, uint8 player_nr_b, uint8 atc_index) {
 
 	if (a_player && b_player) {
 		comp = b_player->get_finance()->get_history_com_year(1, atc_index) - a_player->get_finance()->get_history_com_year(1, atc_index);
-	}
-	if (comp == 0) {
-		comp = b_player->get_finance()->get_history_com_year(0, atc_index) - a_player->get_finance()->get_history_com_year(0, atc_index);
+		if (comp == 0) {
+			comp = b_player->get_finance()->get_history_com_year(0, atc_index) - a_player->get_finance()->get_history_com_year(0, atc_index);
+		}
 	}
 	if (comp == 0) {
 		comp = player_nr_b - player_nr_a;
