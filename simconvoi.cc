@@ -5112,14 +5112,14 @@ void convoi_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if ((file->get_extended_version() >= 13 && file->get_extended_revision() >= 5) || file->get_extended_version() >= 14)
+	if (file->is_version_ex_atleast(13, 5))
 	{
 		bool lswd = last_stop_was_depot;
 		file->rdwr_bool(lswd);
 		last_stop_was_depot = lswd;
 	}
 
-	if (file->get_extended_version() >= 15 || (file->get_extended_version() >= 14 && file->get_extended_revision() >= 6))
+	if (file->is_version_ex_atleast(14, 6))
 	{
 		checked_tile_this_step.rdwr(file);
 	}
@@ -5706,7 +5706,7 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
 		// passenger-km(x10 for precision)
 		const sint64 pas_distance = ware.menge*revenue_distance_meters/100;
 		book(pas_distance, convoi_t::CONVOI_PAX_DISTANCE);
-		get_owner()->book_transported(pas_distance, front()->get_waytype(), 0);
+		owner->book_transported(pas_distance, front()->get_waytype(), 0);
 	}
 	else if(ware.is_mail())
 	{
@@ -5720,7 +5720,7 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
 		const sint64 mail_distance = ware.menge*goods->get_weight_per_unit()*revenue_distance_meters / 100;
 		book(mail_distance, convoi_t::CONVOI_MAIL_DISTANCE); // in kg-km/10
 		// tonne-kilometre(x10 for precision)
-		get_owner()->book_transported(mail_distance/10, front()->get_waytype(), 1);
+		owner->book_transported(mail_distance/10, front()->get_waytype(), 1);
 	}
 	else
 	{
@@ -5732,7 +5732,7 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
 		// tonne-kilometre(x10 for precision)
 		const sint64 payload_distance = ware.menge*goods->get_weight_per_unit()*revenue_distance_meters/100000;
 		book(payload_distance, convoi_t::CONVOI_PAYLOAD_DISTANCE);
-		get_owner()->book_transported(payload_distance, front()->get_waytype(), 2);
+		owner->book_transported(payload_distance, front()->get_waytype(), 2);
 	}
 	// Note that fare comes out in units of 1/4096 of a simcent, for computational precision
 
