@@ -307,6 +307,9 @@ void player_ranking_gui_t::sort_player()
 		case PR_VEHICLES:
 			buttons.sort(compare_vehicles);
 			break;
+		case PR_HALTS:
+			buttons.sort(compare_halts);
+			break;
 		default:
 		case PR_CONVOIS:
 			buttons.sort(compare_convois);
