@@ -198,6 +198,14 @@ public:
 	void book_running_costs(const sint64 amount, const waytype_t wt=ignore_wt);
 
 	/**
+	 * Adds traveled distance of convoy/vehicle to player statistics.
+	 * @param travel distance of convoy
+	 * @param wt type of transport used for accounting statistics
+	 * @param vehicle number of convoy
+	 */
+	void book_convoy_distance(const sint64 distance, const waytype_t wt, uint8 vehicle_count);
+
+	/**
 	 * Adds monthly vehicle maintenance to accounting statistics.
 	 * @param amount (should be negative, will be adjusted for bits_per_month)
 	 * @param wt type of transport for accounting

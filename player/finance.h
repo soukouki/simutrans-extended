@@ -156,9 +156,9 @@ enum accounting_type_vehicles {
 
 	ATV_CONVOIS,               ///< Number of convois
 	ATV_VEHICLES,              ///< Number of vehicles
+	ATV_CONVOY_DISTANCE,       ///< Travel distance of convoys
+	ATV_VEHICLE_DISTANCE,      ///< Travel distance of vehicles
 
-	ATV_DELIVERED_MAIL,        ///< Number of delivered mail, was: COST_TRANSPORTED_MAIL
-	ATV_DELIVERED_GOOD,        ///< Number of delivered goods, was: COST_TRANSPORTED_GOOD
 	ATV_DELIVERED,             ///< Total number of delivered cargo
 
 	ATV_MAX
@@ -407,6 +407,25 @@ public:
 
 		veh_year[ tt][0][ATV_TRANSPORTED_PASSENGER+index] += amount;
 		veh_month[tt][0][ATV_TRANSPORTED_PASSENGER+index] += amount;
+	}
+
+	/**
+	 * Traveled distance of convoy/vehicle to player statistics.
+	 * @param travel distance of convoy
+	 * @param wt type of transport used for accounting statistics
+	 * @param vehicle number of convoy
+	 */
+	inline void book_convoy_distance(const sint64 distance, const waytype_t wt, uint8 vehicle_count)
+	{
+		veh_year[TT_ALL][0][ATV_CONVOY_DISTANCE]   += distance;
+		veh_month[TT_ALL][0][ATV_CONVOY_DISTANCE]  += distance;
+		veh_year[TT_ALL][0][ATV_VEHICLE_DISTANCE]  += distance * vehicle_count;
+		veh_month[TT_ALL][0][ATV_VEHICLE_DISTANCE] += distance * vehicle_count;
+		const transport_type tt = translate_waytype_to_tt(wt);
+		veh_year[tt][0][ATV_CONVOY_DISTANCE]   += distance;
+		veh_month[tt][0][ATV_CONVOY_DISTANCE]  += distance;
+		veh_year[tt][0][ATV_VEHICLE_DISTANCE]  += distance * vehicle_count;
+		veh_month[tt][0][ATV_VEHICLE_DISTANCE] += distance * vehicle_count;
 	}
 
 	/**

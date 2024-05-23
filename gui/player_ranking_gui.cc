@@ -30,10 +30,11 @@ static const char* cost_type_name[player_ranking_gui_t::MAX_PLAYER_RANKING_CHART
 	"Cash",
 	"Net Wealth",
 	"Convoys",
+	"Distance",
 	"Vehicles",
+	"Vehicle-km",
 	"Stops"
 	// "way_distances" // Way kilometreage
-	// "travel_distance"
 };
 
 static const uint8 cost_type[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
@@ -47,7 +48,9 @@ static const uint8 cost_type[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
 	gui_chart_t::MONEY,
 	gui_chart_t::MONEY,
 	gui_chart_t::STANDARD,
+	gui_chart_t::DISTANCE,
 	gui_chart_t::STANDARD,
+	gui_chart_t::DISTANCE,
 	gui_chart_t::STANDARD
 };
 
@@ -62,8 +65,10 @@ static const uint8 cost_type_color[player_ranking_gui_t::MAX_PLAYER_RANKING_CHAR
 	COL_CASH,
 	COL_WEALTH,
 	COL_COUNVOI_COUNT,
+	COL_DISTANCE,
 	COL_NEW_VEHICLES,
-	COL_RED+1
+	COL_RED+2,
+	COL_DODGER_BLUE,
 };
 
 // is_atv=1, ATV:vehicle finance record, ATC:common finance record
@@ -78,7 +83,9 @@ static const uint8 history_type_idx[player_ranking_gui_t::MAX_PLAYER_RANKING_CHA
 	0,ATC_CASH,
 	0,ATC_NETWEALTH,
 	1,ATV_CONVOIS,
+	1,ATV_CONVOY_DISTANCE,
 	1,ATV_VEHICLES,
+	1,ATV_VEHICLE_DISTANCE,
 	0,ATC_HALTS
 };
 
@@ -120,7 +127,7 @@ static int compare_revenue(player_button_t* const& a, player_button_t* const& b)
 	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_REVENUE);
 }
 static int compare_profit(player_button_t* const& a, player_button_t* const& b) {
-	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_PROFIT);
+	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_OPERATING_PROFIT);
 }
 static int compare_transport_pax(player_button_t* const& a, player_button_t* const& b) {
 	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_TRANSPORTED_PASSENGER);
@@ -137,8 +144,14 @@ static int compare_margin(player_button_t* const& a, player_button_t* const& b) 
 static int compare_convois(player_button_t* const& a, player_button_t* const& b) {
 	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_CONVOIS);
 }
+static int compare_convoy_km(player_button_t* const& a, player_button_t* const& b) {
+	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_CONVOY_DISTANCE);
+}
 static int compare_vehicles(player_button_t* const& a, player_button_t* const& b) {
 	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_VEHICLES);
+}
+static int compare_vehicle_km(player_button_t* const& a, player_button_t* const& b) {
+	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_VEHICLE_DISTANCE);
 }
 
 
@@ -310,6 +323,12 @@ void player_ranking_gui_t::sort_player()
 		case PR_HALTS:
 			buttons.sort(compare_halts);
 			break;
+		case PR_CONVOY_DISTANCE:
+			buttons.sort(compare_convoy_km);
+			break;
+		case PR_VEHICLE_DISTANCE:
+			buttons.sort(compare_vehicle_km);
+			break;
 		default:
 		case PR_CONVOIS:
 			buttons.sort(compare_convois);
@@ -400,6 +419,10 @@ void player_ranking_gui_t::sort_player()
 					case gui_chart_t::TON_KM:
 						lb_player_val[np].buf().append(value / 10.0, 0);
 						lb_player_val[np].buf().append(translator::translate("tkm"));
+						break;
+					case gui_chart_t::DISTANCE:
+						lb_player_val[np].buf().append(value);
+						lb_player_val[np].buf().append(translator::translate("km"));
 						break;
 					case gui_chart_t::STANDARD:
 					default:
@@ -513,7 +536,11 @@ void player_ranking_gui_t::update_chart()
 			if (is_chart_table_zero(np)) continue;
 			// create chart
 			const int curve_type = (int)cost_type[selected_item];
-			const int curve_precision = (curve_type == gui_chart_t::STANDARD) ? 0 : (curve_type == gui_chart_t::MONEY || curve_type == gui_chart_t::PERCENT) ? 2 : (curve_type == gui_chart_t::TON_KM_MAIL) ? 3 : 1;
+			const int curve_precision
+				= (curve_type==gui_chart_t::STANDARD || curve_type==gui_chart_t::DISTANCE) ? 0
+				: (curve_type == gui_chart_t::MONEY || curve_type == gui_chart_t::PERCENT) ? 2
+				: (curve_type == gui_chart_t::TON_KM_MAIL) ? 3
+				: 1;
 			gui_chart_t::chart_marker_t marker = (np==selected_player) ? gui_chart_t::square : gui_chart_t::none;
 			chart.add_curve(color_idx_to_rgb( player->get_player_color1()+3), *p_chart_table, MAX_PLAYER_COUNT-1, np, MAX_PLAYER_HISTORY_YEARS, curve_type, true, false, curve_precision, NULL, marker);
 		}

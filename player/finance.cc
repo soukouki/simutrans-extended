@@ -657,10 +657,10 @@ void finance_t::import_from_cost_month(const sint64 finance_history_month[][OLD_
 		veh_month[TT_POWERLINE][i][ATV_REVENUE]       = finance_history_month[i][COST_POWERLINES];
 		veh_month[TT_OTHER][i][ATV_VEHICLES]        = 0;
 		veh_month[TT_ALL  ][i][ATV_VEHICLES]        = 0;
-		veh_month[TT_OTHER][i][ATV_DELIVERED_MAIL]  = finance_history_month[i][COST_TRANSPORTED_MAIL];
-		veh_month[TT_ALL  ][i][ATV_DELIVERED_MAIL]  = finance_history_month[i][COST_TRANSPORTED_MAIL];
-		veh_month[TT_OTHER][i][ATV_DELIVERED_GOOD]  = finance_history_month[i][COST_TRANSPORTED_GOOD];
-		veh_month[TT_ALL  ][i][ATV_DELIVERED_GOOD]  = finance_history_month[i][COST_TRANSPORTED_GOOD];
+		veh_month[TT_OTHER][i][ATV_CONVOY_DISTANCE] = 0;
+		veh_month[TT_ALL  ][i][ATV_CONVOY_DISTANCE] = 0;
+		veh_month[TT_OTHER][i][ATV_VEHICLE_DISTANCE]= 0;
+		veh_month[TT_ALL  ][i][ATV_VEHICLE_DISTANCE]= 0;
 		com_month[i][ATC_HALTS]                     = 0;
 		com_month[i][ATC_SCENARIO_COMPLETED]          = finance_history_month[i][COST_SCENARIO_COMPLETED];
 		if(finance_history_month[i][COST_WAY_TOLLS] > 0 ){
@@ -713,10 +713,10 @@ void finance_t::import_from_cost_year( const sint64 finance_history_year[][OLD_M
 		veh_year[TT_POWERLINE][i][ATV_REVENUE]       = finance_history_year[i][COST_POWERLINES];
 		veh_year[TT_OTHER][i][ATV_VEHICLES]          = 0;
 		veh_year[TT_ALL  ][i][ATV_VEHICLES]          = 0;
-		veh_year[TT_OTHER][i][ATV_DELIVERED_MAIL]    = finance_history_year[i][COST_TRANSPORTED_MAIL];
-		veh_year[TT_ALL  ][i][ATV_DELIVERED_MAIL]    = finance_history_year[i][COST_TRANSPORTED_MAIL];
-		veh_year[TT_OTHER][i][ATV_DELIVERED_GOOD]    = finance_history_year[i][COST_TRANSPORTED_GOOD];
-		veh_year[TT_ALL  ][i][ATV_DELIVERED_GOOD]    = finance_history_year[i][COST_TRANSPORTED_GOOD];
+		veh_year[TT_OTHER][i][ATV_CONVOY_DISTANCE]   = 0;
+		veh_year[TT_ALL  ][i][ATV_CONVOY_DISTANCE]   = 0;
+		veh_year[TT_OTHER][i][ATV_VEHICLE_DISTANCE]  = 0;
+		veh_year[TT_ALL  ][i][ATV_VEHICLE_DISTANCE]  = 0;
 		com_year[i][ATC_HALTS]                       = 0;
 		com_year[i][ATC_SCENARIO_COMPLETED]          = finance_history_year[i][COST_SCENARIO_COMPLETED];
 		if(finance_history_year[i][COST_WAY_TOLLS] > 0 ){

@@ -196,6 +196,11 @@ void player_t::book_running_costs(const sint64 amount, const waytype_t wt)
 	finance->book_running_costs(amount, wt);
 }
 
+void player_t::book_convoy_distance(const sint64 distance, const waytype_t wt, uint8 vehicle_count)
+{
+	finance->book_convoy_distance(distance, wt, vehicle_count);
+}
+
 void player_t::book_vehicle_maintenance(const sint64 amount, const waytype_t wt)
 {
 	finance->book_vehicle_maintenance_with_bits(amount, wt);
