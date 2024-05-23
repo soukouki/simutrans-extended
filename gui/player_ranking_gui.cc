@@ -338,20 +338,24 @@ void player_ranking_gui_t::sort_player()
 	for (uint i = 0; i < buttons.get_count(); i++) {
 		const uint8 player_nr = buttons.at(i)->get_player_nr();
 		// Exclude players who are not in the competition
-		if( (player_nr==PUBLIC_PLAYER_NR && selected_item!=PR_HALTS) || is_chart_table_zero( player_nr ) ) {
+		if( is_chart_table_zero(player_nr) ) {
+			continue;
+		}
+		// Public player only appers in stop number ranking
+		if( player_nr==PUBLIC_PLAYER_NR && selected_item!=PR_HALTS ) {
 			continue;
 		}
 		count++;
 
-		switch (i)
+		switch (count)
 		{
-			case 0:
+			case 1:
 				cont_players.new_component<gui_color_label_t>("1", color_idx_to_rgb(COL_WHITE), 56512, 1);
 				break;
-			case 1:
+			case 2:
 				cont_players.new_component<gui_color_label_t>("2", 0, 36053, 1);
 				break;
-			case 2:
+			case 3:
 				cont_players.new_component<gui_color_label_t>("3", 0, 37702, 1);
 				break;
 
