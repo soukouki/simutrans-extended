@@ -9222,6 +9222,7 @@ const char *tool_make_stop_public_t::work( player_t *player, koord3d p )
 				else
 				{
 					player_t::add_maintenance(w->get_owner(), -maintenance_cost, w->get_desc()->get_finance_waytype());
+					player_t::add_way_length(player, -10, w->get_desc()->get_finance_waytype());
 					player_t::book_construction_costs(player, -construction_cost, gr->get_pos().get_2d(), w->get_desc()->get_finance_waytype());
 					if(player == psplayer)
 					{

@@ -219,8 +219,14 @@ public:
 	 * @param wt type of transport for accounting
 	 * @author jamespetts
 	 */
-
 	void book_way_renewal(const sint64 amount, const waytype_t wt = ignore_wt);
+
+	/**
+	 * Adds way length to accounting statistics.
+	 * @param length factor (will be adjusted for meter per tile and is_diagonal)
+	 * @param wt type of transport for accounting
+	 */
+	void book_way_length(const sint64 meter, const waytype_t wt);
 
 	/**
 	 * Books toll paid by our company to someone else.
@@ -332,6 +338,18 @@ public:
 			return player->add_maintenance(change, wt);
 		}
 		return 0;
+	}
+
+	/**
+	 * Adds way length to accounting statistics.
+	 * @param length factor (will be adjusted for meter per tile and is_diagonal)
+	 * @param wt type of transport for accounting
+	 */
+	static void add_way_length(player_t* player, const sint64 len, const waytype_t wt)
+	{
+		if (player) {
+			player->book_way_length(len, wt);
+		}
 	}
 
 	/**

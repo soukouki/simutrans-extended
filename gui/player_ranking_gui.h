@@ -52,6 +52,7 @@ public:
 		PR_VEHICLES,
 		PR_VEHICLE_DISTANCE,
 		PR_HALTS,
+		PR_WAY_KILOMETREAGE,
 		MAX_PLAYER_RANKING_CHARTS
 	};
 	static uint8 transport_type_option;

@@ -416,6 +416,9 @@ void finance_t::rdwr(loadsave_t *file)
 				}
 			}
 		}
+		// The current value is calculated by finish_rd
+		veh_month[tt][0][ATV_WAY_LENGTH] = 0;
+		veh_year[tt][0][ATV_WAY_LENGTH] = 0;
 	}
 }
 
@@ -441,7 +444,7 @@ void finance_t::roll_history_month()
 			}
 		}
 		for(int accounting_type=0; accounting_type<ATV_MAX; ++accounting_type){
-			if( accounting_type != ATV_CONVOIS  &&  accounting_type != ATV_VEHICLES ){
+			if (accounting_type < ATV_CARRY_OVER_DATA_TO_NEXT_MON ) {
 				veh_month[tt][0][accounting_type] = 0;
 			}
 		}
@@ -470,7 +473,7 @@ void finance_t::roll_history_year()
 			}
 		}
 		for(int accounting_type=0; accounting_type<ATV_MAX; ++accounting_type){
-			if( accounting_type != ATV_CONVOIS  &&  accounting_type != ATV_VEHICLES ){
+			if (accounting_type < ATV_CARRY_OVER_DATA_TO_NEXT_MON ) {
 				veh_year[tt][0][accounting_type] = 0;
 			}
 		}

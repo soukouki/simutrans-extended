@@ -154,12 +154,14 @@ enum accounting_type_vehicles {
 	ATV_TRANSPORTED_MAIL,      ///< Number of transported mail
 	ATV_TRANSPORTED_GOOD,      ///< Payload-distance in tonne km
 
-	ATV_CONVOIS,               ///< Number of convois
-	ATV_VEHICLES,              ///< Number of vehicles
 	ATV_CONVOY_DISTANCE,       ///< Travel distance of convoys
 	ATV_VEHICLE_DISTANCE,      ///< Travel distance of vehicles
 
-	ATV_DELIVERED,             ///< Total number of delivered cargo
+	// == The records below must carry over the previous month's data to the new month.
+	ATV_CONVOIS,               ///< Number of convois
+	ATV_CARRY_OVER_DATA_TO_NEXT_MON = ATV_CONVOIS,
+	ATV_VEHICLES,              ///< Number of vehicles
+	ATV_WAY_LENGTH,            ///< tile base length for Way kilometreage
 
 	ATV_MAX
 };
@@ -301,6 +303,20 @@ public:
 		veh_month[tt][0][ATV_INFRASTRUCTURE_MAINTENANCE] += amount;
 
 		account_balance += amount;
+	}
+
+	/**
+	 * Adds way distance for player ranking stats
+	 * @param straight=10, diagonal=7
+	 * @param wt - waytype for accounting purposes
+	 */
+	inline void book_way_length(const sint64 amount, const waytype_t wt)
+	{
+		veh_year[TT_ALL][0][ATV_WAY_LENGTH] += amount;
+		veh_month[TT_ALL][0][ATV_WAY_LENGTH] += amount;
+		transport_type tt = translate_waytype_to_tt(wt);
+		veh_year[tt][0][ATV_WAY_LENGTH] += amount;
+		veh_month[tt][0][ATV_WAY_LENGTH] += amount;
 	}
 
 	/**

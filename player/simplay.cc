@@ -190,6 +190,11 @@ void player_t::book_way_renewal(const sint64 amount, const waytype_t wt)
 	finance->book_way_renewal(-amount, wt);
 }
 
+void player_t::book_way_length(const sint64 len, const waytype_t wt)
+{
+	finance->book_way_length(len, wt);
+}
+
 
 void player_t::book_running_costs(const sint64 amount, const waytype_t wt)
 {

@@ -33,25 +33,27 @@ static const char* cost_type_name[player_ranking_gui_t::MAX_PLAYER_RANKING_CHART
 	"Distance",
 	"Vehicles",
 	"Vehicle-km",
-	"Stops"
-	// "way_distances" // Way kilometreage
+	"Stops",
+	"way_distances" // way length
 };
 
-static const uint8 cost_type[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
+// digit and suffix
+static const uint8 cost_type[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS*2] =
 {
-	gui_chart_t::MONEY,
-	gui_chart_t::MONEY,
-	gui_chart_t::PERCENT,
-	gui_chart_t::PAX_KM,
-	gui_chart_t::TON_KM_MAIL,
-	gui_chart_t::TON_KM,
-	gui_chart_t::MONEY,
-	gui_chart_t::MONEY,
-	gui_chart_t::STANDARD,
-	gui_chart_t::DISTANCE,
-	gui_chart_t::STANDARD,
-	gui_chart_t::DISTANCE,
-	gui_chart_t::STANDARD
+	2,gui_chart_t::MONEY,
+	2,gui_chart_t::MONEY,
+	2,gui_chart_t::PERCENT,
+	1,gui_chart_t::PAX_KM,
+	3,gui_chart_t::TON_KM_MAIL,
+	1,gui_chart_t::TON_KM,
+	2,gui_chart_t::MONEY,
+	2,gui_chart_t::MONEY,
+	0,gui_chart_t::STANDARD,
+	0,gui_chart_t::DISTANCE,
+	0,gui_chart_t::STANDARD,
+	0,gui_chart_t::DISTANCE,
+	0,gui_chart_t::STANDARD,
+	2,gui_chart_t::DISTANCE
 };
 
 static const uint8 cost_type_color[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
@@ -69,6 +71,7 @@ static const uint8 cost_type_color[player_ranking_gui_t::MAX_PLAYER_RANKING_CHAR
 	COL_NEW_VEHICLES,
 	COL_RED+2,
 	COL_DODGER_BLUE,
+	COL_GREY3
 };
 
 // is_atv=1, ATV:vehicle finance record, ATC:common finance record
@@ -86,8 +89,14 @@ static const uint8 history_type_idx[player_ranking_gui_t::MAX_PLAYER_RANKING_CHA
 	1,ATV_CONVOY_DISTANCE,
 	1,ATV_VEHICLES,
 	1,ATV_VEHICLE_DISTANCE,
-	0,ATC_HALTS
+	0,ATC_HALTS,
+	1,ATV_WAY_LENGTH
 };
+
+
+sint64 convert_waylength(sint64 value) { return (sint64)(value * world()->get_settings().get_meters_per_tile() / 100.0); }
+
+static const gui_chart_t::convert_proc proc = convert_waylength;
 
 static int compare_atv(uint8 player_nr_a, uint8 player_nr_b, uint8 atv_index) {
 	int comp = 0;
@@ -152,6 +161,9 @@ static int compare_vehicles(player_button_t* const& a, player_button_t* const& b
 }
 static int compare_vehicle_km(player_button_t* const& a, player_button_t* const& b) {
 	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_VEHICLE_DISTANCE);
+}
+static int compare_way_length(player_button_t* const& a, player_button_t* const& b) {
+	return compare_atv(a->get_player_nr(), b->get_player_nr(), ATV_WAY_LENGTH);
 }
 
 
@@ -329,6 +341,9 @@ void player_ranking_gui_t::sort_player()
 		case PR_VEHICLE_DISTANCE:
 			buttons.sort(compare_vehicle_km);
 			break;
+		case PR_WAY_KILOMETREAGE:
+			buttons.sort(compare_way_length);
+			break;
 		default:
 		case PR_CONVOIS:
 			buttons.sort(compare_convois);
@@ -382,9 +397,9 @@ void player_ranking_gui_t::sort_player()
 
 		// check totals.
 		sint64 total=0;
-		if( cost_type[selected_item]== gui_chart_t::PAX_KM
-			|| cost_type[selected_item] == gui_chart_t::TON_KM_MAIL
-			|| cost_type[selected_item] == gui_chart_t::TON_KM)
+		if( cost_type[selected_item*2+1]== gui_chart_t::PAX_KM
+			|| cost_type[selected_item*2+1] == gui_chart_t::TON_KM_MAIL
+			|| cost_type[selected_item*2+1] == gui_chart_t::TON_KM)
 		{
 			assert(is_atv);
 			// Calculate the total value first
@@ -402,7 +417,7 @@ void player_ranking_gui_t::sort_player()
 				PIXVAL color = SYSCOL_TEXT;
 				sint64 value = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, 1, history_type_idx[selected_item * 2 + 1])
 					: finance->get_history_com_year(1, history_type_idx[selected_item * 2 + 1]);
-				switch (cost_type[selected_item]) {
+				switch (cost_type[selected_item*2+1]) {
 					case gui_chart_t::MONEY:
 						lb_player_val[np].buf().append_money(value / 100.0);
 						color = value >= 0 ? (value > 0 ? MONEY_PLUS : SYSCOL_TEXT_UNUSED) : MONEY_MINUS;
@@ -425,7 +440,12 @@ void player_ranking_gui_t::sort_player()
 						lb_player_val[np].buf().append(translator::translate("tkm"));
 						break;
 					case gui_chart_t::DISTANCE:
-						lb_player_val[np].buf().append(value);
+						if (selected_item==PR_WAY_KILOMETREAGE) {
+							lb_player_val[np].buf().append(value * welt->get_settings().get_meters_per_tile() / 10000.0, 1);
+						}
+						else {
+							lb_player_val[np].buf().append(value);
+						}
 						lb_player_val[np].buf().append(translator::translate("km"));
 						break;
 					case gui_chart_t::STANDARD:
@@ -539,14 +559,10 @@ void player_ranking_gui_t::update_chart()
 		if ( player_t* player = welt->get_player(np) ) {
 			if (is_chart_table_zero(np)) continue;
 			// create chart
-			const int curve_type = (int)cost_type[selected_item];
-			const int curve_precision
-				= (curve_type==gui_chart_t::STANDARD || curve_type==gui_chart_t::DISTANCE) ? 0
-				: (curve_type == gui_chart_t::MONEY || curve_type == gui_chart_t::PERCENT) ? 2
-				: (curve_type == gui_chart_t::TON_KM_MAIL) ? 3
-				: 1;
+			const int curve_type = (int)cost_type[selected_item*2+1];
+			const int curve_precision=cost_type[selected_item*2];
 			gui_chart_t::chart_marker_t marker = (np==selected_player) ? gui_chart_t::square : gui_chart_t::none;
-			chart.add_curve(color_idx_to_rgb( player->get_player_color1()+3), *p_chart_table, MAX_PLAYER_COUNT-1, np, MAX_PLAYER_HISTORY_YEARS, curve_type, true, false, curve_precision, NULL, marker);
+			chart.add_curve(color_idx_to_rgb( player->get_player_color1()+3), *p_chart_table, MAX_PLAYER_COUNT-1, np, MAX_PLAYER_HISTORY_YEARS, curve_type, true, false, curve_precision, selected_item==PR_WAY_KILOMETREAGE ? convert_waylength:NULL, marker);
 		}
 	}
 
