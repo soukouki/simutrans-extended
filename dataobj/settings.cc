@@ -167,6 +167,7 @@ settings_t::settings_t() :
 
 	num_city_roads = 0;
 	num_intercity_roads = 0;
+	num_industry_roads = 0;
 
 	max_route_steps = 1000000;
 	max_choose_route_steps = 200;
