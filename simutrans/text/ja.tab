@@ -39,6 +39,8 @@ cl_btn_sort_type
 タイプ
 cl_btn_sort_loading_lvl
 積載率
+L/F(passenger)
+搭乗率/乗車率
 cl_btn_sort_max_speed
 最高速度
 cl_btn_sort_value
@@ -1575,6 +1577,8 @@ Passagierziele
 旅客/郵便物の行き先
 Passenger AI
 AI 旅客
+Passenger load factor
+搭乗率/乗車率(年間)
 Passenger Demand %d\n
 労働者/顧客需要: %d\n
 Password

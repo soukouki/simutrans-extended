@@ -8181,6 +8181,20 @@ sint64 convoi_t::get_stat_converted(int month, convoi_cost_t cost_type) const
 	return value;
 }
 
+uint32 convoi_t::get_load_factor_pax() const
+{
+	if (goods_catg_index.is_contained(!goods_manager_t::INDEX_PAS)) return 0;
+
+	sint64 total_seat_km=0;
+	sint64 total_pax_km=0;
+	for (uint8 m = 0; m < MAX_MONTHS; m++) {
+		total_seat_km += financial_history[m][CONVOI_CAPACITY];
+		total_pax_km += financial_history[m][CONVOI_PAX_DISTANCE];
+	}
+	return total_seat_km ? (uint32)(1000*total_pax_km / total_seat_km) : 0;
+}
+
+
 // BG, 31.12.2012: virtual methods of lazy_convoy_t:
 // Bernd Gabriel, Dec, 25 2009
 sint16 convoi_t::get_current_friction()
