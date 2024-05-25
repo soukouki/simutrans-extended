@@ -416,7 +416,7 @@ void grund_t::rdwr(loadsave_t *file)
 					else {
 						assert((flags&has_way2)==0); // maximum two ways on one tile ...
 						weg->set_pos(pos);
-						weg->calc_speed_limit(this); // Necessary to recalculate elements of way speed limits (e.g., slope specific) that rely on the gr, which is not supplied earlier.
+						weg->calc_speed_limit(this, true); // Necessary to recalculate elements of way speed limits (e.g., slope specific) that rely on the gr, which is not supplied earlier.
 						if(owner_n!=-1) {
 							weg->set_owner(welt->get_player(owner_n));
 						}
