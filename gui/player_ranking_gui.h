@@ -56,6 +56,7 @@ public:
 		MAX_PLAYER_RANKING_CHARTS
 	};
 	static uint8 transport_type_option;
+	static uint8 selected_year;
 
 private:
 
@@ -68,6 +69,7 @@ private:
 
 	gui_combobox_t
 		player_select[MAX_PLAYER_COUNT-1],
+		cb_year_selector,
 		transport_type_c;
 	uint16 transport_types[TT_OTHER];
 
@@ -81,6 +83,8 @@ private:
 
 	uint8 selected_item= PR_REVENUE;
 	uint8 selected_player;
+
+	char years_str[MAX_PLAYER_HISTORY_YEARS][6];
 
 	void sort_player();
 
