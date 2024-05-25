@@ -2187,6 +2187,7 @@ sint32 grund_t::weg_entfernen(waytype_t wegtyp, bool ribi_rem)
 				// restore speed limit
 				weg_t* w = (weg_t*)obj_bei(0);
 				w->set_desc(w->get_desc(), true);
+				w->calc_speed_limit(this); // We need this as the above line will not set the speed limit because we call it with "true" because we do not want to overwrite the way wear data.
 				w->count_sign();
 			}
 		}
