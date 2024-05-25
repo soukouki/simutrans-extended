@@ -441,9 +441,10 @@ void player_ranking_gui_t::sort_player()
 
 		// check totals.
 		sint64 total=0;
-		if( cost_type[selected_item*2+1]== gui_chart_t::PAX_KM
-			|| cost_type[selected_item*2+1] == gui_chart_t::TON_KM_MAIL
-			|| cost_type[selected_item*2+1] == gui_chart_t::TON_KM)
+		if( history_type_idx[selected_item*2+1]== ATV_TRANSPORTED_PASSENGER
+			|| history_type_idx[selected_item*2+1] == ATV_TRANSPORTED_MAIL
+			|| history_type_idx[selected_item*2+1] == ATV_TRANSPORTED_GOOD
+			|| history_type_idx[selected_item*2+1] == ATV_WAY_LENGTH)
 		{
 			assert(is_atv);
 			// Calculate the total value first
