@@ -4417,6 +4417,12 @@ void convoi_t::rdwr(loadsave_t *file)
 					}
 				}
 			}
+			// convert to new data (vacant_seats*km to seat-km)
+			if(  !file->is_version_ex_less(14,57) && file->is_version_ex_less(14,64)  ) {
+				for (int k = MAX_MONTHS - 1; k >= 0; k--) {
+					financial_history[k][CONVOI_CAPACITY] += financial_history[k][CONVOI_PAX_DISTANCE];
+				}
+			}
 		}
 	}
 
@@ -5464,13 +5470,12 @@ void convoi_t::laden() //"load" (Babelfish)
 		}
 
 
-		// Calculate the transport distance for "vacant seats".
-		// This is used to determine utilization relative to actual passenger traffic.
+		// Available Seat-Kilometers
+		// This is used to find the Load Factor
 		for (uint8 i = 0; i < vehicle_count; i++) {
 			const vehicle_t* v = vehicle[i];
 			if (v->get_cargo_type() == goods_manager_t::passengers) {
-				// Standing passengers count as negative
-				book( (v->get_cargo_max()-v->get_total_cargo()) * journey_distance_meters/100, CONVOI_CAPACITY );
+				book( v->get_cargo_max() * journey_distance_meters/100, CONVOI_CAPACITY );
 			}
 		}
 

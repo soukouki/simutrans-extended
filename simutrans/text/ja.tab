@@ -1039,8 +1039,8 @@ Fracht
 貨物
 Frame time:
 フレーム：
-Free Capacity
-空席
+Seat-km
+座席キロ
 freeplay mode
 フリープレイ モード
 Friction:
@@ -4499,6 +4499,8 @@ line_network
 接続路線
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
+Free Capacity
+空席
 100 km/h = %i tiles/month
 100 km/h = %i タイル/月
 Passengers %d %c, %d %c, %d no route\n\nCapacity: %i\n

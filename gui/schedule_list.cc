@@ -56,7 +56,7 @@ uint16 schedule_list_gui_t::livery_scheme_index = 0;
 
 static const char *cost_type[MAX_LINE_COST] =
 {
-	"Free Capacity",
+	"Seat-km",
 	"Pax-km",
 	"Mail-km",
 	"Freight-km", // ton-km
@@ -104,7 +104,7 @@ static uint8 statistic[MAX_LINE_COST]={
 };
 
 static uint8 statistic_type[MAX_LINE_COST]={
-	gui_chart_t::STANDARD, gui_chart_t::PAX_KM, gui_chart_t::KG_KM, gui_chart_t::TON_KM,
+	gui_chart_t::PAX_KM, gui_chart_t::PAX_KM, gui_chart_t::KG_KM, gui_chart_t::TON_KM,
 	gui_chart_t::DISTANCE, gui_chart_t::STANDARD, gui_chart_t::STANDARD, gui_chart_t::MONEY,
 	gui_chart_t::MONEY, gui_chart_t::MONEY, gui_chart_t::MONEY, gui_chart_t::MONEY, gui_chart_t::STANDARD, gui_chart_t::STANDARD, gui_chart_t::STANDARD
 };

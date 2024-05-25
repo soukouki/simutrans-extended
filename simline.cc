@@ -614,6 +614,12 @@ void simline_t::rdwr(loadsave_t *file)
 				}
 			}
 		}
+		else if( file->is_version_ex_less(14,64) ) {
+			// convert to new data (vacant_seats*km to seat-km)
+			for (int k = MAX_MONTHS - 1; k >= 0; k--) {
+				financial_history[k][LINE_CAPACITY] += financial_history[k][LINE_PAX_DISTANCE];
+			}
+		}
 	}
 }
 
