@@ -600,8 +600,8 @@ void player_ranking_gui_t::update_chart()
 		sprintf(years_str[y], "%i", world()->get_last_year()-y);
 		cb_year_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(years_str[y], SYSCOL_TEXT);
 	}
-	//cb_year_selector.set_width_fixed(true);
 	cb_year_selector.set_selection(player_ranking_gui_t::selected_year);
+	chart.set_highlight_x(player_ranking_gui_t::selected_year);
 
 	// deselect chart buttons
 	for (uint8 i=0; i < MAX_PLAYER_RANKING_CHARTS; i++) {
