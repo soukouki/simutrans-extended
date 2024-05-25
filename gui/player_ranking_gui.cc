@@ -21,18 +21,18 @@ uint8 player_ranking_gui_t::transport_type_option = TT_ALL;
 // Text should match that of the finance dialog
 static const char* cost_type_name[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
 {
+	"Cash",
+	"Net Wealth",
 	"Revenue",
 	"Ops Profit",
 	"Margin (%%)",
 	"Pax-km",
 	"Mail-km",
 	"Freight-km",
-	"Cash",
-	"Net Wealth",
-	"Convoys",
 	"Distance",
-	"Vehicles",
 	"Vehicle-km",
+	"Convoys",
+	"Vehicles",
 	"Stops",
 	"way_distances" // way length
 };
@@ -42,34 +42,34 @@ static const uint8 cost_type[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS*2] 
 {
 	2,gui_chart_t::MONEY,
 	2,gui_chart_t::MONEY,
+	2,gui_chart_t::MONEY,
+	2,gui_chart_t::MONEY,
 	2,gui_chart_t::PERCENT,
 	1,gui_chart_t::PAX_KM,
 	3,gui_chart_t::TON_KM_MAIL,
 	1,gui_chart_t::TON_KM,
-	2,gui_chart_t::MONEY,
-	2,gui_chart_t::MONEY,
-	0,gui_chart_t::STANDARD,
+	0,gui_chart_t::DISTANCE,
 	0,gui_chart_t::DISTANCE,
 	0,gui_chart_t::STANDARD,
-	0,gui_chart_t::DISTANCE,
+	0,gui_chart_t::STANDARD,
 	0,gui_chart_t::STANDARD,
 	2,gui_chart_t::DISTANCE
 };
 
 static const uint8 cost_type_color[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
 {
+	COL_CASH,
+	COL_WEALTH,
 	COL_REVENUE,
 	COL_PROFIT,
 	COL_MARGIN,
 	COL_LIGHT_PURPLE,
 	COL_TRANSPORTED,
 	COL_BROWN,
-	COL_CASH,
-	COL_WEALTH,
-	COL_COUNVOI_COUNT,
 	COL_DISTANCE,
-	COL_NEW_VEHICLES,
 	COL_RED+2,
+	COL_COUNVOI_COUNT,
+	COL_NEW_VEHICLES,
 	COL_DODGER_BLUE,
 	COL_GREY3
 };
@@ -77,18 +77,18 @@ static const uint8 cost_type_color[player_ranking_gui_t::MAX_PLAYER_RANKING_CHAR
 // is_atv=1, ATV:vehicle finance record, ATC:common finance record
 static const uint8 history_type_idx[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS*2] =
 {
+	0,ATC_CASH,
+	0,ATC_NETWEALTH,
 	1,ATV_REVENUE,
 	1,ATV_OPERATING_PROFIT,
 	1,ATV_PROFIT_MARGIN,
 	1,ATV_TRANSPORTED_PASSENGER,
 	1,ATV_TRANSPORTED_MAIL,
 	1,ATV_TRANSPORTED_GOOD,
-	0,ATC_CASH,
-	0,ATC_NETWEALTH,
-	1,ATV_CONVOIS,
 	1,ATV_CONVOY_DISTANCE,
-	1,ATV_VEHICLES,
 	1,ATV_VEHICLE_DISTANCE,
+	1,ATV_CONVOIS,
+	1,ATV_VEHICLES,
 	0,ATC_HALTS,
 	1,ATV_WAY_LENGTH
 };
@@ -271,15 +271,49 @@ player_ranking_gui_t::player_ranking_gui_t(uint8 selected_player_nr) :
 	}
 	end_table();
 
-	add_table(4,0)->set_force_equal_columns(true);
+	// init chart buttons
+	for (uint8 i = 0; i < MAX_PLAYER_RANKING_CHARTS; i++) {
+		bt_charts[i].init(button_t::box_state | button_t::flexible, cost_type_name[i]);
+		bt_charts[i].background_color = color_idx_to_rgb(cost_type_color[i]);
+		if (i == selected_item) bt_charts[i].pressed = true;
+		bt_charts[i].add_listener(this);
+	}
+
+	add_table(2,0);
 	{
-		for (uint8 i = 0; i < MAX_PLAYER_RANKING_CHARTS; i++) {
-			bt_charts[i].init(button_t::box_state | button_t::flexible, cost_type_name[i]);
-			bt_charts[i].background_color = color_idx_to_rgb(cost_type_color[i]);
-			if (i== selected_item) bt_charts[i].pressed=true;
-			bt_charts[i].add_listener(this);
-			add_component(&bt_charts[i]);
-		}
+		new_component<gui_label_t>("Finanzen");
+		add_table(3,1)->set_force_equal_columns(true); {
+			add_component(&bt_charts[0]);
+			add_component(&bt_charts[1]);
+			new_component<gui_empty_t>();
+		} end_table();
+		new_component<gui_empty_t>();
+		add_table(3, 1)->set_force_equal_columns(true); {
+			add_component(&bt_charts[2]);
+			add_component(&bt_charts[3]);
+			add_component(&bt_charts[4]);
+		} end_table();
+
+		new_component<gui_label_t>("Transportation results");
+		add_table(3, 1)->set_force_equal_columns(true); {
+			add_component(&bt_charts[5]);
+			add_component(&bt_charts[6]);
+			add_component(&bt_charts[7]);
+		} end_table();
+		new_component<gui_empty_t>();
+		add_table(3, 1)->set_force_equal_columns(true); {
+			add_component(&bt_charts[8]);
+			add_component(&bt_charts[9]);
+			new_component<gui_empty_t>();
+		} end_table();
+
+		new_component<gui_label_t>("Infrastructures");
+		add_table(4, 1)->set_force_equal_columns(true); {
+			add_component(&bt_charts[10]);
+			add_component(&bt_charts[11]);
+			add_component(&bt_charts[12]);
+			add_component(&bt_charts[13]);
+		} end_table();
 	}
 	end_table();
 
