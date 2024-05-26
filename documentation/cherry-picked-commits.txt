@@ -6,8 +6,7 @@
 ?-7448 -- probably; depot_frame code changed too much to tell for sure
 7449
 ||
-7459
-7460 -- except for records.cc / records.h, which are missing from extended
+7460
 
 ==== For this section, commits with git-svn-id were found in the log (not hand-checked)
 ==== except where noted as done by Ranran
@@ -38,6 +37,7 @@
 *8125 -- funny stuff going on, need to recheck --
 ==== Recheck everything up to 8125 because we don't trust Phystam's work
 ==== git log search is done from present back to 8125, not before
+==== Recheck all later ones too because we have already found some which are definitely not included
 8127
 8134 -- fixed, see 191e905c232828d, 101fea42417144c2, and other r8134 commits
 8138
@@ -372,7 +372,7 @@
 9064
 9065
 9067
-9068
+9068 -- definitely NOT fully committed, even though it's in the log history.
 9070
 ||
 9072
