@@ -6,7 +6,8 @@
 ?-7448 -- probably; depot_frame code changed too much to tell for sure
 7449
 ||
-7455
+7459
+7460 -- except for records.cc / records.h, which are missing from extended
 
 ==== For this section, commits with git-svn-id were found in the log (not hand-checked)
 ==== except where noted as done by Ranran
