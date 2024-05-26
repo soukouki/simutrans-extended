@@ -254,6 +254,7 @@ player_ranking_gui_t::player_ranking_gui_t(uint8 selected_player_nr) :
 			add_table(3, 1);
 			{
 				cb_year_selector.add_listener(this);
+				cb_year_selector.set_inverse_side_scroll(true);
 				add_component(&cb_year_selector);
 
 				for (int i = 0, count = 0; i < TT_OTHER; ++i) {
