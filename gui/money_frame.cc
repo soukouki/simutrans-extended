@@ -588,7 +588,7 @@ money_frame_t::money_frame_t(player_t *player) :
 
 		for(int i=0, count=0; i<TT_MAX; ++i) {
 			if (!is_chart_table_zero(i)) {
-				transport_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(finance_t::get_transport_type_name((transport_type)i)), SYSCOL_TEXT);
+				transport_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(finance_t::transport_type_values[i]), SYSCOL_TEXT);
 				transport_types[ count++ ] = i;
 			}
 		}

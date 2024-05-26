@@ -260,7 +260,7 @@ player_ranking_frame_t::player_ranking_frame_t(uint8 selected_player_nr) :
 
 				for (int i = 0, count = 0; i < TT_OTHER; ++i) {
 					if (i>0 && !way_builder_t::is_active_waytype(finance_t::translate_tt_to_waytype((transport_type)(i)))) continue;
-					transport_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(finance_t::get_transport_type_name((transport_type)i)), SYSCOL_TEXT);
+					transport_type_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(finance_t::transport_type_values[i]), SYSCOL_TEXT);
 					transport_types[count++] = i;
 				}
 				transport_type_c.set_focusable(false);
