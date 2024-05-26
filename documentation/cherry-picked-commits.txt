@@ -1,8 +1,12 @@
 ====A. Carlotti completed through 7429====
+?-probably irrelevant, not sure though
 7429
 ||
 7447
-7448 -- probably; depot_frame code changed too much to tell
+?-7448 -- probably; depot_frame code changed too much to tell for sure
+7449
+||
+7453
 
 ====
 *=partially
