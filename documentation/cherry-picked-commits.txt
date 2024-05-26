@@ -12,14 +12,14 @@
 ==== except where noted as done by Ranran
 ==== or otherwise noted
 ==== *=partially
-7611
+7611 -- verified present correct
 7664
 7844
 *7697 -- reverted in c0066fc76f5e9e3d31
 
 7865 -- verified present correct
 7870 -- verified present correct
-7908
+7908 -- verified present correct
 7911 -- verified present correct
 7932
 7937
