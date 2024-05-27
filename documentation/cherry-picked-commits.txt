@@ -10,6 +10,7 @@
 
 (NOTE: changes to world speed record stuff are being maintained on a branch)
 (NOTE: 7466 is inapplicable but points to a patch which should go from Extended to Standard)
+(NOTE: 7480 is missing one piece in pedestrian.cc but it will be overwritten by 10664)
 
 ==== For this section, commits with git-svn-id were found in the log (not hand-checked)
 ==== except where noted as done by Ranran
