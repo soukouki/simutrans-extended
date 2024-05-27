@@ -6,7 +6,7 @@
 ?-7448 -- probably; depot_frame code changed too much to tell for sure
 7449
 ||
-7478
+7482
 
 (NOTE: changes to world speed record stuff are being maintained on a branch)
 (NOTE: 7466 is inapplicable but points to a patch which should go from Extended to Standard)
