@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "macros.h" // for clamp
 #include "simdebug.h"
 #include "simunits.h"
 #include "simworld.h"
@@ -617,7 +618,9 @@ DBG_MESSAGE("convoi_t::finish_rd()","next_stop_index=%d", next_stop_index );
 				last_route_index = 0;
 				dbg->warning("convoi_t::finish_rd()", "Convoy %i's route index is out of range: resetting to zero", self.get_id());
 			}
-			uint16 start_index = min(max(1u, vehicle[vehicle_count - 1u]->get_route_index() - 1u), route.get_count() - 1u);
+			uint16 one_more_than_start_index = vehicle[vehicle_count - 1u]->get_route_index();
+			// This should be one_more_than_start_index - 1u, but we have to beware of unsigned arithmetic underflow if get_route_index() returns 0
+			uint16 start_index = clamp((unsigned)one_more_than_start_index, 1u, route.get_count()) - 1u;
 
 			uint32 train_length = move_to(start_index) + 1;
 			const koord3d last_start = front()->get_pos();
