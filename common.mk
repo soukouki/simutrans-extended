@@ -32,6 +32,7 @@ clean:
 	$(Q)rm -f $(DEPS)
 	$(Q)rm -f $(PROGDIR)/$(PROG)
 	$(Q)rm -fr $(PROGDIR)/$(PROG).app
+	$(Q)rm -fr $(BUILDDIR)
 
 -include $(DEPS)
 
