@@ -463,7 +463,7 @@ void player_ranking_gui_t::sort_player()
 			if( player_t* player = welt->get_player(np) ) {
 				const finance_t* finance = player->get_finance();
 				const bool is_atv = history_type_idx[selected_item * 2];
-				PIXVAL color = SYSCOL_TEXT;
+				PIXVAL color = player->get_player_nr()==selected_player ? SYSCOL_TEXT_HIGHLIGHT : SYSCOL_TEXT;
 				sint64 value = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, history_type_idx[selected_item * 2 + 1])
 					: finance->get_history_com_year(player_ranking_gui_t::selected_year, history_type_idx[selected_item * 2 + 1]);
 				switch (cost_type[selected_item*2+1]) {
