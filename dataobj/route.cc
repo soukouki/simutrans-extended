@@ -1529,6 +1529,15 @@ void route_t::postprocess_water_route(karte_t *welt)
 		return ok;
 	}
 
+	// Allow four (count 'em, four) different approaches for spotting vehicles within a platform
+	// 1 -- never advance past the marked spot (simple)
+	// 2 -- advance just enough past the marked spot to fit on the platform (same behavior as Simutrans-Standard)
+	// 3 -- advance to middle of platform (the "eye candy" default for Simutrans-Extended)
+	// 4 -- advance to front of platform (the "rail terminal" default for Simutrans-Extended)
+	// Also if there's a SIGNAL on the platform, consider treating it as a platform divider
+	// and not advancing past it unless the train is long enough that it has to do so in order to fit on the platform
+	// --neroden
+
 	// advance so all convoy fits into a halt (only set for trains and cars)
 	bool move_to_end_of_station = convoy_tile_length >= 8888;
 	if(move_to_end_of_station)
