@@ -79,7 +79,8 @@ private:
 
 	sint64 p_chart_table[MAX_PLAYER_HISTORY_YEARS][MAX_PLAYER_COUNT-1];
 
-	slist_tpl<player_button_t *> buttons;
+	slist_tpl<player_button_t *> player_buttons;
+	void remove_player_buttons();
 
 	uint8 selected_item= PR_REVENUE;
 	uint8 selected_player;
