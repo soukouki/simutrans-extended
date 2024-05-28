@@ -99,32 +99,36 @@ sint64 convert_waylength(sint64 value) { return (sint64)(value * world()->get_se
 
 static const gui_chart_t::convert_proc proc = convert_waylength;
 
-static int compare_atv(uint8 player_nr_a, uint8 player_nr_b, uint8 atv_index) {
-	int comp = 0;
+static int compare_atv(uint8 player_nr_a, uint8 player_nr_b, uint8 atv_index)
+{
+	sint64 comp = 0; // otherwise values may overflow
 	player_t* a_player = world()->get_player(player_nr_a);
 	player_t* b_player = world()->get_player(player_nr_b);
 
 	if (a_player && b_player) {
 		comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, atv_index) - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, atv_index);
-		if (comp==0 && player_ranking_gui_t::selected_year) {
-			comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, 0, atv_index) - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, 0, atv_index);
+		if (comp == 0 && player_ranking_gui_t::selected_year) {
+			comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year-1, atv_index)
+				 - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year-1, atv_index);
 		}
 	}
-	if (comp==0) {
+	if (comp == 0) {
 		comp = player_nr_b - player_nr_a;
 	}
 	return comp;
 }
 
-static int compare_atc(uint8 player_nr_a, uint8 player_nr_b, uint8 atc_index) {
-	int comp = 0;
+static int compare_atc(uint8 player_nr_a, uint8 player_nr_b, uint8 atc_index)
+{
+	sint64 comp = 0;
 	player_t* a_player = world()->get_player(player_nr_a);
 	player_t* b_player = world()->get_player(player_nr_b);
 
 	if (a_player && b_player) {
 		comp = b_player->get_finance()->get_history_com_year(player_ranking_gui_t::selected_year, atc_index) - a_player->get_finance()->get_history_com_year(player_ranking_gui_t::selected_year, atc_index);
-		if (comp == 0) {
-			comp = b_player->get_finance()->get_history_com_year(0, atc_index) - a_player->get_finance()->get_history_com_year(0, atc_index);
+		if (comp == 0 && player_ranking_gui_t::selected_year) {
+			comp = b_player->get_finance()->get_history_com_year(player_ranking_gui_t::selected_year-1, atc_index)
+				 - a_player->get_finance()->get_history_com_year(player_ranking_gui_t::selected_year-1, atc_index);
 		}
 	}
 	if (comp == 0) {
