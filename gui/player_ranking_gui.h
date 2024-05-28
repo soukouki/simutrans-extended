@@ -107,7 +107,7 @@ public:
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
-	void update_chart();
+	void update_chart(bool init_player_button=true);
 
 	void update_buttons();
 

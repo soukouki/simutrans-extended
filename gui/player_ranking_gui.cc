@@ -589,7 +589,7 @@ bool player_ranking_gui_t::action_triggered( gui_action_creator_t *comp,value_t 
 					}
 					bt->pressed ^= 1;
 
-					update_chart();
+					update_chart(false);
 					return true;
 				}
 			}
@@ -628,7 +628,7 @@ bool player_ranking_gui_t::action_triggered( gui_action_creator_t *comp,value_t 
 }
 
 
-void player_ranking_gui_t::update_chart()
+void player_ranking_gui_t::update_chart(bool init_player_button)
 {
 	// update year selector
 	cb_year_selector.clear_elements();
@@ -652,8 +652,11 @@ void player_ranking_gui_t::update_chart()
 
 	// need to clear the chart once to update the suffix and digit
 	chart.remove_curves();
-	remove_player_buttons();
-	player_buttons.clear();
+	if (init_player_button) {
+		remove_player_buttons();
+		player_buttons.clear();
+	}
+	const bool is_atv = history_type_idx[selected_item*2];
 	for (int np = 0; np < MAX_PLAYER_COUNT - 1; np++) {
 		if (np == PUBLIC_PLAYER_NR && selected_item != PR_HALTS) continue;
 		if ( player_t* player = welt->get_player(np) ) {
@@ -664,18 +667,15 @@ void player_ranking_gui_t::update_chart()
 			gui_chart_t::chart_marker_t marker = (np==selected_player) ? gui_chart_t::square : gui_chart_t::none;
 			chart.add_curve(color_idx_to_rgb( player->get_player_color1()+env_t::gui_player_color_dark), *p_chart_table, MAX_PLAYER_COUNT-1, np, MAX_PLAYER_HISTORY_YEARS, curve_type, true, false, curve_precision, selected_item==PR_WAY_KILOMETREAGE ? convert_waylength:NULL, marker);
 
-			player_button_t* b = new player_button_t(np);
-			b->add_listener(this);
-			if (np == selected_player) {
-				b->pressed = true;
+			if(init_player_button) {
+				player_button_t* b = new player_button_t(np);
+				b->add_listener(this);
+				if (np == selected_player) {
+					b->pressed = true;
+				}
+				player_buttons.append(b);
 			}
-			player_buttons.append(b);
-		}
-	}
 
-	const bool is_atv = history_type_idx[selected_item*2];
-	for (int np = 0; np < MAX_PLAYER_COUNT - 1; np++) {
-		if ( player_t* player = welt->get_player(np) ) {
 			// update chart records
 			for (int y = 0; y < MAX_PLAYER_HISTORY_YEARS; y++) {
 				const finance_t* finance = player->get_finance();
