@@ -86,8 +86,10 @@ private:
 
 	char years_str[MAX_PLAYER_HISTORY_YEARS][6];
 
+	// sort by ranking
 	void sort_player();
 
+	// Check if the player is competing in the selected genre
 	bool is_chart_table_zero(uint8 player_nr) const;
 
 public:
