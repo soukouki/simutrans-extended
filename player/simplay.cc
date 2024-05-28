@@ -1279,6 +1279,10 @@ int player_t::get_account_overdrawn() const
 	return finance->get_account_overdrawn();
 }
 
+uint16 player_t::get_age() const
+{
+	return ((12 + welt->get_last_month() - player_age % 12) % 12 + player_age) / 12;
+}
 
 bool player_t::has_money_or_assets() const
 {
