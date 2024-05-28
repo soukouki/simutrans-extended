@@ -357,6 +357,8 @@ player_ranking_gui_t::~player_ranking_gui_t()
 void player_ranking_gui_t::sort_player()
 {
 	cont_players.remove_all();
+
+	bool show_share=false;
 	switch (selected_item)
 	{
 		case PR_REVENUE:
@@ -366,12 +368,15 @@ void player_ranking_gui_t::sort_player()
 			buttons.sort(compare_profit);
 			break;
 		case PR_TRANSPORT_PAX:
+			show_share = true;
 			buttons.sort(compare_transport_pax);
 			break;
 		case PR_TRANSPORT_MAIL:
+			show_share = true;
 			buttons.sort(compare_transport_mail);
 			break;
 		case PR_TRANSPORT_GOODS:
+			show_share = true;
 			buttons.sort(compare_transport_goods);
 			break;
 		case PR_CASH:
@@ -396,6 +401,7 @@ void player_ranking_gui_t::sort_player()
 			buttons.sort(compare_vehicle_km);
 			break;
 		case PR_WAY_KILOMETREAGE:
+			show_share = true;
 			buttons.sort(compare_way_length);
 			break;
 		default:
@@ -404,8 +410,29 @@ void player_ranking_gui_t::sort_player()
 			break;
 	}
 	uint8 count = 0;
+	uint8 rank  = 1; // There may be multiple same ranks
+	sint64 prev_value=0; // To check if they are in the same rank
+	const bool is_atv = history_type_idx[selected_item*2];
+
+	// In order to calculate the share, the total must be calculated first for certain genres
+	sint64 total=0;
+	if (show_share) {
+		// check totals.
+		for (uint i = 0; i < buttons.get_count(); i++) {
+			const uint8 player_nr = buttons.at(i)->get_player_nr();
+			assert(is_atv);
+			if(player_t* player = welt->get_player(player_nr)){
+				const finance_t* finance = player->get_finance();
+				total += finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, history_type_idx[selected_item*2+1]);
+			}
+		}
+	}
+
 	for (uint i = 0; i < buttons.get_count(); i++) {
 		const uint8 player_nr = buttons.at(i)->get_player_nr();
+		player_t* player = welt->get_player(player_nr);
+		if (!player) continue;
+
 		// Exclude players who are not in the competition
 		if( is_chart_table_zero(player_nr) ) {
 			continue;
@@ -416,7 +443,18 @@ void player_ranking_gui_t::sort_player()
 		}
 		count++;
 
-		switch (count)
+		// pick up value first for the same rank
+		const finance_t* finance = player->get_finance();
+		PIXVAL color = player->get_player_nr() == selected_player ? SYSCOL_TEXT_HIGHLIGHT : SYSCOL_TEXT;
+		sint64 value = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, history_type_idx[selected_item * 2 + 1])
+			: finance->get_history_com_year(player_ranking_gui_t::selected_year, history_type_idx[selected_item * 2 + 1]);
+		if (prev_value!=value) {
+			rank = count;
+		}
+
+		prev_value = value;
+
+		switch (rank)
 		{
 			case 1:
 				cont_players.new_component<gui_color_label_t>("1", color_idx_to_rgb(COL_WHITE), 56512, 1);
@@ -430,7 +468,7 @@ void player_ranking_gui_t::sort_player()
 
 			default:
 				gui_label_buf_t* lb = cont_players.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered);
-				lb->buf().printf("%u", count);
+				lb->buf().printf("%u", rank);
 				lb->update();
 				lb->set_fixed_width(lb->get_min_size().w);
 				break;
@@ -441,88 +479,60 @@ void player_ranking_gui_t::sort_player()
 		}
 		cont_players.add_component(buttons.at(i));
 
+		// update label
+		switch (cost_type[selected_item*2+1]) {
+			case gui_chart_t::MONEY:
+				lb_player_val[player_nr].buf().append_money(value / 100.0);
+				color = value >= 0 ? (value > 0 ? MONEY_PLUS : SYSCOL_TEXT_UNUSED) : MONEY_MINUS;
+				break;
+			case gui_chart_t::PERCENT:
+				lb_player_val[player_nr].buf().append(value / 100.0, 2);
+				lb_player_val[player_nr].buf().append("%");
+				color = value >= 0 ? (value > 0 ? MONEY_PLUS : SYSCOL_TEXT_UNUSED) : MONEY_MINUS;
+				break;
+			case gui_chart_t::PAX_KM:
+				lb_player_val[player_nr].buf().append(value / 10.0, 0);
+				lb_player_val[player_nr].buf().append(translator::translate("pkm"));
+				break;
+			case gui_chart_t::TON_KM_MAIL:
+				lb_player_val[player_nr].buf().append(value / 1000.0, 2);
+				lb_player_val[player_nr].buf().append(translator::translate("tkm"));
+				break;
+			case gui_chart_t::TON_KM:
+				lb_player_val[player_nr].buf().append(value / 10.0, 0);
+				lb_player_val[player_nr].buf().append(translator::translate("tkm"));
+				break;
+			case gui_chart_t::DISTANCE:
+				if (selected_item==PR_WAY_KILOMETREAGE) {
+					lb_player_val[player_nr].buf().append(value * welt->get_settings().get_meters_per_tile() / 10000.0, 1);
+				}
+				else {
+					lb_player_val[player_nr].buf().append(value);
+				}
+				lb_player_val[player_nr].buf().append(translator::translate("km"));
+				break;
+			case gui_chart_t::STANDARD:
+			default:
+				lb_player_val[player_nr].buf().append(value);
+				break;
+		}
 		cont_players.add_component(&lb_player_val[player_nr]);
+
+		if (show_share && total) {
+			lb_player_val[player_nr].buf().printf(" (%.1f%%)", (double)value*100/total);
+		}
+		lb_player_val[player_nr].set_color(color);
+		lb_player_val[player_nr].set_align(gui_label_t::right);
+		lb_player_val[player_nr].update();
 	}
 
-
-	if (count) {
-		// update labels
-		const bool is_atv = history_type_idx[selected_item * 2];
-
-		// check totals.
-		sint64 total=0;
-		if( history_type_idx[selected_item*2+1]== ATV_TRANSPORTED_PASSENGER
-			|| history_type_idx[selected_item*2+1] == ATV_TRANSPORTED_MAIL
-			|| history_type_idx[selected_item*2+1] == ATV_TRANSPORTED_GOOD
-			|| history_type_idx[selected_item*2+1] == ATV_WAY_LENGTH)
-		{
-			assert(is_atv);
-			// Calculate the total value first
-			for (uint i = 0; i < buttons.get_count(); i++) {
-				const uint8 player_nr = buttons.at(i)->get_player_nr();
-				const finance_t* finance = world()->get_player(player_nr)->get_finance();
-				total += finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, history_type_idx[selected_item*2+1]);
-			}
-
-		}
-		for (int np = 0; np < MAX_PLAYER_COUNT - 1; np++) {
-			if( player_t* player = welt->get_player(np) ) {
-				const finance_t* finance = player->get_finance();
-				const bool is_atv = history_type_idx[selected_item * 2];
-				PIXVAL color = player->get_player_nr()==selected_player ? SYSCOL_TEXT_HIGHLIGHT : SYSCOL_TEXT;
-				sint64 value = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, history_type_idx[selected_item * 2 + 1])
-					: finance->get_history_com_year(player_ranking_gui_t::selected_year, history_type_idx[selected_item * 2 + 1]);
-				switch (cost_type[selected_item*2+1]) {
-					case gui_chart_t::MONEY:
-						lb_player_val[np].buf().append_money(value / 100.0);
-						color = value >= 0 ? (value > 0 ? MONEY_PLUS : SYSCOL_TEXT_UNUSED) : MONEY_MINUS;
-						break;
-					case gui_chart_t::PERCENT:
-						lb_player_val[np].buf().append(value / 100.0, 2);
-						lb_player_val[np].buf().append("%");
-						color = value >= 0 ? (value > 0 ? MONEY_PLUS : SYSCOL_TEXT_UNUSED) : MONEY_MINUS;
-						break;
-					case gui_chart_t::PAX_KM:
-						lb_player_val[np].buf().append(value / 10.0, 0);
-						lb_player_val[np].buf().append(translator::translate("pkm"));
-						break;
-					case gui_chart_t::TON_KM_MAIL:
-						lb_player_val[np].buf().append(value / 1000.0, 2);
-						lb_player_val[np].buf().append(translator::translate("tkm"));
-						break;
-					case gui_chart_t::TON_KM:
-						lb_player_val[np].buf().append(value / 10.0, 0);
-						lb_player_val[np].buf().append(translator::translate("tkm"));
-						break;
-					case gui_chart_t::DISTANCE:
-						if (selected_item==PR_WAY_KILOMETREAGE) {
-							lb_player_val[np].buf().append(value * welt->get_settings().get_meters_per_tile() / 10000.0, 1);
-						}
-						else {
-							lb_player_val[np].buf().append(value);
-						}
-						lb_player_val[np].buf().append(translator::translate("km"));
-						break;
-					case gui_chart_t::STANDARD:
-					default:
-						lb_player_val[np].buf().append(value);
-						break;
-				}
-				if (total) {
-					lb_player_val[np].buf().printf(" (%.1f%%)", (double)value*100/total);
-				}
-				lb_player_val[np].set_color(color);
-				lb_player_val[np].set_align(gui_label_t::right);
-				lb_player_val[np].update();
-			}
-		}
-		cont_players.new_component<gui_fill_t>(false, true);
+	if( count ) {
 		scrolly.set_visible(true);
 		cont_players.set_size(cont_players.get_min_size());
 		scrolly.set_size(cont_players.get_min_size());
 		scrolly.set_min_width(cont_players.get_min_size().w);
 	}
-	else{
+	else {
 		cont_players.new_component<gui_fill_t>(); // keep the size so that the combo box position does not move
 		scrolly.set_visible(false);
 	}
