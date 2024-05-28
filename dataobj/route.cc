@@ -1573,17 +1573,24 @@ void route_t::postprocess_water_route(karte_t *welt)
 			while(gr->get_neighbour(gr, wegtyp, ribi) && gr->get_halt() == halt && tdriver->check_next_tile(gr) && ((ribi_check || (first_run && is_rail_type))))
 			{
 				first_run = false;
+				weg_t* wg = gr->get_weg(wegtyp);
+				if (!wg) {
+					// Something has gone wrong; the check in get_neighbour should guarantee that we have a suitable way here.
+					// If this happens anyway, stop.
+					koord3d err_pos = gr->get_pos();
+					dbg->warning("route_t::calc_route()","passed get_neighbour check but found no suitable way at %d %d %d", err_pos.x, err_pos.y, err_pos.z);
+					break;
+				}
+				has_signal = wg->has_signal();
+
 				// Do not go on a tile where a one way sign forbids going.
 				// This saves time and fixed the bug that a one way sign on the final tile was ignored.
-				weg_t* wg = gr->get_weg(wegtyp);
-				has_signal = wg->has_signal();
-				ribi_t::ribi go_dir = wg ? wg->get_ribi_maske(): ribi_t::all;
-				if((ribi & go_dir) != 0)
-				{
+				ribi_t::ribi go_dir = wg->get_ribi_maske();
+				if(  (ribi & go_dir)!=0  ) {
 					if(is_rail_type)
 					{
 						// Unidirectional signals allow routing in both directions but only act in one direction. Check whether this is one of those.
-						if(!gr->get_weg(wegtyp) || !has_signal)
+						if(!has_signal)
 						{
 							break;
 						}
@@ -1611,7 +1618,7 @@ void route_t::postprocess_water_route(karte_t *welt)
 
 			if(!move_to_end_of_station && platform_size > convoy_tile_length)
 			{
-				// Do not go to the end, but stop part way along the platform.
+				// Do not go to the end, but stop roughly in the middle of the platform.
 				sint32 truncate_from_route = min(((platform_size - convoy_tile_length) + 1) >> 1, get_count() - 1);
 				while(truncate_from_route-- > 0)
 				{
