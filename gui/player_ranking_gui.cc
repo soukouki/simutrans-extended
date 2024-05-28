@@ -667,7 +667,8 @@ void player_ranking_gui_t::update_chart(bool init_player_button)
 			const int curve_type = (int)cost_type[selected_item*2+1];
 			const int curve_precision=cost_type[selected_item*2];
 			gui_chart_t::chart_marker_t marker = (np==selected_player) ? gui_chart_t::square : gui_chart_t::none;
-			chart.add_curve(color_idx_to_rgb( player->get_player_color1()+env_t::gui_player_color_dark), *p_chart_table, MAX_PLAYER_COUNT-1, np, MAX_PLAYER_HISTORY_YEARS, curve_type, true, false, curve_precision, selected_item==PR_WAY_KILOMETREAGE ? convert_waylength:NULL, marker);
+			int years=min(MAX_PLAYER_HISTORY_YEARS, player->get_age()+1);
+			chart.add_curve(color_idx_to_rgb( player->get_player_color1()+env_t::gui_player_color_dark), *p_chart_table, MAX_PLAYER_COUNT-1, np, years, curve_type, true, false, curve_precision, selected_item==PR_WAY_KILOMETREAGE ? convert_waylength:NULL, marker);
 
 			if(init_player_button) {
 				player_button_t* b = new player_button_t(np);
