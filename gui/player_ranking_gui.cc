@@ -434,9 +434,6 @@ void player_ranking_gui_t::sort_player()
 		player_t* player = welt->get_player(player_nr);
 		if (!player) continue;
 
-		int age = (int)player->get_age();
-		const bool born_yet = (age - (int)selected_year < 0);
-
 		// Exclude players who are not in the competition
 		if( is_chart_table_zero(player_nr) ) {
 			continue;
@@ -445,7 +442,12 @@ void player_ranking_gui_t::sort_player()
 		if( player_nr==PUBLIC_PLAYER_NR && selected_item!=PR_HALTS ) {
 			continue;
 		}
-		count++;
+
+		int age = (int)player->get_age();
+		const bool born_yet = (age - (int)selected_year < 0);
+		if (!born_yet) {
+			count++;
+		}
 
 		// pick up value first for the same rank
 		const finance_t* finance = player->get_finance();
