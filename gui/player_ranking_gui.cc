@@ -659,6 +659,7 @@ void player_ranking_gui_t::update_chart(bool init_player_button)
 		player_buttons.clear();
 	}
 	const bool is_atv = history_type_idx[selected_item*2];
+	int max_operating_year = 0;
 	for (int np = 0; np < MAX_PLAYER_COUNT - 1; np++) {
 		if (np == PUBLIC_PLAYER_NR && selected_item != PR_HALTS) continue;
 		if ( player_t* player = welt->get_player(np) ) {
@@ -668,6 +669,7 @@ void player_ranking_gui_t::update_chart(bool init_player_button)
 			const int curve_precision=cost_type[selected_item*2];
 			gui_chart_t::chart_marker_t marker = (np==selected_player) ? gui_chart_t::square : gui_chart_t::none;
 			int years=min(MAX_PLAYER_HISTORY_YEARS, player->get_age()+1);
+			max_operating_year = max(years, max_operating_year);
 			chart.add_curve(color_idx_to_rgb( player->get_player_color1()+env_t::gui_player_color_dark), *p_chart_table, MAX_PLAYER_COUNT-1, np, years, curve_type, true, false, curve_precision, selected_item==PR_WAY_KILOMETREAGE ? convert_waylength:NULL, marker);
 
 			if(init_player_button) {
@@ -688,6 +690,7 @@ void player_ranking_gui_t::update_chart(bool init_player_button)
 			chart.show_curve(np);
 		}
 	}
+	chart.set_dimension(min(MAX_PLAYER_HISTORY_YEARS, max_operating_year), 10000);
 	transport_type_c.set_visible(is_atv);
 
 	sort_player();
