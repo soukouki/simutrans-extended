@@ -228,11 +228,13 @@ player_ranking_gui_t::player_ranking_gui_t(uint8 selected_player_nr) :
 
 	add_table(2,1)->set_alignment(ALIGN_TOP);
 	{
-		add_component(&chart);
 		chart.set_dimension(MAX_PLAYER_HISTORY_YEARS, 10000);
 		chart.set_seed(welt->get_last_year());
 		chart.set_background(SYSCOL_CHART_BACKGROUND);
 		chart.set_min_size(scr_size(24*LINESPACE, 11*LINESPACE));
+		if( env_t::left_to_right_graphs ) {
+			add_component(&chart); // Position the ranking so that it flows from the chart.
+		}
 
 		cont_players.set_table_layout(3,0);
 		cont_players.set_alignment(ALIGN_CENTER_H);
@@ -257,7 +259,7 @@ player_ranking_gui_t::player_ranking_gui_t(uint8 selected_player_nr) :
 			add_table(3, 1);
 			{
 				cb_year_selector.add_listener(this);
-				cb_year_selector.set_inverse_side_scroll(true);
+				cb_year_selector.set_inverse_side_scroll(env_t::left_to_right_graphs);
 				add_component(&cb_year_selector);
 
 				for (int i = 0, count = 0; i < TT_OTHER; ++i) {
@@ -281,6 +283,10 @@ player_ranking_gui_t::player_ranking_gui_t(uint8 selected_player_nr) :
 			add_component(&scrolly);
 		}
 		end_table();
+
+		if( !env_t::left_to_right_graphs ) {
+			add_component(&chart); // Position the ranking so that it flows from the chart.
+		}
 	}
 	end_table();
 
