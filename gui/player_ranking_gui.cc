@@ -221,7 +221,7 @@ player_ranking_gui_t::player_ranking_gui_t(uint8 selected_player_nr) :
 {
 	selected_player = selected_player_nr;
 	last_year = welt->get_last_year();
-	const uint16 world_age = ((12 + welt->get_last_month()-welt->get_public_player()->get_player_age()%12)%12+ welt->get_public_player()->get_player_age())/12;
+	const uint16 world_age = welt->get_public_player()->get_age();
 	player_ranking_gui_t::selected_year = min(1, world_age);
 
 	set_table_layout(1,0);
@@ -616,7 +616,7 @@ void player_ranking_gui_t::update_chart()
 {
 	// update year selector
 	cb_year_selector.clear_elements();
-	const uint16 world_age = ((12 + welt->get_last_month()-welt->get_public_player()->get_player_age()%12)%12+ welt->get_public_player()->get_player_age())/12;
+	const uint16 world_age = welt->get_public_player()->get_age();
 	for (uint8 y = 0; y < MAX_PLAYER_HISTORY_YEARS; y++) {
 		sprintf(years_str[y], "%i", world()->get_last_year()-y);
 		cb_year_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(years_str[y], SYSCOL_TEXT);
