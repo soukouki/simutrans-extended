@@ -644,7 +644,7 @@ void simline_t::finish_rd()
 void simline_t::register_stops(schedule_t * schedule)
 {
 	DBG_DEBUG("simline_t::register_stops()", "%d schedule entries in schedule %p", schedule->get_count(),schedule);
-	FOR(minivec_tpl<schedule_entry_t>,const &i, schedule->entries) {
+	for(schedule_entry_t const& i : schedule->entries) {
 		halthandle_t const halt = haltestelle_t::get_halt(i.pos, player);
 		if(halt.is_bound()) {
 			//DBG_DEBUG("simline_t::register_stops()", "halt not null");
@@ -673,8 +673,7 @@ void simline_t::unregister_stops()
 
 	// It is necessary to clear all departure data,
 	// which might be out of date on a change of schedule.
-	FOR(vector_tpl<convoihandle_t>, & i, line_managed_convoys)
-	{
+	for(convoihandle_t const &i : line_managed_convoys) {
 		i->clear_departures();
 	}
 	financial_history[0][LINE_DEPARTURES_SCHEDULED] = calc_departures_scheduled();
@@ -683,7 +682,7 @@ void simline_t::unregister_stops()
 
 void simline_t::unregister_stops(schedule_t * schedule)
 {
-	FOR(minivec_tpl<schedule_entry_t>, const& i, schedule->entries) {
+	for(schedule_entry_t const& i : schedule->entries) {
 		halthandle_t const halt = haltestelle_t::get_halt(i.pos, player);
 		if(halt.is_bound()) {
 			halt->remove_line(self);
@@ -728,7 +727,7 @@ void simline_t::set_line_color(uint8 color_idx, uint8 style)
 
 void simline_t::check_freight()
 {
-	FOR(vector_tpl<convoihandle_t>, const i, line_managed_convoys) {
+	for(convoihandle_t const i : line_managed_convoys) {
 		i->check_freight();
 	}
 }
@@ -790,8 +789,7 @@ void simline_t::recalc_status()
 	{
 		const uint16 month_now = welt->get_timeline_year_month();
 
-		FOR(vector_tpl<convoihandle_t>, const i, line_managed_convoys)
-		{
+		for(convoihandle_t const i : line_managed_convoys) {
 			for (uint16 j = 0; j < i->get_vehicle_count(); j++)
 			{
 				vehicle_t *v = i->get_vehicle(j);
@@ -926,8 +924,7 @@ void simline_t::calc_classes_carried()
 
 	passenger_classes_carried.clear();
 	mail_classes_carried.clear();
-	FOR(vector_tpl<convoihandle_t>, const i, line_managed_convoys)
-	{
+	for(convoihandle_t const i : line_managed_convoys) {
 		convoi_t const& cnv = *i;
 
 		if (cnv.get_goods_catg_index().is_contained(goods_manager_t::INDEX_PAS))
@@ -1019,7 +1016,7 @@ void simline_t::recalc_catg_index()
 		convoi_t const& cnv = *i;
 		withdraw &= cnv.get_withdraw();
 
-		FOR(minivec_tpl<uint8>, const catg_index, cnv.get_goods_catg_index()) {
+		for(uint8 const catg_index : cnv.get_goods_catg_index()) {
 			goods_catg_index.append_unique( catg_index );
 		}
 	}
@@ -1057,8 +1054,7 @@ void simline_t::recalc_catg_index()
 	}
 
 	// added categories : present in new category list but not in old category list
-	FOR(minivec_tpl<uint8>, const i, goods_catg_index)
-	{
+	for(uint8 const i : goods_catg_index) {
 		if (!old_goods_catg_index.is_contained(i))
 		{
 			catg_differences.append(i);
