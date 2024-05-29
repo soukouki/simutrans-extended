@@ -3,8 +3,8 @@
  * (see LICENSE.txt)
  */
 
-#ifndef GUI_PLAYER_RANKING_GUI_H
-#define GUI_PLAYER_RANKING_GUI_H
+#ifndef GUI_PLAYER_RANKING_FRAME_H
+#define GUI_PLAYER_RANKING_FRAME_H
 
 
 #include "gui_frame.h"
@@ -34,7 +34,7 @@ public:
 /**
  * Menu for the player list
  */
-class player_ranking_gui_t : public gui_frame_t, private action_listener_t
+class player_ranking_frame_t : public gui_frame_t, private action_listener_t
 {
 public:
 	enum
@@ -94,8 +94,8 @@ private:
 	bool is_chart_table_zero(uint8 player_nr) const;
 
 public:
-	player_ranking_gui_t(uint8 selected_player_nr=255);
-	~player_ranking_gui_t();
+	player_ranking_frame_t(uint8 selected_player_nr=255);
+	~player_ranking_frame_t();
 
 	/**
 	 * Set the window associated helptext

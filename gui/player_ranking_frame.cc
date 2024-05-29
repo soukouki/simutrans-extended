@@ -13,14 +13,14 @@
 #include "money_frame.h" // for the finances
 
 #include "components/gui_halthandled_lines.h" // color label
-#include "player_ranking_gui.h"
+#include "player_ranking_frame.h"
 
 
-uint8 player_ranking_gui_t::transport_type_option = TT_ALL;
-uint8 player_ranking_gui_t::selected_year = 1;
+uint8 player_ranking_frame_t::transport_type_option = TT_ALL;
+uint8 player_ranking_frame_t::selected_year = 1;
 
 // Text should match that of the finance dialog
-static const char* cost_type_name[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
+static const char* cost_type_name[player_ranking_frame_t::MAX_PLAYER_RANKING_CHARTS] =
 {
 	"Cash",
 	"Net Wealth",
@@ -39,7 +39,7 @@ static const char* cost_type_name[player_ranking_gui_t::MAX_PLAYER_RANKING_CHART
 };
 
 // digit and suffix
-static const uint8 cost_type[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS*2] =
+static const uint8 cost_type[player_ranking_frame_t::MAX_PLAYER_RANKING_CHARTS*2] =
 {
 	2,gui_chart_t::MONEY,
 	2,gui_chart_t::MONEY,
@@ -57,7 +57,7 @@ static const uint8 cost_type[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS*2] 
 	2,gui_chart_t::DISTANCE
 };
 
-static const uint8 cost_type_color[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS] =
+static const uint8 cost_type_color[player_ranking_frame_t::MAX_PLAYER_RANKING_CHARTS] =
 {
 	COL_CASH,
 	COL_WEALTH,
@@ -76,7 +76,7 @@ static const uint8 cost_type_color[player_ranking_gui_t::MAX_PLAYER_RANKING_CHAR
 };
 
 // is_atv=1, ATV:vehicle finance record, ATC:common finance record
-static const uint8 history_type_idx[player_ranking_gui_t::MAX_PLAYER_RANKING_CHARTS*2] =
+static const uint8 history_type_idx[player_ranking_frame_t::MAX_PLAYER_RANKING_CHARTS*2] =
 {
 	0,ATC_CASH,
 	0,ATC_NETWEALTH,
@@ -106,13 +106,13 @@ static int compare_atv(uint8 player_nr_a, uint8 player_nr_b, uint8 atv_index)
 	player_t* b_player = world()->get_player(player_nr_b);
 
 	if (a_player && b_player) {
-		comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, atv_index) - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, atv_index);
+		comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, player_ranking_frame_t::selected_year, atv_index) - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, player_ranking_frame_t::selected_year, atv_index);
 		if (comp == 0) {
 			comp = b_player->get_age() - a_player->get_age();
 		}
-		if (comp == 0 && player_ranking_gui_t::selected_year) {
-			comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year-1, atv_index)
-				 - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year-1, atv_index);
+		if (comp == 0 && player_ranking_frame_t::selected_year) {
+			comp = b_player->get_finance()->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, player_ranking_frame_t::selected_year-1, atv_index)
+				 - a_player->get_finance()->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, player_ranking_frame_t::selected_year-1, atv_index);
 		}
 	}
 	if (comp == 0) {
@@ -128,13 +128,13 @@ static int compare_atc(uint8 player_nr_a, uint8 player_nr_b, uint8 atc_index)
 	player_t* b_player = world()->get_player(player_nr_b);
 
 	if (a_player && b_player) {
-		comp = b_player->get_finance()->get_history_com_year(player_ranking_gui_t::selected_year, atc_index) - a_player->get_finance()->get_history_com_year(player_ranking_gui_t::selected_year, atc_index);
+		comp = b_player->get_finance()->get_history_com_year(player_ranking_frame_t::selected_year, atc_index) - a_player->get_finance()->get_history_com_year(player_ranking_frame_t::selected_year, atc_index);
 		if (comp == 0) {
 			comp = b_player->get_age() - a_player->get_age();
 		}
-		if (comp == 0 && player_ranking_gui_t::selected_year) {
-			comp = b_player->get_finance()->get_history_com_year(player_ranking_gui_t::selected_year-1, atc_index)
-				 - a_player->get_finance()->get_history_com_year(player_ranking_gui_t::selected_year-1, atc_index);
+		if (comp == 0 && player_ranking_frame_t::selected_year) {
+			comp = b_player->get_finance()->get_history_com_year(player_ranking_frame_t::selected_year-1, atc_index)
+				 - a_player->get_finance()->get_history_com_year(player_ranking_frame_t::selected_year-1, atc_index);
 		}
 	}
 	if (comp == 0) {
@@ -225,14 +225,14 @@ bool player_button_t::infowin_event(const event_t* ev)
 }
 
 
-player_ranking_gui_t::player_ranking_gui_t(uint8 selected_player_nr) :
+player_ranking_frame_t::player_ranking_frame_t(uint8 selected_player_nr) :
 	gui_frame_t(translator::translate("Player ranking")),
 	scrolly(&cont_players, true, true)
 {
 	selected_player = selected_player_nr;
 	last_year = welt->get_last_year();
 	const uint16 world_age = welt->get_public_player()->get_age();
-	player_ranking_gui_t::selected_year = min(1, world_age);
+	player_ranking_frame_t::selected_year = min(1, world_age);
 
 	set_table_layout(1,0);
 
@@ -340,7 +340,7 @@ player_ranking_gui_t::player_ranking_gui_t(uint8 selected_player_nr) :
 	set_resizemode(diagonal_resize);
 }
 
-void player_ranking_gui_t::remove_player_buttons()
+void player_ranking_frame_t::remove_player_buttons()
 {
 	while (!player_buttons.empty()) {
 		player_button_t* b = player_buttons.remove_first();
@@ -349,13 +349,13 @@ void player_ranking_gui_t::remove_player_buttons()
 	}
 }
 
-player_ranking_gui_t::~player_ranking_gui_t()
+player_ranking_frame_t::~player_ranking_frame_t()
 {
 	remove_player_buttons();
 }
 
 
-void player_ranking_gui_t::sort_player()
+void player_ranking_frame_t::sort_player()
 {
 	cont_players.remove_all();
 
@@ -424,7 +424,7 @@ void player_ranking_gui_t::sort_player()
 			assert(is_atv);
 			if(player_t* player = welt->get_player(player_nr)){
 				const finance_t* finance = player->get_finance();
-				total += finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, history_type_idx[selected_item*2+1]);
+				total += finance->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, player_ranking_frame_t::selected_year, history_type_idx[selected_item*2+1]);
 			}
 		}
 	}
@@ -452,8 +452,8 @@ void player_ranking_gui_t::sort_player()
 		// pick up value first for the same rank
 		const finance_t* finance = player->get_finance();
 		PIXVAL color = player->get_player_nr() == selected_player ? SYSCOL_TEXT_HIGHLIGHT : SYSCOL_TEXT;
-		sint64 value = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, player_ranking_gui_t::selected_year, history_type_idx[selected_item * 2 + 1])
-			: finance->get_history_com_year(player_ranking_gui_t::selected_year, history_type_idx[selected_item * 2 + 1]);
+		sint64 value = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, player_ranking_frame_t::selected_year, history_type_idx[selected_item * 2 + 1])
+			: finance->get_history_com_year(player_ranking_frame_t::selected_year, history_type_idx[selected_item * 2 + 1]);
 		if (prev_value!=value) {
 			rank = count;
 		}
@@ -554,7 +554,7 @@ void player_ranking_gui_t::sort_player()
 	}
 }
 
-bool player_ranking_gui_t::is_chart_table_zero(uint8 player_nr) const
+bool player_ranking_frame_t::is_chart_table_zero(uint8 player_nr) const
 {
 	// search for any non-zero values
 	if( player_t* player = welt->get_player(player_nr) ) {
@@ -562,7 +562,7 @@ bool player_ranking_gui_t::is_chart_table_zero(uint8 player_nr) const
 		const finance_t* finance = player->get_finance();
 		const bool is_atv = history_type_idx[selected_item*2];
 		for (int y = 0; y < MAX_PLAYER_HISTORY_MONTHS; y++) {
-			sint64 val = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, y, history_type_idx[selected_item * 2 + 1])
+			sint64 val = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, y, history_type_idx[selected_item * 2 + 1])
 				: finance->get_history_com_year(y, history_type_idx[selected_item * 2 + 1]);
 			if (val) return false;
 			if (age-y<0) break;
@@ -575,7 +575,7 @@ bool player_ranking_gui_t::is_chart_table_zero(uint8 player_nr) const
 /**
  * This method is called if an action is triggered
  */
-bool player_ranking_gui_t::action_triggered( gui_action_creator_t *comp,value_t p )
+bool player_ranking_frame_t::action_triggered( gui_action_creator_t *comp,value_t p )
 {
 	// Check the GUI list of buttons
 	// player filter
@@ -622,7 +622,7 @@ bool player_ranking_gui_t::action_triggered( gui_action_creator_t *comp,value_t 
 	}
 
 	if( comp == &cb_year_selector ) {
-		player_ranking_gui_t::selected_year = cb_year_selector.get_selection();
+		player_ranking_frame_t::selected_year = cb_year_selector.get_selection();
 		update_chart();
 	}
 
@@ -630,7 +630,7 @@ bool player_ranking_gui_t::action_triggered( gui_action_creator_t *comp,value_t 
 }
 
 
-void player_ranking_gui_t::update_chart(bool init_player_button)
+void player_ranking_frame_t::update_chart(bool init_player_button)
 {
 	// update year selector
 	cb_year_selector.clear_elements();
@@ -642,8 +642,8 @@ void player_ranking_gui_t::update_chart(bool init_player_button)
 			break;
 		}
 	}
-	cb_year_selector.set_selection(player_ranking_gui_t::selected_year);
-	chart.set_highlight_x(player_ranking_gui_t::selected_year);
+	cb_year_selector.set_selection(player_ranking_frame_t::selected_year);
+	chart.set_highlight_x(player_ranking_frame_t::selected_year);
 
 	// deselect chart buttons
 	for (uint8 i=0; i < MAX_PLAYER_RANKING_CHARTS; i++) {
@@ -684,7 +684,7 @@ void player_ranking_gui_t::update_chart(bool init_player_button)
 			// update chart records
 			for (int y = 0; y < MAX_PLAYER_HISTORY_YEARS; y++) {
 				const finance_t* finance = player->get_finance();
-				p_chart_table[y][np] = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_gui_t::transport_type_option, y, history_type_idx[selected_item*2+1])
+				p_chart_table[y][np] = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, y, history_type_idx[selected_item*2+1])
 					: finance->get_history_com_year(y, history_type_idx[selected_item*2+1]);
 			}
 			chart.show_curve(np);
@@ -699,7 +699,7 @@ void player_ranking_gui_t::update_chart(bool init_player_button)
 }
 
 
-void player_ranking_gui_t::update_buttons()
+void player_ranking_frame_t::update_buttons()
 {
 	for (auto bt : player_buttons) {
 		bt->update();
@@ -710,7 +710,7 @@ void player_ranking_gui_t::update_buttons()
 /**
  * Draw the component
  */
-void player_ranking_gui_t::draw(scr_coord pos, scr_size size)
+void player_ranking_frame_t::draw(scr_coord pos, scr_size size)
 {
 	if (last_year != world()->get_last_year()) {
 		last_year = world()->get_last_year();
