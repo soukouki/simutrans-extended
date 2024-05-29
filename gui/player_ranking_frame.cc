@@ -76,7 +76,7 @@ static const uint8 cost_type_color[player_ranking_frame_t::MAX_PLAYER_RANKING_CH
 };
 
 // is_atv=1, ATV:vehicle finance record, ATC:common finance record
-static const uint8 history_type_idx[player_ranking_frame_t::MAX_PLAYER_RANKING_CHARTS*2] =
+static const uint8 history_type_idx[player_ranking_frame_t::MAX_PLAYER_RANKING_CHARTS * 2] =
 {
 	0,ATC_CASH,
 	0,ATC_NETWEALTH,
@@ -236,7 +236,7 @@ player_ranking_frame_t::player_ranking_frame_t(uint8 selected_player_nr) :
 
 	set_table_layout(1,0);
 
-	add_table(2,1)->set_alignment(ALIGN_TOP);
+	add_table(2, 1)->set_alignment(ALIGN_TOP);
 	{
 		chart.set_dimension(MAX_PLAYER_HISTORY_YEARS, 10000);
 		chart.set_seed(welt->get_last_year());
@@ -246,7 +246,7 @@ player_ranking_frame_t::player_ranking_frame_t(uint8 selected_player_nr) :
 			add_component(&chart); // Position the ranking so that it flows from the chart.
 		}
 
-		cont_players.set_table_layout(3,0);
+		cont_players.set_table_layout(3, 0);
 		cont_players.set_alignment(ALIGN_CENTER_H);
 		cont_players.set_margin(NO_SPACING, scr_size(D_SCROLLBAR_WIDTH+D_H_SPACE,D_SCROLLBAR_HEIGHT));
 
@@ -554,13 +554,14 @@ void player_ranking_frame_t::sort_player()
 	}
 }
 
+
 bool player_ranking_frame_t::is_chart_table_zero(uint8 player_nr) const
 {
 	// search for any non-zero values
-	if( player_t* player = welt->get_player(player_nr) ) {
+	if (player_t* player = welt->get_player(player_nr)) {
 		int age = (int)player->get_age();
 		const finance_t* finance = player->get_finance();
-		const bool is_atv = history_type_idx[selected_item*2];
+		const bool is_atv = history_type_idx[selected_item * 2];
 		for (int y = 0; y < MAX_PLAYER_HISTORY_MONTHS; y++) {
 			sint64 val = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, y, history_type_idx[selected_item * 2 + 1])
 				: finance->get_history_com_year(y, history_type_idx[selected_item * 2 + 1]);
@@ -575,7 +576,7 @@ bool player_ranking_frame_t::is_chart_table_zero(uint8 player_nr) const
 /**
  * This method is called if an action is triggered
  */
-bool player_ranking_frame_t::action_triggered( gui_action_creator_t *comp,value_t p )
+bool player_ranking_frame_t::action_triggered(gui_action_creator_t* comp, value_t v)
 {
 	// Check the GUI list of buttons
 	// player filter

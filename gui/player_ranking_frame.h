@@ -59,13 +59,13 @@ public:
 	static uint8 selected_year;
 
 private:
+	sint16 last_year;
 
 	gui_chart_t chart;
 
 	gui_aligned_container_t cont_players;
 	gui_scrollpane_t scrolly;
-	button_t
-		bt_charts[MAX_PLAYER_RANKING_CHARTS];
+	button_t bt_charts[MAX_PLAYER_RANKING_CHARTS];
 
 	gui_combobox_t
 		player_select[MAX_PLAYER_COUNT-1],
@@ -74,8 +74,6 @@ private:
 	uint16 transport_types[TT_OTHER];
 
 	gui_label_buf_t lb_player_val[MAX_PLAYER_COUNT-1];
-
-	sint32 last_year;
 
 	sint64 p_chart_table[MAX_PLAYER_HISTORY_YEARS][MAX_PLAYER_COUNT-1];
 
