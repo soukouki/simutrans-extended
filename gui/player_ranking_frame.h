@@ -88,6 +88,8 @@ private:
 	// sort by ranking
 	void sort_player();
 
+	sint64 get_value_from_history(player_t *player, uint8 offset, bool is_atv) const;
+
 	// Check if the player is competing in the selected genre
 	bool is_chart_table_zero(uint8 player_nr) const;
 

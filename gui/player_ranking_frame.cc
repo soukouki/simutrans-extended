@@ -554,6 +554,17 @@ void player_ranking_frame_t::sort_player()
 	}
 }
 
+sint64 player_ranking_frame_t::get_value_from_history(player_t* player, uint8 offset, bool is_atv) const
+{
+	sint64 value = 0;
+	if( player ) {
+		const bool is_atv = history_type_idx[selected_item * 2];
+		const finance_t* finance = player->get_finance();
+		value = is_atv ? finance->get_history_veh_year((transport_type)player_ranking_frame_t::transport_type_option, offset, history_type_idx[selected_item * 2 + 1])
+			: finance->get_history_com_year(offset, history_type_idx[selected_item * 2 + 1]);
+	}
+	return value;
+}
 
 bool player_ranking_frame_t::is_chart_table_zero(uint8 player_nr) const
 {
