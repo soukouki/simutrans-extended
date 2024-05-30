@@ -551,7 +551,7 @@ network_command_t* network_get_received_command()
  * - server: accept connection to a new client
  * - all: receive commands and puts them to the received_command_queue
  */
-network_command_t* network_check_activity(int timeout)
+network_command_t *network_check_activity(int timeout)
 {
 	fd_set fds;
 	FD_ZERO(&fds);
@@ -756,7 +756,7 @@ bool network_send_data( SOCKET dest, const char *buf, const uint16 size, uint16 
 				// try again, test whether sending is possible
 				fd_set fds;
 				FD_ZERO(&fds);
-				FD_SET(dest, &fds);
+				FD_SET(dest,&fds);
 
 				struct timeval tv;
 				tv.tv_sec = timeout_ms / 1000;
@@ -764,7 +764,7 @@ bool network_send_data( SOCKET dest, const char *buf, const uint16 size, uint16 
 
 				// can we write?
 				if(  select( FD_SETSIZE, NULL, &fds, NULL, &tv )!=1  ) {
-					dbg->warning("network_send_data", "could not write to socket [%d]", dest);
+					dbg->warning("network_send_data", "Could not write to socket [%d]", dest);
 					return false;
 				}
 			}
@@ -773,11 +773,11 @@ bool network_send_data( SOCKET dest, const char *buf, const uint16 size, uint16 
 		}
 		if (sent == 0) {
 			// connection closed
-			dbg->warning("network_send_data", "connection [%d] already closed (sent %hu of %hu)", dest, count, size );
+			dbg->warning("network_send_data", "Connection [%d] already closed (sent %hu of %hu)", dest, count, size );
 			return false;
 		}
 		count += sent;
-		DBG_DEBUG4("network_send_data", "sent %d bytes to socket[%d]; size=%d, left=%d", count, dest, size, size-count );
+		DBG_DEBUG4("network_send_data", "Sent %d bytes to socket[%d]; size=%d, left=%d", count, dest, size, size-count );
 	}
 
 #if USE_WINSOCK == 0
@@ -809,18 +809,19 @@ bool network_receive_data( SOCKET sender, void *dest, const uint16 len, uint16 &
 		struct timeval tv;
 		tv.tv_sec = timeout_ms / 1000;
 		tv.tv_usec = (timeout_ms % 1000) * 1000ul;
+
 		// can we read?
 		if(  select( FD_SETSIZE, &fds, NULL, NULL, &tv )!=1  ) {
 			return true;
 		}
 
 		// now receive
-		int res = recv( sender, ptr+received, len-received, 0 );
+		const int res = recv( sender, ptr+received, len-received, 0 );
 
 		if (res == -1) {
-			int err = GET_LAST_ERROR();
+			const int err = GET_LAST_ERROR();
 			if (err != EWOULDBLOCK) {
-				dbg->warning("network_receive_data", "error %d while receiving from [%d]", err, sender);
+				dbg->warning("network_receive_data", "Could not receive from [%d]: \"%s\"", sender, strerror(err));
 				return false;
 			}
 
