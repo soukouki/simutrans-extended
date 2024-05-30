@@ -128,7 +128,7 @@ server_frame_t::server_frame_t() :
 
 	add_component( &pak_version, 3 );
 #if DEBUG>=4
-	add_component( &pakset_checksum );
+	add_component( &pakset_checksum, 3 );
 #endif
 	new_component_span<gui_divider_t>(3);
 
@@ -266,7 +266,7 @@ bool server_frame_t::update_serverlist ()
 	// Based on current dialog settings, should we show mismatched servers or not
 	uint revision = 0;
 	const char* pakset = NULL;
-	gameinfo_t current(welt);
+	gameinfo_t current( welt );
 
 	if(  !show_mismatched.pressed  ) {
 		revision = current.get_game_engine_revision();
@@ -308,7 +308,7 @@ bool server_frame_t::update_serverlist ()
 
 		cbuffer_t serverdns2;
 		// Strip default port
-		if( strcmp(serverdns.get_str() + serverdns.len() - 6, ":13353") == 0 ) {
+		if(  strcmp(serverdns.get_str() + serverdns.len() - 6, ":13353") == 0  ) {
 			dbg->message( "server_frame_t::update_serverlist", "stripping default port from entry %s", serverdns.get_str() );
 			serverdns2.append( serverdns.get_str(), strlen( serverdns.get_str() ) - 6 );
 			serverdns = serverdns2;
@@ -392,8 +392,8 @@ bool server_frame_t::infowin_event (const event_t *ev)
 bool server_frame_t::action_triggered (gui_action_creator_t *comp, value_t p)
 {
 	// Selection has changed
-	if (  &serverlist == comp  ) {
-		if (  p.i <= -1  ) {
+	if(  &serverlist == comp  ) {
+		if(  p.i <= -1  ) {
 			join.disable();
 			gi = gameinfo_t(welt);
 			update_info();
