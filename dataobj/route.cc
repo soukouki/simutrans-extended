@@ -1564,24 +1564,45 @@ void route_t::postprocess_water_route(karte_t *welt)
 
 			grund_t *gr = welt->lookup(ziel);
 			const waytype_t wegtyp = tdriver->get_waytype();
-			ribi_t::ribi final_way_ribi = tdriver->get_ribi(gr);
-			bool ribi_check = ((final_way_ribi & ribi) != 0);
+			ribi_t::ribi way_ribi = tdriver->get_ribi(gr);
+			bool ribi_check = (way_ribi & ribi) != 0;
 
 			const bool is_rail_type = wegtyp == track_wt || wegtyp == narrowgauge_wt || wegtyp == maglev_wt || wegtyp == tram_wt || wegtyp == monorail_wt;
-			bool first_run = true;
 
 			bool has_signal = gr->get_weg(wegtyp)->has_signal();
+			// This code is the same as that at the bottom of the while loop below, but must be duplicated
+			// to get the first test done right
+			if (is_rail_type && has_signal)
+			{
+				// We cannot use a masked ribi check if there's a signal, due to one-way train signals.
+				// The unmasked ribi check is duplicate to that in get_neighbour, so omit it.
+				// ribi_t::ribi ribi_unmasked = gr->get_weg_ribi_unmasked(wegtyp);
+				// ribi_check = (ribi_unmasked & ribi) != 0;
+				ribi_check = true;
+			}
+			else
+			{
+				// The masked ribi check is not duplicate to that in get_neighbor.
+				ribi_check = (way_ribi & ribi) != 0;
+			}
 
 			// This loop condition checks:
-			// 1 - can we continue on this waytype in the correct direction? (get_neighbour, which also *changes the value of gr* to the new location)
-			// 2 - is this new tile in the correct station?
-			// 3 - can the testdriver get to this new tile from the test driver's current location?
-			// 4 - does the direction of travel (ribi) match an available direction on the current tile (ribi_check)?
-			// 5... or, are we a rail type and we are trying to expand for the first time, in which case bypass the ribi_check?  (first_run && is_rail_type)
+			// 1 - can we continue on this waytype in the correct direction, even with one-way signs? (ribi_check)
+			// 2 - can we continue on this waytype in the correct direction, disregarding signals? (get_neighbour)
+			// VERY IMPORTANT: get_neighbor also CHANGES the value of gr to the new location
+			// You cannot move conditions from before this to after this or vice versa (this has been the source of past errors)
 			// Note that the waytype (which is the waytype of the test driver) is assumed not to change.
-			while(gr->get_neighbour(gr, wegtyp, ribi) && gr->get_halt() == halt && tdriver->check_next_tile(gr) && ((ribi_check || (first_run && is_rail_type))))
+			while(  ribi_check && gr->get_neighbour(gr, wegtyp, ribi)  )
 			{
-				first_run = false;
+				if(  gr->get_halt() != halt  ) {
+					// This new tile is not in the same station
+					break;
+				}
+				if(  !(  tdriver->check_next_tile(gr)  )  ) {
+					// Test driver cannot enter this tile
+					break;
+				}
+
 				weg_t* wg = gr->get_weg(wegtyp);
 				if (!wg) {
 					// Something has gone wrong; the check in get_neighbour should guarantee that we have a suitable way here.
@@ -1610,16 +1631,21 @@ void route_t::postprocess_water_route(karte_t *welt)
 					}
 				}
 
+				// OK, add this tile to the route.
 				route.append(gr->get_pos());
 				platform_size++;
 
-				if (has_signal)
+				if (is_rail_type && has_signal)
 				{
-					ribi_t::ribi ribi_unmasked = gr->get_weg_ribi_unmasked(wegtyp);
-					ribi_check = (ribi_unmasked & ribi) != 0;
+					// We cannot use a masked ribi check if there's a signal, due to one-way train signals.
+					// The unmasked ribi check is duplicate to that in get_neighbour.
+					// ribi_t::ribi ribi_unmasked = gr->get_weg_ribi_unmasked(wegtyp);
+					// ribi_check = (ribi_unmasked & ribi) != 0;
+					ribi_check = true;
 				}
 				else
 				{
+					// The masked ribi check is not duplicate to that in get_neighbor.
 					ribi_check = (tdriver->get_ribi(gr) & ribi) != 0;
 				}
 
