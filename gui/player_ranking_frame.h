@@ -15,6 +15,8 @@
 #include "components/action_listener.h"
 #include "simwin.h"
 
+// fix if MAX_PLAYER_HISTORY_YEARS or MAX_PLAYER_HISTORY_MONTHS changes
+#define MAX_YEAR_STR (MAX_PLAYER_HISTORY_YEARS)
 
 class player_button_t : public button_t
 {
@@ -56,20 +58,25 @@ public:
 		MAX_PLAYER_RANKING_CHARTS
 	};
 	static uint8 transport_type_option;
-	static uint8 selected_year;
+	static uint8 selected_x_axis;
+	static uint8 selected_hist_mode;
 
 private:
-	sint16 last_year;
+	sint16 last_month;
+	uint16 world_age;
 
 	gui_chart_t chart;
 
-	gui_aligned_container_t cont_players;
+	gui_aligned_container_t
+		cont_chart,
+		cont_players;
 	gui_scrollpane_t scrolly;
 	button_t bt_charts[MAX_PLAYER_RANKING_CHARTS];
 
 	gui_combobox_t
 		player_select[MAX_PLAYER_COUNT-1],
-		cb_year_selector,
+		cb_x_axis_selector,
+		cb_chart_span_selector,
 		transport_type_c;
 	uint16 transport_types[TT_OTHER];
 
@@ -83,10 +90,12 @@ private:
 	uint8 selected_item= PR_REVENUE;
 	uint8 selected_player;
 
-	char years_str[MAX_PLAYER_HISTORY_YEARS][6];
+	char years_str[MAX_YEAR_STR][6];
 
 	// sort by ranking
 	void sort_player();
+
+	sint64 get_value_from_history(player_t *player, uint8 offset) const;
 
 	// Check if the player is competing in the selected genre
 	bool is_chart_table_zero(uint8 player_nr) const;
@@ -106,6 +115,9 @@ public:
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 
 	void update_chart(bool init_player_button=true);
+
+	// Call when selected_hist_mode changes
+	void update_x_axis_selector();
 
 	void update_buttons();
 

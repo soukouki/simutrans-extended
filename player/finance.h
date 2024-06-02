@@ -56,6 +56,16 @@ char const *const NOTICE_TILE_FULL = "Tile not empty.";
  */
 char const *const NOTICE_DISABLED_PUBLIC_WAY = "Not allowed to make publicly owned ways!";
 
+enum accounting_history_mode {
+	AC_HISTORY_MONTHS,
+	AC_HISTORY_YEARS,
+	MAX_PLAYER_HISTORY_MODES
+};
+static const char* const chart_span_text[MAX_PLAYER_HISTORY_MODES] =
+{
+	"monthly_chart", "yearly_chart"
+};
+
 /// for compatibility with old versions
 /// Must be different in extended!
 #define OLD_MAX_PLAYER_COST (21)
