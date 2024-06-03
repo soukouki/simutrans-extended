@@ -14,7 +14,7 @@
 7503 - superseded by 4dd025910bd68 (but check that that does the right thing, there are related bugs)
 7504
 ||
-7509
+7511
 
 ***NOTES on 7494:
    -- patch for standard needed for comment in vehicle/movingobj.cc for reference to "fahrer" (now simtestdriver / testdriver_t) 
