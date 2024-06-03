@@ -12,14 +12,14 @@
 # simutrans/pakfilefolder/config/simuconf.tab (always, if present)
 # ~/simutrans/simuconf.tab (read a second time, again only if not a portable (single user) installation)
 #
-###############################override options#################################
+############################### Override settings #################################
 # Use these to override the settings in a savegame with settings in your simuconf.tab file.
 #
 progdir_overrides_savegame_settings = 0
 userdir_overrides_savegame_settings = 0
 pak_overrides_savegame_settings = 0
 #
-################################portable or not#################################
+################################ Portability settings #################################
 #
 # This simuconf.tab will be read first => we set meaningful defaults here.
 #
@@ -29,7 +29,7 @@ pak_overrides_savegame_settings = 0
 #
 #singleuser_install = 0
 #
-#################################program stuff##################################
+################################# Base settings ##################################
 #
 #
 # Do not delete these comment line! (Needed for installer)
@@ -48,7 +48,7 @@ pak_overrides_savegame_settings = 0
 #pak_file_path = pak.winter/
 #pak_file_path = pak.ttd/
 #
-#################################routing stuff##################################
+################################# Routing settings f##################################
 
 # The maximum number of position tested during a way search
 # Consumes 16*x Bytes main memory, where x is the "max_route_steps" value.
