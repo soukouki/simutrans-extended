@@ -10,8 +10,9 @@
 ?-7491 -- probably; code in convoi_info.cc changed too much to tell for sure
 7492
 ||
-7501
-?-7502 -- probably superseded but need to verify
+7502
+7503 - superseded by 4dd025910bd68 (but check that that does the right thing, there are related bugs)
+7504
 
 ***NOTES on 7494:
    -- patch for standard needed for comment in vehicle/movingobj.cc for reference to "fahrer" (now simtestdriver / testdriver_t) 
