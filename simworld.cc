@@ -4977,17 +4977,15 @@ void karte_t::step()
 	// first: check for new month
 	if(ticks > next_month_ticks) {
 
-		// avoid overflow here ...
-		// Should not overflow: now using 64-bit values.
-		// @author: jamespetts
-/*
+		// Even though these are signed 64-bit ints,
+		// check for overflow anyway: it's good practice.
 		if(  next_month_ticks > next_month_ticks+karte_t::ticks_per_world_month  ) {
 			// avoid overflow here ...
 			dbg->warning("karte_t::step()", "Ticks were overflowing => reset");
 			ticks %= karte_t::ticks_per_world_month;
 			next_month_ticks %= karte_t::ticks_per_world_month;
 		}
-*/
+
 		next_month_ticks += karte_t::ticks_per_world_month;
 
 		DBG_DEBUG4("karte_t::step", "calling new_month");
