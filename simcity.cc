@@ -1160,6 +1160,7 @@ class monument_placefinder_t : public placefinder_t {
 			}
 
 			if (gr->hat_wege() && !gr->hat_weg(road_wt)) {
+				/* Note: Standard only permits pre-existing roads on boundary tiles, Extended permits them anywhere */
 				return false;
 			}
 
@@ -1194,7 +1195,9 @@ class townhall_placefinder_t : public placefinder_t {
 		bool is_tile_ok(koord pos, koord d, climate_bits cl, uint16 allowed_regions) const OVERRIDE
 		{
 			const grund_t* gr = welt->lookup_kartenboden(pos + d);
-			if (gr == NULL  ||  gr->get_grund_hang() != slope_t::flat) return false;
+			if (gr == NULL  ||  gr->get_grund_hang() != slope_t::flat) {
+				return false;
+			}
 
 			if(  ((1 << welt->get_climate( gr->get_pos().get_2d() )) & cl) == 0  ) {
 				return false;
