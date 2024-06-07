@@ -73,8 +73,12 @@
 
 uint32 weg_t::private_car_routes_currently_reading_element;
 
-// since we use 32 bit per growth steps, we use this variable to take care of the remaining sub citizen growth
-#define CITYGROWTH_PER_CITIZEN (0x0000000100000000ll)
+/**
+ * This variable is used to control the fractional precision of growth to prevent loss when quantities are small.
+ * Growth calculations use 64 bit signed integers.
+ * Although this is actually scale factor, a power of two is recommended for optimization purposes.
+ */
+static sint64 const CITYGROWTH_PER_CITIZEN = 1ll << 32; // Q31.32 fractional form.
 
 karte_ptr_t stadt_t::welt; // one is enough ...
 
