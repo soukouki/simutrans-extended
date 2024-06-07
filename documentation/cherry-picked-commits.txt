@@ -16,7 +16,11 @@
 ||
 7514
 -- definitely not 7515.  This one is complicated.
-7516 - largely superseded by r8351, remainder present and correct
+7516
+||
+7520
+7521 -- NO, changes to common.mk are not present (all other changes are present)
+7522 -- NO, DEFINITELY MISSING, and DEFINITELY NEEDED
 
 ***NOTES on 7494:
    -- patch for standard needed for comment in vehicle/movingobj.cc for reference to "fahrer" (now simtestdriver / testdriver_t) 
