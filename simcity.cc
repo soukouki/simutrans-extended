@@ -3857,13 +3857,10 @@ void stadt_t::check_bau_townhall(bool new_town)
 void stadt_t::check_bau_factory(bool new_town)
 {
 	uint32 const inc = welt->get_settings().get_industry_increase_every();
-	if (!new_town && inc > 0 && (uint32)bev %inc == 0)
-	{
-		uint32 div = bev / inc;
-		for (uint8 i = 0; i < 8; i++)
-		{
-			if (div == (1u<<i) && welt->get_actual_industry_density() < welt->get_target_industry_density())
-			{
+	if(  !new_town && inc > 0 && (uint32)bev % inc == 0  ) {
+		uint32 const div = bev / inc;
+		for(  uint8 i = 0; i < 8; i++  ) {
+			if(  div == (1u<<i) && welt->get_actual_industry_density() < welt->get_target_industry_density()  ) {
 				// Only add an industry if there is a need for it: if the actual industry density is less than the target density.
 				// @author: jamespetts
 				DBG_MESSAGE("stadt_t::check_bau_factory", "adding new industry at %i inhabitants.", get_einwohner());
