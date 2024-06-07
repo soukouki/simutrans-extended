@@ -2648,7 +2648,7 @@ void stadt_t::step(uint32 delta_t)
 	// is it time for the next step?
 	next_growth_step += delta_t;
 
-	while(stadt_t::city_growth_step < next_growth_step)
+	while(next_growth_step > stadt_t::city_growth_step)
 	{
 		calc_growth();
 		step_grow_city();
