@@ -2971,7 +2971,7 @@ uint32 haltestelle_t::get_ware_summe_for(const goods_desc_t *wtyp, linehandle_t 
 		const schedule_t *schedule = line.is_bound() ? line->get_schedule() : NULL;
 		if (schedule != NULL) {
 			uint16 to = (uint16)min(entry_end + 1, schedule->entries.get_count());
-			if (to < (uint16)entry_start) {
+			if (to <= (uint16)entry_start) {
 				to += schedule->entries.get_count();
 			}
 
@@ -2983,7 +2983,7 @@ uint32 haltestelle_t::get_ware_summe_for(const goods_desc_t *wtyp, linehandle_t 
 				}
 			}
 		}
-		FOR(vector_tpl<ware_t>, const& i, *warray) {
+		for (ware_t const& i : *warray) {
 			if (wtyp->get_index() == i.get_index()) {
 				if (wealth_class !=255  &&  wealth_class != i.get_class()) {
 					continue;
